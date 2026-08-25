@@ -1,0 +1,21 @@
+# Build output
+/bin
+
+# Temp folder
+/tmp
+
+# Runtime data
+**/data/
+
+# Editor / IDE
+/.vscode
+
+# External code references
+docs/external-reference
+external/
+
+# Executables
+*.exe
+
+# Logs
+*.log
