@@ -79,6 +79,18 @@ func TestAnalyzeCommandReturnsUnsupportedExitCode(t *testing.T) {
 	}
 }
 
+func TestOpenCommandRequiresExactlyOneInput(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"open"}, &stdout, &stderr); code != 2 {
+		t.Fatalf("open without input exit code = %d, want 2; stderr=%s", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"open", "--model", "model.json", "--project", "."}, &stdout, &stderr); code != 2 {
+		t.Fatalf("open with two inputs exit code = %d, want 2; stderr=%s", code, stderr.String())
+	}
+}
+
 func TestModelNormalizeAndValidateCommands(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/service\n"), 0o644); err != nil {

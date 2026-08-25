@@ -17,6 +17,7 @@ The capability owns CLI export options, versioned machine-readable output, deter
 - JSON includes the neutral model, evidence references, diagnostics, cycles, layers, and analysis status.
 - Stable IDs/order, normalized paths, explicit versions, and layout provenance make output deterministic; implicit wall-clock timestamps are excluded.
 - Self-contained interactive HTML and scalable SVG are the first visual artifacts. Raster output is a later adapter.
+- Visual artifacts reuse the viewer's local-first reference-visibility policy: canonical JSON retains all references, while HTML/SVG default to hidden or aggregated non-local boundaries and can expand them explicitly.
 - Source content is not embedded by default; exports retain paths and locations and may add explicit future embedding/redaction controls.
 - Partial results and warnings remain visible. Fatal configuration/readability/analysis errors produce non-zero exit codes.
 - CI starts with reproducible artifact generation and documented exit behavior, not automatic architectural approval.
@@ -34,6 +35,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 ## Current delivery slice
 
 - Issue 005 implements deterministic JSON, HTML, and SVG artifacts from the validated model/view contract.
+- Issue 005 also owns export parity for reference visibility, scope, confidence, and import/evidence traceability.
 - It is part of [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Artifact sync

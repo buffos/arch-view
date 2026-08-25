@@ -40,4 +40,4 @@ This capability includes CLI options, machine-readable architecture output, visu
 
 # Planning state
 
-This capability is specified. Its versioned JSON, deterministic HTML/SVG artifacts, status/exit behavior, source-privacy defaults, and CI contract are linked from the exact-spec artifacts.
+This capability is specified. Its versioned JSON, deterministic HTML/SVG artifacts, status/exit behavior, source-privacy defaults, shared reference-visibility policy, and CI contract are linked from the exact-spec artifacts.

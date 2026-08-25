@@ -61,11 +61,11 @@ Owns stable opaque module identity, language and project metadata, explicit hier
 
 ### Graph and view preparation
 
-Owns relationship normalization, aggregation, abstraction classification, cycle detection, hierarchical projection, layer assignment, and layout inputs. It consumes only the neutral model.
+Owns relationship normalization, aggregation, abstraction classification, cycle detection, hierarchical projection, layer assignment, and layout inputs. It consumes only the neutral model. When hierarchy aggregation creates a non-cycle group self-loop, this boundary provides an internal-relationship summary instead of asking a renderer to imply a cycle.
 
 ### Presentation and export
 
-The viewer owns a local web presentation, renderer-neutral scene/view state, interaction, navigation, progressive disclosure, source inspection, tooltips, and accessibility concerns. SVG/HTML is the first renderer/export direction; Canvas/WebGL may be added for large graphs behind the same contract. Exporters own versioned JSON, deterministic HTML/SVG, and CI status behavior. Neither presentation nor export knows how a source language is parsed.
+The viewer owns a local web presentation, renderer-neutral scene/view state, interaction, navigation, progressive disclosure, reference-boundary visibility, import/evidence inspection, source inspection, tooltips, layout/session state, and accessibility concerns. The default overview is local-first; non-local references remain canonical but are hidden, aggregated, or expanded by view policy. The current SVG renderer owns arrowhead styling and consumes node positions plus edge sections/bend points from the locally served ELK/elkjs layered adapter. A deterministic layer-based layout remains the replaceable fallback; neither layout choice changes relationship meaning. Exporters consume the same view policy and own versioned JSON, deterministic HTML/SVG, and CI status behavior. Neither presentation nor export knows how a source language is parsed.
 
 ## Data flow
 
@@ -81,6 +81,7 @@ The viewer owns a local web presentation, renderer-neutral scene/view state, int
 - Analysis is read-only and does not execute the target application.
 - Paths and source evidence must remain traceable to the analyzed repository.
 - Unresolved or dynamic dependencies are reported with confidence or diagnostics.
+- Non-local references are retained in the canonical model; viewer/export projections decide whether they are hidden, aggregated, or expanded, while import evidence remains available in list/details form.
 - External and generated code are filtered by explicit policy, not silently discarded.
 - Language-specific concepts such as interfaces, protocols, or abstract classes are represented as metadata and relation semantics, not hard-coded into the core.
 - Saved models use a versioned, language-neutral JSON interchange format. Visual artifacts are deterministic projections of the same model/view contract; source contents are not embedded by default.
@@ -91,11 +92,12 @@ The root policy is `when-supported`, with justified deferrals required. The arch
 
 ## Implementation sequence
 
-The first architectural slice is the neutral model and plugin contract. The first product slice is Go package analysis connected to headless output and a visible viewer result. Python, TypeScript, Rust, and Clojure analyzers follow the same contract. External process plugins come after the built-in contract has stabilized.
+The first architectural slice is the neutral model and plugin contract. The first product slice is Go package analysis connected to headless output and a visible viewer result. The viewer refinement now prioritizes a local-first overview and import/evidence inspection before broader analyzer expansion. Python, TypeScript, Rust, and Clojure analyzers follow the same contract. External process plugins come after the built-in contract has stabilized.
 
 ## Residual implementation decisions
 
 - Benchmarking and tuning frontend/rendering thresholds.
+- Reference-boundary aggregation, import-list density, and session-scoped layout persistence.
 - Publishing/migrating JSON and NDJSON schemas.
 - Process sandbox/resource-limit implementation.
 - Future call-graph/type-level relation capabilities.

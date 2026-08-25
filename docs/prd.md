@@ -27,12 +27,14 @@ The reference implementation is preserved in `external/` for reading only. It is
 - Produce deterministic headless JSON output.
 - Provide self-contained HTML and scalable SVG artifacts from the same neutral model/view contract.
 - Serve the first interactive experience as a local web application with progressive disclosure for large graphs.
+- Make the default architecture overview local-first: retain standard-library, external, unresolved, and dynamic imports in the model while exposing them through boundary summaries and an accessible imports/evidence view.
+- Keep collapsed group presentation honest: non-cycle internal relationships are summarized as counts/details rather than rendered as cycle-like self-loops, while real cycles remain visible.
 - Keep analyzer-specific behavior behind a plugin contract.
 
 ## Primary user journeys
 
-1. A developer points Arch View at a Go repository and opens its top-level architecture.
-2. The developer drills into a module, follows dependency evidence, and opens the related source file.
+1. A developer points Arch View at a Go repository and opens its local-first top-level architecture, with optional reference-boundary expansion.
+2. The developer drills into a module, inspects its imports and dependency evidence, and opens the related source file.
 3. A maintainer identifies a cycle and uses the model output to understand the participating packages.
 4. A CI job runs headless analysis and stores a versioned architecture artifact.
 5. A later language plugin analyzes a Python, TypeScript, Rust, or Clojure repository using the same model and viewer.
@@ -69,12 +71,12 @@ Source analyzers produce evidence for the language-neutral model. The model owns
 1. Define the neutral architecture model and analyzer contract.
 2. Implement Go package and import analysis.
 3. Build headless JSON output and model validation.
-4. Build the first local web viewer and source-evidence workflow.
+4. Build the first local web viewer with local-first reference visibility, imports/evidence inspection, and source workflow.
 5. Add cycle and layout diagnostics.
 6. Add Python, TypeScript, and Rust analyzers.
 7. Add Clojure compatibility and an external, versioned plugin protocol if third-party analyzers are needed.
 
-The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, and headless projection path are implemented, while the local viewer and deterministic export work remain.
+The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, and headless projection path are implemented, the local viewer implementation is awaiting visual review, and deterministic export work remains.
 
 ## Verification strategy
 
@@ -85,6 +87,7 @@ The root project uses `when-supported` verification. Applicable backend, fronten
 No high or medium blocker prevents the specified planning baseline. The following are implementation risks and verification work, not unresolved product decisions:
 
 - Benchmarking cycle/layer algorithms and large-graph rendering.
+- Reference-visibility policies, import-list fixtures, and session-layout behavior need representative small and large graph verification.
 - Publishing/migrating JSON and NDJSON schemas.
 - Parser fixture breadth and dynamic-language precision.
 - Cross-environment HTML/SVG determinism and source-serving security tests.

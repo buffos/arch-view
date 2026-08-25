@@ -17,6 +17,7 @@ Export canonical versioned JSON, self-contained interactive HTML, and scalable S
 
 - JSON is the canonical durable interchange format and is distinct from the future analyzer NDJSON protocol.
 - HTML/SVG are projections of the same model/view contract.
+- Visual exports use the viewer's local-first reference visibility policy by default; canonical JSON retains every reference and explicit view options can aggregate or expand reference scopes.
 - Stable IDs/order, normalized paths, explicit versions, and layout provenance are required.
 - Source contents are not embedded by default; paths/locations are retained.
 - Complete and partial artifacts may be written; fatal input/render/write errors are non-zero.
@@ -33,6 +34,7 @@ Export canonical versioned JSON, self-contained interactive HTML, and scalable S
 | EX-FR-005 | Make repeated exports byte-stable for identical inputs/options. |
 | EX-FR-006 | Expose clear CLI options, output behavior, and exit codes. |
 | EX-FR-007 | Support reproducible local/CI artifact generation. |
+| EX-FR-008 | Preserve reference scope, confidence, and import/evidence traceability while matching the viewer's selected visibility policy. |
 
 ## Non-goals
 

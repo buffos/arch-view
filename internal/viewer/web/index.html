@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="model-id" content="__ARCH_VIEW_MODEL_ID__">
+    <title>Arch View</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to architecture view</a>
+    <header class="topbar">
+      <div class="brand-block">
+        <p class="eyebrow">LOCAL ARCHITECTURE SESSION</p>
+        <h1>Arch View</h1>
+      </div>
+      <div class="session-meta" aria-live="polite">
+        <span id="project-label">Loading model…</span>
+        <span class="meta-divider" aria-hidden="true">·</span>
+        <span id="model-status">Loading</span>
+      </div>
+    </header>
+
+    <main id="main-content" class="page-shell">
+      <section class="hero-row" aria-labelledby="view-title">
+        <div>
+          <p class="eyebrow">TOP-LEVEL OVERVIEW</p>
+          <h2 id="view-title">Architecture at a glance</h2>
+          <p id="view-description" class="lede">The scene is loaded from a validated, language-neutral model.</p>
+        </div>
+        <div class="hero-actions">
+          <label class="search-control">
+            <span>Find a node</span>
+            <input id="search" type="search" placeholder="Search modules or groups" autocomplete="off">
+          </label>
+          <label class="select-control">
+            <span>References</span>
+            <select id="reference-visibility" aria-label="Reference visibility">
+              <option value="hidden">Local-first</option>
+              <option value="aggregated">Boundary summary</option>
+              <option value="expanded">Show imports</option>
+            </select>
+          </label>
+          <button id="list-toggle" class="button secondary" type="button" aria-pressed="false">List/details</button>
+        </div>
+      </section>
+
+      <section id="summary" class="summary-grid" aria-label="Architecture summary"></section>
+
+      <div id="error-banner" class="notice error" role="alert" hidden></div>
+
+      <section class="workspace-grid" aria-label="Architecture scene and details">
+        <article class="scene-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">SEMANTIC SCENE</p>
+              <h3>Modules and directed dependencies</h3>
+            </div>
+            <div id="scene-state" class="state-pills" aria-live="polite"></div>
+          </div>
+          <div id="layer-legend" class="layer-legend" aria-label="Dependency layers"></div>
+          <div id="reference-summary" class="reference-summary" aria-live="polite"></div>
+          <div id="graph-wrap" class="graph-wrap" aria-label="Architecture graph"></div>
+          <p class="scene-help">Arrowheads show <strong>from</strong> → <strong>to</strong> dependency direction. Non-local imports stay in the model and are available in the list/details view.</p>
+        </article>
+
+        <aside class="details-card" aria-labelledby="details-title">
+          <div class="card-heading compact">
+            <div>
+              <p class="eyebrow">INSPECTION</p>
+              <h3 id="details-title">Select an item</h3>
+            </div>
+            <span id="details-kind" class="kind-pill">Overview</span>
+          </div>
+          <div id="details-content" class="details-content">
+            <p class="muted">Use the graph or the keyboard-accessible list below to inspect the same scene facts.</p>
+          </div>
+          <div class="facts-divider"></div>
+          <div class="list-heading">
+            <h4>Accessible list &amp; imports</h4>
+            <span id="list-count" class="muted"></span>
+          </div>
+          <div id="accessible-list" class="accessible-list" aria-label="Architecture items"></div>
+        </aside>
+      </section>
+
+      <section class="bottom-grid" aria-label="Cycles and diagnostics">
+        <article class="support-card">
+          <div class="card-heading compact">
+            <div>
+              <p class="eyebrow">GRAPH HEALTH</p>
+              <h3>Cycles</h3>
+            </div>
+            <span id="cycle-count" class="count-badge">0</span>
+          </div>
+          <div id="cycles" class="support-list"></div>
+        </article>
+        <article class="support-card">
+          <div class="card-heading compact">
+            <div>
+              <p class="eyebrow">UNCERTAINTY</p>
+              <h3>Diagnostics</h3>
+            </div>
+            <span id="diagnostic-count" class="count-badge">0</span>
+          </div>
+          <div id="diagnostics" class="support-list"></div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Read-only local session</span>
+      <span>Model <code id="footer-model-id">—</code></span>
+    </footer>
+    <script src="/assets/vendor/elk.bundled.js" defer></script>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>

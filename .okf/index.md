@@ -13,7 +13,7 @@
 
 - Initial topology: confirmed on 2026-08-25.
 - State totals: 0 `foggy`, 0 `bounded`, 10 `specified`, 0 `implemented`.
-- Current frontier: first implementation slice selected at Go analysis; issues 001–005 connect analyzer host, model, local viewer, evidence, and exports.
+- Current frontier: complete visual review of issue 003's local-first overview and explicit reference-boundary visibility, then continue with imports/evidence inspection and readable session layout in issues 004–005.
 
 ## Application synthesis
 

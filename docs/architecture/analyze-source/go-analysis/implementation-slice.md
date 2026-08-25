@@ -41,9 +41,14 @@ Given a Go repository containing a selected module, a developer can:
 |---|---|---|---|---|
 | [001](../../../agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md) | Host registry, Go manifest, selection, module boundary, and run options | Plugin runtime + Go analysis | None | none |
 | [002](../../../agents/issues/done/20260825-002-go-package-import-model-pipeline.md) | Go package/import observations normalized into model v1 | Go analysis + Generate models | 001 | none |
-| [003](../../../agents/issues/pending/003-local-web-top-level-architecture-view.md) | First visible local top-level architecture view | Explore architecture | — | visual-review |
-| [004](../../../agents/issues/pending/004-evidence-drilldown-and-source-inspection.md) | Hierarchy navigation, evidence, diagnostics, cycles, and safe source inspection | Explore architecture | 003 | visual-review |
-| [005](../../../agents/issues/pending/005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | 003 | visual-review |
+| [003](../../../agents/issues/done/20260826-003-local-web-top-level-architecture-view.md) | First visible local top-level architecture view — local-first/reference-boundary refinement | Explore architecture | — | approved |
+| [004](../../../agents/issues/pending/004-evidence-drilldown-and-source-inspection.md) | Hierarchy navigation, evidence, diagnostics, cycles, and safe source inspection | Explore architecture | — | visual-review |
+| [005](../../../agents/issues/pending/005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | — | visual-review |
+| [006](../../../agents/issues/pending/006-viewer-semantic-summary-and-elk-routing.md) | Post-baseline semantic summaries and ELK edge routing | Explore architecture | — | visual-review |
+
+## Current delivery status
+
+The analyzer-to-model path and the revised local viewer implementation are available. Issue 003 is archived after explicit visual approval of the local-first/reference-boundary baseline. Issues 004 and 005 are unblocked. Issue 006 remains an active post-baseline viewer refinement awaiting visual review.
 
 ## Slice acceptance
 
@@ -63,4 +68,4 @@ Given a Go repository containing a selected module, a developer can:
 
 ## Artifact impact
 
-This slice updates delivery truth only: the implementation-slice record, issue registry, issue files, capability issue references, and orchestration statuses. Product and application-architecture behavior is already specified and does not change.
+This slice updates delivery truth and the synchronized product/application-architecture records for local-first reference visibility, import inspection, and session layout. It does not change the OKF graph topology or the reference-only `external/` folder.

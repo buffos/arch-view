@@ -15,6 +15,7 @@
 - `InspectModule`
 - `InspectRelationship`
 - `InspectDiagnostic`
+- `InspectImports`
 - `InspectSourceEvidence`
 
 ### ReanalysisService
@@ -24,7 +25,7 @@
 
 ## Canonical queries/commands
 
-`OpenViewSession(model_id)` returns initial overview scene and state. `SetHierarchyPath` returns a new aggregated scene. `SetSelection` returns evidence/details. `InspectSourceEvidence` validates root containment and returns read-only text/locations. `ReanalyzeProject` runs analysis through the parent service and replaces the model only after a valid result is available.
+`OpenViewSession(model_id)` returns an initial local-first overview scene and state. `SetHierarchyPath` returns a new aggregated scene. `SetSelection` returns evidence/details. `SetViewOptions` can hide, aggregate, or expand non-local references and filter their scopes without changing the canonical model. `InspectImports` returns the selected module/group's individual import relationships, target scope, confidence, counts, and source evidence as a list-oriented result. `InspectSourceEvidence` validates root containment and returns read-only text/locations. `ReanalyzeProject` runs analysis through the parent service and replaces the model only after a valid result is available.
 
 ## Failure model
 

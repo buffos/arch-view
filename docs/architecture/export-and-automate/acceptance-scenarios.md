@@ -12,15 +12,15 @@ Given a valid partial model, when JSON/HTML/SVG export runs, then the artifact i
 
 Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
 
-## SC-EXPT-003 — Produce self-contained HTML
+## SC-EXPT-003 — Produce self-contained local-first HTML
 
-Given a model and HTML format, when export completes, then the file opens without network access and exposes overview, navigation, evidence, cycle/diagnostic states, and accessible list/details mode.
+Given a model and HTML format, when export completes, then the file opens without network access and exposes a local-first overview, navigation, evidence/import details, reference-boundary controls, cycle/diagnostic states, and accessible list/details mode.
 
 Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
 
 ## SC-EXPT-004 — Produce accessible SVG
 
-Given a model and SVG format, when export completes, then the artifact is scalable, script-free, has accessible metadata/labels, stable IDs, and deterministic geometry.
+Given a model and SVG format, when export completes, then the artifact is scalable, script-free, has accessible metadata/labels, stable IDs, reference scope/confidence metadata, and deterministic geometry.
 
 Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
 
@@ -47,3 +47,9 @@ Verification: backend-boundary `when-supported`; frontend-integration `not-appli
 Given a fixed project/model, options, tool version, and output target, when CI invokes headless export, then artifacts and exit status are reproducible and diagnostics are machine-readable.
 
 Verification: backend-boundary `when-supported`; frontend-integration `not-applicable`; end-to-end `when-supported`.
+
+## SC-EXPT-009 — Preserve reference visibility policy
+
+Given a model containing standard-library, external, unresolved, or dynamic references, when visual export runs with default or explicit reference-visibility options, then the artifact matches the selected local-first, aggregated, or expanded view while canonical JSON and evidence retain every reference and contributor identity.
+
+Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.

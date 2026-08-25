@@ -17,7 +17,7 @@ Give developers a reachable investigation workflow over the canonical architectu
 
 ## Scope
 
-The first surface is a local web application. It presents a renderer-neutral view of the canonical model, supports hierarchy navigation, selection, evidence/source inspection, cycle/diagnostic visibility, progressive disclosure, reanalysis, and accessible non-graph inspection. It does not parse source, discover dependencies, change the model, or define export formats.
+The first surface is a local web application. It presents a renderer-neutral view of the canonical model, supports hierarchy navigation, selection, evidence/source inspection, cycle/diagnostic visibility, progressive disclosure, reference-boundary filtering, reanalysis, and accessible non-graph inspection. It does not parse source, discover dependencies, change the model, or define export formats.
 
 ## Workflows
 
@@ -33,6 +33,12 @@ The first surface is a local web application. It presents a renderer-neutral vie
 - Viewer session state is separate from canonical model state.
 - Structural hierarchy controls drill-down; dependency relations control edge highlighting and cycle indicators.
 - Large graphs begin aggregated and reveal details on demand.
+- The default overview prioritizes analyzed project modules and groups. Standard-library, external, unresolved, and dynamic references remain in the canonical model but are hidden or summarized at the boundary unless the user expands them.
+- Reference visibility is a view policy with `hidden`, `aggregated`, and `expanded` modes; it never deletes or rewrites canonical relationships.
+- Individual imports are evidence/detail facts. They are available through a searchable list/details view for the selected module or group rather than crowding the default architecture graph.
+- Relationships between child modules that collapse into a group self-loop are shown as an internal-relationship count when they are not a real cycle; the canonical relationships remain available through details/evidence.
+- Node identity stability and relationship confidence are separate inspection facts. A local module/group is not assigned a computed confidence score merely because its ID is stable.
+- Layout, viewport, and optional user positioning belong to viewer session state. They never mutate the canonical model and may be persisted only with a model/revision/hierarchy key.
 - Source access is read-only and confined to the analyzed project root.
 - Stale evidence is never presented as current after reanalysis.
 - The graph has accessible labels, keyboard reachability, contrast, and list/details fallback.
@@ -48,6 +54,8 @@ The first surface is a local web application. It presents a renderer-neutral vie
 | EX-FR-005 | Use progressive disclosure/aggregation for large graphs. |
 | EX-FR-006 | Provide accessible list/details inspection alongside graphics. |
 | EX-FR-007 | Reanalyze/reload without exposing stale or cross-root evidence. |
+| EX-FR-008 | Filter or aggregate non-local references in the overview while exposing their individual imports and evidence through list/details inspection. |
+| EX-FR-009 | Provide a readable layout with fit, pan, zoom, and session-scoped layout state without changing canonical semantics. |
 
 ## Non-goals
 

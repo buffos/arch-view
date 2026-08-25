@@ -14,6 +14,8 @@ Implement repeatable artifacts from the same validated model and renderer-neutra
 
 - Implement arch-view export for JSON, HTML, and SVG and wire the analyze-to-export path.
 - Preserve the arch-view.model/v1 envelope, analysis status, diagnostics, evidence IDs, cycles, layers, provenance, and stable ordering.
+- Reuse the viewer's reference-visibility policy for visual artifacts: JSON always retains canonical references, while HTML/SVG overview output is local-first by default and supports explicit aggregated/expanded reference views.
+- Preserve an accessible imports/evidence list in HTML and equivalent reference-scope metadata in SVG without turning every import into an overview node.
 - Produce self-contained HTML with embedded model/view data and no network dependency.
 - Produce script-free accessible SVG with stable module/relationship attributes, titles, descriptions, cycle/diagnostic styling, and deterministic geometry.
 - Refuse existing outputs unless overwrite is explicit, write atomically, and return the specified status and exit codes.
@@ -23,6 +25,7 @@ Implement repeatable artifacts from the same validated model and renderer-neutra
 
 - [ ] JSON export is versioned, schema-valid, byte-stable for identical input/options, and preserves partial status and diagnostics.
 - [ ] HTML export is self-contained, opens without network access, and exposes overview, hierarchy, search, evidence/details, cycle/diagnostic states, and accessible list/details mode.
+- [ ] HTML/SVG exports preserve the local-first reference policy, expose standard-library/external/unresolved/dynamic scope and confidence distinctly, and keep individual imports available through the appropriate details/metadata path.
 - [ ] SVG export is scalable, script-free, accessible, deterministic, and includes stable module/relationship identifiers and recorded layout provenance.
 - [ ] Repeated exports from identical models and options produce identical bytes and equivalent semantics across CLI and any HTTP entrypoint.
 - [ ] Existing output is protected unless overwrite is supplied; writes are atomic and failed writes do not leave a misleading completed artifact.
@@ -39,7 +42,7 @@ Implement repeatable artifacts from the same validated model and renderer-neutra
 
 ## Blocked by
 
-docs/agents/issues/pending/003-local-web-top-level-architecture-view.md
+—
 
 ## User stories addressed
 
@@ -50,4 +53,4 @@ docs/agents/issues/pending/003-local-web-top-level-architecture-view.md
 ## Contract and scenario trace
 
 - Contract: docs/architecture/export-and-automate/canonical-api-cli-contract.md; docs/architecture/explore-architecture/canonical-api-cli-contract.md
-- Scenarios: SC-EXPT-001, SC-EXPT-002, SC-EXPT-003, SC-EXPT-004, SC-EXPT-005, SC-EXPT-006, SC-EXPT-007, SC-EXPT-008
+- Scenarios: SC-EXPT-001, SC-EXPT-002, SC-EXPT-003, SC-EXPT-004, SC-EXPT-005, SC-EXPT-006, SC-EXPT-007, SC-EXPT-008, SC-EXPT-009

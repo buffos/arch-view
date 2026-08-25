@@ -5,15 +5,16 @@ description: Let users navigate generated architecture views and inspect the cod
 tags: [viewer, navigation, evidence]
 timestamp: 2026-08-25T14:56:24Z
 state: specified
-state_changed: 2026-08-25T17:10:00Z
+state_changed: 2026-08-26T00:00:00Z
 project: /project.md
 parent: /project.md
 artifact_root: docs/architecture/explore-architecture
 orchestration_status: docs/architecture/explore-architecture/orchestration-status.md
 issues:
-  - docs/agents/issues/pending/003-local-web-top-level-architecture-view.md
+  - docs/agents/issues/done/20260826-003-local-web-top-level-architecture-view.md
   - docs/agents/issues/pending/004-evidence-drilldown-and-source-inspection.md
   - docs/agents/issues/pending/005-deterministic-json-html-svg-export.md
+  - docs/agents/issues/pending/006-viewer-semantic-summary-and-elk-routing.md
 discovery_notes: docs/architecture/explore-architecture/discovery-notes.md
 gap_analysis: docs/architecture/explore-architecture/requirements-gap-analysis.md
 prd: docs/architecture/explore-architecture/prd.md
@@ -42,4 +43,8 @@ This capability includes interactive diagram rendering, hierarchy drill-down, zo
 
 # Planning state
 
-This capability is specified. Its local web surface, renderer-neutral scene contract, navigation/evidence behavior, progressive disclosure, source safety, and accessibility requirements are linked from the exact-spec artifacts.
+This capability is specified. Its local web surface, renderer-neutral scene contract, local-first reference visibility, navigation/import evidence behavior, progressive disclosure, source safety, session layout, and accessibility requirements are linked from the exact-spec artifacts.
+
+## Delivery progress
+
+Issue 003 is archived after explicit visual approval of the local-first/reference-boundary baseline. Issue 006 refines group summaries and edge routing without replacing the canonical model boundary and remains independently in visual review. Issue 004 owns deeper imports/evidence interaction and session layout controls; issue 005 owns export parity. Issues 004 and 005 are now unblocked.

@@ -14,6 +14,8 @@ Complete the first investigation workflow on top of the local overview.
 
 - Add hierarchy drill-down, breadcrumbs, back navigation, search, selection, zoom, pan, and fit behavior.
 - Show module metadata, edge direction, relationship evidence, source locations, external/unresolved references, diagnostics, confidence, cycles, and layers.
+- Add a module/group imports list with scope filters for standard-library, external, unresolved, and dynamic references. Keep the default architecture graph local-first and make reference expansion a deliberate toggle.
+- Keep optional user-adjusted node positions and viewport state session-scoped and keyed by model revision and hierarchy path; never mutate the canonical model.
 - Provide a read-only source excerpt endpoint and panel with project-root containment checks.
 - Keep selections and evidence IDs stable across scene updates and prevent stale evidence after reanalysis.
 - Preserve an accessible list/details path with keyboard navigation and equivalent facts to the graphic view.
@@ -22,10 +24,12 @@ Complete the first investigation workflow on top of the local overview.
 
 - [ ] A user can drill into a hierarchy group, inspect its modules and relationships, and return with breadcrumbs or back navigation.
 - [ ] Search and selection identify a module or relationship and reveal its source evidence and source location.
+- [ ] A selected module or group exposes an accessible imports list with individual target scope, confidence, counts, and source evidence; reference visibility can be switched between hidden, aggregated, and expanded.
 - [ ] Source excerpts are read-only, line-aware, confined to the analyzed project root, and reject traversal or cross-root requests.
 - [ ] Cycles, unresolved/external references, diagnostics, confidence, and layer information are visible and explainable in both graphic and list/details modes.
 - [ ] Reanalysis replaces the active model/evidence revision safely; failed reanalysis leaves the prior revision active and never presents stale evidence as current.
 - [ ] Keyboard navigation and accessible labels/descriptions expose the same architecture facts as the graphic view.
+- [ ] Fit, pan, zoom, and optional node movement preserve a readable session layout without changing canonical model data; layout overrides are isolated by model revision and hierarchy path.
 - [ ] A visual review confirms that navigation, evidence, cycle states, and source inspection remain legible and coherent.
 
 ## Artifact sync required
@@ -38,7 +42,7 @@ Complete the first investigation workflow on top of the local overview.
 
 ## Blocked by
 
-docs/agents/issues/pending/003-local-web-top-level-architecture-view.md
+—
 
 ## User stories addressed
 
@@ -49,4 +53,4 @@ docs/agents/issues/pending/003-local-web-top-level-architecture-view.md
 ## Contract and scenario trace
 
 - Contract: docs/architecture/explore-architecture/canonical-api-cli-contract.md
-- Scenarios: SC-EX-002, SC-EX-003, SC-EX-004, SC-EX-005, SC-EX-006, SC-EX-007, SC-EX-008
+- Scenarios: SC-EX-002, SC-EX-003, SC-EX-004, SC-EX-005, SC-EX-006, SC-EX-007, SC-EX-008, SC-EX-009, SC-EX-010

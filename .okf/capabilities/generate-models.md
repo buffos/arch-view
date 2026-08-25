@@ -48,4 +48,4 @@ This capability is specified. Its canonical model schema, normalization rules, p
 
 ## Delivery progress
 
-Issue 002 delivers the first canonical `arch-view.model/v1` normalization, integrity validation, cycle/layer derivation, and hierarchy projection path. The capability remains `specified` while later viewer and export consumers are delivered.
+Issue 002 delivers the first canonical `arch-view.model/v1` normalization, integrity validation, cycle/layer derivation, and hierarchy projection path. Non-local references remain fully retained here; hiding, aggregation, expansion, and import-list presentation belong to the viewer/export consumers. The capability remains `specified` while those consumers are delivered.
