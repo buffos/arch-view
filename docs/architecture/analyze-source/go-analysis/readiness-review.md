@@ -14,4 +14,4 @@ Build constraints and standard-library classification need broad fixture coverag
 
 ## Artifact impact
 
-Capability truth updated; product and architecture truth remain synchronized with the parent analyzer/model specifications; issue 001 completed the host/boundary prerequisite and issue 002 remains the active Go implementation issue.
+Capability truth updated; product and architecture truth remain synchronized with the parent analyzer/model specifications; issues 001 and 002 complete the current Go analyzer/model slice, with viewer and export work remaining in issues 003–005.

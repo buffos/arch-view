@@ -40,8 +40,8 @@ Given a Go repository containing a selected module, a developer can:
 | Issue | Outcome | Owner | Blocked by | Review gate |
 |---|---|---|---|---|
 | [001](../../../agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md) | Host registry, Go manifest, selection, module boundary, and run options | Plugin runtime + Go analysis | None | none |
-| [002](../../../agents/issues/pending/002-go-package-import-model-pipeline.md) | Go package/import observations normalized into model v1 | Go analysis + Generate models | 001 | none |
-| [003](../../../agents/issues/pending/003-local-web-top-level-architecture-view.md) | First visible local top-level architecture view | Explore architecture | 002 | visual-review |
+| [002](../../../agents/issues/done/20260825-002-go-package-import-model-pipeline.md) | Go package/import observations normalized into model v1 | Go analysis + Generate models | 001 | none |
+| [003](../../../agents/issues/pending/003-local-web-top-level-architecture-view.md) | First visible local top-level architecture view | Explore architecture | — | visual-review |
 | [004](../../../agents/issues/pending/004-evidence-drilldown-and-source-inspection.md) | Hierarchy navigation, evidence, diagnostics, cycles, and safe source inspection | Explore architecture | 003 | visual-review |
 | [005](../../../agents/issues/pending/005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | 003 | visual-review |
 

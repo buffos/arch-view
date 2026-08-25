@@ -3,7 +3,7 @@ type: capability
 title: Go analysis
 description: Build architecture input from Go modules, packages, files, and imports.
 tags: [go, analysis, mvp]
-timestamp: 2026-08-25T14:56:24Z
+timestamp: 2026-08-25T18:39:17Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -14,7 +14,7 @@ orchestration_status: docs/architecture/analyze-source/go-analysis/orchestration
 implementation_slice: docs/architecture/analyze-source/go-analysis/implementation-slice.md
 issues:
   - docs/agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md
-  - docs/agents/issues/pending/002-go-package-import-model-pipeline.md
+  - docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md
 prd: docs/architecture/analyze-source/go-analysis/prd.md
 glossary: docs/architecture/analyze-source/go-analysis/domain-glossary.md
 domain_model: docs/architecture/analyze-source/go-analysis/canonical-domain-model.md
@@ -44,3 +44,7 @@ The first Go slice should prioritize package dependency graphs and a visible arc
 # Planning state
 
 This child capability is specified. Its module/workspace selection, package/import semantics, options, exclusions, evidence, diagnostics, and safety behavior are linked from the exact-spec artifacts.
+
+## Delivery progress
+
+Issues 001 and 002 are complete: Go project selection, package/import observations, canonical model normalization, validation, graph derivations, and hierarchy projection are available. The remaining first-slice viewer/export issues are tracked outside this child capability.

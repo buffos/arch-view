@@ -3,7 +3,7 @@ type: capability
 title: Analyze source code
 description: Discover supported project structures, modules, and dependency evidence through language analyzers.
 tags: [analysis, plugins, languages]
-timestamp: 2026-08-25T16:19:41Z
+timestamp: 2026-08-25T18:39:17Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -22,7 +22,7 @@ orchestration_status: docs/architecture/analyze-source/orchestration-status.md
 implementation_slice: docs/architecture/analyze-source/go-analysis/implementation-slice.md
 issues:
   - docs/agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md
-  - docs/agents/issues/pending/002-go-package-import-model-pipeline.md
+  - docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -57,3 +57,7 @@ This capability owns project detection, source scope, language-specific parsing,
 The reference tool reads Clojure forms and currently recognizes Clojure-family source files. The target design keeps that behavior inside a language adapter and exposes a language-neutral result.
 
 The capability is specified. Its observation schema, analyzer lifecycle, safety rules, language adapter contracts, and external protocol direction are linked from the exact-spec artifacts.
+
+## Delivery progress
+
+Issues 001 and 002 are complete for the first Go analyzer/model slice. Viewer and export work remains in issues 003–005; the capability remains `specified` while that scoped delivery continues.

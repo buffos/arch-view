@@ -86,25 +86,7 @@ func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) 
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}
-	result := analysis.AnalysisResult{
-		Status:   analysis.StatusPartial,
-		Analyzer: analyzerInfo(a.Manifest()),
-		Project: analysis.ProjectInfo{
-			RootLabel:     filepath.Base(project.Root),
-			Boundary:      project.Boundary,
-			ModulePath:    project.ModulePath,
-			ModuleRoot:    project.RelativeModuleRoot,
-			WorkspacePath: project.RelativeWorkspacePath,
-		},
-		Diagnostics: []analysis.Diagnostic{{
-			Code:        "go_package_analysis_pending",
-			Severity:    "warning",
-			Message:     "Go project selection is available; package and import extraction is scheduled for issue 002.",
-			Recoverable: true,
-		}},
-	}
-	result.Summary = analysis.ComputeSummary(result)
-	return result, nil
+	return analyzePackages(ctx, request, project, a.Manifest())
 }
 
 func analyzerInfo(manifest analysis.Manifest) analysis.AnalyzerInfo {

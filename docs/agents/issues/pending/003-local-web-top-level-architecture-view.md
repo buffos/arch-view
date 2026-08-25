@@ -40,7 +40,7 @@ Drill-down, source excerpts, and richer evidence interactions are completed in i
 
 ## Blocked by
 
-docs/agents/issues/pending/002-go-package-import-model-pipeline.md
+—
 
 ## User stories addressed
 

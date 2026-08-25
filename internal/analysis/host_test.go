@@ -195,6 +195,24 @@ func TestHostRejectsInvalidResultReferences(t *testing.T) {
 	}
 }
 
+func TestHostRejectsWindowsAbsoluteEvidencePathOnEveryPlatform(t *testing.T) {
+	root := t.TempDir()
+	analyzer := &fakeAnalyzer{manifest: validManifest("org.example.invalid-path", "invalid-path")}
+	analyzer.analyze = func(context.Context, AnalyzeRequest) (AnalysisResult, error) {
+		result := validResult(analyzer.manifest)
+		result.SourceReferences = []SourceReference{{ID: "source", Path: `C:\outside.go`, Kind: "file"}}
+		return result, nil
+	}
+	registry := NewRegistry()
+	if err := registry.Register(analyzer); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	_, err := NewHost(registry).Run(context.Background(), RunRequest{ProjectRoot: root, AnalyzerID: analyzer.manifest.ID})
+	if ErrorCodeOf(err) != ErrResultInvalid {
+		t.Fatalf("error code = %q, want %q", ErrorCodeOf(err), ErrResultInvalid)
+	}
+}
+
 func TestHostRejectsUnserializableResultMetadata(t *testing.T) {
 	root := t.TempDir()
 	analyzer := &fakeAnalyzer{manifest: validManifest("org.example.unserializable-result", "unserializable")}

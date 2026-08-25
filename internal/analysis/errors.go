@@ -19,6 +19,7 @@ const (
 	ErrUnreadableProject  ErrorCode = "unreadable_project"
 	ErrModuleSelection    ErrorCode = "module_selection"
 	ErrInvalidOptions     ErrorCode = "invalid_options"
+	ErrInvalidModel       ErrorCode = "invalid_model"
 	ErrCancelled          ErrorCode = "cancelled"
 	ErrAnalyzerFailed     ErrorCode = "analyzer_failed"
 	ErrResultInvalid      ErrorCode = "result_invalid"
@@ -70,7 +71,7 @@ func ExitCodeForError(err error) int {
 	case ErrInvalidRequest, ErrInvalidManifest, ErrAPIIncompatible,
 		ErrDuplicateAnalyzer, ErrAmbiguousAnalyzer, ErrModuleSelection, ErrInvalidOptions:
 		return 2
-	case ErrNoAnalyzer, ErrUnsupportedProject, ErrUnreadableProject:
+	case ErrNoAnalyzer, ErrUnsupportedProject, ErrUnreadableProject, ErrInvalidModel:
 		return 3
 	case ErrCancelled:
 		return 130

@@ -50,7 +50,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Selected frontier: Go analysis.
 - Implementation slice: [Go repository to visible architecture view](go-analysis/implementation-slice.md).
-- Delivery progress: issue 001 is complete; issues 002 through 005 remain active in docs/agents/issues/pending.
+- Delivery progress: issues 001 and 002 are complete; issues 003 through 005 remain active in dependency order.
 - The slice crosses the plugin runtime, Go analyzer, canonical model, local viewer, evidence, and export contracts.
 
 ## Artifact sync
@@ -60,4 +60,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with completed issue 001 and the remaining ordered issues 002 through 005.
+- Delivery truth: updated with completed issues 001 and 002 and the remaining ordered issues 003 through 005.

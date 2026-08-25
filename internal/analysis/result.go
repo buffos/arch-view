@@ -3,6 +3,7 @@ package analysis
 import (
 	"encoding/json"
 	"math"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -145,11 +146,22 @@ func ValidateAnalysisResult(result AnalysisResult, manifest Manifest, projectRoo
 }
 
 func isRepositoryRelativePath(path string) bool {
-	if filepath.IsAbs(filepath.FromSlash(path)) {
+	normalized := normalizeRepositoryPath(path)
+	if normalized == "" || normalized == "." || strings.HasPrefix(normalized, "/") || windowsAbsolutePath(normalized) {
 		return false
 	}
-	cleanPath := filepath.Clean(filepath.FromSlash(path))
-	return cleanPath != ".." && !strings.HasPrefix(cleanPath, ".."+string(filepath.Separator))
+	return normalized != ".." && !strings.HasPrefix(normalized, "../")
+}
+
+func normalizeRepositoryPath(value string) string {
+	if value == "" {
+		return ""
+	}
+	return path.Clean(strings.ReplaceAll(filepath.ToSlash(value), "\\", "/"))
+}
+
+func windowsAbsolutePath(value string) bool {
+	return len(value) >= 2 && ((value[0] >= 'a' && value[0] <= 'z') || (value[0] >= 'A' && value[0] <= 'Z')) && value[1] == ':'
 }
 
 func validPosition(position *Position) bool {
@@ -188,12 +200,12 @@ func normalizeResultCollections(result *AnalysisResult) {
 	}
 	for index := range result.SourceReferences {
 		if result.SourceReferences[index].Path != "" {
-			result.SourceReferences[index].Path = filepath.ToSlash(filepath.Clean(filepath.FromSlash(result.SourceReferences[index].Path)))
+			result.SourceReferences[index].Path = normalizeRepositoryPath(result.SourceReferences[index].Path)
 		}
 	}
 	for index := range result.Diagnostics {
 		if result.Diagnostics[index].Path != "" {
-			result.Diagnostics[index].Path = filepath.ToSlash(filepath.Clean(filepath.FromSlash(result.Diagnostics[index].Path)))
+			result.Diagnostics[index].Path = normalizeRepositoryPath(result.Diagnostics[index].Path)
 		}
 	}
 	sort.Slice(result.Modules, func(i, j int) bool {

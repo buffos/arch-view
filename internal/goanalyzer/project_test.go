@@ -131,7 +131,7 @@ func TestGoAnalyzerDetectsMarkersWithoutExecutingCode(t *testing.T) {
 	}
 }
 
-func TestGoAnalyzerReturnsBoundaryPartialUntilPackageAnalysis(t *testing.T) {
+func TestGoAnalyzerReturnsPartialForModuleWithoutEligiblePackages(t *testing.T) {
 	root := t.TempDir()
 	writeFixture(t, filepath.Join(root, "go.mod"), "module example.com/service\n")
 	analyzer := New()

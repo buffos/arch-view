@@ -23,4 +23,4 @@ Backend and end-to-end scenario surfaces are applicable; frontend integration is
 - Capability truth: complete exact-spec set added.
 - Product truth: updated because model outputs and deterministic behavior are explicit.
 - Architecture truth: updated because the model contract and graph projection ownership are exact.
-- Delivery truth: updated with issue 002 for the first canonical model pipeline.
+- Delivery truth: issue 002 is complete for the first canonical model pipeline; viewer and export consumers remain in issues 003–005.

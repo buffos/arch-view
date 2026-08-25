@@ -34,8 +34,12 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 ## Current delivery slice
 
-- Issue 002 consumes Go observations and implements the first canonical model pipeline.
+- Issue 002 consumed Go observations and implemented the first canonical model pipeline, including normalization, validation, graph derivations, hierarchy projection, and headless CLI access.
 - It is part of [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
+
+## Delivery progress
+
+Issue 002 is complete. The remaining first-slice work is the local viewer in issue 003, followed by evidence/source inspection in issue 004 and deterministic exports in issue 005.
 
 ## Artifact sync
 
@@ -44,4 +48,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with issue 002.
+- Delivery truth: issue 002 is archived as complete; the active queue begins with issue 003.

@@ -61,3 +61,9 @@
 * **Update**: Set the root verification policy to `when-supported` with justified deferrals required.
 * **Update**: Created the initial application PRD and application architecture summary.
 * **No impact**: No implementation issues, ADRs, or delivery references were created because all capability nodes remain `foggy`.
+
+## 2026-08-25
+
+* **Completion**: Archived issue 002, [Go package/import analysis and canonical model pipeline](../docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md), after implementing deterministic Go observations, canonical model normalization/validation, graph derivations, hierarchy projection, and headless CLI access.
+* **Artifact sync**: Updated the analyze-source and generate-models capability issue references, implementation/orchestration status, active issue blockers, and acceptance traceability. Product and application-architecture truth remain unchanged because the analyzer-to-model boundary is unchanged.
+* **Verification**: Backend and end-to-end obligations passed where supported; frontend integration is not applicable to this backend/model issue. The external reference folder remains untouched.

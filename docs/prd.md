@@ -74,7 +74,7 @@ Source analyzers produce evidence for the language-neutral model. The model owns
 6. Add Python, TypeScript, and Rust analyzers.
 7. Add Clojure compatibility and an external, versioned plugin protocol if third-party analyzers are needed.
 
-The specification set is complete and readiness-reviewed. Issue slicing remains gated only by the application synthesis check and normal delivery planning; implementation has not begun.
+The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, and headless projection path are implemented, while the local viewer and deterministic export work remain.
 
 ## Verification strategy
 

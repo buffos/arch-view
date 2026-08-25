@@ -3,7 +3,7 @@ type: capability
 title: Generate architecture models
 description: Convert analyzer results into a language-neutral, hierarchical, layered architecture model.
 tags: [domain-model, graph, layout]
-timestamp: 2026-08-25T14:56:24Z
+timestamp: 2026-08-25T18:39:17Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -11,7 +11,7 @@ parent: /project.md
 artifact_root: docs/architecture/generate-models
 orchestration_status: docs/architecture/generate-models/orchestration-status.md
 issues:
-  - docs/agents/issues/pending/002-go-package-import-model-pipeline.md
+  - docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md
 discovery_notes: docs/architecture/generate-models/discovery-notes.md
 gap_analysis: docs/architecture/generate-models/requirements-gap-analysis.md
 prd: docs/architecture/generate-models/prd.md
@@ -45,3 +45,7 @@ The model must support dot-separated Clojure namespaces, slash-separated Go impo
 # Planning state
 
 This capability is specified. Its canonical model schema, normalization rules, projection semantics, CLI/HTTP contract, and acceptance behavior are linked from the exact-spec artifacts.
+
+## Delivery progress
+
+Issue 002 delivers the first canonical `arch-view.model/v1` normalization, integrity validation, cycle/layer derivation, and hierarchy projection path. The capability remains `specified` while later viewer and export consumers are delivered.

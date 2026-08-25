@@ -13,6 +13,7 @@ type Project struct {
 	Root                  string
 	ModuleRoot            string
 	ModulePath            string
+	GoVersion             string
 	WorkspacePath         string
 	RelativeModuleRoot    string
 	RelativeWorkspacePath string
@@ -22,6 +23,7 @@ type Project struct {
 type moduleCandidate struct {
 	Root       string
 	ModulePath string
+	GoVersion  string
 }
 
 func ResolveProject(root string, options analysis.EffectiveOptions) (Project, error) {
@@ -164,17 +166,24 @@ func readModule(path string) (moduleCandidate, error) {
 		return moduleCandidate{}, analysis.WrapHostError(analysis.ErrUnreadableProject, "go.mod could not be read", err, map[string]any{"path": path})
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(content)))
+	candidate := moduleCandidate{Root: filepath.Dir(path)}
 	for scanner.Scan() {
 		line := stripLineComment(strings.TrimSpace(scanner.Text()))
 		fields := strings.Fields(line)
 		if len(fields) >= 2 && fields[0] == "module" {
-			return moduleCandidate{Root: filepath.Dir(path), ModulePath: fields[1]}, nil
+			candidate.ModulePath = fields[1]
+		}
+		if len(fields) >= 2 && fields[0] == "go" && candidate.GoVersion == "" {
+			candidate.GoVersion = fields[1]
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return moduleCandidate{}, analysis.WrapHostError(analysis.ErrUnreadableProject, "go.mod could not be scanned", err, map[string]any{"path": path})
 	}
-	return moduleCandidate{}, analysis.NewHostError(analysis.ErrUnsupportedProject, "go.mod does not declare a module path", map[string]any{"path": path})
+	if candidate.ModulePath == "" {
+		return moduleCandidate{}, analysis.NewHostError(analysis.ErrUnsupportedProject, "go.mod does not declare a module path", map[string]any{"path": path})
+	}
+	return candidate, nil
 }
 
 func chooseModule(candidates []moduleCandidate, selector, workspaceRoot string) (moduleCandidate, error) {
@@ -231,6 +240,7 @@ func makeProject(root string, candidate moduleCandidate, workspacePath string) P
 		Root:                  root,
 		ModuleRoot:            candidate.Root,
 		ModulePath:            candidate.ModulePath,
+		GoVersion:             candidate.GoVersion,
 		WorkspacePath:         workspacePath,
 		RelativeModuleRoot:    filepath.ToSlash(relativeModuleRoot),
 		RelativeWorkspacePath: filepath.ToSlash(relativeWorkspacePath),

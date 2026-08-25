@@ -22,8 +22,8 @@
 
 - Selected first frontier: Go analysis.
 - Implementation slice: [Go repository to visible architecture view](implementation-slice.md).
-- Delivery progress: issue 001 is complete; issue 002 is next, followed by issues 003, 004, and 005.
+- Delivery progress: issues 001 and 002 are complete; issues 003, 004, and 005 remain active in dependency order.
 
 ## Next step and artifact impact
 
-Issue 001 is complete; implement issue 002 for Go package/import analysis and canonical model output. Product and architecture truth remain synchronized; delivery truth now records the completed prerequisite and active remainder.
+Issue 002 is complete: Go package/import analysis now feeds a validated canonical model with deterministic graph and hierarchy projections. Product and architecture truth remain synchronized; delivery truth records the completed analyzer/model slice and active viewer/export remainder.
