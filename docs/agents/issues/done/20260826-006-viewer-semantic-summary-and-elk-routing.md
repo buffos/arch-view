@@ -2,7 +2,7 @@
 
 Execution type: AFK
 Review gate: visual-review
-Status: awaiting-human-review
+Status: done
 
 ## Parent PRD
 
@@ -49,7 +49,7 @@ self-loop, and the custom geometry produces hard-to-follow edge routes.
   they are interaction-only stroke targets.
 - [x] Existing deterministic layout behavior remains available and all
   backend/frontend checks pass.
-- [ ] A visual review confirms the self-loop summary, readable edge routing,
+- [x] A visual review confirms the self-loop summary, readable edge routing,
   layer labels, diagnostics/tags/identity wording, and keyboard/list parity.
 
 ## Artifact sync required
@@ -81,5 +81,17 @@ self-loop, and the custom geometry produces hard-to-follow edge routes.
 - Frontend integration: JavaScript syntax check and locally served ELK bundle
   plus worker asset; the renderer consumes returned node positions and edge
   sections/bend points.
-- End-to-end: local `open --project` smoke test and live visual review.
+- End-to-end: local `open --project` smoke test, expanded-reference routing
+  review, and a temporary two-node canonical-cycle fixture reviewed in the
+  browser; the fixture was not committed.
 - Repository/OKF integrity: `git diff --check` and strict OKF validation.
+
+## Review handoff
+
+The user explicitly approved the visual review in the current task. The
+review covered the non-cycle internal summary, ELK edge routing, layer labels,
+identity/confidence wording, diagnostics/tags empty-state wording, keyboard
+and list/details parity, and a temporary `a -> b -> a` canonical cycle
+fixture. The temporary cycle fixture and its server were removed after the
+review; issue 004 remains the next viewer scope for full-screen, pan, zoom,
+and session viewport behavior.

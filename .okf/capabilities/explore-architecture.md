@@ -14,7 +14,7 @@ issues:
   - docs/agents/issues/done/20260826-003-local-web-top-level-architecture-view.md
   - docs/agents/issues/pending/004-evidence-drilldown-and-source-inspection.md
   - docs/agents/issues/pending/005-deterministic-json-html-svg-export.md
-  - docs/agents/issues/pending/006-viewer-semantic-summary-and-elk-routing.md
+  - docs/agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md
 discovery_notes: docs/architecture/explore-architecture/discovery-notes.md
 gap_analysis: docs/architecture/explore-architecture/requirements-gap-analysis.md
 prd: docs/architecture/explore-architecture/prd.md
@@ -47,4 +47,4 @@ This capability is specified. Its local web surface, renderer-neutral scene cont
 
 ## Delivery progress
 
-Issue 003 is archived after explicit visual approval of the local-first/reference-boundary baseline. Issue 006 refines group summaries and edge routing without replacing the canonical model boundary and remains independently in visual review. Issue 004 owns deeper imports/evidence interaction and session layout controls; issue 005 owns export parity. Issues 004 and 005 are now unblocked.
+Issues 003 and 006 are archived after explicit visual approval of the local-first/reference-boundary baseline and its semantic/ELK refinement. Issue 004 owns deeper imports/evidence interaction and session layout controls; issue 005 owns export parity. Issues 004 and 005 remain the active unblocked delivery frontiers.

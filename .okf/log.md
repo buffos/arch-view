@@ -8,7 +8,8 @@
 * **Planning**: Follow-up issue 006 remains under Explore and inspect architecture and is awaiting visual review of the new routing and summaries; the canonical model boundary is unchanged.
 * **Bug fix**: Made the SVG edge hit-area stroke-only and transparent. The previous default SVG fill painted black closed shapes beneath routed edges; the fix was verified in aggregated and expanded browser views.
 * **Closeout**: Archived issue 003 after the user's explicit visual approval, removed its active registry row, updated the dated OKF issue reference, and unblocked issues 004 and 005. Issue 006 remains active for its separate visual review.
-* **Verification**: Viewer scene tests, full Go tests, race tests, vet, build, JavaScript syntax check, and diff checks pass. The baseline visual review is approved; issue 006 still requires visual review of the semantic refinement.
+* **Closeout**: Archived issue 006 after the user's explicit visual approval of the semantic summary, ELK routing, transparent edge hit areas, and temporary canonical-cycle visual fixture. Removed its active registry row and updated the dated OKF issue reference; issues 004 and 005 remain the active unblocked frontiers.
+* **Verification**: Viewer scene tests, full Go tests, race tests, vet, build, JavaScript syntax check, and diff checks pass. The baseline and issue 006 visual reviews are approved.
 
 ## 2026-08-25
 

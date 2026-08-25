@@ -38,7 +38,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 ## Current delivery slice
 
 - Issue 003 delivered the first visible local top-level view with local-first reference policy, semantic confidence labels, and bounded baseline layout; automated acceptance and the required visual review are complete.
-- Issue 006 refines the approved baseline with honest non-cycle internal-relationship summaries, separate node identity/relationship confidence wording, the contributor-facing viewer guide, and a locally served ELK/elkjs layered layout with SVG edge-route consumption. The deterministic layer-based layout remains the replaceable fallback.
+- Issue 006 refined the approved baseline with honest non-cycle internal-relationship summaries, separate node identity/relationship confidence wording, the contributor-facing viewer guide, and a locally served ELK/elkjs layered layout with SVG edge-route consumption. The deterministic layer-based layout remains the replaceable fallback; its visual review is complete.
 - Issue 004 adds evidence, imports list/detail inspection, drill-down, source safety, accessible inspection, viewport controls, and session layout state.
 - Issue 005 reuses the view contract for visual export parity, including reference visibility and import/evidence metadata.
 - Issues 003, 004, 005, and the post-baseline issue 006 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
@@ -54,4 +54,4 @@ The first viewer slice serves validated model files and Go project analyses thro
 - Exact specification: refreshed in the linked PRD, domain model, use cases, contract, scenarios, gap analysis, and readiness review with local-first reference visibility and import inspection.
 - Product truth: refreshed in [the application PRD](../../prd.md).
 - Architecture truth: refreshed in [the application architecture summary](../application-architecture-summary.md); no new boundary or capability was introduced.
-- Delivery truth: issue 003 is archived after visual approval; issue 006 carries the follow-up semantic/presentation refinement and remains in visual review, while issues 004 and 005 are unblocked for their independent scopes.
+- Delivery truth: issues 003 and 006 are archived after visual approval; issues 004 and 005 are unblocked for their independent scopes.

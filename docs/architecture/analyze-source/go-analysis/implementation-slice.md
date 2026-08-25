@@ -44,11 +44,11 @@ Given a Go repository containing a selected module, a developer can:
 | [003](../../../agents/issues/done/20260826-003-local-web-top-level-architecture-view.md) | First visible local top-level architecture view — local-first/reference-boundary refinement | Explore architecture | — | approved |
 | [004](../../../agents/issues/pending/004-evidence-drilldown-and-source-inspection.md) | Hierarchy navigation, evidence, diagnostics, cycles, and safe source inspection | Explore architecture | — | visual-review |
 | [005](../../../agents/issues/pending/005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | — | visual-review |
-| [006](../../../agents/issues/pending/006-viewer-semantic-summary-and-elk-routing.md) | Post-baseline semantic summaries and ELK edge routing | Explore architecture | — | visual-review |
+| [006](../../../agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md) | Post-baseline semantic summaries and ELK edge routing | Explore architecture | — | approved |
 
 ## Current delivery status
 
-The analyzer-to-model path and the revised local viewer implementation are available. Issue 003 is archived after explicit visual approval of the local-first/reference-boundary baseline. Issues 004 and 005 are unblocked. Issue 006 remains an active post-baseline viewer refinement awaiting visual review.
+The analyzer-to-model path and the revised local viewer implementation are available. Issues 003 and 006 are archived after explicit visual approval of the local-first/reference-boundary baseline and its semantic/ELK refinement. Issues 004 and 005 are the next unblocked delivery frontiers.
 
 ## Slice acceptance
 
