@@ -1,13 +1,21 @@
 package viewer
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/model"
 )
 
 func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
@@ -171,6 +179,163 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 	_ = sourceResponse.Body.Close()
 	if sourceResponse.StatusCode != http.StatusNotFound {
 		t.Fatalf("source route status = %d, want 404 until the evidence slice owns it", sourceResponse.StatusCode)
+	}
+}
+
+func TestServerServesContainedReadOnlySourceAndRejectsTraversal(t *testing.T) {
+	value := fixtureModel(t)
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "api"), 0o755); err != nil {
+		t.Fatalf("create source directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "api", "api.go"), []byte("package api\n\nimport (\n\t\"example.com/app/core\"\n)\n\nfunc Use() {}\n"), 0o644); err != nil {
+		t.Fatalf("write source fixture: %v", err)
+	}
+	server, err := NewServer(value, ServerOptions{SourceRoot: root})
+	if err != nil {
+		t.Fatalf("NewServer() error = %v", err)
+	}
+	httpServer := httptest.NewServer(server.Handler())
+	defer httpServer.Close()
+
+	query := url.Values{}
+	query.Set("model_id", value.ModelID)
+	query.Set("evidence_id", "src-api-import")
+	query.Set("path", "api/api.go")
+	query.Set("start_line", "3")
+	query.Set("end_line", "5")
+	response, err := http.Get(httpServer.URL + "/v1/source?" + query.Encode())
+	if err != nil {
+		t.Fatalf("GET contained source: %v", err)
+	}
+	var excerpt SourceExcerpt
+	if err := json.NewDecoder(response.Body).Decode(&excerpt); err != nil {
+		_ = response.Body.Close()
+		t.Fatalf("decode source excerpt: %v", err)
+	}
+	_ = response.Body.Close()
+	if response.StatusCode != http.StatusOK || !excerpt.ReadOnly || excerpt.Path != "api/api.go" || len(excerpt.Lines) != 3 || excerpt.Lines[0].Number != 3 {
+		t.Fatalf("source response = %d %#v", response.StatusCode, excerpt)
+	}
+
+	traversal, err := http.Get(httpServer.URL + "/v1/source?model_id=" + url.QueryEscape(value.ModelID) + "&path=../outside.go")
+	if err != nil {
+		t.Fatalf("GET traversal source: %v", err)
+	}
+	_ = traversal.Body.Close()
+	if traversal.StatusCode != http.StatusForbidden {
+		t.Fatalf("traversal status = %d, want %d", traversal.StatusCode, http.StatusForbidden)
+	}
+
+	stale, err := http.Get(httpServer.URL + "/v1/source?model_id=old-revision&path=api%2Fapi.go")
+	if err != nil {
+		t.Fatalf("GET stale source: %v", err)
+	}
+	_ = stale.Body.Close()
+	if stale.StatusCode != http.StatusNotFound {
+		t.Fatalf("stale source status = %d, want %d", stale.StatusCode, http.StatusNotFound)
+	}
+
+	zeroLine, err := http.Get(httpServer.URL + "/v1/source?model_id=" + url.QueryEscape(value.ModelID) + "&evidence_id=src-api-import&path=api%2Fapi.go&start_line=0&end_line=1")
+	if err != nil {
+		t.Fatalf("GET zero-line source: %v", err)
+	}
+	_ = zeroLine.Body.Close()
+	if zeroLine.StatusCode != http.StatusUnprocessableEntity {
+		t.Fatalf("zero start line status = %d, want %d", zeroLine.StatusCode, http.StatusUnprocessableEntity)
+	}
+}
+
+func TestServerReanalysisReplacesOnlyValidRevision(t *testing.T) {
+	value := fixtureModel(t)
+	root := t.TempDir()
+	called := false
+	server, err := NewServer(value, ServerOptions{
+		SourceRoot: root,
+		Reanalyze: func(_ context.Context, request ReanalysisRequest) (model.Model, error) {
+			called = request.ProjectRoot == root && request.Language == "go"
+			return value, nil
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer() error = %v", err)
+	}
+	httpServer := httptest.NewServer(server.Handler())
+	defer httpServer.Close()
+
+	request, err := http.NewRequest(http.MethodPost, httpServer.URL+"/v1/reanalysis", bytes.NewBufferString(`{"project_root":"","language":"go","options":{}}`))
+	if err != nil {
+		t.Fatalf("create reanalysis request: %v", err)
+	}
+	request.Header.Set("Content-Type", "application/json")
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("POST reanalysis: %v", err)
+	}
+	_ = response.Body.Close()
+	if response.StatusCode != http.StatusOK || !called {
+		t.Fatalf("reanalysis response = %d called=%v", response.StatusCode, called)
+	}
+
+	failedServer, err := NewServer(value, ServerOptions{
+		SourceRoot: root,
+		Reanalyze: func(context.Context, ReanalysisRequest) (model.Model, error) {
+			return model.Model{}, errors.New("fixture analysis failed")
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer(failed) error = %v", err)
+	}
+	failedHTTPServer := httptest.NewServer(failedServer.Handler())
+	defer failedHTTPServer.Close()
+	failedRequest, err := http.NewRequest(http.MethodPost, failedHTTPServer.URL+"/v1/reanalysis", bytes.NewBufferString(`{"project_root":"","language":"go","options":{}}`))
+	if err != nil {
+		t.Fatalf("create failed reanalysis request: %v", err)
+	}
+	failedResponse, err := http.DefaultClient.Do(failedRequest)
+	if err != nil {
+		t.Fatalf("POST failed reanalysis: %v", err)
+	}
+	_ = failedResponse.Body.Close()
+	if failedResponse.StatusCode != http.StatusUnprocessableEntity || failedServer.snapshot().ModelID != value.ModelID {
+		t.Fatalf("failed reanalysis response = %d model=%q", failedResponse.StatusCode, failedServer.snapshot().ModelID)
+	}
+
+	failedModel, err := model.Normalize(analysis.AnalysisResult{
+		Status: analysis.StatusFailed,
+		Analyzer: analysis.AnalyzerInfo{
+			ID:         "org.archview.go",
+			Version:    "1.0.0",
+			Language:   "go",
+			APIVersion: analysis.AnalyzerAPIVersion,
+		},
+		Project: analysis.ProjectInfo{RootLabel: "fixture", Boundary: "go.mod"},
+	})
+	if err != nil {
+		t.Fatalf("normalize failed model: %v", err)
+	}
+	failedRevisionServer, err := NewServer(value, ServerOptions{
+		SourceRoot: root,
+		Reanalyze: func(context.Context, ReanalysisRequest) (model.Model, error) {
+			return failedModel, nil
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer(failed revision) error = %v", err)
+	}
+	failedRevisionHTTPServer := httptest.NewServer(failedRevisionServer.Handler())
+	defer failedRevisionHTTPServer.Close()
+	failedRevisionRequest, err := http.NewRequest(http.MethodPost, failedRevisionHTTPServer.URL+"/v1/reanalysis", bytes.NewBufferString(`{"project_root":"","language":"go","options":{}}`))
+	if err != nil {
+		t.Fatalf("create failed revision request: %v", err)
+	}
+	failedRevisionResponse, err := http.DefaultClient.Do(failedRevisionRequest)
+	if err != nil {
+		t.Fatalf("POST failed revision: %v", err)
+	}
+	_ = failedRevisionResponse.Body.Close()
+	if failedRevisionResponse.StatusCode != http.StatusUnprocessableEntity || failedRevisionServer.snapshot().ModelID != value.ModelID {
+		t.Fatalf("failed revision response = %d model=%q", failedRevisionResponse.StatusCode, failedRevisionServer.snapshot().ModelID)
 	}
 }
 

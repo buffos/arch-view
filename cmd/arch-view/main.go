@@ -112,6 +112,7 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	var value model.Model
+	var viewerOptions viewer.ServerOptions
 	if *modelInput != "" {
 		var err error
 		value, err = readModelFile(*modelInput)
@@ -151,8 +152,39 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			writeError(stderr, err)
 			return analysis.ExitCodeForError(err)
 		}
+		baseOptions := make(map[string]any, len(cliOptions))
+		for key, option := range cliOptions {
+			baseOptions[key] = option
+		}
+		viewerOptions = viewer.ServerOptions{
+			SourceRoot: *project,
+			Reanalyze: func(reanalysisContext context.Context, request viewer.ReanalysisRequest) (model.Model, error) {
+				options := make(map[string]any, len(baseOptions)+len(request.Options))
+				for key, option := range baseOptions {
+					options[key] = option
+				}
+				for key, option := range request.Options {
+					options[key] = option
+				}
+				languageValue := request.Language
+				if languageValue == "" {
+					languageValue = *language
+				}
+				result, err := host.Run(reanalysisContext, analysis.RunRequest{
+					ProjectRoot:    request.ProjectRoot,
+					Language:       languageValue,
+					AnalyzerID:     *analyzerID,
+					CLIOptions:     options,
+					ProjectOptions: map[string]any{},
+				})
+				if err != nil {
+					return model.Model{}, err
+				}
+				return model.Normalize(result)
+			},
+		}
 	}
-	server, err := viewer.NewServer(value)
+	server, err := viewer.NewServer(value, viewerOptions)
 	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)

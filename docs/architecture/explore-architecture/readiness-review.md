@@ -25,4 +25,4 @@ Frontend integration and end-to-end surfaces are explicitly covered; backend bou
 - Capability truth: exact-spec set refreshed with reference visibility, import inspection, and session-owned layout rules.
 - Product truth: updated with the local-first overview and explicit import inspection journey.
 - Architecture truth: boundary remains unchanged; viewer owns visibility/layout policy while the model retains canonical references.
-- Delivery truth: issue 003 reopened for implementation refinement; issues 004 and 005 retain their planned ownership and dependency.
+- Delivery truth: issues 003 and 004, including their approved visual refinements, are complete; issue 005 retains its planned export ownership and remains unblocked.

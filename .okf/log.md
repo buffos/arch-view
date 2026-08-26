@@ -2,6 +2,9 @@
 
 ## 2026-08-26
 
+* **Review**: Completed the strict code-review loop for issue 004. The final pass found no actionable P0–P2 findings after resolving stale reanalysis scene loading, invalid failed-revision replacement, invalid explicit source line ranges, and source-file cleanup.
+* **Closeout**: Archived issue 004 after the user's explicit visual approval of navigation, evidence, source inspection, full-canvas spacing, viewport controls, and stable manual routing. Removed its active registry row and updated the dated issue references; issue 005 remains the active unblocked frontier.
+* **Verification**: Final delivery gates passed: `go test ./... -count=1`, `go test -race ./...`, `go vet ./...`, `go build ./...`, `staticcheck ./...`, `golangci-lint run`, `node --check internal/viewer/web/app.js`, and `git diff --check`.
 * **Documentation**: Added the temporary root README as a contributor-facing viewer guide covering layers, aggregation, diagnostics, tags, identity/confidence, and layout ownership.
 * **Implementation**: Added explicit internal-relationship summaries for non-cycle group self-loops, preserved canonical contributor/evidence IDs, and separated stable node identity from relationship confidence in the scene and inspection UI.
 * **Implementation**: Issue 006 now serves pinned elkjs 0.12.0 and its worker locally, runs the ELK layered layout, consumes returned edge sections/bend points in the SVG renderer, and retains the deterministic layer layout as fallback.

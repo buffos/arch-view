@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="model-id" content="__ARCH_VIEW_MODEL_ID__">
+    <meta name="source-enabled" content="__ARCH_VIEW_SOURCE_ENABLED__">
+    <meta name="reanalysis-enabled" content="__ARCH_VIEW_REANALYSIS_ENABLED__">
     <title>Arch View</title>
     <link rel="stylesheet" href="/assets/styles.css">
   </head>
@@ -42,6 +44,7 @@
             </select>
           </label>
           <button id="list-toggle" class="button secondary" type="button" aria-pressed="false">List/details</button>
+          <button id="reanalysis-button" class="button secondary" type="button" hidden>Reanalyze</button>
         </div>
       </section>
 
@@ -51,15 +54,34 @@
 
       <section class="workspace-grid" aria-label="Architecture scene and details">
         <article class="scene-card">
-          <div class="card-heading">
+          <div class="card-heading scene-heading">
             <div>
               <p class="eyebrow">SEMANTIC SCENE</p>
               <h3>Modules and directed dependencies</h3>
             </div>
-            <div id="scene-state" class="state-pills" aria-live="polite"></div>
+            <div class="scene-heading-actions">
+              <div id="scene-state" class="state-pills" aria-live="polite"></div>
+              <div class="viewport-toolbar" aria-label="Graph viewport controls">
+                <button id="zoom-out" class="button secondary" type="button" aria-label="Zoom out">−</button>
+                <span id="zoom-value" class="zoom-value" aria-live="polite">100%</span>
+                <button id="zoom-in" class="button secondary" type="button" aria-label="Zoom in">+</button>
+                <button id="reset-zoom" class="button secondary" type="button" title="Reset zoom to 100%" aria-label="Reset zoom to 100%">100%</button>
+                <button id="fit-viewport" class="button secondary" type="button">Fit</button>
+                <button id="reset-layout" class="button secondary" type="button" title="Restore calculated node positions" aria-label="Restore calculated node positions">Reset layout</button>
+              </div>
+              <button id="focus-toggle" class="button secondary" type="button">Full canvas</button>
+            </div>
           </div>
-          <div id="layer-legend" class="layer-legend" aria-label="Dependency layers"></div>
-          <div id="reference-summary" class="reference-summary" aria-live="polite"></div>
+          <div class="canvas-meta-bar">
+            <div class="canvas-meta-summary">
+              <div id="layer-legend" class="layer-legend" aria-label="Dependency layers"></div>
+              <div id="reference-summary" class="reference-summary" aria-live="polite"></div>
+            </div>
+          </div>
+          <div class="scene-navigation">
+            <button id="back-button" class="button secondary" type="button" disabled>Back</button>
+            <nav id="breadcrumbs" class="breadcrumbs" aria-label="Hierarchy breadcrumbs"></nav>
+          </div>
           <div id="graph-wrap" class="graph-wrap" aria-label="Architecture graph"></div>
           <p class="scene-help">Arrowheads show <strong>from</strong> → <strong>to</strong> dependency direction. Non-local imports stay in the model and are available in the list/details view.</p>
         </article>
@@ -113,6 +135,6 @@
       <span>Model <code id="footer-model-id">—</code></span>
     </footer>
     <script src="/assets/vendor/elk.bundled.js" defer></script>
-    <script src="/assets/app.js" defer></script>
+    <script src="/assets/app.js?v=20260826-manual-routing" defer></script>
   </body>
 </html>

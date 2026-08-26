@@ -13,7 +13,7 @@
 
 - Initial topology: confirmed on 2026-08-25.
 - State totals: 0 `foggy`, 0 `bounded`, 10 `specified`, 0 `implemented`.
-- Current frontier: complete visual review of issue 003's local-first overview and explicit reference-boundary visibility, then continue with imports/evidence inspection and readable session layout in issues 004–005.
+- Current frontier: implement deterministic JSON, HTML, and SVG export in issue 005; the current Go analyzer/model and interactive viewer slice are delivered.
 
 ## Application synthesis
 

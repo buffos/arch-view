@@ -42,13 +42,13 @@ Given a Go repository containing a selected module, a developer can:
 | [001](../../../agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md) | Host registry, Go manifest, selection, module boundary, and run options | Plugin runtime + Go analysis | None | none |
 | [002](../../../agents/issues/done/20260825-002-go-package-import-model-pipeline.md) | Go package/import observations normalized into model v1 | Go analysis + Generate models | 001 | none |
 | [003](../../../agents/issues/done/20260826-003-local-web-top-level-architecture-view.md) | First visible local top-level architecture view — local-first/reference-boundary refinement | Explore architecture | — | approved |
-| [004](../../../agents/issues/pending/004-evidence-drilldown-and-source-inspection.md) | Hierarchy navigation, evidence, diagnostics, cycles, and safe source inspection | Explore architecture | — | visual-review |
+| [004](../../../agents/issues/done/20260826-004-evidence-drilldown-and-source-inspection.md) | Hierarchy navigation, evidence, diagnostics, safe source inspection, session layout controls, centered fitting, stable drag rendering, and deterministic manual edge routing | Explore architecture | — | approved |
 | [005](../../../agents/issues/pending/005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | — | visual-review |
 | [006](../../../agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md) | Post-baseline semantic summaries and ELK edge routing | Explore architecture | — | approved |
 
 ## Current delivery status
 
-The analyzer-to-model path and the revised local viewer implementation are available. Issues 003 and 006 are archived after explicit visual approval of the local-first/reference-boundary baseline and its semantic/ELK refinement. Issues 004 and 005 are the next unblocked delivery frontiers.
+The analyzer-to-model path and the revised local viewer implementation are available. Issues 003, 004, and 006 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, and its semantic/ELK refinement. Issue 004 completed implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, reset-to-calculated layout, deterministic manual edge routing, and automated/browser verification. Issue 005 remains the next unblocked delivery frontier.
 
 ## Slice acceptance
 
@@ -68,4 +68,4 @@ The analyzer-to-model path and the revised local viewer implementation are avail
 
 ## Artifact impact
 
-This slice updates delivery truth and the synchronized product/application-architecture records for local-first reference visibility, import inspection, and session layout. It does not change the OKF graph topology or the reference-only `external/` folder.
+This slice updates delivery truth and the synchronized capability records for hierarchy/evidence inspection, source safety, and session layout. The application PRD and application architecture summary remain unchanged because the work realizes already specified viewer behavior and introduces no new boundary. It does not change the OKF graph topology or the reference-only `external/` folder.

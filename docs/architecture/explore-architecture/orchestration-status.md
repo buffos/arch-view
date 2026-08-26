@@ -24,6 +24,7 @@ The capability consumes the canonical model and graph/view preparation outputs a
 - Source inspection is read-only with path and locations; no target code is executed or edited.
 - Keyboard navigation, accessible labels/contrast, and a list/details path complement the graph.
 - Reanalysis replaces stale model/evidence state and preserves navigation only when safe and explainable.
+- Manual node movement remains session-only; deterministic orthogonal geometry refreshes affected edge paths synchronously without re-running the layered node layout. The same calculation is used during drag and after drop, and `Reset layout` discards those manual positions and restores the calculated layout.
 
 ## Artifact plan
 
@@ -39,13 +40,13 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Issue 003 delivered the first visible local top-level view with local-first reference policy, semantic confidence labels, and bounded baseline layout; automated acceptance and the required visual review are complete.
 - Issue 006 refined the approved baseline with honest non-cycle internal-relationship summaries, separate node identity/relationship confidence wording, the contributor-facing viewer guide, and a locally served ELK/elkjs layered layout with SVG edge-route consumption. The deterministic layer-based layout remains the replaceable fallback; its visual review is complete.
-- Issue 004 adds evidence, imports list/detail inspection, drill-down, source safety, accessible inspection, viewport controls, and session layout state.
+- Issue 004 adds evidence, imports list/detail inspection, drill-down, source safety, accessible inspection, viewport controls, session layout state, read-only reanalysis replacement, compact expanded-canvas controls, centered dense-scene fitting, explicit 100% zoom reset behavior, reset-to-calculated layout, and deterministic manual edge routing. Its implementation, automated verification, and declared visual review are complete.
 - Issue 005 reuses the view contract for visual export parity, including reference visibility and import/evidence metadata.
 - Issues 003, 004, 005, and the post-baseline issue 006 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Implementation progress
 
-The first viewer slice serves validated model files and Go project analyses through a loopback-only, GET-only HTTP boundary. Its renderer-neutral scene preserves hierarchy aggregation, directed relationships, layers, cycles, diagnostics, confidence, stable contributor IDs, evidence links, reference-boundary summaries, and accessible import details. Issue 003 now defaults to local-first visibility and supports aggregated/expanded policies. Issue 006 adds explicit internal-relationship summaries for collapsed groups, separates stable node identity from relationship confidence without changing canonical model data, and routes the projected graph through the local ELK adapter with a deterministic fallback.
+The first viewer slice serves validated model files and Go project analyses through a loopback-only HTTP boundary. Its renderer-neutral scene preserves hierarchy aggregation, directed relationships, layers, cycles, diagnostics, confidence, stable contributor IDs, evidence links, reference-boundary summaries, and accessible import details. Issue 003 now defaults to local-first visibility and supports aggregated/expanded policies. Issue 006 adds explicit internal-relationship summaries for collapsed groups, separates stable node identity from relationship confidence without changing canonical model data, and routes the projected graph through the local ELK adapter with a deterministic fallback. Issue 004 adds hierarchy breadcrumbs/back navigation, selected-node import filters, source-root-confined excerpts, atomic reanalysis replacement, keyboard/list parity, full-canvas navigation, compact expanded-canvas layout, an explicit 100% zoom reset, session-scoped viewport/manual positions, reset-to-calculated layout, and deterministic orthogonal routing for manual positions; the canonical model remains unchanged.
 
 ## Artifact sync
 
@@ -54,4 +55,4 @@ The first viewer slice serves validated model files and Go project analyses thro
 - Exact specification: refreshed in the linked PRD, domain model, use cases, contract, scenarios, gap analysis, and readiness review with local-first reference visibility and import inspection.
 - Product truth: refreshed in [the application PRD](../../prd.md).
 - Architecture truth: refreshed in [the application architecture summary](../application-architecture-summary.md); no new boundary or capability was introduced.
-- Delivery truth: issues 003 and 006 are archived after visual approval; issues 004 and 005 are unblocked for their independent scopes.
+- Delivery truth: issues 003, 004, and 006 are archived after visual approval; issue 005 remains unblocked for its independent export scope.

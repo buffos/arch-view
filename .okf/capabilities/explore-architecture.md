@@ -3,7 +3,7 @@ type: capability
 title: Explore and inspect architecture
 description: Let users navigate generated architecture views and inspect the code and dependency evidence behind them.
 tags: [viewer, navigation, evidence]
-timestamp: 2026-08-25T14:56:24Z
+timestamp: 2026-08-26T02:41:20Z
 state: specified
 state_changed: 2026-08-26T00:00:00Z
 project: /project.md
@@ -12,7 +12,7 @@ artifact_root: docs/architecture/explore-architecture
 orchestration_status: docs/architecture/explore-architecture/orchestration-status.md
 issues:
   - docs/agents/issues/done/20260826-003-local-web-top-level-architecture-view.md
-  - docs/agents/issues/pending/004-evidence-drilldown-and-source-inspection.md
+  - docs/agents/issues/done/20260826-004-evidence-drilldown-and-source-inspection.md
   - docs/agents/issues/pending/005-deterministic-json-html-svg-export.md
   - docs/agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md
 discovery_notes: docs/architecture/explore-architecture/discovery-notes.md
@@ -47,4 +47,4 @@ This capability is specified. Its local web surface, renderer-neutral scene cont
 
 ## Delivery progress
 
-Issues 003 and 006 are archived after explicit visual approval of the local-first/reference-boundary baseline and its semantic/ELK refinement. Issue 004 owns deeper imports/evidence interaction and session layout controls; issue 005 owns export parity. Issues 004 and 005 remain the active unblocked delivery frontiers.
+Issues 003, 004, and 006 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, and its semantic/ELK refinement. Issue 004's implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, deterministic manual edge routing, reset-layout behavior, and automated/browser verification are complete; issue 005 remains the active unblocked export frontier.
