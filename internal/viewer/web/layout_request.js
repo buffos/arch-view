@@ -1,6 +1,3 @@
-(function (global) {
-  "use strict";
-
   function optionAppliesToAlgorithm(option, algorithm) {
     const algorithms = option && Array.isArray(option.algorithms) ? option.algorithms : [];
     return !algorithms.length || algorithms.includes("all") || algorithms.includes(algorithm);
@@ -57,8 +54,4 @@
     };
   }
 
-  global.ArchViewELKRequest = {
-    buildELKGraph: buildELKGraph,
-    buildRootLayoutOptions: buildRootLayoutOptions
-  };
-})(typeof window !== "undefined" ? window : globalThis);
+export { buildELKGraph, buildRootLayoutOptions };

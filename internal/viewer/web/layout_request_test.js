@@ -1,14 +1,10 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "layout_request.js"), "utf8");
-const context = {};
-vm.runInNewContext(source, context, { filename: "layout_request.js" });
-
-const request = context.ArchViewELKRequest;
-assert.ok(request, "ELK request helper should be exposed");
+import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(function (request) {
+assert.ok(request.buildELKGraph, "ELK request helper should be exposed");
 
 const catalog = {
   options: [
@@ -50,3 +46,8 @@ assert.equal(request.buildRootLayoutOptions(forceProfile, catalog)["org.eclipse.
 const baseSpacingOptions = request.buildRootLayoutOptions(profile, catalog);
 assert.equal(baseSpacingOptions["elk.spacing.nodeNode"], undefined, "explicit spacing defaults must not shadow base spacing");
 assert.equal(baseSpacingOptions["elk.layered.spacing.nodeNodeBetweenLayers"], undefined, "layer spacing defaults must not shadow base spacing");
+
+}).catch(function (error) {
+  console.error(error);
+  process.exitCode = 1;
+});

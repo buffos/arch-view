@@ -27,19 +27,13 @@ func renderHTML(value model.Model, request Request) ([]byte, map[string]any, err
 	if err != nil {
 		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export stylesheet could not be loaded", err, nil)
 	}
-	appData, err := viewer.Asset("app.js")
+	appBundle, err := bundleViewer()
 	if err != nil {
-		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export application could not be loaded", err, nil)
-	}
-	layoutRequestData, err := viewer.Asset("layout_request.js")
-	if err != nil {
-		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export layout request helper could not be loaded", err, nil)
+		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export application bundle could not be built", err, nil)
 	}
 
 	template := normalizeNewlines(string(indexData))
 	styles := normalizeNewlines(string(stylesData))
-	app := normalizeNewlines(string(appData))
-	layoutRequest := normalizeNewlines(string(layoutRequestData))
 	template, err = replaceRequired(template, `    <link rel="stylesheet" href="/assets/styles.css">`, "    <style>\n"+styles+"\n    </style>")
 	if err != nil {
 		return nil, nil, err
@@ -48,18 +42,15 @@ func renderHTML(value model.Model, request Request) ([]byte, map[string]any, err
 	if err != nil {
 		return nil, nil, err
 	}
-	template, err = replaceRequired(template, "    <script src=\"/assets/layout_request.js\" defer></script>\n", "")
-	if err != nil {
-		return nil, nil, err
-	}
-	bootstrap := "    <script>window.__ARCH_VIEW_EXPORT__ = " + string(bundleData) + ";</script>\n    <script>\n" + layoutRequest + "\n    </script>\n    <script>\n" + app + "\n    </script>"
-	template, err = replaceRequired(template, `    <script src="/assets/app.js?v=20260826-manual-routing" defer></script>`, bootstrap)
+	bootstrap := "    <script>window.__ARCH_VIEW_EXPORT__ = " + string(bundleData) + ";</script>\n    <script>\n" + string(appBundle) + "\n    </script>"
+	template, err = replaceRequired(template, "    <script type=\"module\" src=\"/assets/app.js?v=20260826-esmodules\"></script>\n", bootstrap)
 	if err != nil {
 		return nil, nil, err
 	}
 	template = strings.ReplaceAll(template, "__ARCH_VIEW_MODEL_ID__", html.EscapeString(value.ModelID))
 	template = strings.ReplaceAll(template, "__ARCH_VIEW_SOURCE_ENABLED__", "false")
 	template = strings.ReplaceAll(template, "__ARCH_VIEW_REANALYSIS_ENABLED__", "false")
+	template = strings.ReplaceAll(template, "__ARCH_VIEW_WORKER_URL__", "")
 	template = strings.ReplaceAll(template, "LOCAL ARCHITECTURE SESSION", "SELF-CONTAINED ARCHITECTURE EXPORT")
 	return []byte(template), provenance, nil
 }

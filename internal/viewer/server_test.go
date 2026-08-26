@@ -40,7 +40,7 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 		t.Fatalf("root response = %d %q", rootResponse.StatusCode, rootResponse.Header.Get("Content-Type"))
 	}
 	rootText := string(rootBody)
-	if !strings.Contains(rootText, "SEMANTIC SCENE") || !strings.Contains(rootText, value.ModelID) || !strings.Contains(rootText, "reference-visibility") || !strings.Contains(rootText, "Accessible list &amp; imports") || strings.Contains(rootText, "__ARCH_VIEW_MODEL_ID__") {
+	if !strings.Contains(rootText, "SEMANTIC SCENE") || !strings.Contains(rootText, value.ModelID) || !strings.Contains(rootText, "reference-visibility") || !strings.Contains(rootText, "Accessible list &amp; imports") || !strings.Contains(rootText, "type=\"module\"") || !strings.Contains(rootText, "/assets/vendor/elk-worker.min.js") || strings.Contains(rootText, "__ARCH_VIEW_MODEL_ID__") {
 		t.Fatalf("root page did not contain the model bootstrap: %s", rootText)
 	}
 
@@ -53,7 +53,7 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read app.js: %v", err)
 	}
-	if assetResponse.StatusCode != http.StatusOK || !strings.Contains(string(assetBody), "DOMContentLoaded") || !strings.Contains(string(assetBody), "reference-detail") || !strings.Contains(string(assetBody), "reference_visibility") || !strings.Contains(string(assetBody), "ArchViewELKRequest") {
+	if assetResponse.StatusCode != http.StatusOK || !strings.Contains(string(assetBody), "DOMContentLoaded") || !strings.Contains(string(assetBody), "./app/bootstrap.js") {
 		t.Fatalf("asset response = %d %q", assetResponse.StatusCode, string(assetBody))
 	}
 
@@ -68,6 +68,32 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 	}
 	if requestAssetResponse.StatusCode != http.StatusOK || requestAssetResponse.Header.Get("Content-Type") != "text/javascript; charset=utf-8" || !strings.Contains(string(requestAssetBody), "buildRootLayoutOptions") {
 		t.Fatalf("layout request asset = %d %q", requestAssetResponse.StatusCode, requestAssetResponse.Header.Get("Content-Type"))
+	}
+
+	routeResponse, err := http.Get(httpServer.URL + "/assets/graph_route.js")
+	if err != nil {
+		t.Fatalf("GET graph_route.js: %v", err)
+	}
+	routeBody, err := io.ReadAll(routeResponse.Body)
+	_ = routeResponse.Body.Close()
+	if err != nil {
+		t.Fatalf("read graph route asset: %v", err)
+	}
+	if routeResponse.StatusCode != http.StatusOK || routeResponse.Header.Get("Content-Type") != "text/javascript; charset=utf-8" || !strings.Contains(string(routeBody), "fromELKSections") {
+		t.Fatalf("graph route asset = %d %q", routeResponse.StatusCode, routeResponse.Header.Get("Content-Type"))
+	}
+
+	moduleResponse, err := http.Get(httpServer.URL + "/assets/app/bootstrap.js")
+	if err != nil {
+		t.Fatalf("GET app/bootstrap.js: %v", err)
+	}
+	moduleBody, err := io.ReadAll(moduleResponse.Body)
+	_ = moduleResponse.Body.Close()
+	if err != nil {
+		t.Fatalf("read app module asset: %v", err)
+	}
+	if moduleResponse.StatusCode != http.StatusOK || moduleResponse.Header.Get("Content-Type") != "text/javascript; charset=utf-8" || !strings.Contains(string(moduleBody), "export function bootstrap") {
+		t.Fatalf("app module asset = %d %q", moduleResponse.StatusCode, moduleResponse.Header.Get("Content-Type"))
 	}
 
 	elkResponse, err := http.Get(httpServer.URL + "/assets/vendor/elk.bundled.js")

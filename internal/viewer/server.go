@@ -20,7 +20,7 @@ import (
 	"github.com/buffo/arch-view/internal/model"
 )
 
-//go:embed web/index.html web/styles.css web/app.js web/layout_request.js web/vendor/elk.bundled.js web/vendor/elk-worker.min.js
+//go:embed web/index.html web/styles.css web/app.js web/app/*.js web/layout_request.js web/graph_route.js web/vendor/elk.bundled.js web/vendor/elk-worker.min.js
 var webFiles embed.FS
 
 const (
@@ -124,6 +124,7 @@ func (s *Server) handleRoot(writer http.ResponseWriter, request *http.Request) {
 	content := strings.ReplaceAll(string(data), "__ARCH_VIEW_MODEL_ID__", html.EscapeString(value.ModelID))
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_SOURCE_ENABLED__", strconv.FormatBool(s.sourceEnabled()))
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_REANALYSIS_ENABLED__", strconv.FormatBool(s.reanalysisEnabled()))
+	content = strings.ReplaceAll(content, "__ARCH_VIEW_WORKER_URL__", "/assets/vendor/elk-worker.min.js")
 	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	writer.Header().Set("Cache-Control", "no-store")
 	_, _ = io.WriteString(writer, content)
@@ -135,7 +136,7 @@ func (s *Server) handleAsset(writer http.ResponseWriter, request *http.Request) 
 		return
 	}
 	name := strings.TrimPrefix(request.URL.Path, "/assets/")
-	if name != "styles.css" && name != "app.js" && name != "layout_request.js" && name != "vendor/elk.bundled.js" && name != "vendor/elk-worker.min.js" {
+	if !isViewerAsset(name) {
 		http.NotFound(writer, request)
 		return
 	}
@@ -148,16 +149,24 @@ func (s *Server) handleAsset(writer http.ResponseWriter, request *http.Request) 
 	switch name {
 	case "styles.css":
 		contentType = "text/css; charset=utf-8"
-	case "app.js", "layout_request.js", "vendor/elk.bundled.js", "vendor/elk-worker.min.js":
+	default:
 		contentType = "text/javascript; charset=utf-8"
 	}
 	writer.Header().Set("Content-Type", contentType)
-	if name == "app.js" || name == "layout_request.js" || name == "styles.css" {
+	if name == "styles.css" || name == "app.js" || name == "layout_request.js" || name == "graph_route.js" || strings.HasPrefix(name, "app/") {
 		writer.Header().Set("Cache-Control", "no-store")
 	} else {
 		writer.Header().Set("Cache-Control", "public, max-age=3600, immutable")
 	}
 	_, _ = writer.Write(data)
+}
+
+func isViewerAsset(name string) bool {
+	switch name {
+	case "styles.css", "app.js", "layout_request.js", "graph_route.js", "vendor/elk.bundled.js", "vendor/elk-worker.min.js":
+		return true
+	}
+	return strings.HasPrefix(name, "app/") && path.Clean(name) == name && strings.HasSuffix(name, ".js") && !strings.Contains(name, "\\")
 }
 
 func (s *Server) handleModel(writer http.ResponseWriter, request *http.Request) {

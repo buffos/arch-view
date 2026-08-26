@@ -3,6 +3,7 @@ package export
 import (
 	"sort"
 
+	"github.com/buffo/arch-view/internal/routing"
 	"github.com/buffo/arch-view/internal/viewer"
 )
 
@@ -29,15 +30,10 @@ type deterministicLayoutNode struct {
 	Height float64 `json:"height"`
 }
 
-type deterministicLayoutPoint struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
-}
-
 type deterministicLayoutEdge struct {
-	Points []deterministicLayoutPoint `json:"points"`
-	LabelX float64                    `json:"label_x"`
-	LabelY float64                    `json:"label_y"`
+	Points []routing.Point `json:"points"`
+	LabelX float64         `json:"label_x"`
+	LabelY float64         `json:"label_y"`
 }
 
 func buildDeterministicLayout(scene viewer.SceneSnapshot) deterministicLayout {
@@ -103,44 +99,12 @@ func buildDeterministicLayout(scene viewer.SceneSnapshot) deterministicLayout {
 }
 
 func orthogonalEdge(from, to deterministicLayoutNode) deterministicLayoutEdge {
-	fromCenterX := from.X + from.Width/2
-	fromCenterY := from.Y + from.Height/2
-	toCenterX := to.X + to.Width/2
-	toCenterY := to.Y + to.Height/2
-	points := []deterministicLayoutPoint{}
-	if absFloat(toCenterX-fromCenterX) >= absFloat(toCenterY-fromCenterY) {
-		forward := toCenterX >= fromCenterX
-		sourceX := from.X
-		targetX := to.X + to.Width
-		if forward {
-			sourceX = from.X + from.Width
-			targetX = to.X
-		}
-		middleX := (sourceX + targetX) / 2
-		points = append(points,
-			deterministicLayoutPoint{X: sourceX, Y: fromCenterY},
-			deterministicLayoutPoint{X: middleX, Y: fromCenterY},
-			deterministicLayoutPoint{X: middleX, Y: toCenterY},
-			deterministicLayoutPoint{X: targetX, Y: toCenterY},
-		)
-	} else {
-		forward := toCenterY >= fromCenterY
-		sourceY := from.Y
-		targetY := to.Y + to.Height
-		if forward {
-			sourceY = from.Y + from.Height
-			targetY = to.Y
-		}
-		middleY := (sourceY + targetY) / 2
-		points = append(points,
-			deterministicLayoutPoint{X: fromCenterX, Y: sourceY},
-			deterministicLayoutPoint{X: fromCenterX, Y: middleY},
-			deterministicLayoutPoint{X: toCenterX, Y: middleY},
-			deterministicLayoutPoint{X: toCenterX, Y: targetY},
-		)
-	}
-	middle := points[len(points)/2]
-	return deterministicLayoutEdge{Points: points, LabelX: middle.X, LabelY: middle.Y - 7}
+	route := (routing.OrthogonalRouter{}).Build(routing.NodeBox{
+		X: from.X, Y: from.Y, Width: from.Width, Height: from.Height,
+	}, routing.NodeBox{
+		X: to.X, Y: to.Y, Width: to.Width, Height: to.Height,
+	})
+	return deterministicLayoutEdge{Points: route.PolylinePoints(), LabelX: route.Label.X, LabelY: route.Label.Y}
 }
 
 func maxInt(left, right int) int {
@@ -148,11 +112,4 @@ func maxInt(left, right int) int {
 		return left
 	}
 	return right
-}
-
-func absFloat(value float64) float64 {
-	if value < 0 {
-		return -value
-	}
-	return value
 }

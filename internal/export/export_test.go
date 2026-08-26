@@ -65,9 +65,13 @@ func TestRenderHTMLIsSelfContainedAndUsesEmbeddedSceneCatalog(t *testing.T) {
 	for _, forbidden := range []string{
 		`<link rel="stylesheet"`,
 		`<script src=`,
+		`<script type="module"`,
 		`href="/assets/`,
 		`href="http://`,
 		`href="https://`,
+		`import {`,
+		`from "./`,
+		`/assets/`,
 	} {
 		if strings.Contains(html, forbidden) {
 			t.Fatalf("self-contained HTML contains external resource %q", forbidden)

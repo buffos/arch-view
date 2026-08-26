@@ -9,6 +9,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/routing"
 	"github.com/buffo/arch-view/internal/viewer"
 )
 
@@ -170,24 +171,47 @@ func svgNodeMarkup(node viewer.VisibleNode, position deterministicLayoutNode) st
 
 func svgEdgeGeometry(relationship viewer.VisibleRelationship, from, to deterministicLayoutNode, routed deterministicLayoutEdge) (string, float64, float64) {
 	if len(routed.Points) > 1 {
-		return pathFromPoints(routed.Points), routed.LabelX, routed.LabelY
+		route := routing.Polyline(routed.Points, routing.Point{X: routed.LabelX, Y: routed.LabelY})
+		if path := pathFromRoute(route); path != "" {
+			return path, route.Label.X, route.Label.Y
+		}
 	}
 	if relationship.FromVisibleID == relationship.ToVisibleID {
-		x := from.X + from.Width/2
-		return fmt.Sprintf("M %s %s C %s %s, %s %s, %s %s", formatNumber(x), formatNumber(from.Y), formatNumber(x+100), formatNumber(from.Y-55), formatNumber(x+100), formatNumber(from.Y+from.Height+55), formatNumber(x), formatNumber(from.Y+from.Height)), x + 50, from.Y + from.Height/2
+		route := routing.SelfLoop(nodeBox(from))
+		return pathFromRoute(route), route.Label.X, route.Label.Y
 	}
 	fallback := orthogonalEdge(from, to)
-	return pathFromPoints(fallback.Points), fallback.LabelX, fallback.LabelY
+	route := routing.Polyline(fallback.Points, routing.Point{X: fallback.LabelX, Y: fallback.LabelY})
+	return pathFromRoute(route), route.Label.X, route.Label.Y
 }
 
-func pathFromPoints(points []deterministicLayoutPoint) string {
-	parts := make([]string, 0, len(points)*2)
-	for index, point := range points {
-		prefix := "L"
-		if index == 0 {
-			prefix = "M"
+func nodeBox(node deterministicLayoutNode) routing.NodeBox {
+	return routing.NodeBox{X: node.X, Y: node.Y, Width: node.Width, Height: node.Height}
+
+}
+
+func pathFromRoute(route routing.Route) string {
+	parts := make([]string, 0)
+	for _, section := range route.Sections {
+		parts = append(parts, "M", formatNumber(section.Start.X), formatNumber(section.Start.Y))
+		for _, segment := range section.Segments {
+			switch segment.Kind {
+			case routing.SegmentKindLine:
+				parts = append(parts, "L", formatNumber(segment.To.X), formatNumber(segment.To.Y))
+			case routing.SegmentKindCubic:
+				if segment.Control1 == nil || segment.Control2 == nil {
+					return ""
+				}
+				parts = append(parts,
+					"C",
+					formatNumber(segment.Control1.X), formatNumber(segment.Control1.Y)+",",
+					formatNumber(segment.Control2.X), formatNumber(segment.Control2.Y)+",",
+					formatNumber(segment.To.X), formatNumber(segment.To.Y),
+				)
+			default:
+				return ""
+			}
 		}
-		parts = append(parts, prefix, formatNumber(point.X), formatNumber(point.Y))
 	}
 	return strings.Join(parts, " ")
 }
