@@ -51,4 +51,4 @@ declared in the registry and target metadata remains authoritative.
 
 - Contract: `docs/architecture/explore-architecture/canonical-api-cli-contract.md`
 - Scenarios: SC-EX-012, SC-EX-013, SC-EX-016
-- Reference boundary: `external/` remains ignored, read-only, and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.

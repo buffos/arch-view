@@ -18,15 +18,16 @@
   staticcheck, golangci-lint, JavaScript syntax/pure-module tests, export
   self-containment/determinism tests, and `git diff --check` pass. Issues
   010–015 are recorded as awaiting human/repository review handoffs;
-  `external/` remains ignored, read-only, and untouched.
+  the [upstream reference repository](https://github.com/unclebob/arch-view)
+  remains outside the product and untouched.
 
 ## 2026-08-26
 
-* **Closeout**: Archived issue 008 after the user's explicit approval of the parent-level ELK option tranche in windowed and full-canvas views, including representative settings, diagnostics, fallbacks, and resulting layouts. Removed its active registry row, updated the owning capability and implementation-slice references, and unblocked issue 009 without processing it; `external/` remains untouched.
+* **Closeout**: Archived issue 008 after the user's explicit approval of the parent-level ELK option tranche in windowed and full-canvas views, including representative settings, diagnostics, fallbacks, and resulting layouts. Removed its active registry row, updated the owning capability and implementation-slice references, and unblocked issue 009 without processing it; the [upstream reference repository](https://github.com/unclebob/arch-view) remains untouched.
 
 * **Implementation**: Issue 008 expanded the editable ELK parent-level tranche with typed metadata and validation for aspect ratio, layered spacing, layering, cycle breaking, crossing minimization, node placement, and connected-component compaction. The browser request builder now forwards only catalogued editable `PARENTS` options to the root graph; node/edge-targeted options remain reserved for issue 009.
 * **Correction**: Pinned catalog inspection confirmed `org.eclipse.elk.alignment` is node-targeted and that the canonical parent spacing key is `org.eclipse.elk.layered.spacing.baseValue`; neither is silently treated as a root option.
-* **Verification**: Focused Go/JavaScript tests, syntax checks, repository gates, and OKF validation pass. Issue 008 is awaiting visual review of representative settings in windowed and full-canvas views; `external/` remains untouched.
+* **Verification**: Focused Go/JavaScript tests, syntax checks, repository gates, and OKF validation pass. Issue 008 is awaiting visual review of representative settings in windowed and full-canvas views; the [upstream reference repository](https://github.com/unclebob/arch-view) remains untouched.
 
 * **Closeout**: Archived issue 005 at [the dated delivery record](../docs/agents/issues/done/20260826-005-deterministic-json-html-svg-export.md) after the user's explicit approval of HTML/SVG parity with the local viewer; required capability, orchestration, and implementation-slice references now point to the completed issue, and issue 007 remains the next ready-for-agent frontier.
 
@@ -62,7 +63,7 @@
 * **Planning**: Added issue 008 for a bounded parent-level ELK option-support tranche and issue 009 for target-aware node/edge option mapping under [Explore and inspect architecture](/capabilities/explore-architecture.md). Issue 008 is blocked by 007 and issue 009 is blocked by 008.
 * **No impact**: The follow-up issues remain inside the existing viewer capability and preserve the current `arch-view.config/v1` boundary. Advanced ports, labels, junctions, and compound-graph geometry remain a later specification frontier because they would change the scene/renderer contract.
 * **Review**: Completed the strict code-review loop for issue 007. The final pass found no actionable P0–P2 findings after adding required-algorithm validation, enforcing layout-request size limits, and serializing configuration writes with session updates. Repository checks and JavaScript syntax checks pass.
-* **Closeout**: Archived issue 007 after the user's explicit visual approval of the settings surface, origin/error states, apply/reset workflow, and windowed/full-canvas graph behavior. Removed its active registry row, unblocked issue 008, and synchronized the capability, implementation-slice, index, and orchestration references. `external/` remains untouched.
+* **Closeout**: Archived issue 007 after the user's explicit visual approval of the settings surface, origin/error states, apply/reset workflow, and windowed/full-canvas graph behavior. Removed its active registry row, unblocked issue 008, and synchronized the capability, implementation-slice, index, and orchestration references. The [upstream reference repository](https://github.com/unclebob/arch-view) remains untouched.
 
 ## 2026-08-25
 

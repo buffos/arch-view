@@ -65,7 +65,7 @@ eligible visible node or edge in the current scene.
   record no impact with the verification evidence.
 - Delivery truth: required — keep this issue, the registry, the owning
   capability `issues:` list, and `.okf/log.md` synchronized.
-- Reference boundary: `external/` remains read-only and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
 
 ## Blocked by
 
@@ -103,7 +103,7 @@ resumed.
   routes/positions.
 - End-to-end: a saved profile reloads with the same target-aware layout
   behavior in a later project session.
-- Repository/OKF integrity: `external/` is untouched, links resolve, and the
+- Repository/OKF integrity: the upstream [reference repository](https://github.com/unclebob/arch-view) is untouched, links resolve, and the
   issue registry remains synchronized.
 
 ## Review handoff

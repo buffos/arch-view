@@ -8,7 +8,9 @@ This is the application-level planning baseline. It records confirmed product sc
 
 Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, TypeScript, Rust, and Clojure support, with configurable presentation layout for repository-specific viewing needs.
 
-The reference implementation is preserved in `external/` for reading only. It is not part of the product source tree and must remain ignored by Git.
+The reference implementation is available in the upstream
+[unclebob/arch-view repository](https://github.com/unclebob/arch-view) for
+reading only. It is not part of the product source tree.
 
 ## Actors
 
@@ -49,7 +51,7 @@ The reference implementation is preserved in `external/` for reading only. It is
 - Automatic architectural approval or refactoring.
 - Perfect resolution of dynamic imports, generated code, or runtime dispatch.
 - Treating `.archview.json` as a container for analyzer options, canonical model data, viewport state, or manual diagram positions.
-- Changes to the reference material under `external/`.
+- Changes to the upstream reference implementation.
 
 ## Capability map
 
@@ -107,6 +109,6 @@ No high or medium blocker prevents the specified planning baseline. The followin
 
 ## Source references
 
-- [Reference tool README](../external/README.md)
-- [Reference project notes](../external/PROJECT_NOTES.md)
+- [Reference tool repository](https://github.com/unclebob/arch-view)
+- [Reference project](https://github.com/unclebob/arch-view)
 - [Arch View planning map](../.okf/index.md)

@@ -15,7 +15,7 @@ The analyzer reads project configuration and Python syntax, discovers package/mo
 - Package/module is the default node granularity; files remain evidence. `import` and `from ... import ...` produce `depends_on` observations.
 - Relative imports resolve from the importing package context. Absolute imports resolve against configured project roots where possible.
 - `importlib`, `__import__`, plugin discovery, conditional imports, and other dynamic cases produce unresolved/dynamic diagnostics with confidence rather than forced edges.
-- Tests, `__pycache__`, generated/build/cache/vendor directories, `.git`, and `external/` are excluded by default.
+- Tests, `__pycache__`, generated/build/cache/vendor directories, `.git`, and directories named `external` are excluded by default.
 - Static AST/configuration parsing is the first implementation. Type-checker or environment-assisted resolution is optional, read-only, and separately reported.
 
 ## Open questions for exact specification

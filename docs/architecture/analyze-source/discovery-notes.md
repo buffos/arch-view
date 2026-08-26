@@ -6,7 +6,7 @@ Arch View analyzes a repository without executing its application and returns en
 
 ## Current reference behavior
 
-The reference tool in `external/`:
+The reference tool in the upstream [unclebob/arch-view repository](https://github.com/unclebob/arch-view):
 
 - Scans configured Clojure-family source paths.
 - Reads each file's first Clojure form and requires an `ns` declaration.
@@ -43,7 +43,7 @@ The capability stops before graph layout, scene construction, rendering, and exp
 2. Package or module is the default graph node. Files are attached evidence.
 3. Static dependency relationships are the first supported relation.
 4. Project-local modules are shown by default. External dependencies are metadata or diagnostics.
-5. Tests, generated code, vendor directories, caches, build outputs, and the local `external/` reference are excluded by default.
+5. Tests, generated code, vendor directories, caches, build outputs, and the upstream reference repository are not project inputs and are excluded from product analysis by default.
 6. Unresolved dependencies produce partial results plus diagnostics.
 7. Relationship evidence includes source file and parser-provided line and column when available.
 8. Analyzer selection supports auto-detection and explicit override.
@@ -75,6 +75,6 @@ The following analyzer/plugin territories are now bounded and have their own dis
 
 ## References
 
-- [Reference README](../../../external/README.md)
-- [Reference dependency extractor](../../../external/src/arch_view/input/dependency_extract.clj)
+- [Reference tool repository](https://github.com/unclebob/arch-view)
+- [Reference dependency extractor](https://github.com/unclebob/arch-view)
 - [Parent planning concept](../../../.okf/capabilities/analyze-source.md)

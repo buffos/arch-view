@@ -50,4 +50,4 @@ the stable entrypoint and now coordinates the focused capability functions.
 
 - Contract: `docs/architecture/analyze-source/go-analysis/canonical-api-cli-contract.md`
 - Scenarios: SC-GO-001, SC-GO-003, SC-GO-004
-- Reference boundary: `external/` remains ignored, read-only, and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.

@@ -4,8 +4,9 @@ Arch View analyzes supported source repositories and presents a navigable,
 language-neutral architecture view. The first implementation targets Go and
 keeps the analyzer boundary open for Python, TypeScript, Rust, and Clojure.
 
-`external/` is read-only reference material. It is intentionally ignored by
-Git and must not be modified as part of Arch View work.
+The original reference implementation is available in the upstream
+[unclebob/arch-view repository](https://github.com/unclebob/arch-view). It is
+outside this repository and is not modified as part of Arch View work.
 
 ## Viewer guide
 
@@ -170,8 +171,8 @@ Model-only sessions can apply settings but cannot persist a project file.
   those capabilities.
 - Exporters consume the same neutral model/view facts and must not parse source.
 
-The `external/` reference implementation remains outside all of these product
-boundaries.
+The upstream [reference implementation](https://github.com/unclebob/arch-view)
+remains outside all of these product boundaries.
 
 ### Refactor boundary
 

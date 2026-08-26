@@ -32,7 +32,7 @@ Verification: backend-boundary `when-supported`; frontend-integration `not-appli
 
 ## SC-AS-006 — Enforce exclusions and safety
 
-Given tests, generated files, vendor/cache directories, `.git`, and `external/`, when default analysis runs, then they are excluded and the target application is not executed.
+Given tests, generated files, vendor/cache directories, `.git`, and directories named `external`, when default analysis runs, then they are excluded and the target application is not executed.
 
 Verification: backend-boundary `when-supported`; frontend-integration `not-applicable`; end-to-end `when-supported`.
 

@@ -15,7 +15,7 @@ The analyzer reads TypeScript project configuration and source syntax, discovers
 - TypeScript module is the default node. Import/export relationships are represented as typed static dependencies; alias resolution is retained as evidence/metadata.
 - The analyzer understands configured `baseUrl`, `paths`, root directories, package boundaries, and relevant ESM/CJS resolution context without assuming one runtime.
 - Dynamic `import()`, computed paths, bundler-only aliases, and unresolved package exports produce diagnostics/confidence rather than fabricated edges.
-- Tests, generated output, `node_modules`, build/cache directories, `.git`, and `external/` are excluded by default. JavaScript is included only when explicitly enabled by project configuration/options.
+- Tests, generated output, `node_modules`, build/cache directories, `.git`, and directories named `external` are excluded by default. JavaScript is included only when explicitly enabled by project configuration/options.
 - Syntax/configuration parsing is static. Running `tsc`, bundler scripts, or arbitrary package hooks is out of scope for the first slice.
 
 ## Open questions for exact specification

@@ -8,7 +8,7 @@
 | Node | Crate/module with attached files. |
 | Edge | Static module/use/dependency observations normalized as typed dependencies. |
 | Generated behavior | Macro/build/conditional uncertainty becomes diagnostics/confidence. |
-| Defaults | Exclude tests, target/build/cache/generated files, `.git`, and `external/`. |
+| Defaults | Exclude tests, target/build/cache/generated files, `.git`, and directories named `external`. |
 | Safety | Read manifests/source; do not execute Cargo, rustc, build scripts, or application code initially. |
 
 ## Specification closure and residual risks

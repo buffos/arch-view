@@ -40,7 +40,7 @@ The capability does not own canonical graph normalization, cycle/layer calculati
 - Auto-detection must find exactly one highest-confidence analyzer; ambiguity is a user-visible failure.
 - CLI options override project configuration, which overrides analyzer defaults.
 - Project-local modules are included by default; external, standard-library, and unresolved targets are references/diagnostics, not local nodes.
-- Tests, generated files, vendor directories, build output, caches, `.git`, and `external/` are excluded by default.
+- Tests, generated files, vendor directories, build output, caches, `.git`, and directories named `external` are excluded by default.
 - Source paths are repository-relative and locations are one-based when provided.
 - Recoverable unresolved or dynamic relationships produce `partial`, not total failure.
 

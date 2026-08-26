@@ -17,7 +17,7 @@ The adapter discovers Clojure-family source files, reads namespace declarations 
 - Missing or malformed `ns` declarations, reader conditionals, dynamic loading, and macro-driven behavior produce diagnostics and partial results.
 - Selected polymorphic/abstract definitions may be emitted as tags/metadata with evidence, preserving the reference idea without forcing `abstract` or `direct` into the core edge type.
 - The adapter reads forms/configuration but never evaluates project code or loads namespaces.
-- The `external/` folder remains read-only reference material and is excluded from product analysis by default.
+- The upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only design material and is excluded from product analysis by default.
 
 ## Open questions for exact specification
 

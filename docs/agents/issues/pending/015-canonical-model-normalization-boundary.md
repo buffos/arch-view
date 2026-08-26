@@ -56,4 +56,4 @@ architecture cleanup.
 
 - Contract: `docs/architecture/generate-models/canonical-api-cli-contract.md`
 - Scenarios: SC-GM-001, SC-GM-004, SC-GM-005, SC-GM-007
-- Reference boundary: `external/` remains ignored, read-only, and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.

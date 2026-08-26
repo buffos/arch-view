@@ -10,7 +10,7 @@ Read `Cargo.toml` and Rust source, discover crate/module hierarchy, extract `mod
 
 `Cargo.toml` is the project marker. A workspace with multiple crates requires explicit `--crate`; a run never silently merges all workspace members.
 
-Defaults exclude tests, examples/benches unless explicitly selected, target/build/cache/generated files, `.git`, and `external/`.
+Defaults exclude tests, examples/benches unless explicitly selected, target/build/cache/generated files, `.git`, and directories named `external`.
 
 ## Functional requirements
 

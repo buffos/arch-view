@@ -50,4 +50,4 @@ viewer scene file.
 
 - Contract: `docs/architecture/explore-architecture/canonical-api-cli-contract.md`
 - Scenarios: SC-EX-002, SC-EX-006, SC-EX-007, SC-EX-009
-- Reference boundary: `external/` remains ignored, read-only, and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.

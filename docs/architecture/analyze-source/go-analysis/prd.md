@@ -13,7 +13,7 @@ Analyze one selected Go module, discover packages and source files, resolve stat
 - `go.mod` is the primary boundary.
 - A `go.work` root with multiple modules requires explicit `--module`; one run never silently composes multiple modules.
 - Package is the graph node; files are evidence.
-- Default exclusions: `_test.go`, `vendor`, generated marker files, build/cache output, `.git`, and `external/`.
+- Default exclusions: `_test.go`, `vendor`, generated marker files, build/cache output, `.git`, and directories named `external`.
 - Default build view uses normal source files and no optional build tags; selected tags are explicit options.
 
 ## User stories

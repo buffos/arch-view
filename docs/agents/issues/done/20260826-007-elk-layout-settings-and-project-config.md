@@ -127,7 +127,7 @@ presentation preferences safely.
   canonical model semantics, and export behavior remain unchanged because the
   v1 file stores presentation settings only. The export capability is not an
   automatic consumer of `.archview.json` in this issue.
-- Reference boundary: `external/` remains read-only and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
 
 ## Blocked by
 
@@ -163,7 +163,7 @@ presentation preferences safely.
   `Save` writes back to that same path without creating another file, and
   `Save As` writes only to its explicitly selected destination; a subsequent
   session reproduces a saved profile when it is discoverable from the target.
-- Repository/OKF integrity: `external/` remains unchanged, links resolve, the
+- Repository/OKF integrity: the upstream [reference repository](https://github.com/unclebob/arch-view) remains unchanged, links resolve, the
   issue registry max ID is 009, and the synchronized planning artifacts agree.
 
 ## Review handoff
@@ -190,4 +190,4 @@ contract, catalog, discovery, persistence, and JavaScript-syntax checks pass.
 Closed on 2026-08-26 after explicit user approval. The issue was moved to the
 dated delivery archive; its registry row was removed, issue 008 was unblocked,
 and the OKF capability/index/log and implementation-slice references were
-synchronized. `external/` was not modified.
+synchronized. The upstream reference repository was not modified.

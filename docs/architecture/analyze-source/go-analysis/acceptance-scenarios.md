@@ -20,7 +20,7 @@ Verification: backend-boundary `when-supported`; frontend-integration `not-appli
 
 ## SC-GO-004 — Exclude defaults
 
-Given test, vendor, generated, cache, and `external/` files, when default analysis runs, then they are excluded unless explicit supported options include them.
+Given test, vendor, generated, cache, and directories named `external`, when default analysis runs, then they are excluded; the `include_external` option affects only the detail retained for non-local imports and does not include excluded directories.
 
 Verification: backend-boundary `when-supported`; frontend-integration `not-applicable`; end-to-end `when-supported`.
 

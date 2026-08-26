@@ -17,7 +17,7 @@ The capability receives a repository or project root plus analysis options, sele
 - Package or module nodes are the default graph granularity; files remain attached evidence.
 - Static dependency relationships are the first supported relationship type.
 - Project-local modules appear by default. External, standard-library, and unresolved dependencies become metadata or diagnostics.
-- Tests, generated code, vendor directories, caches, build outputs, and `external/` are excluded by default.
+- Tests, generated code, vendor directories, caches, build outputs, and directories named `external` are excluded by default.
 - Partial results are returned when dependencies cannot be resolved.
 - Relationships carry source file and parser-provided line and column evidence when available.
 - Analyzer selection supports auto-detection and an explicit language override.

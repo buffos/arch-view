@@ -80,7 +80,7 @@ allowlist while keeping the current flat/aggregated scene and
   them only if the implementation changes an externally visible contract.
 - Delivery truth: required — keep this issue, the registry, the owning
   capability `issues:` list, and `.okf/log.md` synchronized.
-- Reference boundary: `external/` remains read-only and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
 
 ## Blocked by
 
@@ -111,7 +111,7 @@ allowlist while keeping the current flat/aggregated scene and
   windowed/full-canvas layout changes.
 - End-to-end: a project session applies and persists an enabled parent-level
   option while preserving the existing configuration discovery behavior.
-- Repository/OKF integrity: `external/` is untouched, links resolve, and the
+- Repository/OKF integrity: the upstream [reference repository](https://github.com/unclebob/arch-view) is untouched, links resolve, and the
   issue registry remains synchronized.
 
 ## Implementation result

@@ -57,4 +57,4 @@ responsibility so orchestration remains small.
 
 - Contract: `docs/architecture/explore-architecture/canonical-api-cli-contract.md`
 - Scenarios: SC-EX-001, SC-EX-003, SC-EXPT-003
-- Reference boundary: `external/` remains ignored, read-only, and untouched.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.

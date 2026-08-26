@@ -66,8 +66,8 @@ It stops before interaction state, scene coordinates, renderer-specific graphics
 
 ## References
 
-- [Reference architecture projection](../../../external/src/arch_view/domain/architecture_projection.cljc)
-- [Reference layer assignment](../../../external/src/arch_view/layout/layers.clj)
-- [Reference edge classification](../../../external/src/arch_view/model/classify.clj)
+- [Reference architecture projection](https://github.com/unclebob/arch-view)
+- [Reference layer assignment](https://github.com/unclebob/arch-view)
+- [Reference edge classification](https://github.com/unclebob/arch-view)
 - [Analyze source code discovery notes](../analyze-source/discovery-notes.md)
 - [Parent planning concept](../../../.okf/capabilities/generate-models.md)

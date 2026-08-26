@@ -31,7 +31,7 @@ Language-neutral architecture model
 
 ## Current reference architecture
 
-The `external/` tool couples its command entrypoint to a Clojure source scanner, graph construction, layer assignment, and a Quil/Swing viewer. Its source analyzer reads Clojure forms, recognizes Clojure-family extensions, extracts `:require` dependencies, and marks selected Clojure abstractions. Its graph and layering logic are the main reusable ideas.
+The upstream [unclebob/arch-view reference implementation](https://github.com/unclebob/arch-view) couples its command entrypoint to a Clojure source scanner, graph construction, layer assignment, and a Quil/Swing viewer. Its source analyzer reads Clojure forms, recognizes Clojure-family extensions, extracts `:require` dependencies, and marks selected Clojure abstractions. Its graph and layering logic are the main reusable ideas.
 
 ## Target boundaries
 
@@ -41,7 +41,7 @@ The analyzer receives a repository or project root plus analysis options, select
 
 The plugin runtime and language adapters are specified around this contract. The first deployment uses in-process Go analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, TypeScript, Rust, and Clojure uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
 
-The first graph uses package or module nodes. Files remain attached evidence. Project-local modules are shown by default. Tests, generated code, vendor directories, caches, build outputs, and `external/` are excluded by default. Unresolved dependencies produce partial results with diagnostics.
+The first graph uses package or module nodes. Files remain attached evidence. Project-local modules are shown by default. Tests, generated code, vendor directories, caches, build outputs, and directories named `external` are excluded by default. Unresolved dependencies produce partial results with diagnostics.
 
 ### CLI and orchestration
 

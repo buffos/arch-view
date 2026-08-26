@@ -9,7 +9,7 @@
 | Edge | Static import dependency. |
 | Resolution | Absolute/relative filesystem resolution where deterministic; dynamic cases become diagnostics. |
 | Safety | Never import or execute project code. |
-| Defaults | Exclude tests, caches, generated/build/vendor files, `.git`, and `external/`. |
+| Defaults | Exclude tests, caches, generated/build/vendor files, `.git`, and directories named `external`. |
 
 ## Specification closure and residual risks
 

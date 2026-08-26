@@ -7,7 +7,7 @@
 | Boundary | One `go.mod` module per run; workspace selection is explicit when ambiguous. |
 | Node | Go package with attached files. |
 | Edge | Static import dependency. |
-| Defaults | Exclude tests, vendor, generated/build/cache files, `.git`, and `external/`. |
+| Defaults | Exclude tests, vendor, generated/build/cache files, `.git`, and directories named `external`. |
 | Resolution | Map local imports to selected module packages; retain non-local/unresolved diagnostics. |
 | Safety | Static parsing/configuration first; no application execution. |
 

@@ -10,7 +10,7 @@ Read Python source/configuration, discover packages/modules, resolve determinist
 
 Project marker precedence: explicit analyzer roots/options; `pyproject.toml`; `setup.cfg`; `setup.py` metadata. Source roots: explicit configuration, then `src/` when present, then project root.
 
-Defaults exclude tests, `__pycache__`, generated/build/cache/vendor directories, `.git`, and `external/`. `.py` files are included; `.pyi` stubs require `include_stubs=true`.
+Defaults exclude tests, `__pycache__`, generated/build/cache/vendor directories, `.git`, and directories named `external`. `.py` files are included; `.pyi` stubs require `include_stubs=true`.
 
 ## Functional requirements
 

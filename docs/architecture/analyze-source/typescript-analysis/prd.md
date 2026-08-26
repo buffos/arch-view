@@ -10,7 +10,7 @@ Read one selected `tsconfig.json` project and eligible TypeScript source, resolv
 
 `tsconfig.json` plus its `extends` chain is the primary boundary. Multiple candidate configs require explicit selection. `.ts` and `.tsx` are included by default; `.js/.jsx` require `allowJs` or `include_js=true`.
 
-Defaults exclude test/spec files, generated/outDir/build/cache output, `node_modules`, `.git`, and `external/`.
+Defaults exclude test/spec files, generated/outDir/build/cache output, `node_modules`, `.git`, and directories named `external`.
 
 ## Functional requirements
 

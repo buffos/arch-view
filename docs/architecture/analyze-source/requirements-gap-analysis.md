@@ -12,7 +12,7 @@ The capability is specified. The exact observation contract, runtime contract, a
 | Graph granularity | Package or module nodes, with files as evidence. |
 | First relationship | Static dependency relationships. |
 | Default graph scope | Project-local modules. |
-| Default exclusions | Tests, generated code, vendor, caches, build output, and `external/`. |
+| Default exclusions | Tests, generated code, vendor, caches, build output, and directories named `external`. |
 | Failure behavior | Partial model plus diagnostics. |
 | Evidence | Source file and parser-provided line and column when available. |
 | Analyzer selection | Auto-detection with an explicit language override. |

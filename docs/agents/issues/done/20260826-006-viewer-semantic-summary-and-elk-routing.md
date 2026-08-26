@@ -69,7 +69,7 @@ self-loop, and the custom geometry produces hard-to-follow edge routes.
 - Issue registry: required; add this issue to the owning capability references.
 - Reason/no-impact decision: no new capability or analyzer boundary is
   introduced. The README and viewer slice clarify and refine the existing
-  exploration capability; `external/` remains read-only and untouched.
+  exploration capability; the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
 
 ## Blocked by
 

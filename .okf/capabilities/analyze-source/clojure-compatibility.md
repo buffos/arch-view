@@ -26,12 +26,12 @@ Keep the reference tool's Clojure-oriented architecture discovery available with
 
 # Scope
 
-The adapter covers Clojure-family source discovery, namespace and dependency extraction, source-file evidence, and language-specific abstraction markers. The `external/` folder remains read-only reference material.
+The adapter covers Clojure-family source discovery, namespace and dependency extraction, source-file evidence, and language-specific abstraction markers. The upstream [reference implementation](https://github.com/unclebob/arch-view) remains read-only design material.
 
 # Relationships
 
 - Parent: [Analyze source code](../analyze-source.md)
-- Reference input: `external/README.md`
+- Reference input: [upstream reference repository](https://github.com/unclebob/arch-view)
 - Produces input for: [Generate architecture models](../generate-models.md)
 
 # Planning state

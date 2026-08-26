@@ -8,7 +8,7 @@ Preserve the useful Clojure-family static architecture behavior of the reference
 
 Read `.clj`, `.cljs`, and `.cljc` files plus configured source paths, parse namespace declarations, extract static `:require`, `:use`, and macro dependency forms, attach evidence, and emit polymorphism metadata. Never evaluate forms, require namespaces, or execute project code.
 
-Source-root precedence: explicit options > `deps.edn`/`project.clj`/`shadow-cljs.edn` configuration > `src`; tests are opt-in. The product `external/` directory is excluded by default.
+Source-root precedence: explicit options > `deps.edn`/`project.clj`/`shadow-cljs.edn` configuration > `src`; tests are opt-in. Directories named `external` are excluded by default.
 
 ## Functional requirements
 

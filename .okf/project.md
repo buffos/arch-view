@@ -23,7 +23,8 @@ Arch View helps developers understand a codebase by turning source structure and
 
 The product starts with a Go implementation and is designed to add Python, TypeScript, Rust, and Clojure analyzers through a common plugin contract. It includes source analysis, a language-neutral architecture model, interactive exploration, and headless export.
 
-The reference implementation in `external/` is read-only input to the design. It is not product source and must remain ignored by Git.
+The upstream [reference implementation](https://github.com/unclebob/arch-view)
+is read-only input to the design. It is not product source.
 
 # Relationships
 

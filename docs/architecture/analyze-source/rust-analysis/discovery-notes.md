@@ -13,7 +13,7 @@ The analyzer reads Cargo manifests and Rust source syntax, discovers one selecte
 - `Cargo.toml` is the primary project marker. A workspace with multiple crates requires explicit crate selection for the one-project-per-run policy.
 - Crate and module are the natural Rust nodes; files remain evidence. Local `use`/module relationships produce static dependencies, while external crates are metadata or non-local references by default.
 - `mod`, inline modules, `use`, `pub use`, and declared dependencies are distinct observations so future relation types can preserve the difference without changing the canonical model.
-- Tests, target/build output, generated files, caches, `.git`, and `external/` are excluded by default.
+- Tests, target/build output, generated files, caches, `.git`, and directories named `external` are excluded by default.
 - Macro expansion, build-script output, conditional compilation, and proc-macro behavior are represented with diagnostics/confidence unless an explicitly enabled read-only resolver can prove them.
 - Manifest/source parsing is static and read-only. Tool-assisted Cargo metadata is a later opt-in with timeouts and safety controls.
 

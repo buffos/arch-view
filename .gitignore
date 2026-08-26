@@ -10,10 +10,6 @@
 # Editor / IDE
 /.vscode
 
-# External code references
-docs/external-reference
-external/
-
 # Executables
 *.exe
 
