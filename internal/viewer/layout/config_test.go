@@ -35,6 +35,10 @@ func TestLayoutCatalogMatchesPinnedELKSurface(t *testing.T) {
 	if !ok || unsupported.Editable || unsupported.RendererSupport != "unsupported" {
 		t.Fatalf("padding metadata = %#v", unsupported)
 	}
+	edgeRouting, ok := layoutOptionByID("org.eclipse.elk.edgeRouting")
+	if !ok || !edgeRouting.Editable || edgeRouting.RendererSupport != "supported" || !reflect.DeepEqual(edgeRouting.AllowedValues, []any{"NONE", "POLYLINE", "ORTHOGONAL"}) {
+		t.Fatalf("edge routing metadata = %#v", edgeRouting)
+	}
 }
 
 func TestParentLayoutOptionTrancheHasPinnedMetadata(t *testing.T) {
@@ -217,6 +221,13 @@ func TestLayoutProfileValidationPreservesCallerAndCanonicalizesAliases(t *testin
 	if validated.Options["org.eclipse.elk.layered.layering.strategy"] != "NETWORK_SIMPLEX" {
 		t.Fatalf("validated profile did not canonicalize option: %#v", validated)
 	}
+	_, err = validateLayoutProfile(LayoutProfile{Algorithm: "layered", Options: map[string]any{
+		"elk.layered.layering.strategy":             "NETWORK_SIMPLEX",
+		"org.eclipse.elk.layered.layering.strategy": "LONGEST_PATH",
+	}})
+	if analysis.ErrorCodeOf(err) != analysis.ErrInvalidOptions {
+		t.Fatalf("duplicate aliases error code = %q, want %q", analysis.ErrorCodeOf(err), analysis.ErrInvalidOptions)
+	}
 }
 
 func TestValidateLayoutProfileRejectsUnknownAndUnsafeOptions(t *testing.T) {
@@ -239,6 +250,7 @@ func TestValidateLayoutProfileRejectsUnknownAndUnsafeOptions(t *testing.T) {
 		{name: "unknown option", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"elk.notReal": true}}, code: analysis.ErrUnsupportedOption},
 		{name: "wrong type", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": 1.0}}, code: analysis.ErrInvalidOptions},
 		{name: "bad enum", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.edgeRouting": "curved"}}, code: analysis.ErrInvalidOptions},
+		{name: "spline rendering is deferred", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.edgeRouting": "SPLINES"}}, code: analysis.ErrInvalidOptions},
 		{name: "unsupported object", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.padding": "10"}}, code: analysis.ErrUnsupportedOption},
 		{name: "unknown algorithm", profile: LayoutProfile{Algorithm: "not-real", Options: map[string]any{}}, code: analysis.ErrUnsupportedOption},
 		{name: "missing algorithm", profile: LayoutProfile{Options: map[string]any{}}, code: analysis.ErrInvalidOptions},
@@ -251,6 +263,36 @@ func TestValidateLayoutProfileRejectsUnknownAndUnsafeOptions(t *testing.T) {
 				t.Fatalf("error code = %q, want %q (%v)", analysis.ErrorCodeOf(err), testCase.code, err)
 			}
 		})
+	}
+}
+
+func TestSaveActiveStoresCanonicalValidatedProfile(t *testing.T) {
+	root := t.TempDir()
+	data, err := encodeLayoutConfig(defaultLayoutProfile())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, layoutConfigFileName), data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	session := discoverLayoutSession(root)
+	if err := session.SaveActive(LayoutProfile{
+		Algorithm: "  layered ",
+		Options: map[string]any{
+			"elk.layered.layering.strategy": "NETWORK_SIMPLEX",
+		},
+	}); err != nil {
+		t.Fatalf("SaveActive() error = %v", err)
+	}
+	response := session.Response()
+	if response.Layout.Algorithm != "layered" {
+		t.Fatalf("stored algorithm = %q, want layered", response.Layout.Algorithm)
+	}
+	if len(response.Layout.Options) != 1 || response.Layout.Options["org.eclipse.elk.layered.layering.strategy"] != "NETWORK_SIMPLEX" {
+		t.Fatalf("stored options = %#v", response.Layout.Options)
+	}
+	if _, ok := response.Layout.Options["elk.layered.layering.strategy"]; ok {
+		t.Fatal("stored profile retained the non-canonical option alias")
 	}
 }
 

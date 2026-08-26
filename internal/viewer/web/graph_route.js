@@ -2,11 +2,18 @@
     return typeof value === "number" && Number.isFinite(value) ? value : fallback;
   }
 
+  function pointValue(value) {
+    if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.y)) return null;
+    return { x: value.x, y: value.y };
+  }
+
   function normalizedPoint(value, offset) {
+    const point = pointValue(value);
+    if (!point) return null;
     const shift = finiteNumber(offset, 0);
     return {
-      x: finiteNumber(value && value.x, 0) + shift,
-      y: finiteNumber(value && value.y, 0) + shift
+      x: point.x + shift,
+      y: point.y + shift
     };
   }
 
@@ -15,9 +22,10 @@
   }
 
   function appendUnique(points, value) {
-    if (!value) return;
-    const point = { x: finiteNumber(value.x, 0), y: finiteNumber(value.y, 0) };
+    const point = pointValue(value);
+    if (!point) return false;
     if (!points.length || !samePoint(points[points.length - 1], point)) points.push(point);
+    return true;
   }
 
   function lineSection(points) {
@@ -35,8 +43,11 @@
   }
 
   function lineRoute(points, labelX, labelY, kind) {
+    if (!Array.isArray(points)) return null;
     const normalized = [];
-    (points || []).forEach(function (point) { appendUnique(normalized, point); });
+    for (let index = 0; index < points.length; index += 1) {
+      if (!appendUnique(normalized, points[index])) return null;
+    }
     if (normalized.length < 2) return null;
     const middle = midpoint(normalized);
     const label = {
@@ -55,22 +66,28 @@
   }
 
   function routeFromSections(sections, offset) {
+    if (!Array.isArray(sections) || sections.length === 0) return null;
     const normalizedSections = [];
     const flattened = [];
-    (sections || []).forEach(function (section) {
+    for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
+      const section = sections[sectionIndex];
+      if (!section) return null;
+      const bendPoints = section.bendPoints == null ? [] : section.bendPoints;
+      if (!Array.isArray(bendPoints)) return null;
       const points = [];
-      appendUnique(points, normalizedPoint(section && section.startPoint, offset));
-      (section && section.bendPoints || []).forEach(function (point) {
-        appendUnique(points, normalizedPoint(point, offset));
-      });
-      appendUnique(points, normalizedPoint(section && section.endPoint, offset));
-      const line = lineSection(points);
-      if (line) {
-        normalizedSections.push(line);
-        points.forEach(function (point) { appendUnique(flattened, point); });
+      if (!appendUnique(points, normalizedPoint(section.startPoint, offset))) return null;
+      for (let pointIndex = 0; pointIndex < bendPoints.length; pointIndex += 1) {
+        if (!appendUnique(points, normalizedPoint(bendPoints[pointIndex], offset))) return null;
       }
-    });
-    if (!normalizedSections.length) return null;
+      if (!appendUnique(points, normalizedPoint(section.endPoint, offset))) return null;
+      const line = lineSection(points);
+      if (!line) return null;
+      normalizedSections.push(line);
+      for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+        if (!appendUnique(flattened, points[pointIndex])) return null;
+      }
+    }
+    if (!normalizedSections.length || flattened.length < 2) return null;
     const middle = midpoint(flattened);
     const route = {
       kind: "polyline",
@@ -85,45 +102,63 @@
 
   function routePoints(route) {
     if (!route) return null;
-    if (route.sections && route.sections.length) {
+    if (Object.prototype.hasOwnProperty.call(route, "sections")) {
+      if (!Array.isArray(route.sections) || route.sections.length === 0) return null;
       const points = [];
       for (let sectionIndex = 0; sectionIndex < route.sections.length; sectionIndex += 1) {
         const section = route.sections[sectionIndex];
-        if (!section || !section.start || !Array.isArray(section.segments)) return null;
-        appendUnique(points, section.start);
+        const start = pointValue(section && section.start);
+        if (!start || !Array.isArray(section.segments)) return null;
+        if (!appendUnique(points, start)) return null;
         for (let segmentIndex = 0; segmentIndex < section.segments.length; segmentIndex += 1) {
           const segment = section.segments[segmentIndex];
-          if (!segment || segment.kind !== "line" || !segment.to) return null;
-          appendUnique(points, segment.to);
+          const to = pointValue(segment && segment.to);
+          if (!segment || segment.kind !== "line" || !to) return null;
+          if (!appendUnique(points, to)) return null;
         }
       }
       return points.length > 1 ? points : null;
     }
-    if (route.points && route.points.length > 1) return route.points;
-    if (!route.sourcePoint || !route.targetPoint) return null;
+    if (Object.prototype.hasOwnProperty.call(route, "points")) {
+      if (!Array.isArray(route.points)) return null;
+      const points = [];
+      for (let index = 0; index < route.points.length; index += 1) {
+        if (!appendUnique(points, route.points[index])) return null;
+      }
+      return points.length > 1 ? points : null;
+    }
+    if (!pointValue(route.sourcePoint) || !pointValue(route.targetPoint)) return null;
     const points = [];
-    appendUnique(points, route.sourcePoint);
-    (route.bendPoints || []).forEach(function (point) { appendUnique(points, point); });
-    appendUnique(points, route.targetPoint);
+    if (!appendUnique(points, route.sourcePoint)) return null;
+    const bendPoints = route.bendPoints == null ? [] : route.bendPoints;
+    if (!Array.isArray(bendPoints)) return null;
+    for (let index = 0; index < bendPoints.length; index += 1) {
+      if (!appendUnique(points, bendPoints[index])) return null;
+    }
+    if (!appendUnique(points, route.targetPoint)) return null;
     return points.length > 1 ? points : null;
   }
 
   function pathForRoute(route) {
-    if (!route || !route.sections || !route.sections.length) return null;
+    if (!route || !Array.isArray(route.sections) || !route.sections.length) return null;
     const parts = [];
     for (let sectionIndex = 0; sectionIndex < route.sections.length; sectionIndex += 1) {
       const section = route.sections[sectionIndex];
-      if (!section || !section.start || !Array.isArray(section.segments)) return null;
-      parts.push("M", section.start.x, section.start.y);
+      const start = pointValue(section && section.start);
+      if (!start || !Array.isArray(section.segments)) return null;
+      parts.push("M", start.x, start.y);
       for (let segmentIndex = 0; segmentIndex < section.segments.length; segmentIndex += 1) {
         const segment = section.segments[segmentIndex];
-        if (!segment || !segment.to) return null;
+        const to = pointValue(segment && segment.to);
+        if (!segment || !to) return null;
         if (segment.kind === "line") {
-          parts.push("L", segment.to.x, segment.to.y);
+          parts.push("L", to.x, to.y);
           continue;
         }
-        if (segment.kind === "cubic" && segment.control1 && segment.control2) {
-          parts.push("C", segment.control1.x, segment.control1.y + ",", segment.control2.x, segment.control2.y + ",", segment.to.x, segment.to.y);
+        const control1 = pointValue(segment.control1);
+        const control2 = pointValue(segment.control2);
+        if (segment.kind === "cubic" && control1 && control2) {
+          parts.push("C", control1.x, control1.y + ",", control2.x, control2.y + ",", to.x, to.y);
           continue;
         }
         return null;
@@ -186,25 +221,14 @@
     };
   }
 
-  function smoothCurveGeometry(from, to) {
-    const x1 = from.x + from.width;
-    const y1 = from.y + from.height / 2;
-    const x2 = to.x;
-    const y2 = to.y + to.height / 2;
-    const bend = Math.max(32, Math.abs(x2 - x1) * 0.35);
-    return {
-      path: "M " + x1 + " " + y1 + " C " + (x1 + bend) + " " + y1 + ", " + (x2 - bend) + " " + y2 + ", " + x2 + " " + y2,
-      labelX: (x1 + x2) / 2,
-      labelY: (y1 + y2) / 2 - 7
-    };
-  }
-
-  function edgeGeometry(relationship, from, to, route, preferOrthogonal) {
+  function edgeGeometry(relationship, from, to, route) {
     const routed = geometryFromRoute(route, route && route.labelX, route && route.labelY);
     if (routed) return routed;
     if (relationship.from_visible_id === relationship.to_visible_id) return geometryFromRoute(selfLoopRoute(from));
-    if (preferOrthogonal) return geometryFromRoute(orthogonalRoute(from, to));
-    return smoothCurveGeometry(from, to);
+    // Any missing or malformed route is deterministic orthogonal fallback.
+    // This keeps layout failures and manual-position routing on the same
+    // renderer-neutral path representation.
+    return geometryFromRoute(orthogonalRoute(from, to));
   }
 
 export {

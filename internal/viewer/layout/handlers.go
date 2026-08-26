@@ -9,8 +9,11 @@ type optionHandler struct {
 }
 
 var layoutOptionHandlers = map[string]optionHandler{
-	"org.eclipse.elk.direction":                                        genericOptionHandler("RIGHT", enumValues("RIGHT", "LEFT", "DOWN", "UP")),
-	"org.eclipse.elk.edgeRouting":                                      genericOptionHandler("ORTHOGONAL", enumValues("NONE", "POLYLINE", "ORTHOGONAL", "SPLINES")),
+	"org.eclipse.elk.direction": genericOptionHandler("RIGHT", enumValues("RIGHT", "LEFT", "DOWN", "UP")),
+	// SPLINES remains cataloged by ELK but is deliberately excluded from the
+	// editable values until the browser and export renderers support cubic
+	// spline control data end to end.
+	"org.eclipse.elk.edgeRouting":                                      genericOptionHandler("ORTHOGONAL", enumValues("NONE", "POLYLINE", "ORTHOGONAL")),
 	"org.eclipse.elk.aspectRatio":                                      genericOptionHandlerWithBounds("engine default", nil, numberPointer(0), nil, true, false),
 	"org.eclipse.elk.spacing.nodeNode":                                 genericOptionHandlerWithBounds(35.0, nil, numberPointer(0), nil, false, false),
 	"org.eclipse.elk.spacing.edgeNode":                                 genericOptionHandlerWithBounds(10.0, nil, numberPointer(0), nil, false, false),

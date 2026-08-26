@@ -3,6 +3,7 @@ package export
 import (
 	"fmt"
 	"html"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -191,15 +192,24 @@ func nodeBox(node deterministicLayoutNode) routing.NodeBox {
 }
 
 func pathFromRoute(route routing.Route) string {
+	if len(route.Sections) == 0 {
+		return ""
+	}
 	parts := make([]string, 0)
 	for _, section := range route.Sections {
+		if len(section.Segments) == 0 || !finiteRoutePoint(section.Start) {
+			return ""
+		}
 		parts = append(parts, "M", formatNumber(section.Start.X), formatNumber(section.Start.Y))
 		for _, segment := range section.Segments {
+			if !finiteRoutePoint(segment.To) {
+				return ""
+			}
 			switch segment.Kind {
 			case routing.SegmentKindLine:
 				parts = append(parts, "L", formatNumber(segment.To.X), formatNumber(segment.To.Y))
 			case routing.SegmentKindCubic:
-				if segment.Control1 == nil || segment.Control2 == nil {
+				if segment.Control1 == nil || segment.Control2 == nil || !finiteRoutePoint(*segment.Control1) || !finiteRoutePoint(*segment.Control2) {
 					return ""
 				}
 				parts = append(parts,
@@ -214,6 +224,10 @@ func pathFromRoute(route routing.Route) string {
 		}
 	}
 	return strings.Join(parts, " ")
+}
+
+func finiteRoutePoint(point routing.Point) bool {
+	return !math.IsNaN(point.X) && !math.IsNaN(point.Y) && !math.IsInf(point.X, 0) && !math.IsInf(point.Y, 0)
 }
 
 func referenceScopeAttribute(scope string) string {

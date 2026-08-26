@@ -69,6 +69,10 @@ func (session *Session) Reset() {
 // SaveActive writes the profile to the discovered configuration path. It
 // never creates a new file; callers must use SaveAs for that.
 func (session *Session) SaveActive(profile LayoutProfile) error {
+	profile, err := validateLayoutProfile(profile)
+	if err != nil {
+		return err
+	}
 	data, err := encodeLayoutConfig(profile)
 	if err != nil {
 		return err

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/routing"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -136,6 +138,21 @@ func TestRenderSVGIsStaticAccessibleDeterministicAndTraceable(t *testing.T) {
 	}
 	if !strings.Contains(svg, `data-module-id="ref-fmt"`) {
 		t.Fatal("expanded SVG does not expose the individual reference node")
+	}
+}
+
+func TestSVGRouteSerializerRejectsInvalidGeometry(t *testing.T) {
+	route := routing.Route{
+		Sections: []routing.RouteSection{{
+			Start: routing.Point{X: 0, Y: 0},
+			Segments: []routing.RouteSegment{{
+				Kind: routing.SegmentKindLine,
+				To:   routing.Point{X: math.NaN(), Y: 20},
+			}},
+		}},
+	}
+	if pathFromRoute(route) != "" {
+		t.Fatal("SVG route serializer accepted a non-finite coordinate")
 	}
 }
 

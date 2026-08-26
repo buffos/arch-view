@@ -43,9 +43,20 @@ assert.equal(routing.routePoints(loop), null);
 assert.match(routing.geometryFromRoute(loop).path, /^M 135 42 C 235 -13, 235 179, 135 124$/);
 
 const relationship = { from_visible_id: "a", to_visible_id: "b" };
-assert.equal(routing.edgeGeometry(relationship, from, { x: 400, y: 42, width: 190, height: 82 }, null, true).path, "M 230 83 L 315 83 L 400 83");
-assert.match(routing.edgeGeometry({ from_visible_id: "a", to_visible_id: "a" }, from, from, null, false).path, / C /);
-assert.match(routing.edgeGeometry(relationship, from, { x: 400, y: 42, width: 190, height: 82 }, null, false).path, / C /);
+assert.equal(routing.edgeGeometry(relationship, from, { x: 400, y: 42, width: 190, height: 82 }, null).path, "M 230 83 L 315 83 L 400 83");
+assert.match(routing.edgeGeometry({ from_visible_id: "a", to_visible_id: "a" }, from, from, null).path, / C /);
+assert.equal(routing.edgeGeometry(relationship, from, { x: 400, y: 42, width: 190, height: 82 }, null).path, "M 230 83 L 315 83 L 400 83");
+
+assert.equal(routing.fromELKSections(null, 24), null);
+assert.equal(routing.fromELKSections([{ startPoint: { x: 10, y: 20 } }], 24), null);
+assert.equal(routing.fromELKSections([{
+  startPoint: { x: 10, y: 20 },
+  bendPoints: [{ x: "invalid", y: 20 }],
+  endPoint: { x: 30, y: 40 }
+}], 24), null);
+assert.equal(routing.geometryFromRoute({
+  sections: [{ start: { x: 10, y: 20 }, segments: [{ kind: "line", to: { x: NaN, y: 40 } }] }]
+}), null);
 }).catch(function (error) {
   console.error(error);
   process.exitCode = 1;

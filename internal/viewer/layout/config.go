@@ -107,8 +107,11 @@ func validateLayoutProfile(profile LayoutProfile) (LayoutProfile, error) {
 	}
 	normalizedOptions := make(map[string]any, len(profile.Options))
 	for key, value := range profile.Options {
-		key = canonicalLayoutOptionID(key)
-		normalizedOptions[key] = value
+		canonicalKey := canonicalLayoutOptionID(key)
+		if _, exists := normalizedOptions[canonicalKey]; exists {
+			return LayoutProfile{}, analysis.NewHostError(analysis.ErrInvalidOptions, "layout profile contains duplicate option aliases", map[string]any{"option": canonicalKey})
+		}
+		normalizedOptions[canonicalKey] = value
 	}
 	profile.Options = normalizedOptions
 	for key, value := range profile.Options {

@@ -30,7 +30,7 @@ export function renderGraph(context, services) {
     const matches = relationshipMatches(state, relationship, nodesByID);
     const className = "edge-line " + classForState(relationship.cycle_state) + (selected ? " selected" : "") + (!matches ? " dimmed" : "");
     const hasManualEndpoint = manualPositions[relationship.from_visible_id] || manualPositions[relationship.to_visible_id];
-    const geometry = edgeGeometry(relationship, from, to, hasManualEndpoint ? null : activeLayout.edges[relationship.id], Boolean(hasManualEndpoint));
+    const geometry = edgeGeometry(relationship, from, to, hasManualEndpoint ? null : activeLayout.edges[relationship.id]);
     return '<g class="edge-group" data-edge-id="' + escapeHTML(relationship.id) + '" tabindex="0" role="button" aria-label="' + escapeHTML(relationship.accessible_label) + '">' +
       '<path class="edge-hit" d="' + geometry.path + '"></path><path class="' + className + '" d="' + geometry.path + '" marker-end="url(#arrow)"></path>' +
       '<text class="edge-label ' + classForState(relationship.cycle_state) + (!matches ? " dimmed" : "") + '" x="' + geometry.labelX + '" y="' + geometry.labelY + '" text-anchor="middle">' + escapeHTML(relationship.count) + "</text></g>";
