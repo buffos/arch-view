@@ -35,7 +35,7 @@ Given a Go repository containing a selected module, a developer can:
 - External process plugins or the future NDJSON protocol.
 - Call graphs, runtime tracing, target-code execution, or full type graphs.
 - Source editing, source embedding in exports, cloud hosting, or raster output.
-- Changes to the reference-only external folder.
+- Changes to the upstream reference repository.
 
 ## Ordered delivery issues
 
@@ -50,16 +50,16 @@ Given a Go repository containing a selected module, a developer can:
 | [007](../../../agents/issues/done/20260826-007-elk-layout-settings-and-project-config.md) | User-selectable ELK layout settings and persistent project configuration | Explore architecture | — | done |
 | [008](../../../agents/issues/done/20260826-008-expand-elk-parent-options.md) | Expanded ELK parent-level layout option support | Explore architecture | — | approved |
 | [009](../../../agents/issues/pending/009-elk-node-edge-option-targets.md) | Target-aware node- and edge-level ELK option mapping | Explore architecture | — | deferred |
-| [010](../../../agents/issues/pending/010-renderer-neutral-routing-and-geometry.md) | Renderer-neutral route primitives, ELK route normalization, and dedicated path serialization | Explore architecture | — | awaiting-human-review |
-| [011](../../../agents/issues/pending/011-browser-composition-and-self-contained-bundling.md) | Native browser modules, embedded esbuild export bundle, focused host/CLI composition | Explore + Export | 010 | awaiting-human-review |
-| [012](../../../agents/issues/pending/012-scene-projection-capability.md) | Renderer-neutral scene projection capability and cohesive scene units | Explore architecture | 011 | awaiting-human-review |
-| [013](../../../agents/issues/pending/013-go-analyzer-capability-pipeline.md) | Scanner, import classification, and common observation assembly pipeline | Go analysis | 012 | awaiting-human-review |
-| [014](../../../agents/issues/pending/014-elk-option-handler-registry.md) | Registry-driven ELK option enrichment/validation and layout transport split | Explore architecture | 012 | awaiting-human-review |
-| [015](../../../agents/issues/pending/015-canonical-model-normalization-boundary.md) | Canonical normalization/validation capability boundary | Generate models | 013 | awaiting-human-review |
+| [010](../../../agents/issues/done/20260826-010-renderer-neutral-routing-and-geometry.md) | Renderer-neutral route primitives, ELK route normalization, and dedicated path serialization | Explore architecture | — | approved |
+| [011](../../../agents/issues/done/20260826-011-browser-composition-and-self-contained-bundling.md) | Native browser modules, embedded esbuild export bundle, focused host/CLI composition | Explore + Export | 010 | approved |
+| [012](../../../agents/issues/done/20260826-012-scene-projection-capability.md) | Renderer-neutral scene projection capability and cohesive scene units | Explore architecture | 011 | approved |
+| [013](../../../agents/issues/done/20260826-013-go-analyzer-capability-pipeline.md) | Scanner, import classification, and common observation assembly pipeline | Go analysis | 012 | approved |
+| [014](../../../agents/issues/done/20260826-014-elk-option-handler-registry.md) | Registry-driven ELK option enrichment/validation and layout transport split | Explore architecture | 012 | approved |
+| [015](../../../agents/issues/done/20260826-015-canonical-model-normalization-boundary.md) | Canonical normalization/validation capability boundary | Generate models | 013 | approved |
 
 ## Current delivery status
 
-The analyzer-to-model path and the revised local viewer implementation are available. Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic JSON/HTML/SVG export parity, semantic/ELK refinement, the layout-settings/project-configuration slice, and the expanded parent-level option tranche. Issue 009 is explicitly deferred. Issues 010–015 implement the architecture-refactor plan and await automated/repository or user visual review handoffs; they preserve the analyzer-to-model and export contracts. Spline support remains a later issue after this review gate.
+The analyzer-to-model path and the revised local viewer implementation are available. Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic JSON/HTML/SVG export parity, semantic/ELK refinement, the layout-settings/project-configuration slice, and the expanded parent-level option tranche. Issue 009 is explicitly deferred. Issues 010–015 implement the architecture-refactor plan and are archived after automated, repository, and user visual review approval; they preserve the analyzer-to-model and export contracts. Spline support remains a later issue.
 
 ## Slice acceptance
 

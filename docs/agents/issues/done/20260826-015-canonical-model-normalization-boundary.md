@@ -2,7 +2,7 @@
 
 Execution type: AFK
 Review gate: repository-review
-Status: awaiting-human-review
+Status: done
 
 ## Parent PRD
 
@@ -57,3 +57,30 @@ architecture cleanup.
 - Contract: `docs/architecture/generate-models/canonical-api-cli-contract.md`
 - Scenarios: SC-GM-001, SC-GM-004, SC-GM-005, SC-GM-007
 - Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
+
+## Artifact sync required
+
+- Application PRD: no impact — canonical model behavior and the external
+  contract are preserved.
+- Application architecture summary: synchronized — the canonicalization
+  boundary and model-owned graph responsibilities are recorded.
+- Owning capability artifacts: synchronized in
+  `.okf/capabilities/generate-models.md` and
+  `docs/architecture/generate-models/orchestration-status.md`; the model
+  contract and acceptance artifacts remain unchanged.
+- Delivery truth: the active registry, first implementation slice, and
+  `.okf/log.md` are synchronized during closeout.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
+
+## Review handoff
+
+The user explicitly approved the repository review on 2026-08-27. The strict
+code-review loop found no actionable P0–P2 findings; schema, stable identity,
+ordering, merge behavior, diagnostics, cycle/layer derivation, and package
+ownership were accepted.
+
+## Closeout result
+
+Closed on 2026-08-27 after explicit user approval. The issue was moved to the
+dated delivery archive, its registry row was removed, and the owning
+capability and OKF delivery references were synchronized.

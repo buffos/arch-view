@@ -22,8 +22,8 @@
 
 - Selected first frontier: Go analysis.
 - Implementation slice: [Go repository to visible architecture view](implementation-slice.md).
-- Delivery progress: issues 001 through 008 are complete for the first Go analyzer/model, viewer, export, and layout-configuration slice. Issue 009 is explicitly deferred. Issue 013 splits the Go analyzer implementation into scanner, import-classification, and observation-assembly capabilities while preserving the analyzer contract; automated verification is complete and repository review remains.
+- Delivery progress: issues 001 through 008 and 013 are complete for the first Go analyzer/model, viewer, export, layout-configuration, and analyzer-pipeline slice. Issue 009 is explicitly deferred. Issue 013 splits the Go analyzer implementation into scanner, import-classification, and observation-assembly capabilities while preserving the analyzer contract.
 
 ## Next step and artifact impact
 
-Issues 001 through 008 are complete: Go analysis feeds a validated canonical model, the local viewer provides the approved interactive investigation workflow, the shared JSON/HTML/SVG exporter is visually approved, and the viewer-owned ELK settings/configuration boundary is complete. Issue 008's parent-level ELK option implementation and visual review are complete; issue 009 is deferred. Issue 013's pipeline decomposition is implemented and awaits repository-review handoff. Product and architecture truth remain synchronized.
+Issues 001 through 008 are complete: Go analysis feeds a validated canonical model, the local viewer provides the approved interactive investigation workflow, the shared JSON/HTML/SVG exporter is visually approved, and the viewer-owned ELK settings/configuration boundary is complete. Issue 008's parent-level ELK option implementation and visual review are complete; issue 009 is deferred. Issue 013's pipeline decomposition is implemented and repository-reviewed. Product and architecture truth remain synchronized.

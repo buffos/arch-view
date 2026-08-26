@@ -21,6 +21,15 @@
   the [upstream reference repository](https://github.com/unclebob/arch-view)
   remains outside the product and untouched.
 
+## 2026-08-27
+
+* **Review and closeout**: The user explicitly approved the integrated visual
+  review for issues 010, 011, 012, and 014 and the repository review for
+  issues 013 and 015. Issues 010–015 were moved to the dated delivery archive,
+  removed from the active registry, and synchronized across the owning OKF
+  capabilities and implementation slice. Issue 009 remains explicitly
+  deferred; spline rendering remains a later issue.
+
 ## 2026-08-26
 
 * **Closeout**: Archived issue 008 after the user's explicit approval of the parent-level ELK option tranche in windowed and full-canvas views, including representative settings, diagnostics, fallbacks, and resulting layouts. Removed its active registry row, updated the owning capability and implementation-slice references, and unblocked issue 009 without processing it; the [upstream reference repository](https://github.com/unclebob/arch-view) remains untouched.

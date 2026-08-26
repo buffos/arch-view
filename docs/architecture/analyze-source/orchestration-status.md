@@ -60,4 +60,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with completed issues 001 through 008 and the pending issue 013 analyzer-pipeline refactor; issue 009 is explicitly deferred and future language-adapter work remains in the specified roadmap.
+- Delivery truth: updated with completed issues 001 through 008 and 013; issue 009 is explicitly deferred and future language-adapter work remains in the specified roadmap.

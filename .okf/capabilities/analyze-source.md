@@ -3,7 +3,7 @@ type: capability
 title: Analyze source code
 description: Discover supported project structures, modules, and dependency evidence through language analyzers.
 tags: [analysis, plugins, languages]
-timestamp: 2026-08-25T18:39:17Z
+timestamp: 2026-08-26T20:56:17Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -23,7 +23,7 @@ implementation_slice: docs/architecture/analyze-source/go-analysis/implementatio
 issues:
   - docs/agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md
   - docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md
-  - docs/agents/issues/pending/013-go-analyzer-capability-pipeline.md
+  - docs/agents/issues/done/20260826-013-go-analyzer-capability-pipeline.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -61,4 +61,4 @@ The capability is specified. Its observation schema, analyzer lifecycle, safety 
 
 ## Delivery progress
 
-Issues 001 through 008 are complete for the first Go analyzer/model, viewer, export, and layout slice. Issue 013 isolates the Go analyzer pipeline and awaits repository-review handoff. The capability remains `specified` because the Python, TypeScript, Rust, and Clojure adapter territories and the external plugin protocol remain future delivery work.
+Issues 001 through 008 and 013 are complete for the first Go analyzer/model, viewer, export, layout, and analyzer-pipeline slice. The capability remains `specified` because the Python, TypeScript, Rust, and Clojure adapter territories and the external plugin protocol remain future delivery work.

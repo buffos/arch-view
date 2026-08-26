@@ -2,7 +2,7 @@
 
 Execution type: AFK
 Review gate: visual-review
-Status: awaiting-human-review
+Status: done
 
 ## Parent PRD
 
@@ -29,7 +29,7 @@ dependency and inlining the result.
 - [x] CLI and HTTP host composition is split into focused command/transport
   files; hand-written production files remain below the approximate 400-line
   target.
-- [ ] User visual review confirms live and exported HTML behavior, including
+- [x] User visual review confirms live and exported HTML behavior, including
   settings, navigation, viewport controls, drag/drop, and full canvas.
 
 ## Implementation result
@@ -58,3 +58,29 @@ responsibility so orchestration remains small.
 - Contract: `docs/architecture/explore-architecture/canonical-api-cli-contract.md`
 - Scenarios: SC-EX-001, SC-EX-003, SC-EXPT-003
 - Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
+
+## Artifact sync required
+
+- Application PRD: no impact — the live viewer and export contracts are
+  preserved.
+- Application architecture summary: synchronized — browser composition and
+  self-contained bundling boundaries are recorded.
+- Owning capability artifacts: synchronized in
+  `.okf/capabilities/explore-architecture.md`,
+  `.okf/capabilities/export-and-automate.md`, and their orchestration status
+  records; the viewer and export contract artifacts remain unchanged.
+- Delivery truth: the active registry, first implementation slice, and
+  `.okf/log.md` are synchronized during closeout.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
+
+## Review handoff
+
+The user explicitly approved the visual review on 2026-08-27. It covered live
+and exported HTML behavior, settings, navigation, viewport controls,
+drag/drop, full canvas, and standalone export loading.
+
+## Closeout result
+
+Closed on 2026-08-27 after explicit user approval. The issue was moved to the
+dated delivery archive, its registry row was removed, and the owning
+capability and OKF delivery references were synchronized.

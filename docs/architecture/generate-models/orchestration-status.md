@@ -34,7 +34,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 ## Current delivery slice
 
-- Issue 002 consumed Go observations and implemented the first canonical model pipeline, including normalization, validation, graph derivations, hierarchy projection, and headless CLI access. Issue 015 separates canonical normalization/validation from model data types and preserves the same output contract; automated verification is complete and repository review remains.
+- Issue 002 consumed Go observations and implemented the first canonical model pipeline, including normalization, validation, graph derivations, hierarchy projection, and headless CLI access. Issue 015 separates canonical normalization/validation from model data types and preserves the same output contract; its repository review is complete.
 - It is part of [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Delivery progress
@@ -48,4 +48,4 @@ Issue 002 is complete. Issue 015 implements the planned canonicalization boundar
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: issue 002 is archived as complete; issue 015 is implemented and awaiting repository-review handoff. The active refactor queue is synchronized in `docs/agents/issues/issues.md`.
+- Delivery truth: issues 002 and 015 are archived as complete. The active refactor queue is synchronized in `docs/agents/issues/issues.md`.

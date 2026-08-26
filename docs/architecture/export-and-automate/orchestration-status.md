@@ -5,7 +5,7 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the headless and repeatable-workflow capability.
-- Next route: retain the specified capability for future reanalysis and CI expansion; issue 005's initial JSON/HTML/SVG delivery is archived.
+- Next route: retain the specified capability for future reanalysis and CI expansion; issues 005 and 011's initial export delivery and bundling boundary are archived.
 
 ## Confirmed boundary
 
@@ -37,6 +37,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Issue 005 implements deterministic JSON, HTML, and SVG artifacts from the validated model/view contract.
 - Issue 005 also owns export parity for reference visibility, scope, confidence, and import/evidence traceability.
 - The issue is archived after automated verification and explicit user approval of HTML/SVG visual parity with the local viewer.
+- Issue 011 is archived after automated verification and explicit user approval of live/exported browser composition and self-contained bundling.
 - It is part of [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Artifact sync
@@ -46,4 +47,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with issue 005.
+- Delivery truth: updated with issues 005 and 011.

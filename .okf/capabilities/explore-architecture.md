@@ -3,7 +3,7 @@ type: capability
 title: Explore and inspect architecture
 description: Let users navigate generated architecture views and inspect the code and dependency evidence behind them.
 tags: [viewer, navigation, evidence, layout]
-timestamp: 2026-08-26T17:51:56Z
+timestamp: 2026-08-26T20:56:17Z
 state: specified
 state_changed: 2026-08-26T00:00:00Z
 project: /project.md
@@ -18,10 +18,10 @@ issues:
   - docs/agents/issues/done/20260826-007-elk-layout-settings-and-project-config.md
   - docs/agents/issues/done/20260826-008-expand-elk-parent-options.md
   - docs/agents/issues/pending/009-elk-node-edge-option-targets.md
-  - docs/agents/issues/pending/010-renderer-neutral-routing-and-geometry.md
-  - docs/agents/issues/pending/011-browser-composition-and-self-contained-bundling.md
-  - docs/agents/issues/pending/012-scene-projection-capability.md
-  - docs/agents/issues/pending/014-elk-option-handler-registry.md
+  - docs/agents/issues/done/20260826-010-renderer-neutral-routing-and-geometry.md
+  - docs/agents/issues/done/20260826-011-browser-composition-and-self-contained-bundling.md
+  - docs/agents/issues/done/20260826-012-scene-projection-capability.md
+  - docs/agents/issues/done/20260826-014-elk-option-handler-registry.md
 discovery_notes: docs/architecture/explore-architecture/discovery-notes.md
 gap_analysis: docs/architecture/explore-architecture/requirements-gap-analysis.md
 prd: docs/architecture/explore-architecture/prd.md
@@ -54,4 +54,4 @@ This capability is specified. Its local web surface, renderer-neutral scene cont
 
 ## Delivery progress
 
-Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, the ELK settings/project-configuration slice, and the expanded parent-level ELK option tranche. Issue 009 is explicitly deferred by the user. Refactor issues 010, 011, 012, and 014 have automated implementation verification and await the user's integrated visual review where applicable. The route model reserves spline segments, but spline rendering remains a later specification frontier.
+Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, the ELK settings/project-configuration slice, and the expanded parent-level ELK option tranche. Issue 009 is explicitly deferred by the user. Refactor issues 010, 011, 012, and 014 are archived after automated implementation verification and the user's integrated visual review. The route model reserves spline segments, but spline rendering remains a later specification frontier.

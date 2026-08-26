@@ -2,7 +2,7 @@
 
 Execution type: AFK
 Review gate: visual-review
-Status: awaiting-human-review
+Status: done
 
 ## Parent PRD
 
@@ -26,7 +26,7 @@ accessibility into cohesive units.
   accessibility output are preserved.
 - [x] The former giant scene builder is split into cohesive files and tests
   continue to cover aggregation and inspection behavior.
-- [ ] User visual review confirms the windowed/full-canvas scene and details
+- [x] User visual review confirms the windowed/full-canvas scene and details
   presentation remain unchanged.
 
 ## Implementation result
@@ -51,3 +51,29 @@ viewer scene file.
 - Contract: `docs/architecture/explore-architecture/canonical-api-cli-contract.md`
 - Scenarios: SC-EX-002, SC-EX-006, SC-EX-007, SC-EX-009
 - Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
+
+## Artifact sync required
+
+- Application PRD: no impact — scene projection remains the same product
+  capability and schema.
+- Application architecture summary: synchronized — the renderer-neutral scene
+  projection boundary is recorded.
+- Owning capability artifacts: synchronized in
+  `.okf/capabilities/explore-architecture.md` and
+  `docs/architecture/explore-architecture/orchestration-status.md`; the
+  existing scene contract and acceptance artifacts remain unchanged.
+- Delivery truth: the active registry, first implementation slice, and
+  `.okf/log.md` are synchronized during closeout.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
+
+## Review handoff
+
+The user explicitly approved the visual review on 2026-08-27. It covered the
+windowed and full-canvas scene, hierarchy navigation, details, layers, cycles,
+diagnostics, evidence, accessibility, and imports presentation.
+
+## Closeout result
+
+Closed on 2026-08-27 after explicit user approval. The issue was moved to the
+dated delivery archive, its registry row was removed, and the owning
+capability and OKF delivery references were synchronized.
