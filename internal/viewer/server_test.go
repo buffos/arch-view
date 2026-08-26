@@ -16,6 +16,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -341,7 +342,7 @@ func TestServerReanalysisReplacesOnlyValidRevision(t *testing.T) {
 		t.Fatalf("failed reanalysis response = %d model=%q", failedResponse.StatusCode, failedServer.snapshot().ModelID)
 	}
 
-	failedModel, err := model.Normalize(analysis.AnalysisResult{
+	failedModel, err := canonical.Normalize(analysis.AnalysisResult{
 		Status: analysis.StatusFailed,
 		Analyzer: analysis.AnalyzerInfo{
 			ID:         "org.archview.go",

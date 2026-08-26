@@ -5,6 +5,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 )
 
 func BuildScene(value model.Model, selectedPath []string, displayMode string) (SceneSnapshot, error) {
@@ -16,7 +17,7 @@ func BuildSceneWithOptions(value model.Model, selectedPath []string, displayMode
 }
 
 func buildScene(value model.Model, selectedPath []string, displayMode string, options SceneOptions) (SceneSnapshot, error) {
-	if err := model.Validate(value); err != nil {
+	if err := canonical.Validate(value); err != nil {
 		return SceneSnapshot{}, err
 	}
 	request, err := normalizeSceneRequest(selectedPath, displayMode, options)

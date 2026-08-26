@@ -7,6 +7,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 )
 
 func TestBuildScenePreservesTopLevelSemanticsAndAggregation(t *testing.T) {
@@ -142,7 +143,7 @@ func TestBuildSceneSummarizesNonCycleInternalGroupRelationship(t *testing.T) {
 			{ID: "rel-b-a", Type: "depends_on", FromModuleID: "go:example.com/app/internal/b", ToModuleID: "go:example.com/app/internal/a", SourceReferenceIDs: []string{"src-b-import"}, Confidence: &analysis.Confidence{Basis: "resolved", Score: 1}},
 		},
 	}
-	value, err := model.Normalize(result)
+	value, err := canonical.Normalize(result)
 	if err != nil {
 		t.Fatalf("Normalize() error = %v", err)
 	}
@@ -228,7 +229,7 @@ func fixtureModel(t *testing.T) model.Model {
 		},
 		Diagnostics: []analysis.Diagnostic{{Code: "go_unresolved_import", Severity: "warning", Message: "unresolved import", Path: "api/api.go", Location: position(5, 8), Recoverable: true}},
 	}
-	value, err := model.Normalize(result)
+	value, err := canonical.Normalize(result)
 	if err != nil {
 		t.Fatalf("Normalize() error = %v", err)
 	}

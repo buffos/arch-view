@@ -12,6 +12,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -83,7 +84,7 @@ func Render(value model.Model, request Request) (ArtifactMetadata, []byte, error
 	if err := request.Context.Err(); err != nil {
 		return ArtifactMetadata{}, nil, err
 	}
-	if err := model.Validate(value); err != nil {
+	if err := canonical.Validate(value); err != nil {
 		return ArtifactMetadata{}, nil, err
 	}
 	if value.Status == model.StatusFailed {

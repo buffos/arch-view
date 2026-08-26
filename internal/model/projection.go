@@ -8,9 +8,10 @@ import (
 )
 
 func BuildHierarchyProjection(model Model, selectedPath []string) (HierarchyProjection, error) {
-	if err := Validate(model); err != nil {
-		return HierarchyProjection{}, err
-	}
+	// Callers that accept external model data must validate it through
+	// model/canonical before requesting a projection. Keeping projection
+	// construction independent of canonicalization avoids an import cycle and
+	// leaves this package focused on graph/projection data.
 	for _, segment := range selectedPath {
 		if strings.TrimSpace(segment) == "" {
 			return HierarchyProjection{}, invalidProjection("hierarchy path contains an empty segment")
@@ -91,7 +92,7 @@ func BuildHierarchyProjection(model Model, selectedPath []string) (HierarchyProj
 		projected, exists := relationships[key]
 		if !exists {
 			projected = ProjectionRelationship{
-				ID:                 stableID("projection", relationship.Type, fromNodeID, toNodeID),
+				ID:                 StableID("projection", relationship.Type, fromNodeID, toNodeID),
 				Type:               relationship.Type,
 				FromNodeID:         fromNodeID,
 				ToNodeID:           toNodeID,

@@ -12,6 +12,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -38,7 +39,7 @@ func TestRenderJSONIsCanonicalAndPreservesPartialFacts(t *testing.T) {
 	if err := json.Unmarshal(first, &decoded); err != nil {
 		t.Fatalf("decode exported model: %v", err)
 	}
-	if err := model.Validate(decoded); err != nil {
+	if err := canonical.Validate(decoded); err != nil {
 		t.Fatalf("validate exported model: %v", err)
 	}
 	if decoded.Status != model.StatusPartial || len(decoded.Diagnostics) == 0 || len(decoded.References) != 4 {
@@ -310,7 +311,7 @@ func exportFixtureModel(t *testing.T) model.Model {
 			Recoverable: true,
 		}},
 	}
-	value, err := model.Normalize(result)
+	value, err := canonical.Normalize(result)
 	if err != nil {
 		t.Fatalf("normalize export fixture: %v", err)
 	}

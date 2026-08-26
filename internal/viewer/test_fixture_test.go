@@ -5,6 +5,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 )
 
 func fixtureModel(t *testing.T) model.Model {
@@ -47,7 +48,7 @@ func fixtureModel(t *testing.T) model.Model {
 		},
 		Diagnostics: []analysis.Diagnostic{{Code: "go_unresolved_import", Severity: "warning", Message: "unresolved import", Path: "api/api.go", Location: position(5, 8), Recoverable: true}},
 	}
-	value, err := model.Normalize(result)
+	value, err := canonical.Normalize(result)
 	if err != nil {
 		t.Fatalf("Normalize() error = %v", err)
 	}

@@ -210,15 +210,6 @@ func StableID(kind string, parts ...string) string {
 	return "go:" + kind + ":" + hex.EncodeToString(sum[:8])
 }
 
-func appendUnique(values []string, value string) []string {
-	for _, existing := range values {
-		if existing == value {
-			return values
-		}
-	}
-	return append(values, value)
-}
-
 func optionBool(values map[string]any, name string) bool {
 	value, _ := values[name].(bool)
 	return value

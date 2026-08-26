@@ -148,5 +148,5 @@ func uniqueAdjacentPoints(points []Point) []Point {
 }
 
 func finitePoint(point Point) bool {
-	return math.IsNaN(point.X) == false && math.IsNaN(point.Y) == false && math.IsInf(point.X, 0) == false && math.IsInf(point.Y, 0) == false
+	return !math.IsNaN(point.X) && !math.IsNaN(point.Y) && !math.IsInf(point.X, 0) && !math.IsInf(point.Y, 0)
 }

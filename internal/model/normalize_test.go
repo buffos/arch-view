@@ -1,10 +1,12 @@
-package model
+package model_test
 
 import (
 	"encoding/json"
 	"testing"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	modelpkg "github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 )
 
 func TestNormalizeProducesDeterministicModelAndCycleProjections(t *testing.T) {
@@ -13,11 +15,11 @@ func TestNormalizeProducesDeterministicModelAndCycleProjections(t *testing.T) {
 	second.Modules[0], second.Modules[1] = second.Modules[1], second.Modules[0]
 	second.Relationships[0], second.Relationships[1] = second.Relationships[1], second.Relationships[0]
 
-	left, err := Normalize(first)
+	left, err := canonical.Normalize(first)
 	if err != nil {
 		t.Fatalf("normalize first result: %v", err)
 	}
-	right, err := Normalize(second)
+	right, err := canonical.Normalize(second)
 	if err != nil {
 		t.Fatalf("normalize second result: %v", err)
 	}
@@ -42,7 +44,7 @@ func TestNormalizeProducesDeterministicModelAndCycleProjections(t *testing.T) {
 		t.Fatal("derived layers are empty")
 	}
 
-	projection, err := BuildHierarchyProjection(left, []string{"internal"})
+	projection, err := modelpkg.BuildHierarchyProjection(left, []string{"internal"})
 	if err != nil {
 		t.Fatalf("build projection: %v", err)
 	}
@@ -77,11 +79,11 @@ func TestNormalizeMergesEvidenceAndPreservesPartialDiagnostics(t *testing.T) {
 		Recoverable: true,
 	}}
 
-	model, err := Normalize(result)
+	model, err := canonical.Normalize(result)
 	if err != nil {
 		t.Fatalf("normalize partial result: %v", err)
 	}
-	if model.Status != StatusPartial {
+	if model.Status != modelpkg.StatusPartial {
 		t.Fatalf("status = %q, want partial", model.Status)
 	}
 	if len(model.Modules) != 2 || len(model.Modules[0].SourceReferenceIDs) != 2 {
@@ -98,11 +100,11 @@ func TestNormalizeReportsConflictingDuplicateObservationsAsPartial(t *testing.T)
 	conflict.Name = "different"
 	result.Modules = append(result.Modules, conflict)
 
-	normalized, err := Normalize(result)
+	normalized, err := canonical.Normalize(result)
 	if err != nil {
 		t.Fatalf("normalize conflicting result: %v", err)
 	}
-	if normalized.Status != StatusPartial {
+	if normalized.Status != modelpkg.StatusPartial {
 		t.Fatalf("status = %q, want partial", normalized.Status)
 	}
 	if len(normalized.Diagnostics) != 1 || normalized.Diagnostics[0].Code != "model_conflicting_module" || !normalized.Diagnostics[0].Recoverable {
@@ -128,7 +130,7 @@ func TestNormalizeSortsDiagnosticsAddedDuringNormalization(t *testing.T) {
 	conflict.Name = "different"
 	result.Modules = append(result.Modules, conflict)
 
-	normalized, err := Normalize(result)
+	normalized, err := canonical.Normalize(result)
 	if err != nil {
 		t.Fatalf("normalize result: %v", err)
 	}
@@ -138,33 +140,32 @@ func TestNormalizeSortsDiagnosticsAddedDuringNormalization(t *testing.T) {
 }
 
 func TestValidateRejectsBrokenModelEndpoint(t *testing.T) {
-	model, err := Normalize(fixtureAnalysisResult())
+	model, err := canonical.Normalize(fixtureAnalysisResult())
 	if err != nil {
 		t.Fatalf("normalize fixture: %v", err)
 	}
 	model.Relationships[0].ToModuleID = "missing"
-	if err := Validate(model); analysis.ErrorCodeOf(err) != analysis.ErrInvalidModel {
+	if err := canonical.Validate(model); analysis.ErrorCodeOf(err) != analysis.ErrInvalidModel {
 		t.Fatalf("error code = %q, want %q", analysis.ErrorCodeOf(err), analysis.ErrInvalidModel)
 	}
 }
 
 func TestValidateRejectsStaleModelIDAndUnknownReferenceScope(t *testing.T) {
-	model, err := Normalize(fixtureAnalysisResult())
+	model, err := canonical.Normalize(fixtureAnalysisResult())
 	if err != nil {
 		t.Fatalf("normalize fixture: %v", err)
 	}
 	model.ModelID = "model-stale"
-	if err := Validate(model); analysis.ErrorCodeOf(err) != analysis.ErrInvalidModel {
+	if err := canonical.Validate(model); analysis.ErrorCodeOf(err) != analysis.ErrInvalidModel {
 		t.Fatalf("stale model id error code = %q, want %q", analysis.ErrorCodeOf(err), analysis.ErrInvalidModel)
 	}
 
-	model, err = Normalize(fixtureAnalysisResult())
+	model, err = canonical.Normalize(fixtureAnalysisResult())
 	if err != nil {
 		t.Fatalf("normalize fixture again: %v", err)
 	}
 	model.References = append(model.References, analysis.Reference{ID: "ref-invalid", Name: "invalid", Scope: "unknown", Language: "go"})
-	model.ModelID = modelID(model)
-	if err := Validate(model); analysis.ErrorCodeOf(err) != analysis.ErrInvalidModel {
+	if err := canonical.Validate(model); analysis.ErrorCodeOf(err) != analysis.ErrInvalidModel {
 		t.Fatalf("unknown reference scope error code = %q, want %q", analysis.ErrorCodeOf(err), analysis.ErrInvalidModel)
 	}
 }

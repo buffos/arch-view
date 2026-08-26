@@ -1,6 +1,8 @@
 package model
 
-import "sort"
+import (
+	"sort"
+)
 
 type graphEdge struct {
 	RelationshipID string
@@ -55,7 +57,7 @@ func deriveGraph(model *Model) {
 		sort.Strings(component)
 		sort.Strings(relationshipIDs)
 		cycles = append(cycles, CycleGroup{
-			ID:              stableID("cycle", component...),
+			ID:              StableID("cycle", component...),
 			ModuleIDs:       component,
 			RelationshipIDs: relationshipIDs,
 		})
@@ -70,6 +72,15 @@ func deriveGraph(model *Model) {
 		model.Derived.AlgorithmProvenance = map[string]any{}
 	}
 	model.Derived.AlgorithmProvenance["relation_type"] = "depends_on"
+}
+
+// DeriveGraph populates the model's deterministic graph projections.
+//
+// Canonicalization owns the normalization pipeline, while the model package
+// owns graph derivation. Keeping this small capability boundary lets callers
+// compose the two without coupling model types to canonicalization.
+func DeriveGraph(model *Model) {
+	deriveGraph(model)
 }
 
 func stronglyConnectedComponents(moduleIDs []string, adjacency map[string][]graphEdge) [][]string {
