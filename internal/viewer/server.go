@@ -18,6 +18,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/viewer/layout"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -53,7 +54,7 @@ type Server struct {
 	model      model.Model
 	sourceRoot string
 	reanalyze  ReanalyzeFunc
-	layout     layoutSession
+	layout     layout.Session
 	handler    http.Handler
 }
 
@@ -69,7 +70,7 @@ func NewServer(value model.Model, options ...ServerOptions) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	server := &Server{model: value, sourceRoot: sourceRoot, reanalyze: option.Reanalyze, layout: discoverLayoutSession(sourceRoot)}
+	server := &Server{model: value, sourceRoot: sourceRoot, reanalyze: option.Reanalyze, layout: layout.NewSession(sourceRoot)}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", server.handleRoot)
 	mux.HandleFunc("/assets/", server.handleAsset)

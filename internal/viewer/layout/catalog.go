@@ -1,4 +1,4 @@
-package viewer
+package layout
 
 var pinnedELKAlgorithms = []LayoutAlgorithmDefinition{
 	{ID: "fixed", ELKID: "org.eclipse.elk.fixed", Name: "ELK Fixed", Description: "Keeps the current layout as it is, without any automatic modification. Optional coordinates can be given for nodes and edge bend points.", Category: "", KnownOptions: []string{"org.eclipse.elk.padding", "org.eclipse.elk.position", "org.eclipse.elk.bendPoints", "org.eclipse.elk.nodeSize.constraints", "org.eclipse.elk.nodeSize.minimum", "org.eclipse.elk.nodeSize.fixedGraphSize"}, SupportedFeatures: []string{}, RendererSupport: "supported"},

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/viewer/layout"
 )
 
 func TestLayoutEndpointsExposeCatalogAndModelOnlySessionLimits(t *testing.T) {
@@ -24,7 +25,7 @@ func TestLayoutEndpointsExposeCatalogAndModelOnlySessionLimits(t *testing.T) {
 	if optionsResponse.Code != http.StatusOK {
 		t.Fatalf("GET options status = %d, body=%s", optionsResponse.Code, optionsResponse.Body.String())
 	}
-	var options LayoutOptionsResponse
+	var options layout.LayoutOptionsResponse
 	if err := json.Unmarshal(optionsResponse.Body.Bytes(), &options); err != nil {
 		t.Fatal(err)
 	}
@@ -32,14 +33,14 @@ func TestLayoutEndpointsExposeCatalogAndModelOnlySessionLimits(t *testing.T) {
 		t.Fatalf("catalog sizes = %d options, %d algorithms", len(options.Options), len(options.Algorithms))
 	}
 	configResponse := requestLayout(t, server, http.MethodGet, "/v1/layout/config", nil)
-	var config LayoutConfigResponse
+	var config layout.LayoutConfigResponse
 	if err := json.Unmarshal(configResponse.Body.Bytes(), &config); err != nil {
 		t.Fatal(err)
 	}
 	if config.Origin != "session" || config.CanSave || config.CanSaveAs || len(config.Diagnostics) != 1 {
 		t.Fatalf("model-only config = %#v", config)
 	}
-	payload := layoutJSON(t, layoutApplyRequest{SchemaVersion: layoutConfigSchemaVersion, Layout: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "LEFT"}}})
+	payload := layoutJSON(t, layoutApplyRequest{SchemaVersion: layout.ConfigSchemaVersion, Layout: layout.LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "LEFT"}}})
 	applyResponse := requestLayout(t, server, http.MethodPost, "/v1/layout/apply", payload)
 	if applyResponse.Code != http.StatusOK {
 		t.Fatalf("POST apply status = %d, body=%s", applyResponse.Code, applyResponse.Body.String())
@@ -47,7 +48,7 @@ func TestLayoutEndpointsExposeCatalogAndModelOnlySessionLimits(t *testing.T) {
 	if response := requestLayout(t, server, http.MethodPut, "/v1/layout/config", payload); response.Code != http.StatusConflict || analysis.ErrorCodeOf(decodeHTTPError(t, response.Body.Bytes())) != analysis.ErrSaveAsRequired {
 		t.Fatalf("model-only Save response = %d, body=%s", response.Code, response.Body.String())
 	}
-	saveAsPayload := layoutJSON(t, layoutSaveAsRequest{SchemaVersion: layoutConfigSchemaVersion, Layout: LayoutProfile{Algorithm: "layered", Options: map[string]any{}}, DestinationDir: t.TempDir(), Confirm: true})
+	saveAsPayload := layoutJSON(t, layoutSaveAsRequest{SchemaVersion: layout.ConfigSchemaVersion, Layout: layout.LayoutProfile{Algorithm: "layered", Options: map[string]any{}}, DestinationDir: t.TempDir(), Confirm: true})
 	if response := requestLayout(t, server, http.MethodPut, "/v1/layout/config/save-as", saveAsPayload); response.Code != http.StatusForbidden {
 		t.Fatalf("model-only Save As status = %d, body=%s", response.Code, response.Body.String())
 	}
@@ -60,28 +61,28 @@ func TestLayoutSaveAndSaveAsUseOnlyTheSelectedDestination(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	profile := LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "LEFT"}}
-	payload := layoutJSON(t, layoutApplyRequest{SchemaVersion: layoutConfigSchemaVersion, Layout: profile})
+	profile := layout.LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "LEFT"}}
+	payload := layoutJSON(t, layoutApplyRequest{SchemaVersion: layout.ConfigSchemaVersion, Layout: profile})
 	if response := requestLayout(t, server, http.MethodPut, "/v1/layout/config", payload); response.Code != http.StatusConflict {
 		t.Fatalf("Save without active file status = %d, body=%s", response.Code, response.Body.String())
 	}
-	saveAsPayload := layoutJSON(t, layoutSaveAsRequest{SchemaVersion: layoutConfigSchemaVersion, Layout: profile, DestinationDir: custom, Confirm: true})
+	saveAsPayload := layoutJSON(t, layoutSaveAsRequest{SchemaVersion: layout.ConfigSchemaVersion, Layout: profile, DestinationDir: custom, Confirm: true})
 	saveAsResponse := requestLayout(t, server, http.MethodPut, "/v1/layout/config/save-as", saveAsPayload)
 	if saveAsResponse.Code != http.StatusOK {
 		t.Fatalf("Save As status = %d, body=%s", saveAsResponse.Code, saveAsResponse.Body.String())
 	}
-	customPath := filepath.Join(custom, layoutConfigFileName)
+	customPath := filepath.Join(custom, layout.ConfigFileName)
 	if _, err := os.Stat(customPath); err != nil {
 		t.Fatalf("Save As did not create selected file: %v", err)
 	}
-	var config LayoutConfigResponse
+	var config layout.LayoutConfigResponse
 	if err := json.Unmarshal(saveAsResponse.Body.Bytes(), &config); err != nil {
 		t.Fatal(err)
 	}
 	if config.Origin != "custom" || !samePath(config.ActivePath, customPath) || !config.CanSave {
 		t.Fatalf("Save As config = %#v", config)
 	}
-	updated := layoutJSON(t, layoutApplyRequest{SchemaVersion: layoutConfigSchemaVersion, Layout: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "DOWN"}}})
+	updated := layoutJSON(t, layoutApplyRequest{SchemaVersion: layout.ConfigSchemaVersion, Layout: layout.LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "DOWN"}}})
 	if response := requestLayout(t, server, http.MethodPut, "/v1/layout/config", updated); response.Code != http.StatusOK {
 		t.Fatalf("Save active status = %d, body=%s", response.Code, response.Body.String())
 	}
@@ -89,14 +90,17 @@ func TestLayoutSaveAndSaveAsUseOnlyTheSelectedDestination(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var stored layoutConfigFile
+	var stored struct {
+		SchemaVersion string               `json:"schema_version"`
+		Layout        layout.LayoutProfile `json:"layout"`
+	}
 	if err := json.Unmarshal(data, &stored); err != nil {
 		t.Fatal(err)
 	}
 	if stored.Layout.Options["org.eclipse.elk.direction"] != "DOWN" {
 		t.Fatalf("active file was not overwritten: %#v", stored.Layout)
 	}
-	if _, err := os.Stat(filepath.Join(root, layoutConfigFileName)); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(root, layout.ConfigFileName)); !os.IsNotExist(err) {
 		t.Fatalf("Save As unexpectedly created a project-root file: %v", err)
 	}
 }
@@ -107,12 +111,12 @@ func TestLayoutSaveTargetsNearestDiscoveredAncestor(t *testing.T) {
 	if err := os.MkdirAll(root, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	profile := LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "RIGHT"}}
-	data, err := encodeLayoutConfig(profile)
+	profile := layout.LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "RIGHT"}}
+	data, err := layout.EncodeConfig(profile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ancestorPath := filepath.Join(parent, layoutConfigFileName)
+	ancestorPath := filepath.Join(parent, layout.ConfigFileName)
 	if err := os.WriteFile(ancestorPath, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +124,7 @@ func TestLayoutSaveTargetsNearestDiscoveredAncestor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	updated := layoutJSON(t, layoutApplyRequest{SchemaVersion: layoutConfigSchemaVersion, Layout: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "UP"}}})
+	updated := layoutJSON(t, layoutApplyRequest{SchemaVersion: layout.ConfigSchemaVersion, Layout: layout.LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "UP"}}})
 	response := requestLayout(t, server, http.MethodPut, "/v1/layout/config", updated)
 	if response.Code != http.StatusOK {
 		t.Fatalf("ancestor Save status = %d, body=%s", response.Code, response.Body.String())
@@ -129,14 +133,17 @@ func TestLayoutSaveTargetsNearestDiscoveredAncestor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var decoded layoutConfigFile
+	var decoded struct {
+		SchemaVersion string               `json:"schema_version"`
+		Layout        layout.LayoutProfile `json:"layout"`
+	}
 	if err := json.Unmarshal(stored, &decoded); err != nil {
 		t.Fatal(err)
 	}
 	if decoded.Layout.Options["org.eclipse.elk.direction"] != "UP" {
 		t.Fatalf("ancestor was not updated: %#v", decoded.Layout)
 	}
-	if _, err := os.Stat(filepath.Join(root, layoutConfigFileName)); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(root, layout.ConfigFileName)); !os.IsNotExist(err) {
 		t.Fatalf("ordinary Save unexpectedly created a root config: %v", err)
 	}
 }
@@ -146,7 +153,7 @@ func TestLayoutEndpointsRejectOversizedRequests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	oversized := []byte(fmt.Sprintf(`{"schema_version":"%s","layout":{"algorithm":"layered","options":{}}}%s`, layoutConfigSchemaVersion, strings.Repeat(" ", maxLayoutRequestBytes)))
+	oversized := []byte(fmt.Sprintf(`{"schema_version":"%s","layout":{"algorithm":"layered","options":{}}}%s`, layout.ConfigSchemaVersion, strings.Repeat(" ", maxLayoutRequestBytes)))
 	for _, request := range []struct {
 		method string
 		path   string

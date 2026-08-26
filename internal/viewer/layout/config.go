@@ -1,4 +1,4 @@
-package viewer
+package layout
 
 import (
 	"bytes"
@@ -8,122 +8,11 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
 )
-
-const (
-	layoutConfigSchemaVersion = "arch-view.config/v1"
-	layoutConfigFileName      = ".archview.json"
-)
-
-// LayoutProfile is the user-controlled presentation layout. It deliberately
-// contains no model, analyzer, or source-editing fields.
-type LayoutProfile struct {
-	Algorithm string         `json:"algorithm"`
-	Options   map[string]any `json:"options"`
-}
-
-type layoutConfigFile struct {
-	SchemaVersion string        `json:"schema_version"`
-	Layout        LayoutProfile `json:"layout"`
-}
-
-type LayoutAdapter struct {
-	ID      string `json:"id"`
-	Version string `json:"version"`
-	Source  string `json:"source"`
-}
-
-type LayoutAlgorithmDefinition struct {
-	ID                string   `json:"id"`
-	ELKID             string   `json:"elk_id"`
-	Name              string   `json:"name"`
-	Description       string   `json:"description"`
-	Category          string   `json:"category,omitempty"`
-	KnownOptions      []string `json:"known_options"`
-	SupportedFeatures []string `json:"supported_features,omitempty"`
-	RendererSupport   string   `json:"renderer_support"`
-}
-
-type LayoutCategoryDefinition struct {
-	ID             string   `json:"id"`
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	KnownLayouters []string `json:"known_layouters,omitempty"`
-}
-
-// LayoutOptionDefinition is the normalized, UI-facing catalog entry. The
-// bundled ELK API provides names/types/targets, while this application adds
-// safe editability, defaults, and renderer support explicitly.
-type LayoutOptionDefinition struct {
-	ID               string   `json:"id"`
-	Name             string   `json:"name"`
-	Description      string   `json:"description"`
-	Group            string   `json:"group,omitempty"`
-	Type             string   `json:"type"`
-	Targets          []string `json:"targets"`
-	Algorithms       []string `json:"algorithms,omitempty"`
-	DefaultValue     any      `json:"default"`
-	AllowedValues    []any    `json:"allowed_values"`
-	Minimum          *float64 `json:"minimum,omitempty"`
-	Maximum          *float64 `json:"maximum,omitempty"`
-	MinimumExclusive bool     `json:"minimum_exclusive,omitempty"`
-	MaximumExclusive bool     `json:"maximum_exclusive,omitempty"`
-	Editable         bool     `json:"editable"`
-	RendererSupport  string   `json:"renderer_support"`
-}
-
-type LayoutOptionsResponse struct {
-	SchemaVersion string                      `json:"schema_version"`
-	Adapter       LayoutAdapter               `json:"adapter"`
-	Algorithms    []LayoutAlgorithmDefinition `json:"algorithms"`
-	Categories    []LayoutCategoryDefinition  `json:"categories"`
-	Options       []LayoutOptionDefinition    `json:"options"`
-}
-
-type LayoutDiagnostic struct {
-	Code     string `json:"code"`
-	Severity string `json:"severity"`
-	Message  string `json:"message"`
-	Path     string `json:"path,omitempty"`
-	Source   string `json:"source,omitempty"`
-}
-
-type LayoutConfigResponse struct {
-	SchemaVersion string             `json:"schema_version"`
-	Layout        LayoutProfile      `json:"layout"`
-	Origin        string             `json:"origin"`
-	ActivePath    string             `json:"active_path,omitempty"`
-	Status        string             `json:"status"`
-	CanSave       bool               `json:"can_save"`
-	CanSaveAs     bool               `json:"can_save_as"`
-	Diagnostics   []LayoutDiagnostic `json:"diagnostics"`
-}
-
-type layoutSession struct {
-	profile      LayoutProfile
-	activePath   string
-	activeOrigin string
-	origin       string
-	status       string
-	canSave      bool
-	canSaveAs    bool
-	diagnostics  []LayoutDiagnostic
-}
-
-type layoutApplyRequest struct {
-	SchemaVersion string        `json:"schema_version"`
-	Layout        LayoutProfile `json:"layout"`
-}
-
-type layoutSaveAsRequest struct {
-	SchemaVersion  string        `json:"schema_version"`
-	Layout         LayoutProfile `json:"layout"`
-	DestinationDir string        `json:"destination_dir"`
-	Confirm        bool          `json:"confirm"`
-}
 
 func defaultLayoutProfile() LayoutProfile {
 	return LayoutProfile{Algorithm: "layered", Options: map[string]any{}}
@@ -141,7 +30,7 @@ func cloneLayoutProfile(profile LayoutProfile) LayoutProfile {
 	return profile
 }
 
-func (session layoutSession) response() LayoutConfigResponse {
+func (session Session) response() LayoutConfigResponse {
 	diagnostics := append([]LayoutDiagnostic(nil), session.diagnostics...)
 	if diagnostics == nil {
 		diagnostics = []LayoutDiagnostic{}
@@ -158,7 +47,7 @@ func (session layoutSession) response() LayoutConfigResponse {
 	}
 }
 
-func layoutCatalog() LayoutOptionsResponse {
+func Catalog() LayoutOptionsResponse {
 	algorithms := append([]LayoutAlgorithmDefinition(nil), pinnedELKAlgorithms...)
 	categories := append([]LayoutCategoryDefinition(nil), pinnedELKCategories...)
 	options := make([]LayoutOptionDefinition, len(pinnedELKOptions))
@@ -175,102 +64,8 @@ func layoutCatalog() LayoutOptionsResponse {
 	}
 }
 
-func enrichLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
-	option = cloneLayoutOption(option)
-	if strings.TrimSpace(option.Description) == "" {
-		option.Description = "ELK layout option: " + option.Name + "."
-	}
-	if option.AllowedValues == nil {
-		option.AllowedValues = []any{}
-	}
-	option.DefaultValue = "engine default"
-	option.Editable = false
-	option.RendererSupport = "unsupported"
-	setMinimum := func(value float64) { option.Minimum = &value }
-	setMaximum := func(value float64) { option.Maximum = &value }
-	setEnum := func(values ...string) {
-		option.AllowedValues = make([]any, len(values))
-		for index, value := range values {
-			option.AllowedValues[index] = value
-		}
-	}
-	setSupported := func(defaultValue any) {
-		if !layoutOptionTargetsParent(option) {
-			return
-		}
-		option.DefaultValue = defaultValue
-		option.Editable = true
-		option.RendererSupport = "supported"
-	}
-	switch option.ID {
-	case "org.eclipse.elk.direction":
-		setSupported("RIGHT")
-		setEnum("RIGHT", "LEFT", "DOWN", "UP")
-	case "org.eclipse.elk.edgeRouting":
-		setSupported("ORTHOGONAL")
-		setEnum("NONE", "POLYLINE", "ORTHOGONAL", "SPLINES")
-	case "org.eclipse.elk.aspectRatio":
-		setSupported("engine default")
-		setMinimum(0)
-		option.MinimumExclusive = true
-	case "org.eclipse.elk.spacing.nodeNode":
-		setSupported(35.0)
-		setMinimum(0)
-	case "org.eclipse.elk.spacing.edgeNode":
-		setSupported(10.0)
-		setMinimum(0)
-	case "org.eclipse.elk.spacing.edgeEdge":
-		setSupported(5.0)
-		setMinimum(0)
-	case "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers":
-		setSupported(84.0)
-		setMinimum(0)
-	case "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers":
-		setSupported(10.0)
-		setMinimum(0)
-	case "org.eclipse.elk.layered.spacing.baseValue":
-		setSupported("engine default")
-		setMinimum(0)
-	case "org.eclipse.elk.layered.spacing.edgeEdgeBetweenLayers":
-		setSupported(10.0)
-		setMinimum(0)
-	case "org.eclipse.elk.layered.layering.strategy":
-		setSupported("NETWORK_SIMPLEX")
-		setEnum("NETWORK_SIMPLEX", "LONGEST_PATH", "LONGEST_PATH_SOURCE", "COFFMAN_GRAHAM", "INTERACTIVE", "STRETCH_WIDTH", "MIN_WIDTH", "BF_MODEL_ORDER", "DF_MODEL_ORDER")
-	case "org.eclipse.elk.layered.cycleBreaking.strategy":
-		setSupported("GREEDY")
-		setEnum("GREEDY", "DEPTH_FIRST", "INTERACTIVE", "MODEL_ORDER", "GREEDY_MODEL_ORDER", "SCC_CONNECTIVITY", "SCC_NODE_TYPE", "DFS_NODE_ORDER", "BFS_NODE_ORDER")
-	case "org.eclipse.elk.layered.crossingMinimization.strategy":
-		setSupported("LAYER_SWEEP")
-		setEnum("LAYER_SWEEP", "MEDIAN_LAYER_SWEEP", "INTERACTIVE", "NONE")
-	case "org.eclipse.elk.layered.nodePlacement.strategy":
-		setSupported("BRANDES_KOEPF")
-		setEnum("SIMPLE", "INTERACTIVE", "LINEAR_SEGMENTS", "BRANDES_KOEPF", "NETWORK_SIMPLEX")
-	case "org.eclipse.elk.layered.compaction.connectedComponents":
-		setSupported(false)
-	case "org.eclipse.elk.layered.thoroughness":
-		setSupported(7.0)
-		setMinimum(1)
-		setMaximum(100)
-	case "org.eclipse.elk.layered.mergeEdges":
-		setSupported(false)
-	case "org.eclipse.elk.layered.mergeHierarchyEdges":
-		setSupported(false)
-	case "org.eclipse.elk.layered.feedbackEdges":
-		setSupported(false)
-	case "org.eclipse.elk.layered.crossingMinimization.forceNodeModelOrder":
-		setSupported(false)
-	case "org.eclipse.elk.separateConnectedComponents":
-		setSupported(true)
-	case "org.eclipse.elk.interactive":
-		setSupported(false)
-	case "org.eclipse.elk.interactiveLayout":
-		setSupported(false)
-	case "org.eclipse.elk.randomSeed":
-		setSupported(1.0)
-		setMinimum(0)
-	}
-	return option
+func layoutCatalog() LayoutOptionsResponse {
+	return Catalog()
 }
 
 func cloneLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
@@ -278,15 +73,6 @@ func cloneLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
 	option.Algorithms = append([]string(nil), option.Algorithms...)
 	option.AllowedValues = append([]any(nil), option.AllowedValues...)
 	return option
-}
-
-func layoutOptionTargetsParent(option LayoutOptionDefinition) bool {
-	for _, target := range option.Targets {
-		if target == "PARENTS" {
-			return true
-		}
-	}
-	return false
 }
 
 func layoutOptionByID(id string) (LayoutOptionDefinition, bool) {
@@ -352,6 +138,9 @@ func canonicalLayoutOptionID(value string) string {
 }
 
 func layoutOptionApplies(option LayoutOptionDefinition, algorithm string) bool {
+	if handler, ok := layoutOptionHandlers[option.ID]; ok && handler.algorithmApplies != nil {
+		return handler.algorithmApplies(option, algorithm)
+	}
 	if len(option.Algorithms) == 0 {
 		return option.Editable && option.RendererSupport == "supported"
 	}
@@ -364,6 +153,13 @@ func layoutOptionApplies(option LayoutOptionDefinition, algorithm string) bool {
 }
 
 func validateLayoutOptionValue(option LayoutOptionDefinition, value any) error {
+	if handler, ok := layoutOptionHandlers[option.ID]; ok && handler.validate != nil {
+		return handler.validate(option, value)
+	}
+	return validateCatalogOptionValue(option, value)
+}
+
+func validateCatalogOptionValue(option LayoutOptionDefinition, value any) error {
 	invalid := func(message string) error {
 		return analysis.NewHostError(analysis.ErrInvalidOptions, message, map[string]any{"option": option.ID, "type": option.Type, "value": value})
 	}
@@ -482,10 +278,10 @@ func encodeLayoutConfig(profile LayoutProfile) ([]byte, error) {
 	return append(data, '\n'), nil
 }
 
-func discoverLayoutSession(sourceRoot string) layoutSession {
+func discoverLayoutSession(sourceRoot string) Session {
 	profile := defaultLayoutProfile()
 	if sourceRoot == "" {
-		return layoutSession{
+		return Session{
 			profile:     profile,
 			origin:      "session",
 			status:      "valid",
@@ -500,7 +296,7 @@ func discoverLayoutSession(sourceRoot string) layoutSession {
 			profile, decodeErr := decodeLayoutConfig(data)
 			origin := layoutOriginForPath(sourceRoot, candidate)
 			if decodeErr != nil {
-				return layoutSession{
+				return Session{
 					profile:      profileOrDefault(profile),
 					activePath:   candidate,
 					activeOrigin: origin,
@@ -510,17 +306,17 @@ func discoverLayoutSession(sourceRoot string) layoutSession {
 					diagnostics:  []LayoutDiagnostic{{Code: "invalid_config", Severity: "error", Message: decodeErr.Error(), Path: candidate, Source: "nearest configuration"}},
 				}
 			}
-			return layoutSession{profile: profile, activePath: candidate, activeOrigin: origin, origin: origin, status: "valid", canSave: true, canSaveAs: true}
+			return Session{profile: profile, activePath: candidate, activeOrigin: origin, origin: origin, status: "valid", canSave: true, canSaveAs: true}
 		}
 		if !os.IsNotExist(err) {
-			return layoutSession{profile: profile, activePath: candidate, activeOrigin: layoutOriginForPath(sourceRoot, candidate), origin: layoutOriginForPath(sourceRoot, candidate), status: "invalid", canSaveAs: true, diagnostics: []LayoutDiagnostic{{Code: "unreadable_config", Severity: "error", Message: "The nearest .archview.json could not be read: " + err.Error(), Path: candidate, Source: "nearest configuration"}}}
+			return Session{profile: profile, activePath: candidate, activeOrigin: layoutOriginForPath(sourceRoot, candidate), origin: layoutOriginForPath(sourceRoot, candidate), status: "invalid", canSaveAs: true, diagnostics: []LayoutDiagnostic{{Code: "unreadable_config", Severity: "error", Message: "The nearest .archview.json could not be read: " + err.Error(), Path: candidate, Source: "nearest configuration"}}}
 		}
 		parent := filepath.Dir(directory)
 		if parent == directory {
 			break
 		}
 	}
-	return layoutSession{profile: profile, origin: "default", status: "valid", canSaveAs: true}
+	return Session{profile: profile, origin: "default", status: "valid", canSaveAs: true}
 }
 
 func profileOrDefault(profile LayoutProfile) LayoutProfile {
@@ -557,4 +353,13 @@ func activeLayoutOrigin(sourceRoot, configPath string) string {
 		return layoutOriginForPath(sourceRoot, configPath)
 	}
 	return "custom"
+}
+
+func samePath(left, right string) bool {
+	left = filepath.Clean(left)
+	right = filepath.Clean(right)
+	if runtime.GOOS == "windows" {
+		return strings.EqualFold(left, right)
+	}
+	return left == right
 }

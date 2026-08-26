@@ -1,4 +1,4 @@
-package viewer
+package layout
 
 import (
 	"encoding/json"
