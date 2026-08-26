@@ -2,6 +2,12 @@
 
 ## 2026-08-26
 
+* **Closeout**: Archived issue 008 after the user's explicit approval of the parent-level ELK option tranche in windowed and full-canvas views, including representative settings, diagnostics, fallbacks, and resulting layouts. Removed its active registry row, updated the owning capability and implementation-slice references, and unblocked issue 009 without processing it; `external/` remains untouched.
+
+* **Implementation**: Issue 008 expanded the editable ELK parent-level tranche with typed metadata and validation for aspect ratio, layered spacing, layering, cycle breaking, crossing minimization, node placement, and connected-component compaction. The browser request builder now forwards only catalogued editable `PARENTS` options to the root graph; node/edge-targeted options remain reserved for issue 009.
+* **Correction**: Pinned catalog inspection confirmed `org.eclipse.elk.alignment` is node-targeted and that the canonical parent spacing key is `org.eclipse.elk.layered.spacing.baseValue`; neither is silently treated as a root option.
+* **Verification**: Focused Go/JavaScript tests, syntax checks, repository gates, and OKF validation pass. Issue 008 is awaiting visual review of representative settings in windowed and full-canvas views; `external/` remains untouched.
+
 * **Closeout**: Archived issue 005 at [the dated delivery record](../docs/agents/issues/done/20260826-005-deterministic-json-html-svg-export.md) after the user's explicit approval of HTML/SVG parity with the local viewer; required capability, orchestration, and implementation-slice references now point to the completed issue, and issue 007 remains the next ready-for-agent frontier.
 
 * **Planning**: Added the user-confirmed ELK layout-settings and project-configuration extension as issue 007 under the existing Explore and inspect architecture capability; no new capability or shared-concern node was needed because the behavior remains viewer-owned presentation policy.

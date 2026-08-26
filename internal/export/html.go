@@ -31,10 +31,15 @@ func renderHTML(value model.Model, request Request) ([]byte, map[string]any, err
 	if err != nil {
 		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export application could not be loaded", err, nil)
 	}
+	layoutRequestData, err := viewer.Asset("layout_request.js")
+	if err != nil {
+		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export layout request helper could not be loaded", err, nil)
+	}
 
 	template := normalizeNewlines(string(indexData))
 	styles := normalizeNewlines(string(stylesData))
 	app := normalizeNewlines(string(appData))
+	layoutRequest := normalizeNewlines(string(layoutRequestData))
 	template, err = replaceRequired(template, `    <link rel="stylesheet" href="/assets/styles.css">`, "    <style>\n"+styles+"\n    </style>")
 	if err != nil {
 		return nil, nil, err
@@ -43,7 +48,11 @@ func renderHTML(value model.Model, request Request) ([]byte, map[string]any, err
 	if err != nil {
 		return nil, nil, err
 	}
-	bootstrap := "    <script>window.__ARCH_VIEW_EXPORT__ = " + string(bundleData) + ";</script>\n    <script>\n" + app + "\n    </script>"
+	template, err = replaceRequired(template, "    <script src=\"/assets/layout_request.js\" defer></script>\n", "")
+	if err != nil {
+		return nil, nil, err
+	}
+	bootstrap := "    <script>window.__ARCH_VIEW_EXPORT__ = " + string(bundleData) + ";</script>\n    <script>\n" + layoutRequest + "\n    </script>\n    <script>\n" + app + "\n    </script>"
 	template, err = replaceRequired(template, `    <script src="/assets/app.js?v=20260826-manual-routing" defer></script>`, bootstrap)
 	if err != nil {
 		return nil, nil, err

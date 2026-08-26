@@ -75,5 +75,7 @@ Editing source or diagrams, collaboration, cloud hosting, runtime tracing, autom
 
 Issue 007 implements the specified layout catalog, profile application/reset,
 nearest-ancestor configuration discovery, active-file `Save`, and explicit
-custom-folder `Save As`. Automated checks and the declared visual review pass;
-issue 007 is archived and issue 008 is the next ready implementation slice.
+custom-folder `Save As`. Issue 008 extends the catalog with the bounded,
+root-safe parent-level option tranche; its automated checks and visual review
+are complete. Target-aware node/edge option mapping remains sequenced in issue
+009.

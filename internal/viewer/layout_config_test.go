@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -33,6 +34,188 @@ func TestLayoutCatalogMatchesPinnedELKSurface(t *testing.T) {
 	unsupported, ok := layoutOptionByID("org.eclipse.elk.padding")
 	if !ok || unsupported.Editable || unsupported.RendererSupport != "unsupported" {
 		t.Fatalf("padding metadata = %#v", unsupported)
+	}
+}
+
+func TestParentLayoutOptionTrancheHasPinnedMetadata(t *testing.T) {
+	zero := 0.0
+	tests := []struct {
+		id               string
+		typeName         string
+		targets          []string
+		algorithms       []string
+		defaultValue     any
+		allowedValues    []any
+		minimum          *float64
+		minimumExclusive bool
+	}{
+		{
+			id:               "org.eclipse.elk.aspectRatio",
+			typeName:         "DOUBLE",
+			targets:          []string{"PARENTS"},
+			algorithms:       []string{"box", "random", "layered", "mrtree", "force", "rectpacking"},
+			defaultValue:     "engine default",
+			allowedValues:    []any{},
+			minimum:          &zero,
+			minimumExclusive: true,
+		},
+		{
+			id:            "org.eclipse.elk.layered.spacing.baseValue",
+			typeName:      "DOUBLE",
+			targets:       []string{"PARENTS"},
+			algorithms:    []string{"layered"},
+			defaultValue:  "engine default",
+			allowedValues: []any{},
+			minimum:       &zero,
+		},
+		{
+			id:            "org.eclipse.elk.layered.spacing.edgeEdgeBetweenLayers",
+			typeName:      "DOUBLE",
+			targets:       []string{"PARENTS"},
+			algorithms:    []string{"layered"},
+			defaultValue:  10.0,
+			allowedValues: []any{},
+			minimum:       &zero,
+		},
+		{
+			id:           "org.eclipse.elk.layered.layering.strategy",
+			typeName:     "ENUM",
+			targets:      []string{"PARENTS"},
+			algorithms:   []string{"layered"},
+			defaultValue: "NETWORK_SIMPLEX",
+			allowedValues: []any{
+				"NETWORK_SIMPLEX", "LONGEST_PATH", "LONGEST_PATH_SOURCE", "COFFMAN_GRAHAM", "INTERACTIVE", "STRETCH_WIDTH", "MIN_WIDTH", "BF_MODEL_ORDER", "DF_MODEL_ORDER",
+			},
+		},
+		{
+			id:           "org.eclipse.elk.layered.cycleBreaking.strategy",
+			typeName:     "ENUM",
+			targets:      []string{"PARENTS"},
+			algorithms:   []string{"layered"},
+			defaultValue: "GREEDY",
+			allowedValues: []any{
+				"GREEDY", "DEPTH_FIRST", "INTERACTIVE", "MODEL_ORDER", "GREEDY_MODEL_ORDER", "SCC_CONNECTIVITY", "SCC_NODE_TYPE", "DFS_NODE_ORDER", "BFS_NODE_ORDER",
+			},
+		},
+		{
+			id:           "org.eclipse.elk.layered.crossingMinimization.strategy",
+			typeName:     "ENUM",
+			targets:      []string{"PARENTS"},
+			algorithms:   []string{"layered"},
+			defaultValue: "LAYER_SWEEP",
+			allowedValues: []any{
+				"LAYER_SWEEP", "MEDIAN_LAYER_SWEEP", "INTERACTIVE", "NONE",
+			},
+		},
+		{
+			id:           "org.eclipse.elk.layered.nodePlacement.strategy",
+			typeName:     "ENUM",
+			targets:      []string{"PARENTS"},
+			algorithms:   []string{"layered"},
+			defaultValue: "BRANDES_KOEPF",
+			allowedValues: []any{
+				"SIMPLE", "INTERACTIVE", "LINEAR_SEGMENTS", "BRANDES_KOEPF", "NETWORK_SIMPLEX",
+			},
+		},
+		{
+			id:            "org.eclipse.elk.layered.compaction.connectedComponents",
+			typeName:      "BOOLEAN",
+			targets:       []string{"PARENTS"},
+			algorithms:    []string{"layered"},
+			defaultValue:  false,
+			allowedValues: []any{},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.id, func(t *testing.T) {
+			option, ok := layoutOptionByID(testCase.id)
+			if !ok {
+				t.Fatalf("option is not in the pinned catalog")
+			}
+			if !option.Editable || option.RendererSupport != "supported" || !layoutOptionTargetsParent(option) {
+				t.Fatalf("option is not an editable parent option: %#v", option)
+			}
+			if option.Type != testCase.typeName || !reflect.DeepEqual(option.Targets, testCase.targets) || option.Description == "" {
+				t.Fatalf("type/targets/description = %q/%#v/%q, want %q/%#v/non-empty", option.Type, option.Targets, option.Description, testCase.typeName, testCase.targets)
+			}
+			if !reflect.DeepEqual(option.Algorithms, testCase.algorithms) {
+				t.Fatalf("algorithms = %#v, want %#v", option.Algorithms, testCase.algorithms)
+			}
+			if !reflect.DeepEqual(option.DefaultValue, testCase.defaultValue) {
+				t.Fatalf("default = %#v, want %#v", option.DefaultValue, testCase.defaultValue)
+			}
+			if !reflect.DeepEqual(option.AllowedValues, testCase.allowedValues) {
+				t.Fatalf("allowed values = %#v, want %#v", option.AllowedValues, testCase.allowedValues)
+			}
+			if (option.Minimum == nil) != (testCase.minimum == nil) || option.Minimum != nil && *option.Minimum != *testCase.minimum {
+				t.Fatalf("minimum = %#v, want %#v", option.Minimum, testCase.minimum)
+			}
+			if option.MinimumExclusive != testCase.minimumExclusive {
+				t.Fatalf("minimum exclusive = %t, want %t", option.MinimumExclusive, testCase.minimumExclusive)
+			}
+		})
+	}
+
+	alignment, ok := layoutOptionByID("org.eclipse.elk.alignment")
+	if !ok || alignment.Editable || alignment.RendererSupport == "supported" || reflect.DeepEqual(alignment.Targets, []string{"PARENTS"}) {
+		t.Fatalf("node-targeted alignment was incorrectly exposed as a root option: %#v", alignment)
+	}
+	if _, ok := layoutOptionByID("org.eclipse.elk.spacing.baseValue"); ok {
+		t.Fatal("non-canonical spacing base option unexpectedly exists")
+	}
+}
+
+func TestParentLayoutOptionTrancheAcceptsPinnedValuesAndRejectsUnsafeValues(t *testing.T) {
+	valid := map[string]any{
+		"org.eclipse.elk.aspectRatio":                            1.6,
+		"org.eclipse.elk.layered.spacing.baseValue":              0,
+		"org.eclipse.elk.layered.spacing.edgeEdgeBetweenLayers":  10.0,
+		"org.eclipse.elk.layered.layering.strategy":              "NETWORK_SIMPLEX",
+		"org.eclipse.elk.layered.cycleBreaking.strategy":         "GREEDY",
+		"org.eclipse.elk.layered.crossingMinimization.strategy":  "LAYER_SWEEP",
+		"org.eclipse.elk.layered.nodePlacement.strategy":         "BRANDES_KOEPF",
+		"org.eclipse.elk.layered.compaction.connectedComponents": true,
+	}
+	if _, err := validateLayoutProfile(LayoutProfile{Algorithm: "layered", Options: valid}); err != nil {
+		t.Fatalf("valid parent tranche rejected: %v", err)
+	}
+
+	cases := []struct {
+		name    string
+		profile LayoutProfile
+		code    analysis.ErrorCode
+	}{
+		{name: "aspect ratio lower bound is exclusive", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.aspectRatio": 0.0}}, code: analysis.ErrInvalidOptions},
+		{name: "base spacing lower bound", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.layered.spacing.baseValue": -1.0}}, code: analysis.ErrInvalidOptions},
+		{name: "edge spacing lower bound", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.layered.spacing.edgeEdgeBetweenLayers": -1.0}}, code: analysis.ErrInvalidOptions},
+		{name: "bad layering enum", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.layered.layering.strategy": "NOT_A_STRATEGY"}}, code: analysis.ErrInvalidOptions},
+		{name: "algorithm incompatibility", profile: LayoutProfile{Algorithm: "force", Options: map[string]any{"org.eclipse.elk.layered.nodePlacement.strategy": "SIMPLE"}}, code: analysis.ErrInvalidOptions},
+		{name: "node-targeted option stays unsupported", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.alignment": "CENTER"}}, code: analysis.ErrUnsupportedOption},
+		{name: "incorrect option identifier", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.spacing.baseValue": 10.0}}, code: analysis.ErrUnsupportedOption},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := validateLayoutProfile(testCase.profile)
+			if analysis.ErrorCodeOf(err) != testCase.code {
+				t.Fatalf("error code = %q, want %q (%v)", analysis.ErrorCodeOf(err), testCase.code, err)
+			}
+		})
+	}
+}
+
+func TestLayoutProfileValidationPreservesCallerAndCanonicalizesAliases(t *testing.T) {
+	profile := LayoutProfile{Algorithm: "layered", Options: map[string]any{
+		"elk.layered.layering.strategy": "NETWORK_SIMPLEX",
+	}}
+	validated, err := validateLayoutProfile(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := profile.Options["elk.layered.layering.strategy"]; !ok || len(profile.Options) != 1 {
+		t.Fatalf("caller profile was mutated: %#v", profile)
+	}
+	if validated.Options["org.eclipse.elk.layered.layering.strategy"] != "NETWORK_SIMPLEX" {
+		t.Fatalf("validated profile did not canonicalize option: %#v", validated)
 	}
 }
 

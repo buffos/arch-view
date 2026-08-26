@@ -53,8 +53,21 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read app.js: %v", err)
 	}
-	if assetResponse.StatusCode != http.StatusOK || !strings.Contains(string(assetBody), "DOMContentLoaded") || !strings.Contains(string(assetBody), "reference-detail") || !strings.Contains(string(assetBody), "reference_visibility") {
+	if assetResponse.StatusCode != http.StatusOK || !strings.Contains(string(assetBody), "DOMContentLoaded") || !strings.Contains(string(assetBody), "reference-detail") || !strings.Contains(string(assetBody), "reference_visibility") || !strings.Contains(string(assetBody), "ArchViewELKRequest") {
 		t.Fatalf("asset response = %d %q", assetResponse.StatusCode, string(assetBody))
+	}
+
+	requestAssetResponse, err := http.Get(httpServer.URL + "/assets/layout_request.js")
+	if err != nil {
+		t.Fatalf("GET layout_request.js: %v", err)
+	}
+	requestAssetBody, err := io.ReadAll(requestAssetResponse.Body)
+	_ = requestAssetResponse.Body.Close()
+	if err != nil {
+		t.Fatalf("read layout_request.js: %v", err)
+	}
+	if requestAssetResponse.StatusCode != http.StatusOK || requestAssetResponse.Header.Get("Content-Type") != "text/javascript; charset=utf-8" || !strings.Contains(string(requestAssetBody), "buildRootLayoutOptions") {
+		t.Fatalf("layout request asset = %d %q", requestAssetResponse.StatusCode, requestAssetResponse.Header.Get("Content-Type"))
 	}
 
 	elkResponse, err := http.Get(httpServer.URL + "/assets/vendor/elk.bundled.js")

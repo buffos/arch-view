@@ -50,5 +50,6 @@ These intents may be browser state handlers, application services, or local HTTP
 
 The local HTTP viewer now maps the layout configuration use cases to catalog,
 config, apply, reset, Save, and Save As endpoints. Automated contract,
-resolver, and browser visual checks are complete for issue 007; the next
-increment is the bounded parent-level option tranche in issue 008.
+resolver, and browser visual checks are complete for issue 007. Issue 008
+extends the validated root-level parent-option tranche and its visual review
+is complete; target-aware node/edge mapping follows in issue 009.

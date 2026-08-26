@@ -1344,6 +1344,15 @@ body.canvas-focus .scene-card .scene-help {
   border-top: 1px solid var(--line-soft);
 }
 
+.layout-settings-status-error {
+  display: inline-block;
+  padding: 0.35rem 0.55rem;
+  color: #ffd5dc;
+  background: rgba(127, 29, 52, 0.28);
+  border: 1px solid rgba(251, 113, 133, 0.38);
+  border-radius: 0.45rem;
+}
+
 .layout-settings-actions {
   display: flex;
   flex-wrap: wrap;

@@ -3,7 +3,7 @@ type: capability
 title: Explore and inspect architecture
 description: Let users navigate generated architecture views and inspect the code and dependency evidence behind them.
 tags: [viewer, navigation, evidence, layout]
-timestamp: 2026-08-26T12:42:04Z
+timestamp: 2026-08-26T17:51:56Z
 state: specified
 state_changed: 2026-08-26T00:00:00Z
 project: /project.md
@@ -16,7 +16,7 @@ issues:
   - docs/agents/issues/done/20260826-005-deterministic-json-html-svg-export.md
   - docs/agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md
   - docs/agents/issues/done/20260826-007-elk-layout-settings-and-project-config.md
-  - docs/agents/issues/pending/008-expand-elk-parent-options.md
+  - docs/agents/issues/done/20260826-008-expand-elk-parent-options.md
   - docs/agents/issues/pending/009-elk-node-edge-option-targets.md
 discovery_notes: docs/architecture/explore-architecture/discovery-notes.md
 gap_analysis: docs/architecture/explore-architecture/requirements-gap-analysis.md
@@ -50,4 +50,4 @@ This capability is specified. Its local web surface, renderer-neutral scene cont
 
 ## Delivery progress
 
-Issues 003, 004, 005, 006, and 007 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, and the ELK settings/project-configuration slice. Issue 004's implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, deterministic manual edge routing, reset-layout behavior, and automated/browser verification are complete. Issue 008 is the next ready parent-level ELK option tranche, followed by issue 009's node/edge target mapping; advanced ports, labels, junctions, and compound-graph geometry remain a later specification frontier.
+Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, the ELK settings/project-configuration slice, and the expanded parent-level ELK option tranche. Issue 004's implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, deterministic manual edge routing, reset-layout behavior, and automated/browser verification are complete. Issue 009 is now the ready-for-agent frontier for node/edge target mapping. Advanced ports, labels, junctions, and compound-graph geometry remain a later specification frontier.

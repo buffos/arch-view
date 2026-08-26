@@ -27,4 +27,4 @@ Frontend integration and end-to-end surfaces are explicitly covered; backend bou
 - Capability truth: exact-spec set refreshed with reference visibility, import inspection, session-owned layout rules, typed ELK settings, and `.archview.json` discovery/persistence.
 - Product truth: updated with the layout-settings journey and project-scoped presentation preferences.
 - Architecture truth: viewer/local host owns presentation configuration resolution, active-file `Save`, and explicit custom-folder `Save As`; analyzer options, canonical model facts, and export semantics remain separate.
-- Delivery truth: issues 003, 004, 005, 006, and 007 are complete after their explicit visual reviews; issue 008 is the next ready implementation slice.
+- Delivery truth: issues 003, 004, 005, 006, 007, and 008 are complete after their explicit visual reviews; issue 009 remains the next target-aware ELK option extension.

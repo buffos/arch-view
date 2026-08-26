@@ -100,6 +100,16 @@ canonical model
   -> SVG paths and arrowheads
 ```
 
+Issue 008 expands the editable root-level ELK surface with aspect ratio,
+layered base spacing, layered edge-to-edge spacing, layering strategy, cycle
+breaking strategy, crossing minimization strategy, node placement strategy,
+and connected-component compaction. These options are enabled only when the
+pinned catalog marks them as editable `PARENTS` options for the selected
+algorithm. `org.eclipse.elk.alignment` remains catalog-only because it targets
+nodes; node- and edge-targeted settings are reserved for the target-aware
+mapping slice. The canonical layered spacing base key is
+`org.eclipse.elk.layered.spacing.baseValue`.
+
 If the ELK worker cannot be created or a layout request fails, the viewer
 uses its deterministic layer-based layout as a visible fallback. This keeps
 the semantic scene usable while making the layout engine replaceable.

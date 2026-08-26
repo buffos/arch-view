@@ -52,4 +52,6 @@ The capability consumes the canonical model and graph/view preparation outputs a
 The local viewer now implements the confirmed layout-settings boundary through
 the pinned catalog and the versioned `.archview.json` resolver. Automated
 validation and persistence checks, plus the normal/full-canvas browser review,
-are complete for issue 007. Further option support is sequenced in issue 008.
+are complete for issue 007. Issue 008 implements the next bounded parent-level
+option tranche and its visual review is complete; target-aware node/edge option
+support remains in issue 009.

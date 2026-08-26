@@ -20,7 +20,7 @@ import (
 	"github.com/buffo/arch-view/internal/model"
 )
 
-//go:embed web/index.html web/styles.css web/app.js web/vendor/elk.bundled.js web/vendor/elk-worker.min.js
+//go:embed web/index.html web/styles.css web/app.js web/layout_request.js web/vendor/elk.bundled.js web/vendor/elk-worker.min.js
 var webFiles embed.FS
 
 const (
@@ -135,7 +135,7 @@ func (s *Server) handleAsset(writer http.ResponseWriter, request *http.Request) 
 		return
 	}
 	name := strings.TrimPrefix(request.URL.Path, "/assets/")
-	if name != "styles.css" && name != "app.js" && name != "vendor/elk.bundled.js" && name != "vendor/elk-worker.min.js" {
+	if name != "styles.css" && name != "app.js" && name != "layout_request.js" && name != "vendor/elk.bundled.js" && name != "vendor/elk-worker.min.js" {
 		http.NotFound(writer, request)
 		return
 	}
@@ -148,11 +148,11 @@ func (s *Server) handleAsset(writer http.ResponseWriter, request *http.Request) 
 	switch name {
 	case "styles.css":
 		contentType = "text/css; charset=utf-8"
-	case "app.js", "vendor/elk.bundled.js", "vendor/elk-worker.min.js":
+	case "app.js", "layout_request.js", "vendor/elk.bundled.js", "vendor/elk-worker.min.js":
 		contentType = "text/javascript; charset=utf-8"
 	}
 	writer.Header().Set("Content-Type", contentType)
-	if name == "app.js" || name == "styles.css" {
+	if name == "app.js" || name == "layout_request.js" || name == "styles.css" {
 		writer.Header().Set("Cache-Control", "no-store")
 	} else {
 		writer.Header().Set("Cache-Control", "public, max-age=3600, immutable")

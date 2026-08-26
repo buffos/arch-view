@@ -48,12 +48,12 @@ Given a Go repository containing a selected module, a developer can:
 | [005](../../../agents/issues/done/20260826-005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | — | approved |
 | [006](../../../agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md) | Post-baseline semantic summaries and ELK edge routing | Explore architecture | — | approved |
 | [007](../../../agents/issues/done/20260826-007-elk-layout-settings-and-project-config.md) | User-selectable ELK layout settings and persistent project configuration | Explore architecture | — | done |
-| [008](../../../agents/issues/pending/008-expand-elk-parent-options.md) | Expanded ELK parent-level layout option support | Explore architecture | — | ready-for-agent |
-| [009](../../../agents/issues/pending/009-elk-node-edge-option-targets.md) | Target-aware node- and edge-level ELK option mapping | Explore architecture | 008 | ready-for-agent |
+| [008](../../../agents/issues/done/20260826-008-expand-elk-parent-options.md) | Expanded ELK parent-level layout option support | Explore architecture | — | approved |
+| [009](../../../agents/issues/pending/009-elk-node-edge-option-targets.md) | Target-aware node- and edge-level ELK option mapping | Explore architecture | — | ready-for-agent |
 
 ## Current delivery status
 
-The analyzer-to-model path and the revised local viewer implementation are available. Issues 003, 004, 005, 006, and 007 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic JSON/HTML/SVG export parity, semantic/ELK refinement, and the layout-settings/project-configuration slice. Issue 004 completed implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, reset-to-calculated layout, deterministic manual edge routing, and automated/browser verification. Issues 008 and 009 are sequenced follow-up slices for expanding ELK option support; they do not change the analyzer-to-model path.
+The analyzer-to-model path and the revised local viewer implementation are available. Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic JSON/HTML/SVG export parity, semantic/ELK refinement, the layout-settings/project-configuration slice, and the expanded parent-level option tranche. Issue 004 completed implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, reset-to-calculated layout, deterministic manual edge routing, and automated/browser verification. Issue 009 is the next ready-for-agent target-aware option extension. These viewer extensions do not change the analyzer-to-model path.
 
 ## Slice acceptance
 

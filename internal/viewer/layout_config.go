@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,19 +58,21 @@ type LayoutCategoryDefinition struct {
 // bundled ELK API provides names/types/targets, while this application adds
 // safe editability, defaults, and renderer support explicitly.
 type LayoutOptionDefinition struct {
-	ID              string   `json:"id"`
-	Name            string   `json:"name"`
-	Description     string   `json:"description"`
-	Group           string   `json:"group,omitempty"`
-	Type            string   `json:"type"`
-	Targets         []string `json:"targets"`
-	Algorithms      []string `json:"algorithms,omitempty"`
-	DefaultValue    any      `json:"default"`
-	AllowedValues   []any    `json:"allowed_values"`
-	Minimum         *float64 `json:"minimum,omitempty"`
-	Maximum         *float64 `json:"maximum,omitempty"`
-	Editable        bool     `json:"editable"`
-	RendererSupport string   `json:"renderer_support"`
+	ID               string   `json:"id"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	Group            string   `json:"group,omitempty"`
+	Type             string   `json:"type"`
+	Targets          []string `json:"targets"`
+	Algorithms       []string `json:"algorithms,omitempty"`
+	DefaultValue     any      `json:"default"`
+	AllowedValues    []any    `json:"allowed_values"`
+	Minimum          *float64 `json:"minimum,omitempty"`
+	Maximum          *float64 `json:"maximum,omitempty"`
+	MinimumExclusive bool     `json:"minimum_exclusive,omitempty"`
+	MaximumExclusive bool     `json:"maximum_exclusive,omitempty"`
+	Editable         bool     `json:"editable"`
+	RendererSupport  string   `json:"renderer_support"`
 }
 
 type LayoutOptionsResponse struct {
@@ -192,6 +195,9 @@ func enrichLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
 		}
 	}
 	setSupported := func(defaultValue any) {
+		if !layoutOptionTargetsParent(option) {
+			return
+		}
 		option.DefaultValue = defaultValue
 		option.Editable = true
 		option.RendererSupport = "supported"
@@ -203,6 +209,10 @@ func enrichLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
 	case "org.eclipse.elk.edgeRouting":
 		setSupported("ORTHOGONAL")
 		setEnum("NONE", "POLYLINE", "ORTHOGONAL", "SPLINES")
+	case "org.eclipse.elk.aspectRatio":
+		setSupported("engine default")
+		setMinimum(0)
+		option.MinimumExclusive = true
 	case "org.eclipse.elk.spacing.nodeNode":
 		setSupported(35.0)
 		setMinimum(0)
@@ -218,6 +228,26 @@ func enrichLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
 	case "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers":
 		setSupported(10.0)
 		setMinimum(0)
+	case "org.eclipse.elk.layered.spacing.baseValue":
+		setSupported("engine default")
+		setMinimum(0)
+	case "org.eclipse.elk.layered.spacing.edgeEdgeBetweenLayers":
+		setSupported(10.0)
+		setMinimum(0)
+	case "org.eclipse.elk.layered.layering.strategy":
+		setSupported("NETWORK_SIMPLEX")
+		setEnum("NETWORK_SIMPLEX", "LONGEST_PATH", "LONGEST_PATH_SOURCE", "COFFMAN_GRAHAM", "INTERACTIVE", "STRETCH_WIDTH", "MIN_WIDTH", "BF_MODEL_ORDER", "DF_MODEL_ORDER")
+	case "org.eclipse.elk.layered.cycleBreaking.strategy":
+		setSupported("GREEDY")
+		setEnum("GREEDY", "DEPTH_FIRST", "INTERACTIVE", "MODEL_ORDER", "GREEDY_MODEL_ORDER", "SCC_CONNECTIVITY", "SCC_NODE_TYPE", "DFS_NODE_ORDER", "BFS_NODE_ORDER")
+	case "org.eclipse.elk.layered.crossingMinimization.strategy":
+		setSupported("LAYER_SWEEP")
+		setEnum("LAYER_SWEEP", "MEDIAN_LAYER_SWEEP", "INTERACTIVE", "NONE")
+	case "org.eclipse.elk.layered.nodePlacement.strategy":
+		setSupported("BRANDES_KOEPF")
+		setEnum("SIMPLE", "INTERACTIVE", "LINEAR_SEGMENTS", "BRANDES_KOEPF", "NETWORK_SIMPLEX")
+	case "org.eclipse.elk.layered.compaction.connectedComponents":
+		setSupported(false)
 	case "org.eclipse.elk.layered.thoroughness":
 		setSupported(7.0)
 		setMinimum(1)
@@ -248,6 +278,15 @@ func cloneLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
 	option.Algorithms = append([]string(nil), option.Algorithms...)
 	option.AllowedValues = append([]any(nil), option.AllowedValues...)
 	return option
+}
+
+func layoutOptionTargetsParent(option LayoutOptionDefinition) bool {
+	for _, target := range option.Targets {
+		if target == "PARENTS" {
+			return true
+		}
+	}
+	return false
 }
 
 func layoutOptionByID(id string) (LayoutOptionDefinition, bool) {
@@ -314,7 +353,7 @@ func canonicalLayoutOptionID(value string) string {
 
 func layoutOptionApplies(option LayoutOptionDefinition, algorithm string) bool {
 	if len(option.Algorithms) == 0 {
-		return option.ID == "org.eclipse.elk.direction" || option.ID == "org.eclipse.elk.edgeRouting" || option.ID == "org.eclipse.elk.spacing.nodeNode" || option.ID == "org.eclipse.elk.spacing.edgeNode" || option.ID == "org.eclipse.elk.spacing.edgeEdge" || option.ID == "org.eclipse.elk.separateConnectedComponents" || option.ID == "org.eclipse.elk.interactive" || option.ID == "org.eclipse.elk.interactiveLayout" || option.ID == "org.eclipse.elk.randomSeed"
+		return option.Editable && option.RendererSupport == "supported"
 	}
 	for _, candidate := range option.Algorithms {
 		if candidate == "all" || candidate == algorithm {
@@ -335,18 +374,18 @@ func validateLayoutOptionValue(option LayoutOptionDefinition, value any) error {
 		}
 	case "INT":
 		number, ok := jsonNumber(value)
-		if !ok || number != float64(int64(number)) {
+		if !ok || !isFiniteNumber(number) || number != math.Trunc(number) {
 			return invalid("layout option must be an integer")
 		}
-		if option.Minimum != nil && number < *option.Minimum || option.Maximum != nil && number > *option.Maximum {
+		if outsideLayoutOptionBounds(option, number) {
 			return invalid("layout option is outside its supported range")
 		}
 	case "DOUBLE":
 		number, ok := jsonNumber(value)
-		if !ok {
+		if !ok || !isFiniteNumber(number) {
 			return invalid("layout option must be a number")
 		}
-		if option.Minimum != nil && number < *option.Minimum || option.Maximum != nil && number > *option.Maximum {
+		if outsideLayoutOptionBounds(option, number) {
 			return invalid("layout option is outside its supported range")
 		}
 	case "ENUM", "STRING":
@@ -370,6 +409,20 @@ func validateLayoutOptionValue(option LayoutOptionDefinition, value any) error {
 		return invalid("layout option type is not editable by this viewer")
 	}
 	return nil
+}
+
+func isFiniteNumber(value float64) bool {
+	return !math.IsNaN(value) && !math.IsInf(value, 0)
+}
+
+func outsideLayoutOptionBounds(option LayoutOptionDefinition, value float64) bool {
+	if option.Minimum != nil && (value < *option.Minimum || option.MinimumExclusive && value == *option.Minimum) {
+		return true
+	}
+	if option.Maximum != nil && (value > *option.Maximum || option.MaximumExclusive && value == *option.Maximum) {
+		return true
+	}
+	return false
 }
 
 func jsonNumber(value any) (float64, bool) {

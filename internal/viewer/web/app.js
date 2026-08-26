@@ -32,6 +32,7 @@
     layoutDraft: null,
     layoutOptionSearch: "",
     layoutMessage: "",
+    layoutMessageError: false,
     layoutSettingsOpen: false,
     layoutConfigRequest: 0,
     layoutKey: "",
@@ -230,6 +231,7 @@
         });
       }
       state.layoutMessage = "Unsaved settings changes";
+      state.layoutMessageError = false;
       renderLayoutSettings();
     });
     elements.layoutOptionSearch.addEventListener("input", function (event) {
@@ -299,6 +301,7 @@
       if (request !== state.layoutConfigRequest) return;
       state.layoutConfig = { layout: cloneLayoutProfile(state.layoutProfile), origin: "session", status: "invalid", can_save: false, can_save_as: false, diagnostics: [{ code: "config_unavailable", severity: "error", message: error.message || "Layout settings could not be loaded." }] };
       state.layoutMessage = error.message || "Layout settings could not be loaded.";
+      state.layoutMessageError = true;
       renderLayoutSettings();
     }
   }
@@ -348,6 +351,13 @@
     return JSON.stringify(value);
   }
 
+  function optionBoundsText(option) {
+    const bounds = [];
+    if (option.minimum != null) bounds.push((option.minimum_exclusive ? "> " : "≥ ") + formatOptionValue(option.minimum));
+    if (option.maximum != null) bounds.push((option.maximum_exclusive ? "< " : "≤ ") + formatOptionValue(option.maximum));
+    return bounds.length ? " · bounds: " + bounds.join(", ") : "";
+  }
+
   function layoutOptionInput(option, draft, applicable) {
     if (!applicable) return '<span class="layout-option-state">Not applicable to this algorithm</span>';
     if (!option.editable || option.renderer_support !== "supported") return '<span class="layout-option-state">Cataloged · unsupported by this renderer</span>';
@@ -380,6 +390,7 @@
     elements.layoutSettingsOrigin.textContent = layoutOriginLabel(config);
     renderLayoutSettingsDiagnostic(config);
     elements.layoutSettingsStatus.textContent = state.layoutMessage || (config && config.status === "invalid" ? "Safe defaults are active until the profile is corrected." : "");
+    elements.layoutSettingsStatus.className = "muted" + (state.layoutMessageError || (config && config.status === "invalid") ? " layout-settings-status-error" : "");
     if (!catalog || !catalog.algorithms || !catalog.options || !state.layoutDraft) {
       elements.layoutAlgorithm.innerHTML = '<option>Loading…</option>';
       elements.layoutAlgorithm.disabled = true;
@@ -419,7 +430,7 @@
           markup.push('<h4 class="layout-option-group">' + escapeHTML(group) + '</h4>');
           lastGroup = group;
         }
-        markup.push('<article class="layout-option ' + supportClass + '"><div class="layout-option-copy"><div class="layout-option-title"><strong>' + escapeHTML(option.name) + '</strong><code>' + escapeHTML(option.id) + '</code></div><div class="layout-option-meta">' + escapeHTML(group) + " · " + escapeHTML(option.type) + " · default: " + escapeHTML(optionDefaultText(option)) + " · current: " + escapeHTML(currentLabel) + '</div><p>' + escapeHTML(option.description) + '</p></div><div class="layout-option-control">' + layoutOptionInput(option, state.layoutDraft, applicable) + '</div></article>');
+        markup.push('<article class="layout-option ' + supportClass + '"><div class="layout-option-copy"><div class="layout-option-title"><strong>' + escapeHTML(option.name) + '</strong><code>' + escapeHTML(option.id) + '</code></div><div class="layout-option-meta">' + escapeHTML(group) + " · " + escapeHTML(option.type) + " · default: " + escapeHTML(optionDefaultText(option)) + " · current: " + escapeHTML(currentLabel) + escapeHTML(optionBoundsText(option)) + '</div><p>' + escapeHTML(option.description) + '</p></div><div class="layout-option-control">' + layoutOptionInput(option, state.layoutDraft, applicable) + '</div></article>');
       });
       elements.layoutOptionsList.innerHTML = markup.join("");
     }
@@ -432,6 +443,7 @@
     if (embeddedExport) return;
     state.layoutSettingsOpen = true;
     state.layoutMessage = "";
+    state.layoutMessageError = false;
     state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
     renderLayoutSettings();
     if (elements.layoutSettingsDialog.showModal) elements.layoutSettingsDialog.showModal();
@@ -441,6 +453,7 @@
   function closeLayoutSettings() {
     state.layoutSettingsOpen = false;
     state.layoutMessage = "";
+    state.layoutMessageError = false;
     if (elements.layoutSettingsDialog.close) elements.layoutSettingsDialog.close();
     else elements.layoutSettingsDialog.removeAttribute("open");
   }
@@ -463,7 +476,9 @@
       state.layoutDraft.options[option.id] = raw;
     }
     state.layoutMessage = "Unsaved settings changes";
+    state.layoutMessageError = false;
     elements.layoutSettingsStatus.textContent = state.layoutMessage;
+    elements.layoutSettingsStatus.className = "muted";
   }
 
   function clearManualLayoutPositions() {
@@ -475,6 +490,7 @@
   async function applyLayoutProfile() {
     if (!state.layoutDraft || embeddedExport) return;
     state.layoutMessage = "Applying layout…";
+    state.layoutMessageError = false;
     renderLayoutSettings();
     try {
       const response = await postJSON("/v1/layout/apply", layoutRequestPayload(state.layoutDraft));
@@ -486,11 +502,13 @@
       state.layoutError = false;
       state.layoutRequest += 1;
       state.layoutMessage = "Applied to the current session";
+      state.layoutMessageError = false;
       renderAll();
       renderLayoutSettings();
       void prepareLayout(state.scene, state.layoutProfile);
     } catch (error) {
       state.layoutMessage = error.message || "Layout settings could not be applied.";
+      state.layoutMessageError = true;
       renderLayoutSettings();
     }
   }
@@ -498,6 +516,7 @@
   async function resetLayoutProfile() {
     if (embeddedExport) return;
     state.layoutMessage = "Restoring built-in defaults…";
+    state.layoutMessageError = false;
     renderLayoutSettings();
     try {
       const response = await postJSON("/v1/layout/reset", {});
@@ -509,11 +528,13 @@
       state.layoutError = false;
       state.layoutRequest += 1;
       state.layoutMessage = "Built-in defaults restored for this session";
+      state.layoutMessageError = false;
       renderAll();
       renderLayoutSettings();
       void prepareLayout(state.scene, state.layoutProfile);
     } catch (error) {
       state.layoutMessage = error.message || "Layout defaults could not be restored.";
+      state.layoutMessageError = true;
       renderLayoutSettings();
     }
   }
@@ -521,6 +542,7 @@
   async function saveLayoutProfile() {
     if (!state.layoutDraft || embeddedExport) return;
     state.layoutMessage = "Saving active profile…";
+    state.layoutMessageError = false;
     renderLayoutSettings();
     try {
       const response = await putJSON("/v1/layout/config", layoutRequestPayload(state.layoutDraft));
@@ -531,11 +553,13 @@
       state.layout = null;
       state.layoutRequest += 1;
       state.layoutMessage = "Saved active .archview.json";
+      state.layoutMessageError = false;
       renderAll();
       renderLayoutSettings();
       void prepareLayout(state.scene, state.layoutProfile);
     } catch (error) {
       state.layoutMessage = error.message || "The active layout profile could not be saved.";
+      state.layoutMessageError = true;
       renderLayoutSettings();
     }
   }
@@ -546,10 +570,12 @@
     const confirm = elements.layoutSaveAsConfirm.checked;
     if (!destination || !confirm) {
       state.layoutMessage = "Enter a directory and confirm Save As before writing .archview.json.";
+      state.layoutMessageError = true;
       renderLayoutSettings();
       return;
     }
     state.layoutMessage = "Saving a custom profile…";
+    state.layoutMessageError = false;
     renderLayoutSettings();
     try {
       const response = await putJSON("/v1/layout/config/save-as", { schema_version: "arch-view.config/v1", layout: cloneLayoutProfile(state.layoutDraft), destination_dir: destination, confirm: confirm });
@@ -560,11 +586,13 @@
       state.layout = null;
       state.layoutRequest += 1;
       state.layoutMessage = "Saved custom .archview.json";
+      state.layoutMessageError = false;
       renderAll();
       renderLayoutSettings();
       void prepareLayout(state.scene, state.layoutProfile);
     } catch (error) {
       state.layoutMessage = error.message || "The custom layout profile could not be saved.";
+      state.layoutMessageError = true;
       renderLayoutSettings();
     }
   }
@@ -1009,34 +1037,6 @@
     return { engine: "fallback", key: sceneLayoutKey(scene), width: width, height: height, positions: positions, edges: {} };
   }
 
-  function buildELKGraph(scene, profile) {
-    const nodeWidth = 190;
-    const nodeHeight = 82;
-    const selectedProfile = profile || { algorithm: "layered", options: {} };
-    const algorithm = selectedProfile.algorithm || "layered";
-    const layoutOptions = {
-      "elk.algorithm": algorithm.startsWith("org.eclipse.elk.") ? algorithm : "org.eclipse.elk." + algorithm,
-      "elk.direction": "RIGHT",
-      "elk.edgeRouting": "ORTHOGONAL",
-      "elk.spacing.nodeNode": "35",
-      "elk.layered.spacing.nodeNodeBetweenLayers": "84"
-    };
-    Object.keys(selectedProfile.options || {}).forEach(function (key) {
-      const value = selectedProfile.options[key];
-      if (value !== undefined && value !== null) layoutOptions[key] = String(value);
-    });
-    return {
-      id: "root",
-      layoutOptions: layoutOptions,
-      children: scene.visible_nodes.map(function (node) {
-        return { id: node.id, width: nodeWidth, height: nodeHeight };
-      }),
-      edges: scene.visible_relationships.map(function (relationship) {
-        return { id: relationship.id, sources: [relationship.from_visible_id], targets: [relationship.to_visible_id] };
-      })
-    };
-  }
-
   function numberOrZero(value) {
     return typeof value === "number" && Number.isFinite(value) ? value : 0;
   }
@@ -1095,7 +1095,7 @@
     try {
       const workerURL = new URL("/assets/vendor/elk-worker.min.js", window.location.href).toString();
       elk = new window.ELK({ workerUrl: workerURL });
-      const result = await elk.layout(buildELKGraph(scene, profile || state.layoutProfile));
+      const result = await elk.layout(window.ArchViewELKRequest.buildELKGraph(scene, profile || state.layoutProfile, state.layoutCatalog));
       if (request !== state.layoutRequest || state.scene !== scene) return;
       state.layout = adaptELKLayout(scene, result, key);
       state.layoutError = false;
@@ -1107,6 +1107,7 @@
       state.layout = null;
       state.layoutError = true;
       state.layoutMessage = "ELK layout failed; deterministic fallback is active.";
+      state.layoutMessageError = true;
       renderSceneState();
       renderGraph();
       if (state.layoutSettingsOpen) renderLayoutSettings();

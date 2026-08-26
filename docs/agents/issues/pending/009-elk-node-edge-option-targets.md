@@ -69,7 +69,7 @@ eligible visible node or edge in the current scene.
 
 ## Blocked by
 
-008
+—
 
 ## User stories addressed
 
