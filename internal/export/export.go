@@ -12,7 +12,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
-	"github.com/buffo/arch-view/internal/viewer"
+	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
 const (
@@ -66,11 +66,11 @@ type DiagnosticSummary struct {
 }
 
 type htmlBundle struct {
-	Model                      model.Model                     `json:"model"`
-	Scenes                     map[string]viewer.SceneSnapshot `json:"scenes"`
-	Layouts                    map[string]deterministicLayout  `json:"layouts"`
-	InitialPath                []string                        `json:"initial_path"`
-	InitialReferenceVisibility string                          `json:"initial_reference_visibility"`
+	Model                      model.Model                    `json:"model"`
+	Scenes                     map[string]scene.SceneSnapshot `json:"scenes"`
+	Layouts                    map[string]deterministicLayout `json:"layouts"`
+	InitialPath                []string                       `json:"initial_path"`
+	InitialReferenceVisibility string                         `json:"initial_reference_visibility"`
 }
 
 // Render validates the model and returns deterministic artifact bytes without
@@ -151,7 +151,7 @@ func normalizeRequest(request Request) (Request, error) {
 		request.Context = context.Background()
 	}
 	if request.ReferenceVisibility == "" {
-		request.ReferenceVisibility = viewer.ReferenceVisibilityHidden
+		request.ReferenceVisibility = scene.ReferenceVisibilityHidden
 	}
 	if !validReferenceVisibility(request.ReferenceVisibility) {
 		return Request{}, analysis.NewHostError(analysis.ErrInvalidRequest, "export reference visibility is unsupported", map[string]any{"reference_visibility": request.ReferenceVisibility})
@@ -179,7 +179,7 @@ func isSupportedFormat(value string) bool {
 }
 
 func validReferenceVisibility(value string) bool {
-	return value == viewer.ReferenceVisibilityHidden || value == viewer.ReferenceVisibilityAggregated || value == viewer.ReferenceVisibilityExpanded
+	return value == scene.ReferenceVisibilityHidden || value == scene.ReferenceVisibilityAggregated || value == scene.ReferenceVisibilityExpanded
 }
 
 func validReferenceScope(value string) bool {
@@ -224,15 +224,15 @@ func sceneCatalog(value model.Model, request Request) (htmlBundle, map[string]an
 		return htmlBundle{}, nil, analysis.NewHostError(analysis.ErrInvalidRequest, "export view path does not resolve", map[string]any{"view_path": request.ViewPath})
 	}
 
-	scenes := make(map[string]viewer.SceneSnapshot, len(paths)*len(visualFormats)+len(paths))
+	scenes := make(map[string]scene.SceneSnapshot, len(paths)*len(visualFormats)+len(paths))
 	layouts := make(map[string]deterministicLayout, len(scenes))
 	var provenance map[string]any
 	for _, path := range paths {
-		for _, visibility := range []string{viewer.ReferenceVisibilityHidden, viewer.ReferenceVisibilityAggregated, viewer.ReferenceVisibilityExpanded} {
+		for _, visibility := range []string{scene.ReferenceVisibilityHidden, scene.ReferenceVisibilityAggregated, scene.ReferenceVisibilityExpanded} {
 			if err := request.Context.Err(); err != nil {
 				return htmlBundle{}, nil, err
 			}
-			scene, err := viewer.BuildSceneWithOptions(value, path, "overview", viewer.SceneOptions{
+			snapshot, err := scene.BuildSceneWithOptions(value, path, "overview", scene.SceneOptions{
 				ReferenceVisibility: visibility,
 				ReferenceScopes:     request.ReferenceScopes,
 			})
@@ -240,9 +240,9 @@ func sceneCatalog(value model.Model, request Request) (htmlBundle, map[string]an
 				return htmlBundle{}, nil, err
 			}
 			key := sceneCatalogKey(path, visibility)
-			scenes[key] = scene
-			layout := buildDeterministicLayout(scene)
-			layouts[sceneLayoutKey(scene)] = layout
+			scenes[key] = snapshot
+			layout := buildDeterministicLayout(snapshot)
+			layouts[sceneLayoutKey(snapshot)] = layout
 			if provenance == nil {
 				provenance = layoutProvenance()
 			}
@@ -284,7 +284,7 @@ func sceneCatalogKey(path []string, visibility string) string {
 	return pathKey(path) + "|" + visibility
 }
 
-func sceneLayoutKey(scene viewer.SceneSnapshot) string {
+func sceneLayoutKey(scene scene.SceneSnapshot) string {
 	nodes := make([]string, 0, len(scene.VisibleNodes))
 	for _, node := range scene.VisibleNodes {
 		nodes = append(nodes, node.ID)

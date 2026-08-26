@@ -12,7 +12,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
-	"github.com/buffo/arch-view/internal/viewer"
+	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
 func TestRenderJSONIsCanonicalAndPreservesPartialFacts(t *testing.T) {
@@ -53,7 +53,7 @@ func TestRenderHTMLIsSelfContainedAndUsesEmbeddedSceneCatalog(t *testing.T) {
 	value := exportFixtureModel(t)
 	metadata, data, err := Render(value, Request{
 		Format:              FormatHTML,
-		ReferenceVisibility: viewer.ReferenceVisibilityHidden,
+		ReferenceVisibility: scene.ReferenceVisibilityHidden,
 	})
 	if err != nil {
 		t.Fatalf("HTML render: %v", err)
@@ -96,7 +96,7 @@ func TestRenderSVGIsStaticAccessibleDeterministicAndTraceable(t *testing.T) {
 	value := exportFixtureModel(t)
 	request := Request{
 		Format:              FormatSVG,
-		ReferenceVisibility: viewer.ReferenceVisibilityExpanded,
+		ReferenceVisibility: scene.ReferenceVisibilityExpanded,
 	}
 	firstMetadata, first, err := Render(value, request)
 	if err != nil {
@@ -140,16 +140,16 @@ func TestRenderSVGIsStaticAccessibleDeterministicAndTraceable(t *testing.T) {
 
 func TestVisualExportsRespectLocalFirstReferenceVisibility(t *testing.T) {
 	value := exportFixtureModel(t)
-	hidden, _, err := Render(value, Request{Format: FormatSVG, ReferenceVisibility: viewer.ReferenceVisibilityHidden})
+	hidden, _, err := Render(value, Request{Format: FormatSVG, ReferenceVisibility: scene.ReferenceVisibilityHidden})
 	if err != nil {
 		t.Fatalf("hidden SVG render: %v", err)
 	}
-	aggregated, _, err := Render(value, Request{Format: FormatSVG, ReferenceVisibility: viewer.ReferenceVisibilityAggregated})
+	aggregated, _, err := Render(value, Request{Format: FormatSVG, ReferenceVisibility: scene.ReferenceVisibilityAggregated})
 	if err != nil {
 		t.Fatalf("aggregated SVG render: %v", err)
 	}
-	hiddenData := string(renderedBytes(t, value, Request{Format: FormatSVG, ReferenceVisibility: viewer.ReferenceVisibilityHidden}))
-	aggregatedData := string(renderedBytes(t, value, Request{Format: FormatSVG, ReferenceVisibility: viewer.ReferenceVisibilityAggregated}))
+	hiddenData := string(renderedBytes(t, value, Request{Format: FormatSVG, ReferenceVisibility: scene.ReferenceVisibilityHidden}))
+	aggregatedData := string(renderedBytes(t, value, Request{Format: FormatSVG, ReferenceVisibility: scene.ReferenceVisibilityAggregated}))
 	if strings.Contains(hiddenData, `data-module-id="ref-fmt"`) || strings.Contains(hiddenData, `data-module-id="reference-boundary:standard_library"`) {
 		t.Fatal("hidden SVG exposed a reference node")
 	}

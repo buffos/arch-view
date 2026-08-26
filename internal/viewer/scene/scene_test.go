@@ -1,4 +1,4 @@
-package viewer
+package scene
 
 import (
 	"encoding/json"

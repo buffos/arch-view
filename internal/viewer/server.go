@@ -18,6 +18,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
 //go:embed web/index.html web/styles.css web/app.js web/app/*.js web/layout_request.js web/graph_route.js web/vendor/elk.bundled.js web/vendor/elk-worker.min.js
@@ -213,12 +214,12 @@ func (s *Server) handleModel(writer http.ResponseWriter, request *http.Request) 
 		writeHTTPError(writer, http.StatusBadRequest, err)
 		return
 	}
-	scene, err := BuildSceneWithOptions(value, selectedPath, displayMode, SceneOptions{ReferenceVisibility: referenceVisibility, ReferenceScopes: referenceScopes})
+	sceneSnapshot, err := scene.BuildSceneWithOptions(value, selectedPath, displayMode, scene.SceneOptions{ReferenceVisibility: referenceVisibility, ReferenceScopes: referenceScopes})
 	if err != nil {
 		writeHTTPError(writer, http.StatusUnprocessableEntity, err)
 		return
 	}
-	writeJSON(writer, http.StatusOK, scene)
+	writeJSON(writer, http.StatusOK, sceneSnapshot)
 }
 
 func (s *Server) handleSource(writer http.ResponseWriter, request *http.Request) {
@@ -585,12 +586,14 @@ func sourceErrorStatus(err error) int {
 
 func queryReferenceVisibility(value string) (string, error) {
 	if value == "" {
-		return ReferenceVisibilityHidden, nil
+		return scene.ReferenceVisibilityHidden, nil
 	}
-	if !validReferenceVisibility(value) {
+	switch value {
+	case scene.ReferenceVisibilityHidden, scene.ReferenceVisibilityAggregated, scene.ReferenceVisibilityExpanded:
+		return value, nil
+	default:
 		return "", analysis.NewHostError(analysis.ErrInvalidRequest, "viewer reference visibility is unsupported", map[string]any{"reference_visibility": value})
 	}
-	return value, nil
 }
 
 func queryReferenceScopes(values []string) ([]string, error) {
@@ -605,6 +608,24 @@ func queryReferenceScopes(values []string) ([]string, error) {
 		result = appendUniqueString(result, value)
 	}
 	return result, nil
+}
+
+func validReferenceScope(value string) bool {
+	switch value {
+	case "standard_library", "external", "unresolved", "dynamic":
+		return true
+	default:
+		return false
+	}
+}
+
+func appendUniqueString(values []string, value string) []string {
+	for _, existing := range values {
+		if existing == value {
+			return values
+		}
+	}
+	return append(values, value)
 }
 
 func queryHierarchyPath(values []string) ([]string, error) {

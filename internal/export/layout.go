@@ -4,7 +4,7 @@ import (
 	"sort"
 
 	"github.com/buffo/arch-view/internal/routing"
-	"github.com/buffo/arch-view/internal/viewer"
+	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
 const (
@@ -36,9 +36,9 @@ type deterministicLayoutEdge struct {
 	LabelY float64         `json:"label_y"`
 }
 
-func buildDeterministicLayout(scene viewer.SceneSnapshot) deterministicLayout {
-	byLayer := make(map[int][]viewer.VisibleNode)
-	for _, node := range scene.VisibleNodes {
+func buildDeterministicLayout(snapshot scene.SceneSnapshot) deterministicLayout {
+	byLayer := make(map[int][]scene.VisibleNode)
+	for _, node := range snapshot.VisibleNodes {
 		layer := 0
 		if node.Layer != nil {
 			layer = *node.Layer
@@ -67,7 +67,7 @@ func buildDeterministicLayout(scene viewer.SceneSnapshot) deterministicLayout {
 
 	width := float64(maxInt(760, len(layers)*(deterministicNodeWidth+deterministicColumnGap)+80))
 	height := float64(maxInt(430, maxRows*(deterministicNodeHeight+deterministicRowGap)+100))
-	positions := make(map[string]deterministicLayoutNode, len(scene.VisibleNodes))
+	positions := make(map[string]deterministicLayoutNode, len(snapshot.VisibleNodes))
 	for layerIndex, layer := range layers {
 		for rowIndex, node := range byLayer[layer] {
 			positions[node.ID] = deterministicLayoutNode{
@@ -79,8 +79,8 @@ func buildDeterministicLayout(scene viewer.SceneSnapshot) deterministicLayout {
 		}
 	}
 
-	edges := make(map[string]deterministicLayoutEdge, len(scene.VisibleRelationships))
-	for _, relationship := range scene.VisibleRelationships {
+	edges := make(map[string]deterministicLayoutEdge, len(snapshot.VisibleRelationships))
+	for _, relationship := range snapshot.VisibleRelationships {
 		from, fromOK := positions[relationship.FromVisibleID]
 		to, toOK := positions[relationship.ToVisibleID]
 		if !fromOK || !toOK || relationship.FromVisibleID == relationship.ToVisibleID {
@@ -90,7 +90,7 @@ func buildDeterministicLayout(scene viewer.SceneSnapshot) deterministicLayout {
 	}
 	return deterministicLayout{
 		Engine:    "deterministic-export",
-		Key:       sceneLayoutKey(scene),
+		Key:       sceneLayoutKey(snapshot),
 		Width:     width,
 		Height:    height,
 		Positions: positions,

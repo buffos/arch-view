@@ -16,6 +16,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
 func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
@@ -153,30 +154,30 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET projection: %v", err)
 	}
-	var scene SceneSnapshot
-	if err := json.NewDecoder(projectionResponse.Body).Decode(&scene); err != nil {
+	var snapshot scene.SceneSnapshot
+	if err := json.NewDecoder(projectionResponse.Body).Decode(&snapshot); err != nil {
 		_ = projectionResponse.Body.Close()
 		t.Fatalf("decode projection response: %v", err)
 	}
 	_ = projectionResponse.Body.Close()
-	if projectionResponse.StatusCode != http.StatusOK || scene.DisplayMode != "list" || len(scene.HierarchyPath) != 1 || scene.HierarchyPath[0] != "core" {
-		t.Fatalf("projection response = %d %#v", projectionResponse.StatusCode, scene)
+	if projectionResponse.StatusCode != http.StatusOK || snapshot.DisplayMode != "list" || len(snapshot.HierarchyPath) != 1 || snapshot.HierarchyPath[0] != "core" {
+		t.Fatalf("projection response = %d %#v", projectionResponse.StatusCode, snapshot)
 	}
-	if scene.ReferenceVisibility != ReferenceVisibilityHidden {
-		t.Fatalf("default reference visibility = %q", scene.ReferenceVisibility)
+	if snapshot.ReferenceVisibility != scene.ReferenceVisibilityHidden {
+		t.Fatalf("default reference visibility = %q", snapshot.ReferenceVisibility)
 	}
 
 	aggregatedResponse, err := http.Get(httpServer.URL + "/v1/models/" + url.PathEscape(value.ModelID) + "/projection?reference_visibility=aggregated")
 	if err != nil {
 		t.Fatalf("GET aggregated projection: %v", err)
 	}
-	var aggregated SceneSnapshot
+	var aggregated scene.SceneSnapshot
 	if err := json.NewDecoder(aggregatedResponse.Body).Decode(&aggregated); err != nil {
 		_ = aggregatedResponse.Body.Close()
 		t.Fatalf("decode aggregated projection: %v", err)
 	}
 	_ = aggregatedResponse.Body.Close()
-	if aggregatedResponse.StatusCode != http.StatusOK || aggregated.ReferenceVisibility != ReferenceVisibilityAggregated || aggregated.ReferenceSummary.AggregatedCount != 1 {
+	if aggregatedResponse.StatusCode != http.StatusOK || aggregated.ReferenceVisibility != scene.ReferenceVisibilityAggregated || aggregated.ReferenceSummary.AggregatedCount != 1 {
 		t.Fatalf("aggregated response = %d %#v", aggregatedResponse.StatusCode, aggregated)
 	}
 

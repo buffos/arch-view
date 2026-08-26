@@ -10,25 +10,25 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/routing"
-	"github.com/buffo/arch-view/internal/viewer"
+	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
 func renderSVG(value model.Model, request Request) ([]byte, map[string]any, error) {
 	if err := checkContext(request.Context); err != nil {
 		return nil, nil, err
 	}
-	scene, err := viewer.BuildSceneWithOptions(value, request.ViewPath, "overview", viewer.SceneOptions{
+	sceneSnapshot, err := scene.BuildSceneWithOptions(value, request.ViewPath, "overview", scene.SceneOptions{
 		ReferenceVisibility: request.ReferenceVisibility,
 		ReferenceScopes:     request.ReferenceScopes,
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	layout := buildDeterministicLayout(scene)
-	return renderSVGDocument(value, scene, layout), layoutProvenance(), nil
+	layout := buildDeterministicLayout(sceneSnapshot)
+	return renderSVGDocument(value, sceneSnapshot, layout), layoutProvenance(), nil
 }
 
-func renderSVGDocument(value model.Model, scene viewer.SceneSnapshot, layout deterministicLayout) []byte {
+func renderSVGDocument(value model.Model, scene scene.SceneSnapshot, layout deterministicLayout) []byte {
 	var builder strings.Builder
 	width := formatNumber(layout.Width)
 	height := formatNumber(layout.Height)
@@ -75,7 +75,7 @@ func renderSVGDocument(value model.Model, scene viewer.SceneSnapshot, layout det
 	return []byte(builder.String())
 }
 
-func writeSVGMetadata(builder *strings.Builder, value model.Model, scene viewer.SceneSnapshot, layout deterministicLayout) {
+func writeSVGMetadata(builder *strings.Builder, value model.Model, scene scene.SceneSnapshot, layout deterministicLayout) {
 	provenance := layoutProvenance()
 	builder.WriteString(`<metadata><arch-view schema-version="` + xmlEscape(value.SchemaVersion) + `" model-id="` + xmlEscape(value.ModelID) + `" model-revision="` + xmlEscape(value.ModelID) + `" status="` + xmlEscape(string(value.Status)) + `" reference-visibility="` + xmlEscape(scene.ReferenceVisibility) + `" layout-engine="` + xmlEscape(fmt.Sprint(provenance["engine"])) + `" layout-algorithm="` + xmlEscape(fmt.Sprint(provenance["algorithm"])) + `" layout-algorithm-version="` + xmlEscape(fmt.Sprint(provenance["algorithm_version"])) + `" layout-width="` + formatNumber(layout.Width) + `" layout-height="` + formatNumber(layout.Height) + `">`)
 	builder.WriteString(`<summary visible-nodes="` + strconv.Itoa(scene.Summary.VisibleNodeCount) + `" visible-relationships="` + strconv.Itoa(scene.Summary.VisibleRelationshipCount) + `" modules="` + strconv.Itoa(scene.Summary.ModuleCount) + `" references="` + strconv.Itoa(scene.Summary.ReferenceCount) + `" cycles="` + strconv.Itoa(scene.Summary.CycleCount) + `" diagnostics="` + strconv.Itoa(scene.Summary.DiagnosticCount) + `" evidence="` + strconv.Itoa(scene.Summary.EvidenceCount) + `"/>`)
@@ -142,7 +142,7 @@ func writeSVGMetadata(builder *strings.Builder, value model.Model, scene viewer.
 	builder.WriteString(`</layers></arch-view></metadata>`)
 }
 
-func svgNodeMarkup(node viewer.VisibleNode, position deterministicLayoutNode) string {
+func svgNodeMarkup(node scene.VisibleNode, position deterministicLayoutNode) string {
 	className := "node-shape " + svgStateClass(node.Kind) + " " + svgStateClass(node.CycleState)
 	if node.DiagnosticState != "none" {
 		className += " " + svgStateClass(node.DiagnosticState)
@@ -169,7 +169,7 @@ func svgNodeMarkup(node viewer.VisibleNode, position deterministicLayoutNode) st
 	return `<g class="node-group" data-module-id="` + xmlEscape(node.ID) + `" data-module-ids="` + xmlEscape(strings.Join(node.ModuleIDs, ",")) + `" data-node-kind="` + xmlEscape(node.Kind) + `" data-cycle-state="` + xmlEscape(node.CycleState) + `" data-diagnostic-state="` + xmlEscape(node.DiagnosticState) + `" data-confidence-state="` + xmlEscape(node.ConfidenceState) + `" data-evidence-ids="` + xmlEscape(strings.Join(node.EvidenceIDs, ",")) + `"` + referenceScopeAttribute(node.ReferenceScope) + ` role="group" aria-label="` + xmlEscape(node.AccessibleLabel) + `"><title>` + xmlEscape(node.AccessibleLabel) + `</title><desc>` + xmlEscape(nodeDetails(node)) + `</desc><rect class="` + className + `" x="` + formatNumber(position.X) + `" y="` + formatNumber(position.Y) + `" width="` + formatNumber(position.Width) + `" height="` + formatNumber(position.Height) + `" rx="12"/><text class="node-label" x="` + formatNumber(position.X+14) + `" y="` + formatNumber(position.Y+30) + `">` + xmlEscape(truncate(node.Label, 25)) + `</text><text class="node-subtitle" x="` + formatNumber(position.X+14) + `" y="` + formatNumber(position.Y+51) + `">` + xmlEscape(truncate(subtitle, 29)) + `</text><text class="node-subtitle" x="` + formatNumber(position.X+14) + `" y="` + formatNumber(position.Y+68) + `">` + xmlEscape(truncate(status, 29)) + `</text></g>`
 }
 
-func svgEdgeGeometry(relationship viewer.VisibleRelationship, from, to deterministicLayoutNode, routed deterministicLayoutEdge) (string, float64, float64) {
+func svgEdgeGeometry(relationship scene.VisibleRelationship, from, to deterministicLayoutNode, routed deterministicLayoutEdge) (string, float64, float64) {
 	if len(routed.Points) > 1 {
 		route := routing.Polyline(routed.Points, routing.Point{X: routed.LabelX, Y: routed.LabelY})
 		if path := pathFromRoute(route); path != "" {
@@ -280,7 +280,7 @@ func exportConfidenceState(score float64) string {
 	}
 }
 
-func nodeStatus(node viewer.VisibleNode) string {
+func nodeStatus(node scene.VisibleNode) string {
 	if node.CycleState != "none" {
 		return "cycle: " + node.CycleState
 	}
@@ -296,11 +296,11 @@ func nodeStatus(node viewer.VisibleNode) string {
 	return "identity " + node.IdentityState
 }
 
-func nodeDetails(node viewer.VisibleNode) string {
+func nodeDetails(node scene.VisibleNode) string {
 	return fmt.Sprintf("%s · %s · %d module(s) · %d relationship(s) · %d evidence item(s)", node.Label, node.Kind, node.Counts.ModuleCount, node.Counts.RelationshipCount, node.Counts.EvidenceCount)
 }
 
-func svgDescription(scene viewer.SceneSnapshot) string {
+func svgDescription(scene scene.SceneSnapshot) string {
 	return fmt.Sprintf("%d visible nodes, %d directed relationships, %d cycles, %d diagnostics, and %d evidence links in the %s hierarchy.", scene.Summary.VisibleNodeCount, scene.Summary.VisibleRelationshipCount, scene.Summary.CycleCount, scene.Summary.DiagnosticCount, scene.Summary.EvidenceCount, hierarchyLabel(scene.HierarchyPath))
 }
 
