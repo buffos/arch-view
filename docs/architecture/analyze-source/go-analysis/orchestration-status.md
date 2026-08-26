@@ -22,8 +22,8 @@
 
 - Selected first frontier: Go analysis.
 - Implementation slice: [Go repository to visible architecture view](implementation-slice.md).
-- Delivery progress: issues 001 through 004 and post-baseline issue 006 are complete; issue 005 remains active as the unblocked export frontier.
+- Delivery progress: issues 001 through 007 are complete for the first Go analyzer/model, viewer, export, and layout-configuration slice; issue 008 is the next ready viewer extension.
 
 ## Next step and artifact impact
 
-Issues 001 through 004 and post-baseline issue 006 are complete: Go analysis feeds a validated canonical model and the local viewer provides the approved interactive investigation workflow. Product and architecture truth remain synchronized; delivery truth records issue 005 as the active export frontier.
+Issues 001 through 007 are complete: Go analysis feeds a validated canonical model, the local viewer provides the approved interactive investigation workflow, the shared JSON/HTML/SVG exporter is visually approved, and the viewer-owned ELK settings/configuration boundary is complete. Issue 008 is the next ready viewer extension; product and architecture truth remain synchronized.

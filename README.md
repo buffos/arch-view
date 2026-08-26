@@ -107,6 +107,38 @@ the semantic scene usable while making the layout engine replaceable.
 Manual positions are viewer-session state keyed by model revision and
 hierarchy path. They never modify the canonical model.
 
+### Project layout settings
+
+The viewer exposes the pinned ELK adapter's 11 algorithms and 235 layout
+options through a searchable, grouped settings surface. Editable options are
+typed and validated before they are applied. A project-backed session discovers
+the nearest `.archview.json` by checking the selected target directory and
+then its parents toward the filesystem root; the first file found wins as a
+complete profile, with no merging. If no file exists, built-in defaults apply.
+
+The file will contain presentation layout settings only. Analyzer options,
+viewport state, manual node positions, and canonical model facts remain
+separate. If discovery loads the file from folder X, ordinary `Save` will
+atomically overwrite that exact active file and will not create a project-root
+copy. If no file was discovered, `Save` will require `Save As`. `Save As` will
+be the only operation that accepts a custom destination folder, writes the
+fixed `.archview.json` filename there, and makes it active for the current
+session. Model-only sessions can apply settings temporarily but cannot persist
+a project configuration. Automatic discovery in a later session still follows
+the selected target's ancestor chain, so a custom file outside that chain will
+need an explicit configuration-selection feature in a later issue. The
+settings dialog also reports whether an entry is editable, unsupported, or not
+applicable to the selected algorithm. `Apply` and `Reset defaults` are
+session actions; applying a profile recalculates ELK node positions and edge
+routes and clears manual positions for the current hierarchy path. If ELK
+fails, the deterministic fallback remains visible.
+
+The local viewer exposes the settings contract through `GET /v1/layout/options`,
+`GET /v1/layout/config`, `POST /v1/layout/apply`, and `POST /v1/layout/reset`.
+Persistence uses `PUT /v1/layout/config` for the exact active file and
+`PUT /v1/layout/config/save-as` for an explicitly confirmed custom directory.
+Model-only sessions can apply settings but cannot persist a project file.
+
 ### Scope boundaries
 
 - Analyzers discover source facts and emit modules, relationships, tags,
@@ -118,3 +150,20 @@ hierarchy path. They never modify the canonical model.
 
 The `external/` reference implementation remains outside all of these product
 boundaries.
+
+### Export artifacts
+
+The CLI can write the validated model as canonical JSON, a self-contained
+interactive HTML report, or a static accessible SVG:
+
+```text
+arch-view analyze --project <path> --format html --output architecture.html
+arch-view export --input model.json --format json --output architecture.json
+arch-view export --input model.json --format svg --output architecture.svg
+```
+
+Visual exports are local-first by default. Use `--reference-visibility
+aggregated` or `--reference-visibility expanded` to show non-local boundaries
+or individual imports; the canonical JSON always retains every reference and
+source location. Source contents are not embedded in v1, and an existing
+output requires `--overwrite`.

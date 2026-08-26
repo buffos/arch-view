@@ -5,7 +5,7 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the interactive investigation capability.
-- Next route: implement or slice the specified local web viewer after application synthesis validation.
+- Next route: process issue 008's parent-level ELK option tranche, then issue 009's node/edge target mapping; issue 007's layout-settings/project-configuration slice and issue 005's independent export review are complete and archived.
 
 ## Confirmed boundary
 
@@ -25,6 +25,9 @@ The capability consumes the canonical model and graph/view preparation outputs a
 - Keyboard navigation, accessible labels/contrast, and a list/details path complement the graph.
 - Reanalysis replaces stale model/evidence state and preserves navigation only when safe and explainable.
 - Manual node movement remains session-only; deterministic orthogonal geometry refreshes affected edge paths synchronously without re-running the layered node layout. The same calculation is used during drag and after drop, and `Reset layout` discards those manual positions and restores the calculated layout.
+- The viewer exposes a searchable catalog of the pinned ELK algorithms/options with typed validation, explicit apply/reset behavior, and visible applicability/support information.
+- Project layout preferences use versioned `.archview.json` configuration. Discovery walks from the selected target directory toward the filesystem root and selects the nearest file without merging; no file means built-in defaults.
+- Ordinary `Save` atomically overwrites exactly the active discovered `.archview.json` and never creates a project-root copy; when no file is active it requires `Save As`. `Save As` is the only operation that accepts a custom destination folder, writes the fixed `.archview.json` filename, and makes it active for the current session. Model-only sessions remain session-only, and layout configuration never stores analyzer options, canonical model facts, viewport state, or manual positions.
 
 ## Artifact plan
 
@@ -41,8 +44,9 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Issue 003 delivered the first visible local top-level view with local-first reference policy, semantic confidence labels, and bounded baseline layout; automated acceptance and the required visual review are complete.
 - Issue 006 refined the approved baseline with honest non-cycle internal-relationship summaries, separate node identity/relationship confidence wording, the contributor-facing viewer guide, and a locally served ELK/elkjs layered layout with SVG edge-route consumption. The deterministic layer-based layout remains the replaceable fallback; its visual review is complete.
 - Issue 004 adds evidence, imports list/detail inspection, drill-down, source safety, accessible inspection, viewport controls, session layout state, read-only reanalysis replacement, compact expanded-canvas controls, centered dense-scene fitting, explicit 100% zoom reset behavior, reset-to-calculated layout, and deterministic manual edge routing. Its implementation, automated verification, and declared visual review are complete.
-- Issue 005 reuses the view contract for visual export parity, including reference visibility and import/evidence metadata.
-- Issues 003, 004, 005, and the post-baseline issue 006 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
+- Issue 005 reuses the view contract for visual export parity, including reference visibility and import/evidence metadata. Its implementation, automated verification, and explicit user-approved visual parity review are complete; the issue is archived.
+- Issue 007 implements the ELK option catalog/settings surface, explicit profile application/reset, nearest-ancestor `.archview.json` discovery, active-file `Save`, and explicit custom-folder `Save As`. Its automated verification and declared visual review are complete and it is archived. Issue 008 is the next parent-level option-support tranche, followed by issue 009's node/edge target mapping; advanced ports, labels, junctions, and compound-graph geometry require a later specification refresh. Export configuration consumption remains intentionally outside this slice.
+- Issues 003, 004, 005, 006, and 007 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Implementation progress
 
@@ -55,4 +59,6 @@ The first viewer slice serves validated model files and Go project analyses thro
 - Exact specification: refreshed in the linked PRD, domain model, use cases, contract, scenarios, gap analysis, and readiness review with local-first reference visibility and import inspection.
 - Product truth: refreshed in [the application PRD](../../prd.md).
 - Architecture truth: refreshed in [the application architecture summary](../application-architecture-summary.md); no new boundary or capability was introduced.
-- Delivery truth: issues 003, 004, and 006 are archived after visual approval; issue 005 remains unblocked for its independent export scope.
+- Delivery truth: issues 003, 004, 005, 006, and 007 are archived after visual approval; issues 008 and 009 are linked as sequenced follow-up viewer extensions, with 008 now unblocked.
+- No impact: creating issues 008 and 009 does not change capability topology, product scope, or the external layout contract; advanced ELK geometry is intentionally deferred until its scene/renderer contract is specified.
+- No impact: analyzer/plugin and canonical-model artifacts are unchanged because `.archview.json` contains presentation settings only; export artifacts are unchanged because issue 007 does not automatically consume project layout configuration for headless export.

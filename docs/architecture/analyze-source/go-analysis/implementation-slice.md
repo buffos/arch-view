@@ -15,7 +15,8 @@ Given a Go repository containing a selected module, a developer can:
 3. receive a deterministic language-neutral model with evidence, non-local references, diagnostics, cycles, and layers;
 4. open the top-level model in a local web viewer;
 5. drill into hierarchy and source evidence; and
-6. write deterministic JSON, self-contained HTML, or accessible SVG artifacts.
+6. write deterministic JSON, self-contained HTML, or accessible SVG artifacts; and
+7. adjust the pinned ELK layout through the viewer and persist project presentation preferences.
 
 ## Scope
 
@@ -26,6 +27,7 @@ Given a Go repository containing a selected module, a developer can:
 - Local web overview, navigation, evidence, diagnostics, and accessible list/details inspection.
 - Deterministic JSON, HTML, and SVG output.
 - Read-only analysis and source inspection.
+- User-selectable ELK layout settings and nearest-ancestor `.archview.json` project configuration for the interactive viewer.
 
 ## Explicit non-goals
 
@@ -43,12 +45,15 @@ Given a Go repository containing a selected module, a developer can:
 | [002](../../../agents/issues/done/20260825-002-go-package-import-model-pipeline.md) | Go package/import observations normalized into model v1 | Go analysis + Generate models | 001 | none |
 | [003](../../../agents/issues/done/20260826-003-local-web-top-level-architecture-view.md) | First visible local top-level architecture view — local-first/reference-boundary refinement | Explore architecture | — | approved |
 | [004](../../../agents/issues/done/20260826-004-evidence-drilldown-and-source-inspection.md) | Hierarchy navigation, evidence, diagnostics, safe source inspection, session layout controls, centered fitting, stable drag rendering, and deterministic manual edge routing | Explore architecture | — | approved |
-| [005](../../../agents/issues/pending/005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | — | visual-review |
+| [005](../../../agents/issues/done/20260826-005-deterministic-json-html-svg-export.md) | Repeatable JSON, HTML, and SVG artifacts from the same model/view contract | Export + Explore architecture | — | approved |
 | [006](../../../agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md) | Post-baseline semantic summaries and ELK edge routing | Explore architecture | — | approved |
+| [007](../../../agents/issues/done/20260826-007-elk-layout-settings-and-project-config.md) | User-selectable ELK layout settings and persistent project configuration | Explore architecture | — | done |
+| [008](../../../agents/issues/pending/008-expand-elk-parent-options.md) | Expanded ELK parent-level layout option support | Explore architecture | — | ready-for-agent |
+| [009](../../../agents/issues/pending/009-elk-node-edge-option-targets.md) | Target-aware node- and edge-level ELK option mapping | Explore architecture | 008 | ready-for-agent |
 
 ## Current delivery status
 
-The analyzer-to-model path and the revised local viewer implementation are available. Issues 003, 004, and 006 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, and its semantic/ELK refinement. Issue 004 completed implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, reset-to-calculated layout, deterministic manual edge routing, and automated/browser verification. Issue 005 remains the next unblocked delivery frontier.
+The analyzer-to-model path and the revised local viewer implementation are available. Issues 003, 004, 005, 006, and 007 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic JSON/HTML/SVG export parity, semantic/ELK refinement, and the layout-settings/project-configuration slice. Issue 004 completed implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, reset-to-calculated layout, deterministic manual edge routing, and automated/browser verification. Issues 008 and 009 are sequenced follow-up slices for expanding ELK option support; they do not change the analyzer-to-model path.
 
 ## Slice acceptance
 
@@ -57,7 +62,7 @@ The analyzer-to-model path and the revised local viewer implementation are avail
 - Identical inputs and options produce byte-stable model and export artifacts.
 - The viewer exposes hierarchy, relationship direction, cycles, diagnostics, and source evidence without executing or editing target code.
 - JSON, HTML, and SVG preserve the same model semantics and status.
-- All issue dependencies form a linear, acyclic path from analyzer host to visible result and durable artifacts.
+- All issue dependencies form a linear, acyclic path from analyzer host to visible result and durable artifacts; issue 007 depends only on the approved ELK/viewer baseline.
 
 ## Verification surfaces
 
@@ -68,4 +73,4 @@ The analyzer-to-model path and the revised local viewer implementation are avail
 
 ## Artifact impact
 
-This slice updates delivery truth and the synchronized capability records for hierarchy/evidence inspection, source safety, and session layout. The application PRD and application architecture summary remain unchanged because the work realizes already specified viewer behavior and introduces no new boundary. It does not change the OKF graph topology or the reference-only `external/` folder.
+This slice updates delivery truth and the synchronized capability records for hierarchy/evidence inspection, source safety, session layout, and project layout configuration. The application PRD and application architecture summary are refreshed for issue 007's presentation-settings and narrowly scoped active-file/configuration write boundary. Issues 008 and 009 remain within the existing viewer boundary; their advanced target/geometry work is not yet part of the canonical model or export contract. Analyzer/plugin contracts, canonical model semantics, export behavior, the OKF graph topology, and the reference-only `external/` folder remain unchanged.

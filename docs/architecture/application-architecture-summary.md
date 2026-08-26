@@ -23,6 +23,8 @@ Language-neutral architecture model
         |
         +--> renderer-neutral view contract
         |
+        +--> project configuration resolver -> viewer layout profile
+        |
         +--> local web viewer
         +--> versioned JSON, SVG, HTML, and CI outputs
 ```
@@ -43,7 +45,7 @@ The first graph uses package or module nodes. Files remain attached evidence. Pr
 
 ### CLI and orchestration
 
-Owns command parsing, project selection, analyzer selection, configuration, progress, and error reporting. It must not parse language syntax or calculate layout.
+Owns command parsing, project selection, analyzer selection, analyzer-option configuration, progress, and error reporting. It does not parse language syntax or calculate layout. Presentation layout configuration is resolved by the local host/viewer boundary and remains separate from analyzer options.
 
 ### Plugin manager
 
@@ -65,7 +67,13 @@ Owns relationship normalization, aggregation, abstraction classification, cycle 
 
 ### Presentation and export
 
-The viewer owns a local web presentation, renderer-neutral scene/view state, interaction, navigation, progressive disclosure, reference-boundary visibility, import/evidence inspection, source inspection, tooltips, layout/session state, and accessibility concerns. The default overview is local-first; non-local references remain canonical but are hidden, aggregated, or expanded by view policy. The current SVG renderer owns arrowhead styling and consumes node positions plus edge sections/bend points from the locally served ELK/elkjs layered adapter. A deterministic layer-based layout remains the replaceable fallback; neither layout choice changes relationship meaning. Exporters consume the same view policy and own versioned JSON, deterministic HTML/SVG, and CI status behavior. Neither presentation nor export knows how a source language is parsed.
+The viewer owns a local web presentation, renderer-neutral scene/view state, interaction, navigation, progressive disclosure, reference-boundary visibility, import/evidence inspection, source inspection, tooltips, layout/session state, configurable ELK presentation settings, and accessibility concerns. The default overview is local-first; non-local references remain canonical but are hidden, aggregated, or expanded by view policy. The current SVG renderer owns arrowhead styling and consumes node positions plus edge sections/bend points from the locally served ELK/elkjs layered adapter. A deterministic layer-based layout remains the replaceable fallback; neither layout choice changes relationship meaning. Exporters consume the same view policy and own versioned JSON, deterministic HTML/SVG, and CI status behavior. Neither presentation nor export knows how a source language is parsed.
+
+### Project configuration and layout settings
+
+The local host resolves the nearest versioned `.archview.json` from the selected target directory through its ancestors toward the filesystem root. A discovered file is selected as one complete profile; v1 does not merge multiple files. The viewer settings surface obtains a typed/catalogued list of the pinned ELK algorithms and options, validates applicability, and applies profiles explicitly to the current scene. Applying a profile may recalculate node positions and edge routes and clears session manual positions for that hierarchy path, but it cannot mutate canonical model semantics.
+
+Configuration writes distinguish two actions. Ordinary `Save` has no destination input and atomically overwrites exactly the active discovered `.archview.json`; it never creates a new file or copies settings to the analyzed project root, and it requires `Save As` when no active file exists. `Save As` is the only operation that accepts a user-selected custom destination folder; it writes the fixed `.archview.json` filename there atomically after explicit confirmation and makes that path active for the current session. Model-only sessions can use session settings but cannot persist a project file. Analyzer options, viewport state, and manual positions are separate from this configuration. Headless export continues to use its explicit deterministic contract unless a future issue deliberately adds configuration consumption.
 
 ## Data flow
 
@@ -74,7 +82,8 @@ The viewer owns a local web presentation, renderer-neutral scene/view state, int
 3. The analyzer returns modules, relationships, evidence, diagnostics, and source references.
 4. The model validator checks identity and relationship integrity.
 5. The graph engine normalizes relationships, computes cycles, and assigns layers.
-6. The renderer-neutral viewer or exporter consumes the resulting model and view projection.
+6. The local host resolves project layout configuration and exposes the effective profile/catalog to the viewer.
+7. The renderer-neutral viewer or exporter consumes the resulting model and view projection.
 
 ## Shared policies
 
@@ -85,6 +94,8 @@ The viewer owns a local web presentation, renderer-neutral scene/view state, int
 - External and generated code are filtered by explicit policy, not silently discarded.
 - Language-specific concepts such as interfaces, protocols, or abstract classes are represented as metadata and relation semantics, not hard-coded into the core.
 - Saved models use a versioned, language-neutral JSON interchange format. Visual artifacts are deterministic projections of the same model/view contract; source contents are not embedded by default.
+- `.archview.json` is versioned presentation configuration. Nearest-ancestor discovery is deterministic and invalid nearest configuration is surfaced rather than silently bypassed. Ordinary `Save` is explicit, active-file-only, and atomic; only explicit `Save As` may select a custom destination folder, with the fixed filename and atomic write preserved.
+- Analyzer options and layout options have separate ownership and schemas; layout configuration cannot alter canonical model facts or source analysis.
 
 ## Verification
 
@@ -97,7 +108,7 @@ The first architectural slice is the neutral model and plugin contract. The firs
 ## Residual implementation decisions
 
 - Benchmarking and tuning frontend/rendering thresholds.
-- Reference-boundary aggregation, import-list density, and session-scoped layout persistence.
+- Reference-boundary aggregation, import-list density, session-scoped layout behavior, and broader ELK option support.
 - Publishing/migrating JSON and NDJSON schemas.
 - Process sandbox/resource-limit implementation.
 - Future call-graph/type-level relation capabilities.

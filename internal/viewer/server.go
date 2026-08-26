@@ -52,6 +52,7 @@ type Server struct {
 	model      model.Model
 	sourceRoot string
 	reanalyze  ReanalyzeFunc
+	layout     layoutSession
 	handler    http.Handler
 }
 
@@ -67,10 +68,15 @@ func NewServer(value model.Model, options ...ServerOptions) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	server := &Server{model: value, sourceRoot: sourceRoot, reanalyze: option.Reanalyze}
+	server := &Server{model: value, sourceRoot: sourceRoot, reanalyze: option.Reanalyze, layout: discoverLayoutSession(sourceRoot)}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", server.handleRoot)
 	mux.HandleFunc("/assets/", server.handleAsset)
+	mux.HandleFunc("/v1/layout/options", server.handleLayoutOptions)
+	mux.HandleFunc("/v1/layout/config/save-as", server.handleLayoutConfigSaveAs)
+	mux.HandleFunc("/v1/layout/config", server.handleLayoutConfig)
+	mux.HandleFunc("/v1/layout/apply", server.handleLayoutApply)
+	mux.HandleFunc("/v1/layout/reset", server.handleLayoutReset)
 	mux.HandleFunc("/v1/source", server.handleSource)
 	mux.HandleFunc("/v1/reanalysis", server.handleReanalysis)
 	mux.HandleFunc("/v1/models/", server.handleModel)

@@ -2,8 +2,9 @@
 
 | # | Title | Category | PRD | State | Blocked by |
 |---|---|---|---|---|---|
-| 005 | Deterministic JSON, HTML, and SVG export | export | docs/architecture/export-and-automate/prd.md | ready-for-agent | — |
+| 008 | Expand ELK parent-level layout option support | feature | docs/architecture/explore-architecture/prd.md | ready-for-agent | — |
+| 009 | Route node- and edge-targeted ELK options through the scene adapter | feature | docs/architecture/explore-architecture/prd.md | ready-for-agent | 008 |
 
 # Current Max Issue ID
 
-006
+009

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/buffo/arch-view/internal/analysis"
@@ -181,4 +182,114 @@ func TestAnalyzeCommandRejectsPositionalArguments(t *testing.T) {
 	if code != 2 {
 		t.Fatalf("exit code = %d, want 2; stderr=%s", code, stderr.String())
 	}
+}
+
+func TestAnalyzeCommandExportsSelfContainedHTML(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/export-cli\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte("package main\n\nimport \"fmt\"\n\nfunc main() { fmt.Println(\"ok\") }\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	output := filepath.Join(t.TempDir(), "architecture.html")
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"analyze",
+		"--project", root,
+		"--language", "go",
+		"--format", "html",
+		"--output", output,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("HTML analyze/export exit code = %d, stderr=%s", code, stderr.String())
+	}
+	data, err := os.ReadFile(output)
+	if err != nil {
+		t.Fatalf("read HTML export: %v", err)
+	}
+	html := string(data)
+	if !strings.Contains(html, "window.__ARCH_VIEW_EXPORT__") || strings.Contains(html, "<script src=") || strings.Contains(html, "<link rel=\"stylesheet\"") {
+		t.Fatalf("HTML export is not self-contained: %s", html[:minTestStringLength(len(html), 500)])
+	}
+	var metadata struct {
+		Format string `json:"format"`
+		Status string `json:"status"`
+		Bytes  int    `json:"bytes"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &metadata); err != nil {
+		t.Fatalf("decode export metadata: %v; output=%s", err, stdout.String())
+	}
+	if metadata.Format != "html" || metadata.Status == "" || metadata.Bytes != len(data) {
+		t.Fatalf("export metadata = %#v, file bytes=%d", metadata, len(data))
+	}
+}
+
+func TestExportCommandWritesAllFormatsAndRejectsSourceEmbedding(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/export-command\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte("package main\n\nimport \"fmt\"\n\nfunc main() { fmt.Println(\"ok\") }\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	analysisPath := filepath.Join(t.TempDir(), "analysis.json")
+	modelPath := filepath.Join(t.TempDir(), "model.json")
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"analyze", "--project", root, "--language", "go", "--format", "analysis-json", "--output", analysisPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("analyze exit code = %d, stderr=%s", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"model", "normalize", "--input", analysisPath, "--output", modelPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("normalize exit code = %d, stderr=%s", code, stderr.String())
+	}
+	for _, format := range []string{"json", "html", "svg"} {
+		stdout.Reset()
+		stderr.Reset()
+		output := filepath.Join(t.TempDir(), "architecture."+format)
+		if code := run([]string{"export", "--input", modelPath, "--format", format, "--output", output}, &stdout, &stderr); code != 0 {
+			t.Fatalf("%s export exit code = %d, stderr=%s", format, code, stderr.String())
+		}
+		if info, err := os.Stat(output); err != nil || info.Size() == 0 {
+			t.Fatalf("%s export output = %v, stat error=%v", format, info, err)
+		}
+	}
+	unsupportedOutput := filepath.Join(t.TempDir(), "unsupported.json")
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"export", "--input", modelPath, "--format", "json", "--output", unsupportedOutput, "--embed-source"}, &stdout, &stderr); code != 2 {
+		t.Fatalf("embed-source exit code = %d, want 2; stderr=%s", code, stderr.String())
+	}
+	if _, err := os.Stat(unsupportedOutput); !os.IsNotExist(err) {
+		t.Fatalf("unsupported export left an output file: %v", err)
+	}
+}
+
+func TestExportCommandRejectsNonDeterministicOutput(t *testing.T) {
+	output := filepath.Join(t.TempDir(), "architecture.json")
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"export",
+		"--input", filepath.Join(t.TempDir(), "missing-model.json"),
+		"--format", "json",
+		"--output", output,
+		"--deterministic=false",
+	}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("non-deterministic export exit code = %d, want 2; stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "non-deterministic export is unsupported") {
+		t.Fatalf("non-deterministic export error = %s", stderr.String())
+	}
+	if _, err := os.Stat(output); !os.IsNotExist(err) {
+		t.Fatalf("rejected export left an output file: %v", err)
+	}
+}
+
+func minTestStringLength(value, maximum int) int {
+	if value < maximum {
+		return value
+	}
+	return maximum
 }

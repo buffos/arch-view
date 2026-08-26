@@ -6,7 +6,7 @@ This is the application-level planning baseline. It records confirmed product sc
 
 ## Product
 
-Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, TypeScript, Rust, and Clojure support.
+Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, TypeScript, Rust, and Clojure support, with configurable presentation layout for repository-specific viewing needs.
 
 The reference implementation is preserved in `external/` for reading only. It is not part of the product source tree and must remain ignored by Git.
 
@@ -29,6 +29,7 @@ The reference implementation is preserved in `external/` for reading only. It is
 - Serve the first interactive experience as a local web application with progressive disclosure for large graphs.
 - Make the default architecture overview local-first: retain standard-library, external, unresolved, and dynamic imports in the model while exposing them through boundary summaries and an accessible imports/evidence view.
 - Keep collapsed group presentation honest: non-cycle internal relationships are summarized as counts/details rather than rendered as cycle-like self-loops, while real cycles remain visible.
+- Allow developers to inspect and apply the pinned ELK layout catalog and persist presentation preferences in a nearest-ancestor `.archview.json` configuration file.
 - Keep analyzer-specific behavior behind a plugin contract.
 
 ## Primary user journeys
@@ -39,6 +40,7 @@ The reference implementation is preserved in `external/` for reading only. It is
 4. A CI job runs headless analysis and stores a versioned architecture artifact.
 5. A later language plugin analyzes a Python, TypeScript, Rust, or Clojure repository using the same model and viewer.
 6. A maintainer generates deterministic JSON, HTML, or SVG artifacts for documentation or CI.
+7. A developer adjusts ELK layout settings for a repository, saves them back to the active discovered configuration (or uses `Save As` for a custom folder), and reopens the project with the same effective profile when the file is discoverable from the selected target.
 
 ## Non-goals
 
@@ -46,6 +48,7 @@ The reference implementation is preserved in `external/` for reading only. It is
 - Runtime tracing or a complete call graph.
 - Automatic architectural approval or refactoring.
 - Perfect resolution of dynamic imports, generated code, or runtime dispatch.
+- Treating `.archview.json` as a container for analyzer options, canonical model data, viewport state, or manual diagram positions.
 - Changes to the reference material under `external/`.
 
 ## Capability map
@@ -64,7 +67,7 @@ The reference implementation is preserved in `external/` for reading only. It is
 
 ## Cross-capability dependencies
 
-Source analyzers produce evidence for the language-neutral model. The model owns stable identity, structured hierarchy, typed relationships, provenance, cycles, and derived layers. Structural containment remains separate from semantic dependency edges. The viewer consumes the model through a renderer-neutral view contract, while exporters produce versioned JSON, HTML, and SVG without knowing source syntax. The plugin runtime is the only boundary that should know how a language is detected or parsed.
+Source analyzers produce evidence for the language-neutral model. The model owns stable identity, structured hierarchy, typed relationships, provenance, cycles, and derived layers. Structural containment remains separate from semantic dependency edges. The viewer consumes the model through a renderer-neutral view contract and a presentation-only layout profile. The local host resolves nearest-ancestor `.archview.json` settings and safely persists explicit project preferences, while exporters produce versioned JSON, HTML, and SVG without knowing source syntax. Analyzer configuration remains separate from viewer layout configuration, and the plugin runtime is the only boundary that should know how a language is detected or parsed.
 
 ## Implementation sequence
 
@@ -72,11 +75,11 @@ Source analyzers produce evidence for the language-neutral model. The model owns
 2. Implement Go package and import analysis.
 3. Build headless JSON output and model validation.
 4. Build the first local web viewer with local-first reference visibility, imports/evidence inspection, and source workflow.
-5. Add cycle and layout diagnostics.
+5. Add cycle and layout diagnostics plus user-selectable ELK settings and project configuration discovery.
 6. Add Python, TypeScript, and Rust analyzers.
 7. Add Clojure compatibility and an external, versioned plugin protocol if third-party analyzers are needed.
 
-The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, and local viewer implementation are complete, and deterministic export work remains.
+The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, local viewer implementation, deterministic JSON/HTML/SVG export, and the issue 007 layout-settings/configuration backend and browser surface are implemented and visually approved. Issue 008 is the next ready parent-level ELK option tranche.
 
 ## Verification strategy
 
@@ -91,6 +94,7 @@ No high or medium blocker prevents the specified planning baseline. The followin
 - Publishing/migrating JSON and NDJSON schemas.
 - Parser fixture breadth and dynamic-language precision.
 - Cross-environment HTML/SVG determinism and source-serving security tests.
+- Pinned-ELK option compatibility, nearest-ancestor configuration fixtures, active-file `Save` versus custom-folder `Save As`, and safe project-settings writes.
 
 ## Specification sources
 

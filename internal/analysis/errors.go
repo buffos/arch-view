@@ -9,21 +9,24 @@ import (
 type ErrorCode string
 
 const (
-	ErrInvalidRequest     ErrorCode = "invalid_request"
-	ErrInvalidManifest    ErrorCode = "invalid_manifest"
-	ErrAPIIncompatible    ErrorCode = "api_incompatible"
-	ErrDuplicateAnalyzer  ErrorCode = "duplicate_analyzer"
-	ErrNoAnalyzer         ErrorCode = "no_analyzer"
-	ErrAmbiguousAnalyzer  ErrorCode = "ambiguous_analyzer"
-	ErrUnsupportedProject ErrorCode = "unsupported_project"
-	ErrUnreadableProject  ErrorCode = "unreadable_project"
-	ErrModuleSelection    ErrorCode = "module_selection"
-	ErrInvalidOptions     ErrorCode = "invalid_options"
-	ErrInvalidModel       ErrorCode = "invalid_model"
-	ErrCancelled          ErrorCode = "cancelled"
-	ErrAnalyzerFailed     ErrorCode = "analyzer_failed"
-	ErrResultInvalid      ErrorCode = "result_invalid"
-	ErrHostFailure        ErrorCode = "host_failure"
+	ErrInvalidRequest         ErrorCode = "invalid_request"
+	ErrInvalidManifest        ErrorCode = "invalid_manifest"
+	ErrAPIIncompatible        ErrorCode = "api_incompatible"
+	ErrDuplicateAnalyzer      ErrorCode = "duplicate_analyzer"
+	ErrNoAnalyzer             ErrorCode = "no_analyzer"
+	ErrAmbiguousAnalyzer      ErrorCode = "ambiguous_analyzer"
+	ErrUnsupportedProject     ErrorCode = "unsupported_project"
+	ErrUnreadableProject      ErrorCode = "unreadable_project"
+	ErrModuleSelection        ErrorCode = "module_selection"
+	ErrInvalidOptions         ErrorCode = "invalid_options"
+	ErrUnsupportedOption      ErrorCode = "unsupported_option"
+	ErrSaveAsRequired         ErrorCode = "save_as_required"
+	ErrPersistenceUnavailable ErrorCode = "persistence_unavailable"
+	ErrInvalidModel           ErrorCode = "invalid_model"
+	ErrCancelled              ErrorCode = "cancelled"
+	ErrAnalyzerFailed         ErrorCode = "analyzer_failed"
+	ErrResultInvalid          ErrorCode = "result_invalid"
+	ErrHostFailure            ErrorCode = "host_failure"
 )
 
 type HostError struct {
@@ -69,7 +72,8 @@ func ErrorCodeOf(err error) ErrorCode {
 func ExitCodeForError(err error) int {
 	switch ErrorCodeOf(err) {
 	case ErrInvalidRequest, ErrInvalidManifest, ErrAPIIncompatible,
-		ErrDuplicateAnalyzer, ErrAmbiguousAnalyzer, ErrModuleSelection, ErrInvalidOptions:
+		ErrDuplicateAnalyzer, ErrAmbiguousAnalyzer, ErrModuleSelection, ErrInvalidOptions,
+		ErrUnsupportedOption, ErrSaveAsRequired, ErrPersistenceUnavailable:
 		return 2
 	case ErrNoAnalyzer, ErrUnsupportedProject, ErrUnreadableProject, ErrInvalidModel:
 		return 3

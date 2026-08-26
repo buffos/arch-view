@@ -12,13 +12,19 @@
 | Reference boundary | The overview is local-first; standard-library, external, unresolved, and dynamic references remain canonical but are hidden, aggregated, or expanded through an explicit view policy. |
 | Import inspection | Individual imports are detail/evidence facts exposed through an accessible list for the selected module or group rather than default graph nodes. |
 | Layout ownership | Layout, fit/pan/zoom, and optional manual positions belong to renderer/session state; they never mutate canonical model semantics. |
+| Layout configuration | The viewer provides a searchable catalog of the pinned ELK algorithms/options, validates typed values and applicability, and applies settings explicitly to the current scene. |
+| Project configuration discovery | `.archview.json` is discovered from the selected target directory upward; the nearest file wins as a complete profile, with built-in defaults when none exists. |
+| Configuration persistence | `Save` overwrites the exact discovered `.archview.json` that is active for the session and never creates a replacement elsewhere; with no active file it requires `Save As`. `Save As` is the only custom-destination operation and atomically writes the fixed `.archview.json` filename after explicit confirmation. Model-only sessions remain session-only and no source file is edited. |
+| Configuration boundary | Layout configuration is presentation policy and remains separate from analyzer options, canonical model facts, viewport state, and manual positions. |
 | Source inspection | Read-only path/line/column evidence; no execution or editing. |
 | Accessibility | Keyboard/labels/contrast and list/details fallback are part of the boundary. |
 | Ownership | Viewer owns session/presentation state; model/graph capabilities own semantic data and algorithms. |
 
 ## Specification closure and residual risks
 
-The scene schema, local HTTP/CLI surface, source-root safety rules, progressive-disclosure/reference-boundary behavior, accessibility requirements, and renderer direction are defined in the exact-spec artifacts. Frontend framework, theme tokens, renderer performance benchmarks, and the final position-persistence mechanism remain implementation risks behind the renderer-neutral boundary.
+The scene schema, local HTTP/CLI surface, source-root safety rules, progressive-disclosure/reference-boundary behavior, accessibility requirements, renderer direction, layout-option catalog, and project-config discovery/persistence rules are defined in the exact-spec artifacts. Frontend framework, theme tokens, and renderer performance benchmarks remain implementation risks behind the renderer-neutral boundary; issue 007's settings-page review is complete.
+
+The implementation risks for the configuration extension are covered by the complete pinned ELK catalog, typed validation, explicit unsupported/non-applicable treatment, platform-specific atomic-write tests, and the approved settings-surface review. Benchmark fixtures and broader ELK option support remain later implementation concerns.
 
 ## Readiness
 

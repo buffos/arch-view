@@ -5,7 +5,7 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the headless and repeatable-workflow capability.
-- Next route: implement or slice the specified JSON/HTML/SVG exporter after application synthesis validation.
+- Next route: retain the specified capability for future reanalysis and CI expansion; issue 005's initial JSON/HTML/SVG delivery is archived.
 
 ## Confirmed boundary
 
@@ -30,12 +30,13 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Observed in reference: the tool supports headless analysis and writes an EDN architecture representation.
 - User-confirmed target: the Go product should support repeatable machine-readable output and future automation.
-- Required follow-up: implement versioned JSON, self-contained HTML, deterministic accessible SVG, atomic writes, and documented CI exit behavior.
+- Delivered in issue 005: versioned JSON, self-contained HTML, deterministic accessible SVG, atomic writes, documented CLI exit behavior, and analyze-to-export wiring. The user explicitly approved visual parity, so the initial export slice is complete.
 
 ## Current delivery slice
 
 - Issue 005 implements deterministic JSON, HTML, and SVG artifacts from the validated model/view contract.
 - Issue 005 also owns export parity for reference visibility, scope, confidence, and import/evidence traceability.
+- The issue is archived after automated verification and explicit user approval of HTML/SVG visual parity with the local viewer.
 - It is part of [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Artifact sync

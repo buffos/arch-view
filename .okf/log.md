@@ -2,6 +2,23 @@
 
 ## 2026-08-26
 
+* **Closeout**: Archived issue 005 at [the dated delivery record](../docs/agents/issues/done/20260826-005-deterministic-json-html-svg-export.md) after the user's explicit approval of HTML/SVG parity with the local viewer; required capability, orchestration, and implementation-slice references now point to the completed issue, and issue 007 remains the next ready-for-agent frontier.
+
+* **Planning**: Added the user-confirmed ELK layout-settings and project-configuration extension as issue 007 under the existing Explore and inspect architecture capability; no new capability or shared-concern node was needed because the behavior remains viewer-owned presentation policy.
+* **Design**: Chose versioned `.archview.json` as the v1 project configuration file. Discovery walks from the selected target directory through its ancestors toward the filesystem root, the nearest file wins without merging, and an invalid nearest file is surfaced instead of bypassed; the configuration changes layout presentation only.
+* **Artifact sync**: Refreshed the Explore exact-spec set, application PRD, application architecture summary, capability issue references, registry, and orchestration records. Analyzer options, canonical model semantics, and export behavior are explicitly unchanged by issue 007.
+* **Delivery**: Created issue 007 as `ready-for-agent`, with settings-catalog, validation, apply/reset, active-file `Save`, explicit custom-folder `Save As`, configuration discovery, and model-only-session acceptance coverage.
+* **Clarification**: Ordinary `Save` overwrites the exact discovered configuration path and never creates a new project-root copy. When no file is active, it requires `Save As`; `Save As` is the only operation that accepts a custom destination folder and makes the written file active for the current session.
+* **Implementation**: Issue 007 now serves the complete pinned ELK catalog (11 algorithms, 8 categories, 235 options), validates typed/applicable profiles, runs the selected ELK adapter with returned routes, and keeps deterministic fallback behavior visible.
+* **Persistence**: Added nearest-ancestor `.archview.json` resolution with invalid-nearest diagnostics, session Apply/Reset, exact active-file Save, and explicitly confirmed custom-folder Save As. Model-only sessions remain non-persistent.
+* **Review gate**: Automated issue 007 checks pass; the issue is `awaiting-human-review` for the settings origin/error states, apply/reset workflow, and graph behavior in windowed and full-canvas views.
+
+## 2026-08-26
+
+* **Implementation**: Issue 005 now renders validated models as canonical deterministic JSON, self-contained interactive HTML, and script-free accessible SVG. The CLI supports direct export and analyze-to-export with reference visibility/scope controls, source-embedding rejection, partial status, atomic writes, and overwrite protection.
+* **Verification**: Issue 005 passed `go test ./... -count=1`, `go test -race ./...`, `go vet ./...`, `go build ./...`, `staticcheck ./...`, `golangci-lint run`, `node --check internal/viewer/web/app.js`, and `git diff --check`. HTTP export parity is not applicable because the current product has no HTTP export endpoint.
+* **Delivery**: Issue 005 is awaiting explicit visual review of HTML/SVG parity with the approved local viewer; no issue closeout or commit has been performed.
+
 * **Review**: Completed the strict code-review loop for issue 004. The final pass found no actionable P0–P2 findings after resolving stale reanalysis scene loading, invalid failed-revision replacement, invalid explicit source line ranges, and source-file cleanup.
 * **Closeout**: Archived issue 004 after the user's explicit visual approval of navigation, evidence, source inspection, full-canvas spacing, viewport controls, and stable manual routing. Removed its active registry row and updated the dated issue references; issue 005 remains the active unblocked frontier.
 * **Verification**: Final delivery gates passed: `go test ./... -count=1`, `go test -race ./...`, `go vet ./...`, `go build ./...`, `staticcheck ./...`, `golangci-lint run`, `node --check internal/viewer/web/app.js`, and `git diff --check`.
@@ -13,6 +30,13 @@
 * **Closeout**: Archived issue 003 after the user's explicit visual approval, removed its active registry row, updated the dated OKF issue reference, and unblocked issues 004 and 005. Issue 006 remains active for its separate visual review.
 * **Closeout**: Archived issue 006 after the user's explicit visual approval of the semantic summary, ELK routing, transparent edge hit areas, and temporary canonical-cycle visual fixture. Removed its active registry row and updated the dated OKF issue reference; issues 004 and 005 remain the active unblocked frontiers.
 * **Verification**: Viewer scene tests, full Go tests, race tests, vet, build, JavaScript syntax check, and diff checks pass. The baseline and issue 006 visual reviews are approved.
+
+## 2026-08-26
+
+* **Planning**: Added issue 008 for a bounded parent-level ELK option-support tranche and issue 009 for target-aware node/edge option mapping under [Explore and inspect architecture](/capabilities/explore-architecture.md). Issue 008 is blocked by 007 and issue 009 is blocked by 008.
+* **No impact**: The follow-up issues remain inside the existing viewer capability and preserve the current `arch-view.config/v1` boundary. Advanced ports, labels, junctions, and compound-graph geometry remain a later specification frontier because they would change the scene/renderer contract.
+* **Review**: Completed the strict code-review loop for issue 007. The final pass found no actionable P0–P2 findings after adding required-algorithm validation, enforcing layout-request size limits, and serializing configuration writes with session updates. Repository checks and JavaScript syntax checks pass.
+* **Closeout**: Archived issue 007 after the user's explicit visual approval of the settings surface, origin/error states, apply/reset workflow, and windowed/full-canvas graph behavior. Removed its active registry row, unblocked issue 008, and synchronized the capability, implementation-slice, index, and orchestration references. `external/` remains untouched.
 
 ## 2026-08-25
 

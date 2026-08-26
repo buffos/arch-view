@@ -13,7 +13,7 @@
 
 - Initial topology: confirmed on 2026-08-25.
 - State totals: 0 `foggy`, 0 `bounded`, 10 `specified`, 0 `implemented`.
-- Current frontier: implement deterministic JSON, HTML, and SVG export in issue 005; the current Go analyzer/model and interactive viewer slice are delivered.
+- Current frontier: issue 007 is archived; issue 008 is the next ready parent-level ELK option tranche and issue 009 follows with node/edge target mapping. Issue 005's deterministic JSON/HTML/SVG export is also archived.
 
 ## Application synthesis
 

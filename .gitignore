@@ -19,3 +19,7 @@ external/
 
 # Logs
 *.log
+
+# Local export previews
+/architecture.html
+/architecture.svg

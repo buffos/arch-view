@@ -23,4 +23,4 @@ Acceptance scenarios cover backend and end-to-end surfaces where applicable; fro
 - Capability truth: updated with the complete exact-spec set.
 - Product truth: updated because analysis statuses, CLI behavior, and acceptance behavior are now explicit.
 - Architecture truth: updated because analyzer-host ports and safety boundaries are now exact.
-- Delivery truth: issues 001 through 004 and post-baseline issue 006 are completed; issue 005 remains in the ordered implementation slice.
+- Delivery truth: issues 001 through 006 are completed for the first Go analyzer/model, viewer, and export slice; future language-adapter work remains in the ordered roadmap.

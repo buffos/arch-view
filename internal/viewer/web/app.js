@@ -2,13 +2,14 @@
   "use strict";
 
   const modelID = document.querySelector('meta[name="model-id"]').content;
+  const embeddedExport = window.__ARCH_VIEW_EXPORT__ || null;
   const sourceEnabled = document.querySelector('meta[name="source-enabled"]').content === "true";
   const reanalysisEnabled = document.querySelector('meta[name="reanalysis-enabled"]').content === "true";
   const MIN_ZOOM = 0.35;
   // Interaction guardrail only; Fit uses a separate, conservative ceiling.
   // Keep this finite because extreme SVG transform values lose precision, but
   // make it effectively unlimited for normal interactive use.
-  const MAX_ZOOM = 400;
+  const MAX_ZOOM = 40000;
   // One screen pixel of pointer movement should represent one screen pixel of
   // canvas movement, regardless of the SVG viewBox scale.
   const PAN_SPEED = 1;
@@ -25,6 +26,14 @@
     referenceVisibility: "hidden",
     importScope: "all",
     layout: null,
+    layoutProfile: { algorithm: "layered", options: {} },
+    layoutCatalog: null,
+    layoutConfig: null,
+    layoutDraft: null,
+    layoutOptionSearch: "",
+    layoutMessage: "",
+    layoutSettingsOpen: false,
+    layoutConfigRequest: 0,
     layoutKey: "",
     layoutRequest: 0,
     layoutError: false,
@@ -73,7 +82,23 @@
     zoomValue: document.getElementById("zoom-value"),
     resetZoom: document.getElementById("reset-zoom"),
     fitViewport: document.getElementById("fit-viewport"),
-    resetLayout: document.getElementById("reset-layout")
+    resetLayout: document.getElementById("reset-layout"),
+    layoutSettingsButton: document.getElementById("layout-settings-button"),
+    layoutSettingsDialog: document.getElementById("layout-settings-dialog"),
+    layoutSettingsClose: document.getElementById("layout-settings-close"),
+    layoutSettingsOrigin: document.getElementById("layout-settings-origin"),
+    layoutSettingsDiagnostic: document.getElementById("layout-settings-diagnostic"),
+    layoutAlgorithm: document.getElementById("layout-algorithm"),
+    layoutAlgorithmHelp: document.getElementById("layout-algorithm-help"),
+    layoutOptionSearch: document.getElementById("layout-option-search"),
+    layoutOptionsList: document.getElementById("layout-options-list"),
+    layoutSaveAsDirectory: document.getElementById("layout-save-as-directory"),
+    layoutSaveAsConfirm: document.getElementById("layout-save-as-confirm"),
+    layoutSettingsStatus: document.getElementById("layout-settings-status"),
+    layoutResetDefaults: document.getElementById("layout-reset-defaults"),
+    layoutSettingsApply: document.getElementById("layout-settings-apply"),
+    layoutSettingsSave: document.getElementById("layout-settings-save"),
+    layoutSettingsSaveAs: document.getElementById("layout-settings-save-as")
   };
 
   function escapeHTML(value) {
@@ -110,6 +135,7 @@
   }
 
   async function getJSON(path) {
+    if (embeddedExport) return embeddedJSON(path);
     const response = await fetch(path, { headers: { Accept: "application/json" } });
     const body = await response.json();
     if (!response.ok) {
@@ -118,9 +144,38 @@
     return body;
   }
 
+  function embeddedJSON(path) {
+    const url = new URL(path, window.location.href);
+    const modelPath = "/v1/models/" + encodeURIComponent(modelID);
+    if (url.pathname === modelPath) return embeddedExport.model;
+    if (url.pathname === modelPath + "/projection") {
+      const pathValue = url.searchParams.getAll("path");
+      const visibility = url.searchParams.get("reference_visibility") || "hidden";
+      const key = JSON.stringify(pathValue) + "|" + visibility;
+      if (embeddedExport.scenes && embeddedExport.scenes[key]) return embeddedExport.scenes[key];
+      throw new Error("The exported hierarchy path or reference view is unavailable.");
+    }
+    if (url.pathname === "/v1/layout/config") return { schema_version: "arch-view.config/v1", layout: { algorithm: "layered", options: {} }, origin: "session", status: "valid", can_save: false, can_save_as: false, diagnostics: [] };
+    if (url.pathname === "/v1/layout/options") return { schema_version: "arch-view.config/v1", adapter: { id: "export", version: "embedded", source: "export" }, algorithms: [], categories: [], options: [] };
+    throw new Error("The self-contained export does not require network access.");
+  }
+
   async function postJSON(path, value) {
     const response = await fetch(path, {
       method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(value)
+    });
+    const body = await response.json();
+    if (!response.ok) {
+      throw new Error(body && body.error && body.error.message ? body.error.message : "The viewer request failed.");
+    }
+    return body;
+  }
+
+  async function putJSON(path, value) {
+    const response = await fetch(path, {
+      method: "PUT",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify(value)
     });
@@ -161,11 +216,41 @@
     elements.resetZoom.addEventListener("click", resetZoom);
     elements.fitViewport.addEventListener("click", fitViewport);
     elements.resetLayout.addEventListener("click", resetLayout);
+    elements.layoutSettingsButton.hidden = Boolean(embeddedExport);
+    elements.layoutSettingsButton.addEventListener("click", openLayoutSettings);
+    elements.layoutSettingsClose.addEventListener("click", closeLayoutSettings);
+    elements.layoutSettingsDialog.addEventListener("cancel", function (event) { event.preventDefault(); closeLayoutSettings(); });
+    elements.layoutAlgorithm.addEventListener("change", function (event) {
+      if (!state.layoutDraft) state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
+      state.layoutDraft.algorithm = event.target.value;
+      if (state.layoutCatalog && state.layoutDraft.options) {
+        Object.keys(state.layoutDraft.options).forEach(function (optionID) {
+          const option = state.layoutCatalog.options.find(function (item) { return item.id === optionID; });
+          if (option && !optionAppliesToAlgorithm(option, state.layoutDraft.algorithm)) delete state.layoutDraft.options[optionID];
+        });
+      }
+      state.layoutMessage = "Unsaved settings changes";
+      renderLayoutSettings();
+    });
+    elements.layoutOptionSearch.addEventListener("input", function (event) {
+      state.layoutOptionSearch = event.target.value.trim().toLowerCase();
+      renderLayoutSettings();
+    });
+    elements.layoutOptionsList.addEventListener("input", updateLayoutDraftOption);
+    elements.layoutOptionsList.addEventListener("change", updateLayoutDraftOption);
+    elements.layoutResetDefaults.addEventListener("click", resetLayoutProfile);
+    elements.layoutSettingsApply.addEventListener("click", applyLayoutProfile);
+    elements.layoutSettingsSave.addEventListener("click", saveLayoutProfile);
+    elements.layoutSettingsSaveAs.addEventListener("click", saveLayoutProfileAs);
     elements.focusToggle.addEventListener("click", toggleFocusMode);
     document.addEventListener("fullscreenchange", syncFocusButton);
     elements.reanalysisButton.addEventListener("click", reanalyze);
+    if (embeddedExport && embeddedExport.initial_reference_visibility) {
+      state.referenceVisibility = embeddedExport.initial_reference_visibility;
+    }
     loadModel();
-    loadScene([]);
+    loadLayoutConfig();
+    loadScene(embeddedExport && Array.isArray(embeddedExport.initial_path) ? embeddedExport.initial_path : []);
   }
 
   async function loadModel() {
@@ -177,6 +262,310 @@
       if (state.scene) renderDetails();
     } catch (error) {
       showError(error.message || "The canonical model could not be loaded.");
+    }
+  }
+
+  function cloneLayoutProfile(profile) {
+    const value = profile || {};
+    return {
+      algorithm: value.algorithm || "layered",
+      options: Object.assign({}, value.options || {})
+    };
+  }
+
+  function layoutRequestPayload(profile) {
+    return { schema_version: "arch-view.config/v1", layout: cloneLayoutProfile(profile) };
+  }
+
+  async function loadLayoutConfig() {
+    if (embeddedExport) return;
+    const request = ++state.layoutConfigRequest;
+    try {
+      const values = await Promise.all([getJSON("/v1/layout/options"), getJSON("/v1/layout/config")]);
+      if (request !== state.layoutConfigRequest) return;
+      state.layoutCatalog = values[0];
+      state.layoutConfig = values[1];
+      state.layoutProfile = cloneLayoutProfile(values[1].layout);
+      if (!state.layoutSettingsOpen) state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
+      if (state.layoutSettingsOpen) renderLayoutSettings();
+      if (state.scene) {
+        state.layout = null;
+        state.layoutRequest += 1;
+        renderSceneState();
+        renderGraph();
+        void prepareLayout(state.scene, state.layoutProfile);
+      }
+    } catch (error) {
+      if (request !== state.layoutConfigRequest) return;
+      state.layoutConfig = { layout: cloneLayoutProfile(state.layoutProfile), origin: "session", status: "invalid", can_save: false, can_save_as: false, diagnostics: [{ code: "config_unavailable", severity: "error", message: error.message || "Layout settings could not be loaded." }] };
+      state.layoutMessage = error.message || "Layout settings could not be loaded.";
+      renderLayoutSettings();
+    }
+  }
+
+  function layoutOriginLabel(config) {
+    if (!config) return "Loading layout profile…";
+    const origin = config.origin || "default";
+    const labels = { default: "Built-in defaults", project: "Project .archview.json", ancestor: "Ancestor .archview.json", custom: "Custom .archview.json", session: "Current session (unsaved)" };
+    const label = labels[origin] || origin;
+    return config.active_path ? label + " · " + config.active_path : label;
+  }
+
+  function renderLayoutSettingsDiagnostic(config) {
+    const diagnostics = config && config.diagnostics ? config.diagnostics : [];
+    if (!diagnostics.length) {
+      elements.layoutSettingsDiagnostic.hidden = true;
+      elements.layoutSettingsDiagnostic.textContent = "";
+      return;
+    }
+    elements.layoutSettingsDiagnostic.hidden = false;
+    elements.layoutSettingsDiagnostic.className = "layout-settings-diagnostic " + (diagnostics.some(function (item) { return item.severity === "error"; }) ? "error" : "info");
+    elements.layoutSettingsDiagnostic.innerHTML = diagnostics.map(function (item) {
+      return "<strong>" + escapeHTML(item.code || "diagnostic") + "</strong> " + escapeHTML(item.message || "") + (item.path ? " <code>" + escapeHTML(item.path) + "</code>" : "");
+    }).join("<br>");
+  }
+
+  function optionAppliesToAlgorithm(option, algorithm) {
+    const algorithms = option.algorithms || [];
+    return !algorithms.length || algorithms.includes("all") || algorithms.includes(algorithm);
+  }
+
+  function optionDisplayValue(option, draft) {
+    if (draft && draft.options && Object.prototype.hasOwnProperty.call(draft.options, option.id)) {
+      return String(draft.options[option.id]);
+    }
+    return "";
+  }
+
+  function optionDefaultText(option) {
+    if (option.default === "engine default") return "engine default";
+    return formatOptionValue(option.default);
+  }
+
+  function formatOptionValue(value) {
+    if (value == null) return "—";
+    if (typeof value === "string") return value;
+    return JSON.stringify(value);
+  }
+
+  function layoutOptionInput(option, draft, applicable) {
+    if (!applicable) return '<span class="layout-option-state">Not applicable to this algorithm</span>';
+    if (!option.editable || option.renderer_support !== "supported") return '<span class="layout-option-state">Cataloged · unsupported by this renderer</span>';
+    const value = optionDisplayValue(option, draft);
+    const id = "layout-option-" + option.id.replace(/[^a-z0-9_-]/gi, "-");
+    const attributes = 'data-layout-option-id="' + escapeHTML(option.id) + '" aria-label="' + escapeHTML(option.name) + '"';
+    if (option.allowed_values && option.allowed_values.length) {
+      const choices = ['<option value="">Engine default</option>'].concat(option.allowed_values.map(function (choice) {
+        const text = String(choice);
+        return '<option value="' + escapeHTML(text) + '"' + (value === text ? " selected" : "") + '>' + escapeHTML(text) + '</option>';
+      }));
+      return '<select id="' + id + '" class="layout-option-input" ' + attributes + '>' + choices.join("") + "</select>";
+    }
+    if (option.type === "BOOLEAN") {
+      return '<select id="' + id + '" class="layout-option-input" ' + attributes + '><option value="">Engine default</option><option value="true"' + (value === "true" ? " selected" : "") + '>true</option><option value="false"' + (value === "false" ? " selected" : "") + '>false</option></select>';
+    }
+    if (option.type === "INT" || option.type === "DOUBLE") {
+      const step = option.type === "INT" ? "1" : "any";
+      const min = option.minimum == null ? "" : ' min="' + escapeHTML(option.minimum) + '"';
+      const max = option.maximum == null ? "" : ' max="' + escapeHTML(option.maximum) + '"';
+      return '<input id="' + id + '" class="layout-option-input" type="number" step="' + step + '" value="' + escapeHTML(value) + '" placeholder="Engine default"' + min + max + " " + attributes + ">";
+    }
+    return '<input id="' + id + '" class="layout-option-input" type="text" value="' + escapeHTML(value) + '" placeholder="Engine default" ' + attributes + ">";
+  }
+
+  function renderLayoutSettings() {
+    if (!elements.layoutSettingsDialog) return;
+    const config = state.layoutConfig;
+    const catalog = state.layoutCatalog;
+    elements.layoutSettingsOrigin.textContent = layoutOriginLabel(config);
+    renderLayoutSettingsDiagnostic(config);
+    elements.layoutSettingsStatus.textContent = state.layoutMessage || (config && config.status === "invalid" ? "Safe defaults are active until the profile is corrected." : "");
+    if (!catalog || !catalog.algorithms || !catalog.options || !state.layoutDraft) {
+      elements.layoutAlgorithm.innerHTML = '<option>Loading…</option>';
+      elements.layoutAlgorithm.disabled = true;
+      elements.layoutOptionsList.innerHTML = '<p class="muted">Loading the pinned ELK catalog…</p>';
+      elements.layoutSettingsApply.disabled = true;
+      elements.layoutSettingsSave.disabled = true;
+      elements.layoutSettingsSaveAs.disabled = true;
+      return;
+    }
+    elements.layoutAlgorithm.disabled = false;
+    elements.layoutAlgorithm.innerHTML = catalog.algorithms.map(function (algorithm) {
+      return '<option value="' + escapeHTML(algorithm.id) + '"' + (state.layoutDraft.algorithm === algorithm.id ? " selected" : "") + '>' + escapeHTML(algorithm.name) + "</option>";
+    }).join("");
+    const selectedAlgorithm = catalog.algorithms.find(function (algorithm) { return algorithm.id === state.layoutDraft.algorithm; });
+    elements.layoutAlgorithmHelp.textContent = selectedAlgorithm
+      ? selectedAlgorithm.description + (selectedAlgorithm.category ? " Category: " + selectedAlgorithm.category + "." : "")
+      : "The selected algorithm is not available in the pinned catalog.";
+    const query = state.layoutOptionSearch || "";
+    const options = catalog.options.slice().sort(function (left, right) {
+      const group = String(left.group || "").localeCompare(String(right.group || ""));
+      return group || String(left.name).localeCompare(String(right.name));
+    }).filter(function (option) {
+      return !query || [option.id, option.name, option.group, option.description].join(" ").toLowerCase().includes(query);
+    });
+    if (!options.length) {
+      elements.layoutOptionsList.innerHTML = '<p class="muted">No ELK options match this search.</p>';
+    } else {
+      let lastGroup = null;
+      const markup = [];
+      options.forEach(function (option) {
+        const group = option.group || "General";
+        const applicable = optionAppliesToAlgorithm(option, state.layoutDraft.algorithm);
+        const current = optionDisplayValue(option, state.layoutDraft);
+        const currentLabel = current || optionDefaultText(option);
+        const supportClass = !applicable ? "not-applicable" : option.editable && option.renderer_support === "supported" ? "editable" : "catalog-only";
+        if (group !== lastGroup) {
+          markup.push('<h4 class="layout-option-group">' + escapeHTML(group) + '</h4>');
+          lastGroup = group;
+        }
+        markup.push('<article class="layout-option ' + supportClass + '"><div class="layout-option-copy"><div class="layout-option-title"><strong>' + escapeHTML(option.name) + '</strong><code>' + escapeHTML(option.id) + '</code></div><div class="layout-option-meta">' + escapeHTML(group) + " · " + escapeHTML(option.type) + " · default: " + escapeHTML(optionDefaultText(option)) + " · current: " + escapeHTML(currentLabel) + '</div><p>' + escapeHTML(option.description) + '</p></div><div class="layout-option-control">' + layoutOptionInput(option, state.layoutDraft, applicable) + '</div></article>');
+      });
+      elements.layoutOptionsList.innerHTML = markup.join("");
+    }
+    elements.layoutSettingsApply.disabled = false;
+    elements.layoutSettingsSave.disabled = !config || !config.can_save;
+    elements.layoutSettingsSaveAs.disabled = !config || !config.can_save_as;
+  }
+
+  function openLayoutSettings() {
+    if (embeddedExport) return;
+    state.layoutSettingsOpen = true;
+    state.layoutMessage = "";
+    state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
+    renderLayoutSettings();
+    if (elements.layoutSettingsDialog.showModal) elements.layoutSettingsDialog.showModal();
+    else elements.layoutSettingsDialog.setAttribute("open", "");
+  }
+
+  function closeLayoutSettings() {
+    state.layoutSettingsOpen = false;
+    state.layoutMessage = "";
+    if (elements.layoutSettingsDialog.close) elements.layoutSettingsDialog.close();
+    else elements.layoutSettingsDialog.removeAttribute("open");
+  }
+
+  function updateLayoutDraftOption(event) {
+    const input = event.target.closest("[data-layout-option-id]");
+    if (!input || !state.layoutDraft) return;
+    const option = (state.layoutCatalog.options || []).find(function (item) { return item.id === input.dataset.layoutOptionId; });
+    if (!option) return;
+    const raw = input.value;
+    if (raw === "") {
+      delete state.layoutDraft.options[option.id];
+    } else if (option.type === "BOOLEAN") {
+      state.layoutDraft.options[option.id] = raw === "true";
+    } else if (option.type === "INT") {
+      state.layoutDraft.options[option.id] = Number.parseInt(raw, 10);
+    } else if (option.type === "DOUBLE") {
+      state.layoutDraft.options[option.id] = Number.parseFloat(raw);
+    } else {
+      state.layoutDraft.options[option.id] = raw;
+    }
+    state.layoutMessage = "Unsaved settings changes";
+    elements.layoutSettingsStatus.textContent = state.layoutMessage;
+  }
+
+  function clearManualLayoutPositions() {
+    if (!state.viewport) state.viewport = defaultViewport();
+    state.viewport.positions = {};
+    persistViewport();
+  }
+
+  async function applyLayoutProfile() {
+    if (!state.layoutDraft || embeddedExport) return;
+    state.layoutMessage = "Applying layout…";
+    renderLayoutSettings();
+    try {
+      const response = await postJSON("/v1/layout/apply", layoutRequestPayload(state.layoutDraft));
+      state.layoutConfig = response;
+      state.layoutProfile = cloneLayoutProfile(response.layout);
+      state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
+      clearManualLayoutPositions();
+      state.layout = null;
+      state.layoutError = false;
+      state.layoutRequest += 1;
+      state.layoutMessage = "Applied to the current session";
+      renderAll();
+      renderLayoutSettings();
+      void prepareLayout(state.scene, state.layoutProfile);
+    } catch (error) {
+      state.layoutMessage = error.message || "Layout settings could not be applied.";
+      renderLayoutSettings();
+    }
+  }
+
+  async function resetLayoutProfile() {
+    if (embeddedExport) return;
+    state.layoutMessage = "Restoring built-in defaults…";
+    renderLayoutSettings();
+    try {
+      const response = await postJSON("/v1/layout/reset", {});
+      state.layoutConfig = response;
+      state.layoutProfile = cloneLayoutProfile(response.layout);
+      state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
+      clearManualLayoutPositions();
+      state.layout = null;
+      state.layoutError = false;
+      state.layoutRequest += 1;
+      state.layoutMessage = "Built-in defaults restored for this session";
+      renderAll();
+      renderLayoutSettings();
+      void prepareLayout(state.scene, state.layoutProfile);
+    } catch (error) {
+      state.layoutMessage = error.message || "Layout defaults could not be restored.";
+      renderLayoutSettings();
+    }
+  }
+
+  async function saveLayoutProfile() {
+    if (!state.layoutDraft || embeddedExport) return;
+    state.layoutMessage = "Saving active profile…";
+    renderLayoutSettings();
+    try {
+      const response = await putJSON("/v1/layout/config", layoutRequestPayload(state.layoutDraft));
+      state.layoutConfig = response;
+      state.layoutProfile = cloneLayoutProfile(response.layout);
+      state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
+      clearManualLayoutPositions();
+      state.layout = null;
+      state.layoutRequest += 1;
+      state.layoutMessage = "Saved active .archview.json";
+      renderAll();
+      renderLayoutSettings();
+      void prepareLayout(state.scene, state.layoutProfile);
+    } catch (error) {
+      state.layoutMessage = error.message || "The active layout profile could not be saved.";
+      renderLayoutSettings();
+    }
+  }
+
+  async function saveLayoutProfileAs() {
+    if (!state.layoutDraft || embeddedExport) return;
+    const destination = elements.layoutSaveAsDirectory.value.trim();
+    const confirm = elements.layoutSaveAsConfirm.checked;
+    if (!destination || !confirm) {
+      state.layoutMessage = "Enter a directory and confirm Save As before writing .archview.json.";
+      renderLayoutSettings();
+      return;
+    }
+    state.layoutMessage = "Saving a custom profile…";
+    renderLayoutSettings();
+    try {
+      const response = await putJSON("/v1/layout/config/save-as", { schema_version: "arch-view.config/v1", layout: cloneLayoutProfile(state.layoutDraft), destination_dir: destination, confirm: confirm });
+      state.layoutConfig = response;
+      state.layoutProfile = cloneLayoutProfile(response.layout);
+      state.layoutDraft = cloneLayoutProfile(state.layoutProfile);
+      clearManualLayoutPositions();
+      state.layout = null;
+      state.layoutRequest += 1;
+      state.layoutMessage = "Saved custom .archview.json";
+      renderAll();
+      renderLayoutSettings();
+      void prepareLayout(state.scene, state.layoutProfile);
+    } catch (error) {
+      state.layoutMessage = error.message || "The custom layout profile could not be saved.";
+      renderLayoutSettings();
     }
   }
 
@@ -246,7 +635,7 @@
       hideError();
       renderAll();
       restoreScroll(scene);
-      void prepareLayout(scene);
+      void prepareLayout(scene, state.layoutProfile);
       return true;
     } catch (error) {
       if (request !== state.sceneRequest) return false;
@@ -296,8 +685,10 @@
     if (scene.cycle_indicators.length) pills.push('<span class="state-pill error">' + escapeHTML(scene.cycle_indicators.length) + " cycle(s)</span>");
     if (scene.diagnostic_indicators.length) pills.push('<span class="state-pill warning">' + escapeHTML(scene.diagnostic_indicators.length) + " diagnostic(s)</span>");
     pills.push('<span class="state-pill">' + escapeHTML(referenceVisibilityLabel(scene.reference_visibility)) + " references</span>");
-    if (state.layout && state.layout.key === sceneLayoutKey(scene)) {
-      pills.push('<span class="state-pill ok">ELK layered layout</span>');
+    if (embeddedExport) {
+      pills.push('<span class="state-pill ok">deterministic export layout</span>');
+    } else if (state.layout && state.layout.key === sceneLayoutKey(scene)) {
+      pills.push('<span class="state-pill ok">ELK ' + escapeHTML((state.layoutProfile && state.layoutProfile.algorithm) || "layered") + " layout</span>");
     } else if (state.layoutError) {
       pills.push('<span class="state-pill warning">deterministic fallback layout</span>');
     }
@@ -455,7 +846,12 @@
       includePoint(box.x + box.width, box.y + box.height);
     }
     scene.visible_nodes.forEach(function (node) { includeBox(positions[node.id]); });
+    const manualPositions = state.viewport && state.viewport.positions ? state.viewport.positions : {};
+    const relationshipsByID = {};
+    scene.visible_relationships.forEach(function (relationship) { relationshipsByID[relationship.id] = relationship; });
     Object.keys(layout.edges || {}).forEach(function (edgeID) {
+      const relationship = relationshipsByID[edgeID];
+      if (relationship && (manualPositions[relationship.from_visible_id] || manualPositions[relationship.to_visible_id])) return;
       const points = routePoints(layout.edges[edgeID]);
       if (points) points.forEach(function (point) { includePoint(point.x, point.y); });
     });
@@ -576,6 +972,10 @@
   }
 
   function fallbackLayout(scene) {
+    if (embeddedExport && embeddedExport.layouts) {
+      const exported = embeddedExport.layouts[sceneLayoutKey(scene)];
+      if (exported) return exported;
+    }
     const nodes = scene.visible_nodes;
     const byLayer = {};
     nodes.forEach(function (node) {
@@ -593,7 +993,10 @@
     const height = Math.max(430, maxRows * (nodeHeight + rowGap) + 100);
     const positions = {};
     layers.forEach(function (layer, layerIndex) {
-      byLayer[layer].sort(function (left, right) { return left.label.localeCompare(right.label); });
+      byLayer[layer].sort(function (left, right) {
+        if (left.label === right.label) return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+        return left.label < right.label ? -1 : 1;
+      });
       byLayer[layer].forEach(function (node, rowIndex) {
         positions[node.id] = {
           x: 40 + layerIndex * (nodeWidth + columnGap),
@@ -606,18 +1009,25 @@
     return { engine: "fallback", key: sceneLayoutKey(scene), width: width, height: height, positions: positions, edges: {} };
   }
 
-  function buildELKGraph(scene) {
+  function buildELKGraph(scene, profile) {
     const nodeWidth = 190;
     const nodeHeight = 82;
+    const selectedProfile = profile || { algorithm: "layered", options: {} };
+    const algorithm = selectedProfile.algorithm || "layered";
+    const layoutOptions = {
+      "elk.algorithm": algorithm.startsWith("org.eclipse.elk.") ? algorithm : "org.eclipse.elk." + algorithm,
+      "elk.direction": "RIGHT",
+      "elk.edgeRouting": "ORTHOGONAL",
+      "elk.spacing.nodeNode": "35",
+      "elk.layered.spacing.nodeNodeBetweenLayers": "84"
+    };
+    Object.keys(selectedProfile.options || {}).forEach(function (key) {
+      const value = selectedProfile.options[key];
+      if (value !== undefined && value !== null) layoutOptions[key] = String(value);
+    });
     return {
       id: "root",
-      layoutOptions: {
-        "elk.algorithm": "layered",
-        "elk.direction": "RIGHT",
-        "elk.edgeRouting": "ORTHOGONAL",
-        "elk.spacing.nodeNode": "35",
-        "elk.layered.spacing.nodeNodeBetweenLayers": "84"
-      },
+      layoutOptions: layoutOptions,
       children: scene.visible_nodes.map(function (node) {
         return { id: node.id, width: nodeWidth, height: nodeHeight };
       }),
@@ -667,7 +1077,7 @@
     });
     const fallback = fallbackLayout(scene);
     return {
-      engine: "elk.layered",
+      engine: "elk." + ((state.layoutProfile && state.layoutProfile.algorithm) || "layered"),
       key: key,
       width: Math.max(760, numberOrZero(result.width) + offset * 2, fallback.width),
       height: Math.max(430, numberOrZero(result.height) + offset * 2, fallback.height),
@@ -676,17 +1086,16 @@
     };
   }
 
-  async function prepareLayout(scene) {
+  async function prepareLayout(scene, profile) {
+    if (embeddedExport || !scene || !scene.visible_nodes.length || typeof window.ELK !== "function") return;
     const key = sceneLayoutKey(scene);
     state.layoutKey = key;
-    if (!scene.visible_nodes.length || typeof window.ELK !== "function") return;
     const request = ++state.layoutRequest;
     let elk;
     try {
-      // The bundled ELK build currently falls back to its local adapter; avoid
-      // requesting an unavailable worker package and keep the console quiet.
-      elk = new window.ELK();
-      const result = await elk.layout(buildELKGraph(scene));
+      const workerURL = new URL("/assets/vendor/elk-worker.min.js", window.location.href).toString();
+      elk = new window.ELK({ workerUrl: workerURL });
+      const result = await elk.layout(buildELKGraph(scene, profile || state.layoutProfile));
       if (request !== state.layoutRequest || state.scene !== scene) return;
       state.layout = adaptELKLayout(scene, result, key);
       state.layoutError = false;
@@ -697,8 +1106,10 @@
       if (request !== state.layoutRequest || state.scene !== scene) return;
       state.layout = null;
       state.layoutError = true;
+      state.layoutMessage = "ELK layout failed; deterministic fallback is active.";
       renderSceneState();
       renderGraph();
+      if (state.layoutSettingsOpen) renderLayoutSettings();
     } finally {
       if (elk && typeof elk.terminateWorker === "function") {
         try {
@@ -1091,7 +1502,12 @@
     (state.scene.evidence_links || []).forEach(function (link) { linksByID[link.id] = link; });
     const links = (ids || []).map(function (id) { return linksByID[id]; }).filter(Boolean);
     if (!links.length) return '<p class="muted">No source evidence is attached to this item.</p>';
-    if (!sourceEnabled) return '<p class="muted">Source inspection is unavailable for this model-only session.</p>';
+    if (!sourceEnabled && !embeddedExport) return '<p class="muted">Source inspection is unavailable for this model-only session.</p>';
+    if (!sourceEnabled) {
+      return '<div class="evidence-list">' + links.map(function (link) {
+        return '<div class="evidence-item" aria-label="' + escapeHTML((link.symbol || link.kind || "Source evidence") + ". " + locationText(link)) + '"><span>' + escapeHTML(link.symbol || link.kind || "Source evidence") + '</span><small>' + escapeHTML(locationText(link)) + ' · source not embedded</small></div>';
+      }).join("") + "</div>";
+    }
     return '<div class="evidence-list">' + links.map(function (link) {
       return '<button type="button" class="evidence-item" data-evidence-id="' + escapeHTML(link.id) + '"><span>' + escapeHTML(link.symbol || link.kind || "Source evidence") + '</span><small>' + escapeHTML(locationText(link)) + '</small></button>';
     }).join("") + "</div>";

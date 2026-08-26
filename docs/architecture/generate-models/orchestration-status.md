@@ -39,7 +39,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 ## Delivery progress
 
-Issue 002 is complete. The remaining first-slice work is the local viewer in issue 003, followed by evidence/source inspection in issue 004 and deterministic exports in issue 005.
+Issue 002 is complete. The first-slice viewer and export consumers in issues 003 through 006 are complete; issue 007 is a viewer-owned presentation extension and does not change the canonical model boundary.
 
 ## Artifact sync
 

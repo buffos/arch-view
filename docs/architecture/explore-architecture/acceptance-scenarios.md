@@ -71,3 +71,40 @@ visually and textually identified. Local node identity is shown separately
 from relationship confidence.
 
 Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
+
+## SC-EX-012 — Inspect the ELK layout catalog
+
+Given an open viewer session, when the developer opens layout settings, then a searchable and grouped catalog exposes the pinned ELK algorithms and options with type, default, current value, description, applicability, and renderer-support information, and unsupported entries cannot be applied as if they were valid.
+
+Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
+
+## SC-EX-013 — Apply and reset a layout profile
+
+Given a valid layout profile, when the developer applies it, then the current scene is recalculated with the selected layout adapter, the renderer consumes the resulting node positions and edge routes, manual positions for that hierarchy path are cleared, and canonical model facts remain unchanged. Reset returns the active session to built-in defaults without silently deleting a project file.
+
+Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
+
+## SC-EX-014 — Discover the nearest project configuration
+
+Given a target directory with zero or more ancestor `.archview.json` files, when a project-backed viewer session opens, then Arch View checks the target directory and walks toward the filesystem root, selects the nearest file as one complete profile without merging, reports its origin, and uses built-in defaults when no file exists.
+
+Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
+
+## SC-EX-015 — Persist project layout settings safely
+
+Given a project-backed session and a valid edited profile, when discovery loaded `.archview.json` from folder X and the developer chooses ordinary `Save`, then Arch View atomically overwrites that exact active file, reports the saved origin/path, creates no project-root copy, and loads the same settings on the next project session. Given no discovered active file, ordinary `Save` is unavailable or returns `save_as_required` without creating a file. When the developer explicitly chooses `Save As`, Arch View accepts a user-selected custom destination folder, atomically writes the fixed `.archview.json` filename there, makes it active for the current session, and reports the destination. Only `Save As` can choose a destination; neither operation edits source files.
+
+Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
+
+## SC-EX-016 — Handle invalid or model-only configuration
+
+Given a malformed/unsupported nearest `.archview.json` or a model-only session, when layout configuration is loaded or saved, then the viewer reports an actionable diagnostic, does not silently fall through to a farther file, uses safe defaults where necessary, and disables project persistence when no project root is available. A model-only session may still apply settings for the current session, but cannot use either `Save` or `Save As`.
+
+Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
+
+## Issue 007 verification status
+
+The backend portions of SC-EX-012 through SC-EX-016 are covered by catalog,
+validation, discovery, destination, and model-only endpoint tests. The browser
+settings surface and its windowed/full-canvas workflow have passed the declared
+human visual review; no scenario changes the language-neutral model contract.

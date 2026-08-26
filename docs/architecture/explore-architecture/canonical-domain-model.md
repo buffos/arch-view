@@ -6,9 +6,17 @@ Fields: `session_id`, `model_id`, `project_root_label`, `model_revision`, `state
 
 ### ViewState
 
-`hierarchy_path[]`, `selected_node_id?`, `selected_relationship_id?`, `search_query?`, `filters`, `viewport` (`zoom`, `pan_x`, `pan_y`), `layout_overrides?`, `display_mode` (`overview`, `detail`, `list`), `reanalysis_revision`.
+`hierarchy_path[]`, `selected_node_id?`, `selected_relationship_id?`, `search_query?`, `filters`, `viewport` (`zoom`, `pan_x`, `pan_y`), `layout_profile`, `layout_overrides?`, `display_mode` (`overview`, `detail`, `list`), `reanalysis_revision`.
 
 `filters` includes `reference_visibility` (`hidden`, `aggregated`, `expanded`; `hidden` is the default for the overview) and optional reference-scope filters for `standard_library`, `external`, `unresolved`, and `dynamic`. `layout_overrides` contains optional session-scoped positions keyed by visible ID and is never part of canonical model state.
+
+### LayoutConfiguration
+
+`LayoutProfile`: `algorithm`, `options`, `origin` (`default`, `project`, `ancestor`, `custom`, `session`), `config_path?`, `schema_version`, `fingerprint`, `status` (`valid`, `invalid`, `fallback`), `can_save`, `can_save_as`. `options` contains normalized, typed values from the pinned layout adapter's option catalog. `config_path`, when present, is the exact active file targeted by ordinary `Save`; `custom` identifies a file selected through `Save As` that is not classified as the target project or one of its ancestors.
+
+`LayoutOptionDefinition`: `id`, `group`, `type`, `default`, `allowed_values?`, `description`, `algorithms?`, `renderer_support`, and `editable`. The catalog may contain options that are not applicable to the current algorithm; those are explained rather than silently applied.
+
+`ProjectLayoutConfig`: `schema_version` (`arch-view.config/v1`), `layout` (`algorithm`, `options`). The v1 file name is `.archview.json` and the file contains presentation settings only.
 
 ### SceneSnapshot
 
@@ -41,11 +49,22 @@ Fields: `session_id`, `model_id`, `project_root_label`, `model_revision`, `state
 - Source inspection is read-only; path traversal, symlink escape, and unreadable files return diagnostics.
 - Reanalysis increments model revision and clears selections that no longer resolve.
 - Scene snapshots may be rendered by SVG, Canvas, WebGL, or accessible list views without changing semantics. Layout algorithms and manual positions remain renderer/session concerns.
+- A discovered `.archview.json` is selected by nearest-ancestor precedence from the selected target directory toward the filesystem root; v1 does not merge files. No file means built-in defaults.
+- A malformed or unsupported nearest configuration is surfaced as a configuration diagnostic and uses safe defaults for the active session; it does not silently select a farther configuration.
+- Applying a new layout profile recalculates presentation geometry and clears manual positions for the affected hierarchy path. Configuration never changes canonical model facts, analyzer options, viewport state, or source content.
+- Ordinary `Save` is explicit and atomic and overwrites exactly the active discovered `.archview.json`; it never creates a replacement in another folder. If no file is active, it returns `save_as_required` rather than creating one. `Save As` is the only operation that accepts a custom destination folder, writes the fixed `.archview.json` filename atomically after explicit confirmation, and may make that file active for the current session. Model-only sessions cannot persist a project file.
 
 ## Domain events
 
-`ViewOpened`, `HierarchyEntered`, `SelectionChanged`, `EvidenceInspected`, `SourceInspected`, `ViewReanalyzed`, `ViewBecameStale`, `ViewClosed`.
+`ViewOpened`, `HierarchyEntered`, `SelectionChanged`, `EvidenceInspected`, `SourceInspected`, `LayoutSettingsLoaded`, `LayoutSettingsChanged`, `LayoutApplied`, `LayoutSettingsSaved`, `ViewReanalyzed`, `ViewBecameStale`, `ViewClosed`.
 
 ## Extension points
 
-Renderer adapters, themes, filters, layout algorithms, alternate accessibility views, and large-graph level-of-detail policies.
+Renderer adapters, themes, filters, layout algorithms, layout option catalogs, project configuration resolvers, alternate accessibility views, and large-graph level-of-detail policies.
+
+## Current delivery status
+
+The issue 007 implementation realizes the `LayoutConfiguration` boundary with
+the pinned ELK catalog, typed profiles, nearest-file origin, session reset,
+and explicit persistence actions. The canonical model remains unchanged by
+these presentation operations.

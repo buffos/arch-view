@@ -69,6 +69,7 @@
                 <button id="fit-viewport" class="button secondary" type="button">Fit</button>
                 <button id="reset-layout" class="button secondary" type="button" title="Restore calculated node positions" aria-label="Restore calculated node positions">Reset layout</button>
               </div>
+              <button id="layout-settings-button" class="button secondary" type="button">Layout settings</button>
               <button id="focus-toggle" class="button secondary" type="button">Full canvas</button>
             </div>
           </div>
@@ -105,6 +106,49 @@
           <div id="accessible-list" class="accessible-list" aria-label="Architecture items"></div>
         </aside>
       </section>
+
+      <dialog id="layout-settings-dialog" class="layout-settings-dialog" aria-labelledby="layout-settings-title">
+        <div class="layout-settings-shell">
+          <div class="layout-settings-header">
+            <div>
+              <p class="eyebrow">PRESENTATION PROFILE</p>
+              <h3 id="layout-settings-title">ELK layout settings</h3>
+              <p class="muted">Choose how the current semantic scene is arranged. Settings affect positions and routes only; they never change the model.</p>
+            </div>
+            <button id="layout-settings-close" class="button secondary" type="button" aria-label="Close layout settings">Close</button>
+          </div>
+          <div id="layout-settings-origin" class="layout-settings-origin" aria-live="polite"></div>
+          <div id="layout-settings-diagnostic" class="layout-settings-diagnostic" role="status" hidden></div>
+          <div class="layout-settings-controls">
+            <label class="settings-field">
+              <span>Algorithm</span>
+              <select id="layout-algorithm" aria-describedby="layout-algorithm-help"></select>
+              <small id="layout-algorithm-help">The pinned ELK adapter exposes each available algorithm. Some algorithms are best suited to trees or disconnected boxes.</small>
+            </label>
+            <label class="settings-field">
+              <span>Search options</span>
+              <input id="layout-option-search" type="search" placeholder="Search name, group, or option id" autocomplete="off">
+            </label>
+          </div>
+          <div id="layout-options-list" class="layout-options-list" aria-live="polite"></div>
+          <div class="layout-save-as">
+            <label class="settings-field">
+              <span>Save As directory</span>
+              <input id="layout-save-as-directory" type="text" placeholder="Choose a custom folder path">
+            </label>
+            <label class="confirm-field"><input id="layout-save-as-confirm" type="checkbox"> <span>Confirm writing <code>.archview.json</code> to this directory</span></label>
+          </div>
+          <div class="layout-settings-footer">
+            <span id="layout-settings-status" class="muted" aria-live="polite"></span>
+            <div class="layout-settings-actions">
+              <button id="layout-reset-defaults" class="button secondary" type="button">Reset defaults</button>
+              <button id="layout-settings-apply" class="button" type="button">Apply</button>
+              <button id="layout-settings-save" class="button secondary" type="button">Save</button>
+              <button id="layout-settings-save-as" class="button secondary" type="button">Save As</button>
+            </div>
+          </div>
+        </div>
+      </dialog>
 
       <section class="bottom-grid" aria-label="Cycles and diagnostics">
         <article class="support-card">

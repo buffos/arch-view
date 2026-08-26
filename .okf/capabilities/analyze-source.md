@@ -60,4 +60,4 @@ The capability is specified. Its observation schema, analyzer lifecycle, safety 
 
 ## Delivery progress
 
-Issues 001 through 004 and post-baseline issue 006 are complete for the first Go analyzer/model and viewer slice. Deterministic export remains in issue 005; the capability remains `specified` while that scoped delivery continues.
+Issues 001 through 006 are complete for the first Go analyzer/model, viewer, and export slice. The capability remains `specified` because the Python, TypeScript, Rust, and Clojure adapter territories and the external plugin protocol remain future delivery work.

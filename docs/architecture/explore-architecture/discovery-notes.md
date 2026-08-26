@@ -23,6 +23,14 @@ The capability consumes the canonical model and graph/view preparation outputs a
 7. The viewer supports keyboard navigation, accessible labels/contrast, and a non-visual list/details path so the graph is not the only way to inspect architecture.
 8. Reanalysis replaces the model while preserving a safe, explainable navigation context where possible; stale evidence is never presented as current.
 
+## Confirmed layout-settings and project-configuration decisions
+
+9. The viewer exposes a dedicated layout settings surface for the pinned ELK/elkjs adapter. It presents a searchable, grouped catalog of the available layout algorithms and options, including type, default, current value, description, and applicability. Options that the current adapter cannot validate or render are visible as unsupported rather than silently applied.
+10. Applying a layout profile is an explicit user action. It recalculates the current scene with the selected ELK settings, consumes the returned node positions and edge routes, and treats the operation like `Reset layout` by discarding manual positions for the affected hierarchy path. The canonical model and relationship semantics are unchanged.
+11. Project layout preferences use a versioned `.archview.json` file. For a project-backed session, discovery checks the selected target directory and then each parent directory toward the filesystem root; the nearest file wins as a whole, with no v1 merging. If no file is found, built-in defaults apply. A malformed or unsupported nearest file produces an actionable configuration diagnostic and is not silently bypassed in favor of a farther file.
+12. Saving distinguishes `Save` from `Save As`. If discovery loaded `.archview.json` from folder X, ordinary `Save` atomically overwrites that exact active file and never creates or copies a project-root file. If discovery found no file, ordinary `Save` is unavailable and the user must choose `Save As`. `Save As` is the only operation that accepts a custom destination folder; it writes the fixed `.archview.json` filename atomically after explicit confirmation and makes that file active for the current session. A model-only session can apply settings for the current session but has no project persistence boundary.
+13. The configuration file stores presentation layout preferences only. Analyzer options, canonical model data, viewport state, and manual node positions remain separate concerns. The same resolver may later be reused by headless/export commands, but issue 007 applies it to the interactive viewer.
+
 ## Actors and inputs
 
 - A developer or maintainer opens a local analysis session in a browser.
@@ -38,3 +46,10 @@ The capability consumes the canonical model and graph/view preparation outputs a
 - Source delivery policy for paths outside the repository, symlinks, unreadable files, and optional embedded source.
 - Accessibility acceptance criteria and browser support matrix.
 - Reanalysis behavior when module IDs or hierarchy paths change.
+
+## Issue 007 implementation note
+
+The local viewer now implements the confirmed layout-settings boundary through
+the pinned catalog and the versioned `.archview.json` resolver. Automated
+validation and persistence checks, plus the normal/full-canvas browser review,
+are complete for issue 007. Further option support is sequenced in issue 008.
