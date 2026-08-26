@@ -61,9 +61,24 @@ The adapters have exact language-specific contracts; parser/library choices may 
 
 Owns stable opaque module identity, language and project metadata, explicit hierarchy segments, source references, relationships, evidence, confidence, tags, analysis diagnostics, and derived cycle/layer projections. Hierarchy is structural and separate from semantic dependency edges. The model must represent one package containing many files and must not assume dot-separated names.
 
+Canonical model data types and graph/projection data remain in
+`internal/model`. The canonicalization capability is `internal/model/canonical`:
+it owns normalization, collection merging, conflict/recovery diagnostics,
+validation, deterministic identity/content checks, and orchestration of graph
+derivation. This keeps model data from depending on its own canonicalization
+package while giving CLI, viewer, and export callers one explicit validation
+boundary.
+
 ### Graph and view preparation
 
 Owns relationship normalization, aggregation, abstraction classification, cycle detection, hierarchical projection, layer assignment, and layout inputs. It consumes only the neutral model. When hierarchy aggregation creates a non-cycle group self-loop, this boundary provides an internal-relationship summary instead of asking a renderer to imply a cycle.
+
+The viewer scene projection is isolated in `internal/viewer/scene` and returns
+the versioned renderer-neutral scene contract. Route geometry is isolated in
+`internal/routing`, where ELK sections, deterministic orthogonal routes, and
+the reserved future cubic segment representation meet before browser/SVG
+serialization. A new route strategy therefore does not require changes to
+graph orchestration or path rendering.
 
 ### Presentation and export
 
@@ -75,15 +90,22 @@ The local host resolves the nearest versioned `.archview.json` from the selected
 
 Configuration writes distinguish two actions. Ordinary `Save` has no destination input and atomically overwrites exactly the active discovered `.archview.json`; it never creates a new file or copies settings to the analyzed project root, and it requires `Save As` when no active file exists. `Save As` is the only operation that accepts a user-selected custom destination folder; it writes the fixed `.archview.json` filename there atomically after explicit confirmation and makes that path active for the current session. Model-only sessions can use session settings but cannot persist a project file. Analyzer options, viewport state, and manual positions are separate from this configuration. Headless export continues to use its explicit deterministic contract unless a future issue deliberately adds configuration consumption.
 
+The layout catalog, profile validation, option-handler registry, session state,
+and persistence are grouped under `internal/viewer/layout`; HTTP handlers only
+translate transport envelopes. The live browser uses a small native-ES-module
+entrypoint and focused modules. Exported HTML uses an embedded esbuild bundle
+with external-import rejection, so no module, script, or stylesheet dependency
+escapes the exported artifact.
+
 ## Data flow
 
 1. The CLI selects a repository and either an explicit analyzer or an analyzer detected from project files.
 2. The plugin manager runs the analyzer with source-scope and filtering options.
 3. The analyzer returns modules, relationships, evidence, diagnostics, and source references.
-4. The model validator checks identity and relationship integrity.
-5. The graph engine normalizes relationships, computes cycles, and assigns layers.
+4. The canonical model capability normalizes observations, validates identity and relationship integrity, and asks the model graph capability to derive cycles/layers.
+5. The scene capability projects the model into the renderer-neutral interactive contract.
 6. The local host resolves project layout configuration and exposes the effective profile/catalog to the viewer.
-7. The renderer-neutral viewer or exporter consumes the resulting model and view projection.
+7. The routing/layout adapters calculate positions and route sections; the renderer-neutral viewer or exporter serializes the resulting view.
 
 ## Shared policies
 
@@ -103,12 +125,22 @@ The root policy is `when-supported`, with justified deferrals required. The arch
 
 ## Implementation sequence
 
-The first architectural slice is the neutral model and plugin contract. The first product slice is Go package analysis connected to headless output and a visible viewer result. The viewer refinement now prioritizes a local-first overview and import/evidence inspection before broader analyzer expansion. Python, TypeScript, Rust, and Clojure analyzers follow the same contract. External process plugins come after the built-in contract has stabilized.
+The first architectural slice is the neutral model and plugin contract. The
+first product slice is Go package analysis connected to headless output and a
+visible viewer result. The completed refactor sequence then isolates routing,
+browser composition/bundling, scene projection, the Go analyzer pipeline, the
+ELK option registry, and canonical model normalization. Python, TypeScript,
+Rust, and Clojure analyzers follow the same `analysis.Analyzer` contract and
+register at the composition root; adding one does not modify host orchestration.
+Issue 009's node/edge ELK target mapping is explicitly deferred. Spline
+control-point mapping/rendering is a separate future issue after refactor
+review.
 
 ## Residual implementation decisions
 
 - Benchmarking and tuning frontend/rendering thresholds.
 - Reference-boundary aggregation, import-list density, session-scoped layout behavior, and broader ELK option support.
+- Target-aware node/edge ELK mapping (issue 009) and cubic/spline route rendering.
 - Publishing/migrating JSON and NDJSON schemas.
 - Process sandbox/resource-limit implementation.
 - Future call-graph/type-level relation capabilities.

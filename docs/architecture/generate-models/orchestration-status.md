@@ -30,16 +30,16 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Observed in reference: graph construction, cycle handling, hierarchy projection, and layered layout are separate from Clojure source extraction but still consume namespace-shaped strings.
 - User-confirmed target: analyzers for multiple languages must feed one shared model.
-- Required follow-up: implement schema validation, deterministic normalization, cycle/layer projections, and hierarchy aggregation according to the exact contract.
+- Required follow-up: preserve the specified schema validation, deterministic normalization, cycle/layer projections, and hierarchy aggregation while keeping canonicalization behind its dedicated capability boundary.
 
 ## Current delivery slice
 
-- Issue 002 consumed Go observations and implemented the first canonical model pipeline, including normalization, validation, graph derivations, hierarchy projection, and headless CLI access.
+- Issue 002 consumed Go observations and implemented the first canonical model pipeline, including normalization, validation, graph derivations, hierarchy projection, and headless CLI access. Issue 015 separates canonical normalization/validation from model data types and preserves the same output contract; automated verification is complete and repository review remains.
 - It is part of [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Delivery progress
 
-Issue 002 is complete. The first-slice viewer and export consumers in issues 003 through 006 are complete; issue 007 is a viewer-owned presentation extension and does not change the canonical model boundary.
+Issue 002 is complete. Issue 015 implements the planned canonicalization boundary without changing model JSON, IDs, ordering, or derived graph semantics. The first-slice viewer and export consumers in issues 003 through 006 are complete; issues 007 and 008 are viewer-owned presentation extensions and do not change the canonical model boundary.
 
 ## Artifact sync
 
@@ -48,4 +48,4 @@ Issue 002 is complete. The first-slice viewer and export consumers in issues 003
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: issue 002 is archived as complete; the active queue begins with issue 003.
+- Delivery truth: issue 002 is archived as complete; issue 015 is implemented and awaiting repository-review handoff. The active refactor queue is synchronized in `docs/agents/issues/issues.md`.

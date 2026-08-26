@@ -153,13 +153,34 @@ Model-only sessions can apply settings but cannot persist a project file.
 
 - Analyzers discover source facts and emit modules, relationships, tags,
   evidence, confidence, and diagnostics.
-- The model normalizes identities, hierarchy, cycles, and dependency layers.
+- `internal/model` owns canonical model types, graph derivation, stable
+  model-owned identities, and hierarchy projection data. The
+  `internal/model/canonical` capability owns normalization, merge/recovery
+  diagnostics, and validation.
+- `internal/goanalyzer` remains the public Go analyzer entrypoint while its
+  implementation is split into scanner, import classification, and common
+  observation assembly capabilities. Other languages can register separate
+  implementations of the common analyzer contract.
 - The viewer projects/aggregates the model and owns layout, interaction, and
   presentation.
+- `internal/viewer/scene` owns the renderer-neutral scene contract;
+  `internal/routing` owns route geometry and strategy boundaries;
+  `internal/viewer/layout` owns the ELK catalog, typed handlers, profiles, and
+  persistence. Browser modules and HTTP/CLI composition are kept separate from
+  those capabilities.
 - Exporters consume the same neutral model/view facts and must not parse source.
 
 The `external/` reference implementation remains outside all of these product
 boundaries.
+
+### Refactor boundary
+
+Issues 010–015 implement the architecture refactor before spline support. They
+preserve the model, scene, configuration, CLI, HTTP, and export schemas while
+making the replaceable boundaries explicit. The route model reserves cubic
+segments for a future spline issue; current rendering remains deterministic
+orthogonal/polyline plus the established self-loop behavior. Issue 009's
+node/edge ELK option mapping is deferred.
 
 ### Export artifacts
 

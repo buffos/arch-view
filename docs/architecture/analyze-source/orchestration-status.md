@@ -50,7 +50,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Selected frontier: Go analysis.
 - Implementation slice: [Go repository to visible architecture view](go-analysis/implementation-slice.md).
-- Delivery progress: issues 001 through 007 are complete for the first Go analyzer/model, viewer, export, and layout-configuration slice; future language-adapter work remains specified.
+- Delivery progress: issues 001 through 008 are complete for the first Go analyzer/model, viewer, export, and layout-configuration slice. Issue 013 now isolates the Go scanner, import classifier, and observation assembler behind the existing analyzer entrypoint; future language-adapter work remains specified.
 - The slice crosses the plugin runtime, Go analyzer, canonical model, local viewer, evidence, and export contracts.
 
 ## Artifact sync
@@ -60,4 +60,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with completed issues 001 through 007; future language-adapter work remains in the specified roadmap.
+- Delivery truth: updated with completed issues 001 through 008 and the pending issue 013 analyzer-pipeline refactor; issue 009 is explicitly deferred and future language-adapter work remains in the specified roadmap.

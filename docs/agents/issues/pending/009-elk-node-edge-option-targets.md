@@ -2,7 +2,7 @@
 
 Execution type: AFK
 Review gate: visual-review
-Status: ready-for-agent
+Status: deferred
 
 ## Parent PRD
 
@@ -70,6 +70,13 @@ eligible visible node or edge in the current scene.
 ## Blocked by
 
 —
+
+## Scheduling note
+
+Deferred by explicit user direction on 2026-08-26. The current implementation
+continues to support the approved parent-level option tranche; node- and
+edge-targeted ELK options remain catalog-only until this issue is deliberately
+resumed.
 
 ## User stories addressed
 

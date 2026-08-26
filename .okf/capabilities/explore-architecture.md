@@ -18,6 +18,10 @@ issues:
   - docs/agents/issues/done/20260826-007-elk-layout-settings-and-project-config.md
   - docs/agents/issues/done/20260826-008-expand-elk-parent-options.md
   - docs/agents/issues/pending/009-elk-node-edge-option-targets.md
+  - docs/agents/issues/pending/010-renderer-neutral-routing-and-geometry.md
+  - docs/agents/issues/pending/011-browser-composition-and-self-contained-bundling.md
+  - docs/agents/issues/pending/012-scene-projection-capability.md
+  - docs/agents/issues/pending/014-elk-option-handler-registry.md
 discovery_notes: docs/architecture/explore-architecture/discovery-notes.md
 gap_analysis: docs/architecture/explore-architecture/requirements-gap-analysis.md
 prd: docs/architecture/explore-architecture/prd.md
@@ -50,4 +54,4 @@ This capability is specified. Its local web surface, renderer-neutral scene cont
 
 ## Delivery progress
 
-Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, the ELK settings/project-configuration slice, and the expanded parent-level ELK option tranche. Issue 004's implementation, compact full-canvas/viewport refinements, centered dense-scene fitting, stable drag rendering, deterministic manual edge routing, reset-layout behavior, and automated/browser verification are complete. Issue 009 is now the ready-for-agent frontier for node/edge target mapping. Advanced ports, labels, junctions, and compound-graph geometry remain a later specification frontier.
+Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, the ELK settings/project-configuration slice, and the expanded parent-level ELK option tranche. Issue 009 is explicitly deferred by the user. Refactor issues 010, 011, 012, and 014 have automated implementation verification and await the user's integrated visual review where applicable. The route model reserves spline segments, but spline rendering remains a later specification frontier.

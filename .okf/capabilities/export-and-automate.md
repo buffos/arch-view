@@ -12,6 +12,7 @@ artifact_root: docs/architecture/export-and-automate
 orchestration_status: docs/architecture/export-and-automate/orchestration-status.md
 issues:
   - docs/agents/issues/done/20260826-005-deterministic-json-html-svg-export.md
+  - docs/agents/issues/pending/011-browser-composition-and-self-contained-bundling.md
 discovery_notes: docs/architecture/export-and-automate/discovery-notes.md
 gap_analysis: docs/architecture/export-and-automate/requirements-gap-analysis.md
 prd: docs/architecture/export-and-automate/prd.md
@@ -44,4 +45,4 @@ This capability is specified. Its versioned JSON, deterministic HTML/SVG artifac
 
 ## Delivery progress
 
-Issue 005 implemented the shared JSON, self-contained HTML, and static SVG export path, including deterministic layouts, reference visibility, evidence metadata, atomic writes, and CLI analyze-to-export wiring. It is archived after explicit user approval of the HTML/SVG visual-parity review. The capability remains `specified` because broader reanalysis and future CI expansion remain specified but are outside the closed issue.
+Issue 005 implemented the shared JSON, self-contained HTML, and static SVG export path, including deterministic layouts, reference visibility, evidence metadata, atomic writes, and CLI analyze-to-export wiring. Issue 011 hardens the browser module/bundling boundary without changing the export contract and awaits integrated visual review. The capability remains `specified` because broader reanalysis and future CI expansion remain specified but are outside the closed issue.

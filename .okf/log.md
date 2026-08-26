@@ -2,6 +2,26 @@
 
 ## 2026-08-26
 
+* **Architecture refactor**: Implemented issues 010–015 while preserving the
+  canonical model, scene, HTTP, CLI, configuration, and export contracts.
+  Routing is now renderer-neutral with deterministic orthogonal/manual and
+  existing self-loop behavior; spline segments are reserved but not rendered.
+* **Composition**: Split the live viewer into native ES modules, kept
+  `app.js` as a small entrypoint, added embedded esbuild bundling with external
+  import rejection for self-contained HTML, and decomposed the Go viewer host
+  and CLI into focused files.
+* **Capabilities**: Isolated scene projection, the Go scanner/import/
+  observation pipeline, the ELK option-handler registry, and canonical model
+  normalization/validation into explicit packages. Issue 009's node/edge ELK
+  target mapping is explicitly deferred by the user.
+* **Verification**: `go test ./... -count=1`, race tests, vet, build,
+  staticcheck, golangci-lint, JavaScript syntax/pure-module tests, export
+  self-containment/determinism tests, and `git diff --check` pass. Issues
+  010–015 are recorded as awaiting human/repository review handoffs;
+  `external/` remains ignored, read-only, and untouched.
+
+## 2026-08-26
+
 * **Closeout**: Archived issue 008 after the user's explicit approval of the parent-level ELK option tranche in windowed and full-canvas views, including representative settings, diagnostics, fallbacks, and resulting layouts. Removed its active registry row, updated the owning capability and implementation-slice references, and unblocked issue 009 without processing it; `external/` remains untouched.
 
 * **Implementation**: Issue 008 expanded the editable ELK parent-level tranche with typed metadata and validation for aspect ratio, layered spacing, layering, cycle breaking, crossing minimization, node placement, and connected-component compaction. The browser request builder now forwards only catalogued editable `PARENTS` options to the root graph; node/edge-targeted options remain reserved for issue 009.

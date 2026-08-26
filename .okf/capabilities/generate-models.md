@@ -12,6 +12,7 @@ artifact_root: docs/architecture/generate-models
 orchestration_status: docs/architecture/generate-models/orchestration-status.md
 issues:
   - docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md
+  - docs/agents/issues/pending/015-canonical-model-normalization-boundary.md
 discovery_notes: docs/architecture/generate-models/discovery-notes.md
 gap_analysis: docs/architecture/generate-models/requirements-gap-analysis.md
 prd: docs/architecture/generate-models/prd.md
@@ -48,4 +49,4 @@ This capability is specified. Its canonical model schema, normalization rules, p
 
 ## Delivery progress
 
-Issue 002 delivers the first canonical `arch-view.model/v1` normalization, integrity validation, cycle/layer derivation, and hierarchy projection path. Non-local references remain fully retained here; hiding, aggregation, expansion, and import-list presentation belong to the viewer/export consumers. The capability remains `specified` while those consumers are delivered.
+Issue 002 delivered the first canonical `arch-view.model/v1` normalization, integrity validation, cycle/layer derivation, and hierarchy projection path. Issue 015 separates canonical normalization/validation from model data types while preserving the same contract; automated verification is complete and repository review remains. Non-local references remain fully retained here; hiding, aggregation, expansion, and import-list presentation belong to viewer/export consumers.

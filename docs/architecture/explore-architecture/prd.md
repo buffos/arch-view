@@ -77,5 +77,8 @@ Issue 007 implements the specified layout catalog, profile application/reset,
 nearest-ancestor configuration discovery, active-file `Save`, and explicit
 custom-folder `Save As`. Issue 008 extends the catalog with the bounded,
 root-safe parent-level option tranche; its automated checks and visual review
-are complete. Target-aware node/edge option mapping remains sequenced in issue
-009.
+are complete. Issue 009 is explicitly deferred. Refactor issues 010, 011, 012,
+and 014 preserve the viewer contract while isolating routing, browser
+composition, scene projection, and ELK option handling; their automated checks
+are complete and their review handoffs remain open. Spline rendering is
+deferred until after the refactor.

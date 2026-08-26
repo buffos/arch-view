@@ -13,7 +13,7 @@
 
 - Initial topology: confirmed on 2026-08-25.
 - State totals: 0 `foggy`, 0 `bounded`, 10 `specified`, 0 `implemented`.
-- Current frontier: issues 007 and 008 are archived after visual approval; issue 009 is the ready-for-agent frontier for node/edge target mapping. Issue 005's deterministic JSON/HTML/SVG export is also archived.
+- Current delivery frontier: issue 009 is explicitly deferred; refactor issues 010–015 have been implemented with automated verification and are awaiting their review handoffs. Spline routing remains deferred until the refactor is reviewed.
 
 ## Application synthesis
 
