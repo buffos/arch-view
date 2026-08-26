@@ -7,6 +7,8 @@ import (
 	"sort"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/goanalyzer/observations"
+	"github.com/buffo/arch-view/internal/goanalyzer/scanner"
 )
 
 type Analyzer struct{}
@@ -82,20 +84,15 @@ func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) 
 	if ctx.Err() != nil {
 		return analysis.AnalysisResult{}, ctx.Err()
 	}
-	project, err := ResolveProject(request.ProjectRoot, request.Options)
+	project, err := scanner.ResolveProject(request.ProjectRoot, request.Options)
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}
-	return analyzePackages(ctx, request, project, a.Manifest())
-}
-
-func analyzerInfo(manifest analysis.Manifest) analysis.AnalyzerInfo {
-	return analysis.AnalyzerInfo{
-		ID:         manifest.ID,
-		Version:    manifest.Version,
-		Language:   manifest.Language,
-		APIVersion: manifest.APIVersion,
+	scan, err := scanner.ScanProject(ctx, request, project)
+	if err != nil {
+		return analysis.AnalysisResult{}, err
 	}
+	return observations.Build(scan, request, project, a.Manifest()), nil
 }
 
 func existsAsFile(path string) bool {
