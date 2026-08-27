@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -160,7 +161,7 @@ func TestExternalPythonAnalyzerMatchesBuiltInAndUsesSharedPipeline(t *testing.T)
 	if err != nil {
 		t.Fatalf("GET external viewer source: %v", err)
 	}
-	defer sourceResponse.Body.Close()
+	defer func() { _ = sourceResponse.Body.Close() }()
 	if sourceResponse.StatusCode != http.StatusOK {
 		t.Fatalf("external viewer source status = %d", sourceResponse.StatusCode)
 	}
@@ -182,13 +183,35 @@ func TestExternalPythonAnalyzerMatchesBuiltInAndUsesSharedPipeline(t *testing.T)
 	}
 }
 
+func TestExternalProjectViewerReanalysisRetainsLoadedAnalyzer(t *testing.T) {
+	if _, err := exec.LookPath("python"); err != nil {
+		t.Skip("python is not available on PATH")
+	}
+	root := writeExternalPythonFixture(t)
+	host := analysis.NewHost(analysis.NewRegistry())
+	if err := loadExternalPlugins(host, []string{externalPythonDescriptorPath(t)}); err != nil {
+		t.Fatalf("load external plugin: %v", err)
+	}
+	options := projectViewerOptions(host, root, "", "org.archview.python.external", nil)
+	value, err := options.Reanalyze(context.Background(), viewer.ReanalysisRequest{ProjectRoot: root, Language: "python", Options: map[string]any{}})
+	if err != nil {
+		t.Fatalf("external reanalysis: %v", err)
+	}
+	if value.Analyzer.ID != "org.archview.python.external" || value.Project.Language != "python" || len(value.Modules) == 0 {
+		t.Fatalf("external reanalysis model = %#v", value)
+	}
+}
+
 func TestExternalPluginListingAndSelectionAreDeterministic(t *testing.T) {
 	if _, err := exec.LookPath("python"); err != nil {
 		t.Skip("python is not available on PATH")
 	}
 	descriptor := externalPythonDescriptorPath(t)
 
-	stdout, stderr := runExternalTestCommandWithOutput(t, []string{"analyzers", "--plugin", descriptor})
+	code, stdout, stderr := runExternalTestCommandWithOutput(t, []string{"analyzers", "--plugin", descriptor})
+	if code != 0 {
+		t.Fatalf("plugin listing exit code = %d, stderr=%s", code, stderr)
+	}
 	if stderr != "" {
 		t.Fatalf("plugin listing stderr = %s", stderr)
 	}
@@ -207,9 +230,9 @@ func TestExternalPluginListingAndSelectionAreDeterministic(t *testing.T) {
 		}
 	}
 
-	duplicateStdout, duplicateStderr := runExternalTestCommandWithOutput(t, []string{"analyzers", "--plugin", descriptor, "--plugin", descriptor})
-	if duplicateStdout != "" || !strings.Contains(duplicateStderr, "analyzer id is already registered") {
-		t.Fatalf("duplicate plugin registration output=%q stderr=%q", duplicateStdout, duplicateStderr)
+	duplicateCode, duplicateStdout, duplicateStderr := runExternalTestCommandWithOutput(t, []string{"analyzers", "--plugin", descriptor, "--plugin", descriptor})
+	if duplicateCode != 2 || duplicateStdout != "" || !strings.Contains(duplicateStderr, "analyzer id is already registered") {
+		t.Fatalf("duplicate plugin registration code=%d output=%q stderr=%q", duplicateCode, duplicateStdout, duplicateStderr)
 	}
 
 	root := writeExternalPythonFixture(t)
@@ -257,11 +280,11 @@ func runExternalTestCommand(t *testing.T, args []string) (int, string) {
 	return code, stderr.String()
 }
 
-func runExternalTestCommandWithOutput(t *testing.T, args []string) (string, string) {
+func runExternalTestCommandWithOutput(t *testing.T, args []string) (int, string, string) {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
-	_ = run(args, &stdout, &stderr)
-	return stdout.String(), stderr.String()
+	code := run(args, &stdout, &stderr)
+	return code, stdout.String(), stderr.String()
 }
 
 func readExternalAnalysis(t *testing.T, path string) analysis.AnalysisResult {

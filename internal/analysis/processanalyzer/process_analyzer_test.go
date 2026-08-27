@@ -48,6 +48,10 @@ func TestProcessAnalyzerFixtureProcess(t *testing.T) {
 		return
 	}
 	writeFixtureFrame(processprotocol.Frame{Type: processprotocol.FrameHello, Protocol: processprotocol.ProtocolVersion, Manifest: &manifest})
+	if mode == "no-read" {
+		time.Sleep(10 * time.Second)
+		return
+	}
 	decoder := processprotocol.NewDecoder(os.Stdin)
 	request, err := decoder.ReadFrame()
 	if err != nil {
@@ -376,11 +380,45 @@ func TestProcessAnalyzerCancellationAndTimeoutTerminateChild(t *testing.T) {
 		Selection:   analysis.AnalyzerSelection{AnalyzerID: testFixtureManifest, Mode: "explicit-id"},
 		Options:     analysis.EffectiveOptions{Values: map[string]any{}, Fingerprint: "options"},
 	})
-	if got := analysis.ErrorCodeOf(err); got != analysis.ErrAnalyzerFailed {
-		t.Fatalf("timeout error code = %q, want analyzer_failed; err=%v", got, err)
+	if got := analysis.ErrorCodeOf(err); got != analysis.ErrCancelled {
+		t.Fatalf("timeout error code = %q, want cancelled; err=%v", got, err)
 	}
 	if elapsed := time.Since(started); elapsed > cleanupWaitTimeout {
 		t.Fatalf("timeout cleanup took %s", elapsed)
+	}
+}
+
+func TestProcessAnalyzerCapsLaterCallerDeadlineAndRequestWrites(t *testing.T) {
+	analyzer := newProcessFixtureAnalyzer(t, "delay", Config{OperationTimeout: 50 * time.Millisecond})
+	callerContext, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err := analyzer.Analyze(callerContext, analysis.AnalyzeRequest{
+		ProjectRoot: t.TempDir(),
+		Selection:   analysis.AnalyzerSelection{AnalyzerID: testFixtureManifest, Mode: "explicit-id"},
+		Options:     analysis.EffectiveOptions{Values: map[string]any{}, Fingerprint: "options"},
+	})
+	if got := analysis.ErrorCodeOf(err); got != analysis.ErrCancelled {
+		t.Fatalf("later caller deadline error code = %q, want cancelled; err=%v", got, err)
+	}
+
+	// The fixture sends hello and then deliberately stops reading stdin. A
+	// request larger than the OS pipe buffer must therefore be interrupted by
+	// the adapter's operation context instead of blocking forever in Write.
+	analyzer = newProcessFixtureAnalyzer(t, "no-read", Config{OperationTimeout: time.Second})
+	started := time.Now()
+	_, err = analyzer.Analyze(context.Background(), analysis.AnalyzeRequest{
+		ProjectRoot: t.TempDir(),
+		Selection:   analysis.AnalyzerSelection{AnalyzerID: testFixtureManifest, Mode: "explicit-id"},
+		Options: analysis.EffectiveOptions{
+			Values:      map[string]any{"payload": strings.Repeat("x", 6*1024*1024)},
+			Fingerprint: "options",
+		},
+	})
+	if got := analysis.ErrorCodeOf(err); got != analysis.ErrCancelled {
+		t.Fatalf("blocked request error code = %q, want cancelled; err=%v", got, err)
+	}
+	if elapsed := time.Since(started); elapsed > 3*cleanupWaitTimeout {
+		t.Fatalf("blocked request cleanup took %s", elapsed)
 	}
 }
 

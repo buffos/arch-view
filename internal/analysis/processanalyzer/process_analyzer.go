@@ -250,11 +250,10 @@ func (a *Analyzer) execute(ctx context.Context, operation processprotocol.FrameT
 		return nil, a.cancelled(operation, ctx.Err(), "external analyzer was cancelled before launch", "")
 	}
 
-	operationContext := ctx
-	operationCancel := func() {}
-	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
-		operationContext, operationCancel = context.WithTimeout(ctx, a.config.OperationTimeout)
-	}
+	// Always apply the adapter's operation cap. context.WithTimeout naturally
+	// preserves an earlier caller deadline while still bounding callers that
+	// provide a later deadline.
+	operationContext, operationCancel := context.WithTimeout(ctx, a.config.OperationTimeout)
 	defer operationCancel()
 
 	runner, err := startRunner(a, operation)
@@ -285,7 +284,7 @@ func (a *Analyzer) execute(ctx context.Context, operation processprotocol.FrameT
 		if helloContext.Err() == context.DeadlineExceeded {
 			_ = runner.terminate()
 			cleaned = true
-			return nil, a.failureWithStderr("external analyzer hello timed out", context.DeadlineExceeded, nil, nil, runner.stderrText())
+			return nil, a.cancelled(operation, context.DeadlineExceeded, "external analyzer hello timed out", runner.stderrText())
 		}
 		_ = runner.terminate()
 		cleaned = true
@@ -312,9 +311,15 @@ func (a *Analyzer) execute(ctx context.Context, operation processprotocol.FrameT
 		cleaned = true
 		return nil, a.failureWithStderr("external analyzer request was rejected", err, nil, nil, runner.stderrText())
 	}
-	if err := runner.write(requestFrame); err != nil {
+	if err := runner.writeContext(operationContext, requestFrame); err != nil {
 		_ = runner.terminate()
 		cleaned = true
+		if ctx.Err() != nil {
+			return nil, a.cancelled(operation, ctx.Err(), "external analyzer was cancelled while sending the request", runner.stderrText())
+		}
+		if operationContext.Err() == context.DeadlineExceeded {
+			return nil, a.cancelled(operation, context.DeadlineExceeded, "external analyzer operation timed out while sending the request", runner.stderrText())
+		}
 		return nil, a.failureWithStderr("external analyzer request could not be written", err, nil, nil, runner.stderrText())
 	}
 
@@ -330,7 +335,7 @@ func (a *Analyzer) execute(ctx context.Context, operation processprotocol.FrameT
 			if operationContext.Err() == context.DeadlineExceeded {
 				_ = runner.cancelAndTerminate(requestID, context.DeadlineExceeded)
 				cleaned = true
-				return nil, a.failureWithStderr("external analyzer operation timed out", context.DeadlineExceeded, nil, nil, runner.stderrText())
+				return nil, a.cancelled(operation, context.DeadlineExceeded, "external analyzer operation timed out", runner.stderrText())
 			}
 			_ = runner.terminate()
 			cleaned = true
@@ -367,6 +372,9 @@ func (a *Analyzer) execute(ctx context.Context, operation processprotocol.FrameT
 	cleaned = true
 	if ctx.Err() != nil {
 		return nil, a.cancelled(operation, ctx.Err(), "external analyzer was cancelled", runner.stderrText())
+	}
+	if operationContext.Err() != nil {
+		return nil, a.cancelled(operation, operationContext.Err(), "external analyzer operation timed out", runner.stderrText())
 	}
 	if !terminalSeen || !session.Complete() {
 		return nil, a.failureWithStderr("external analyzer ended without a complete terminal exchange", waitErr, session, nil, runner.stderrText())
@@ -637,6 +645,23 @@ func (r *processRunner) write(frame processprotocol.Frame) error {
 	return processprotocol.WriteFrameWithLimit(r.stdin, frame, r.maxFrameBytes)
 }
 
+func (r *processRunner) writeContext(ctx context.Context, frame processprotocol.Frame) error {
+	if r == nil {
+		return errors.New("external analyzer process runner is nil")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	result := make(chan error, 1)
+	go func() { result <- r.write(frame) }()
+	select {
+	case err := <-result:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
 func (r *processRunner) closeStdin() {
 	r.stdinOnce.Do(func() { _ = r.stdin.Close() })
 }
@@ -645,20 +670,16 @@ func (r *processRunner) cancelAndTerminate(requestID string, cause error) error 
 	if r == nil {
 		return nil
 	}
-	cancelFrame := processprotocol.Frame{Type: processprotocol.FrameCancel, RequestID: requestID, Reason: cause.Error()}
-	result := make(chan error, 1)
-	go func() { result <- r.write(cancelFrame) }()
-	timer := time.NewTimer(cancelWriteTimeout)
-	select {
-	case <-result:
-	case <-timer.C:
-		r.closeStdin()
+	reason := "cancelled"
+	if cause != nil {
+		reason = cause.Error()
 	}
-	if !timer.Stop() {
-		select {
-		case <-timer.C:
-		default:
-		}
+	cancelFrame := processprotocol.Frame{Type: processprotocol.FrameCancel, RequestID: requestID, Reason: reason}
+	cancelContext, cancel := context.WithTimeout(context.Background(), cancelWriteTimeout)
+	writeErr := r.writeContext(cancelContext, cancelFrame)
+	cancel()
+	if writeErr != nil {
+		r.closeStdin()
 	}
 	return r.terminate()
 }
@@ -669,9 +690,16 @@ func (r *processRunner) finish() error {
 	}
 	r.closeStdin()
 	waitErr := r.awaitWait()
+	if errors.Is(waitErr, errProcessCleanupTimeout) {
+		// A process that ignores EOF must not survive a successful protocol
+		// exchange. Close its pipes and kill it before waiting again.
+		r.stopReaderOnce()
+		r.closePipes()
+		r.kill()
+		waitErr = r.awaitWait()
+	}
 	r.stopReaderOnce()
-	_ = r.stdout.Close()
-	_ = r.stderr.Close()
+	r.closePipes()
 	r.awaitStderr()
 	return waitErr
 }
@@ -682,16 +710,30 @@ func (r *processRunner) terminate() error {
 	}
 	r.stopReaderOnce()
 	r.closeStdin()
+	r.closePipes()
+	r.kill()
+	waitErr := r.awaitWait()
+	r.awaitStderr()
+	return waitErr
+}
+
+func (r *processRunner) closePipes() {
+	if r == nil {
+		return
+	}
 	_ = r.stdout.Close()
 	_ = r.stderr.Close()
+}
+
+func (r *processRunner) kill() {
+	if r == nil {
+		return
+	}
 	r.killOnce.Do(func() {
 		if r.command.Process != nil {
 			_ = r.command.Process.Kill()
 		}
 	})
-	waitErr := r.awaitWait()
-	r.awaitStderr()
-	return waitErr
 }
 
 func (r *processRunner) stopReaderOnce() {
@@ -705,7 +747,7 @@ func (r *processRunner) awaitWait() error {
 	case err := <-r.wait:
 		return err
 	case <-timer.C:
-		return errors.New("external analyzer process did not terminate after cleanup")
+		return errProcessCleanupTimeout
 	}
 }
 
@@ -776,3 +818,5 @@ func cloneManifest(value analysis.Manifest) analysis.Manifest {
 	}
 	return value
 }
+
+var errProcessCleanupTimeout = errors.New("external analyzer process did not terminate after cleanup")
