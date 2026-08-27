@@ -23,7 +23,7 @@ func TestAnalyzersCommandListsBuiltInManifests(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &response); err != nil {
 		t.Fatalf("decode response: %v; output=%s", err, stdout.String())
 	}
-	if len(response.Analyzers) != 4 || response.Analyzers[0].ID != "org.archview.clojure" || response.Analyzers[1].ID != "org.archview.go" || response.Analyzers[2].ID != "org.archview.python" || response.Analyzers[3].ID != "org.archview.rust" {
+	if len(response.Analyzers) != 5 || response.Analyzers[0].ID != "org.archview.clojure" || response.Analyzers[1].ID != "org.archview.go" || response.Analyzers[2].ID != "org.archview.python" || response.Analyzers[3].ID != "org.archview.rust" || response.Analyzers[4].ID != "org.archview.typescript" {
 		t.Fatalf("analyzers = %#v", response.Analyzers)
 	}
 }
@@ -332,6 +332,73 @@ pub struct Root(Answer);
 	}
 }
 
+func TestAnalyzeCommandSelectsTypeScriptAndNormalizesVisiblePath(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "package.json"), []byte(`{"name":"cli-fixture","type":"module"}`), 0o644); err != nil {
+		t.Fatalf("write package.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tsconfig.json"), []byte(`{"include":["src/**/*"]}`), 0o644); err != nil {
+		t.Fatalf("write tsconfig.json: %v", err)
+	}
+	sourceRoot := filepath.Join(root, "src")
+	if err := os.MkdirAll(sourceRoot, 0o755); err != nil {
+		t.Fatalf("create TypeScript source root: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceRoot, "main.ts"), []byte(`import { dependency } from "./dependency";
+export const main = dependency;
+`), 0o644); err != nil {
+		t.Fatalf("write main.ts: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceRoot, "dependency.ts"), []byte(`export const dependency = true;
+`), 0o644); err != nil {
+		t.Fatalf("write dependency.ts: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceRoot, "client.js"), []byte(`export const client = true;
+`), 0o644); err != nil {
+		t.Fatalf("write client.js: %v", err)
+	}
+	analysisPath := filepath.Join(t.TempDir(), "typescript-analysis.json")
+	modelPath := filepath.Join(t.TempDir(), "typescript-model.json")
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"analyze", "--project", root, "--language", "typescript", "--config", "tsconfig.json",
+		"--include-js", "--runtime", "esm", "--format", "analysis-json", "--output", analysisPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("TypeScript analyze exit code = %d, stderr=%s", code, stderr.String())
+	}
+	data, err := os.ReadFile(analysisPath)
+	if err != nil {
+		t.Fatalf("read TypeScript analysis: %v", err)
+	}
+	var result analysis.AnalysisResult
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("decode TypeScript analysis: %v", err)
+	}
+	if result.Analyzer.ID != "org.archview.typescript" || result.Status != analysis.StatusComplete || result.Project.Boundary != "tsconfig.json" {
+		t.Fatalf("TypeScript analysis result = %#v", result)
+	}
+	if !hasMainTestModule(result.Modules, "ts:module:src/main") || !hasMainTestModule(result.Modules, "ts:module:src/client") {
+		t.Fatalf("TypeScript modules = %#v", result.Modules)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"model", "normalize", "--input", analysisPath, "--output", modelPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("TypeScript model normalize exit code = %d, stderr=%s", code, stderr.String())
+	}
+	modelData, err := os.ReadFile(modelPath)
+	if err != nil {
+		t.Fatalf("read TypeScript model: %v", err)
+	}
+	var normalized model.Model
+	if err := json.Unmarshal(modelData, &normalized); err != nil {
+		t.Fatalf("decode TypeScript model: %v", err)
+	}
+	if normalized.Project.Language != "typescript" || len(normalized.Modules) != 3 || len(normalized.Relationships) != 1 {
+		t.Fatalf("normalized TypeScript model = %#v", normalized)
+	}
+}
+
 func TestAnalyzeCommandReturnsUnsupportedExitCode(t *testing.T) {
 	root := t.TempDir()
 	var stdout, stderr bytes.Buffer
@@ -562,4 +629,13 @@ func minTestStringLength(value, maximum int) int {
 		return value
 	}
 	return maximum
+}
+
+func hasMainTestModule(values []analysis.ModuleObservation, id string) bool {
+	for _, value := range values {
+		if value.ID == id {
+			return true
+		}
+	}
+	return false
 }

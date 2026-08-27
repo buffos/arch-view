@@ -6,7 +6,7 @@ This is the application-level planning baseline. It records confirmed product sc
 
 ## Product
 
-Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, Clojure, TypeScript, and Rust support, with configurable presentation layout for repository-specific viewing needs. Go, Python, Rust, and Clojure currently run as in-process adapters behind the same language-neutral contract.
+Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, Clojure, TypeScript, and Rust support, with configurable presentation layout for repository-specific viewing needs. Go, Python, TypeScript, Rust, and Clojure currently run as in-process adapters behind the same language-neutral contract.
 
 The reference implementation is available in the upstream
 [unclebob/arch-view repository](https://github.com/unclebob/arch-view) for
@@ -40,7 +40,7 @@ reading only. It is not part of the product source tree.
 2. The developer drills into a module, inspects its imports and dependency evidence, and opens the related source file.
 3. A maintainer identifies a cycle and uses the model output to understand the participating packages.
 4. A CI job runs headless analysis and stores a versioned architecture artifact.
-5. A language adapter analyzes a Python or Clojure repository, and later TypeScript/Rust plugins use the same model and viewer.
+5. A language adapter analyzes a Python, TypeScript, Rust, or Clojure repository through the same model and viewer.
 6. A maintainer generates deterministic JSON, HTML, or SVG artifacts for documentation or CI.
 7. A developer adjusts ELK layout settings for a repository, saves them back to the active discovered configuration (or uses `Save As` for a custom folder), and reopens the project with the same effective profile when the file is discoverable from the selected target.
 
@@ -62,7 +62,7 @@ reading only. It is not part of the product source tree.
 
 ## Capability maturity
 
-- [Analyze source code](/.okf/capabilities/analyze-source.md): `specified`, with the Python, Rust, and Clojure children implemented while the plugin-runtime, Go, and TypeScript child contracts remain specified.
+- [Analyze source code](/.okf/capabilities/analyze-source.md): `specified`, with the Python, TypeScript, Rust, and Clojure children implemented while the plugin-runtime and Go child contracts remain specified.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `specified`, including the v1 canonical model and graph-projection contract.
 - [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) remains `foggy` for future extensions.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `specified`, including JSON v1 and HTML/SVG/CI behavior.
@@ -78,10 +78,10 @@ Source analyzers produce evidence for the language-neutral model. The model owns
 3. Build headless JSON output and model validation.
 4. Build the first local web viewer with local-first reference visibility, imports/evidence inspection, and source workflow.
 5. Add cycle and layout diagnostics plus user-selectable ELK settings and project configuration discovery.
-6. Add the Python, Rust, and Clojure analyzers through the same common contract, then continue with TypeScript.
+6. Add the Python, TypeScript, Rust, and Clojure analyzers through the same common contract.
 7. Add an external, versioned plugin protocol if third-party analyzers are needed.
 
-The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, local viewer implementation, deterministic JSON/HTML artifact generation, static SVG export, and the issue 007 layout-settings/configuration backend and browser surface are implemented and visually approved. Issue 008's bounded parent-level ELK option tranche and issue 009's bounded target-aware node/edge mapping are implemented and visually approved. Issue 016's spline-route implementation, embedded HTML ELK runtime, and browser current-canvas SVG download are implemented, visually approved, and archived. The current Explore capability scope is complete and its future Advanced ELK renderer support work is explicitly tracked as a separate foggy child. Issues 017–019 implement and visually approve the first registered Python project-boundary, module discovery, static relationship/uncertainty, evidence, partial-result, and shared public visible journey in [the Python implementation slice](architecture/analyze-source/python-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module hierarchy, static relationships, uncertainty/evidence, and shared canonical output path in [the Rust implementation slice](architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace adapter, static dependency and uncertainty handling, platform/polymorphic metadata, safety boundary, and shared public visible journey in [the Clojure implementation slice](architecture/analyze-source/clojure-compatibility/implementation-slice.md). TypeScript is the next language in the agreed sequence.
+The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, local viewer implementation, deterministic JSON/HTML artifact generation, static SVG export, and the issue 007 layout-settings/configuration backend and browser surface are implemented and visually approved. Issue 008's bounded parent-level ELK option tranche and issue 009's bounded target-aware node/edge mapping are implemented and visually approved. Issue 016's spline-route implementation, embedded HTML ELK runtime, and browser current-canvas SVG download are implemented, visually approved, and archived. The current Explore capability scope is complete and its future Advanced ELK renderer support work is explicitly tracked as a separate foggy child. Issues 017–019 implement and visually approve the first registered Python project-boundary, module discovery, static relationship/uncertainty, evidence, partial-result, and shared public visible journey in [the Python implementation slice](architecture/analyze-source/python-analysis/implementation-slice.md). Issues 020–022 complete and visually approve the TypeScript project-boundary, module-discovery, static relationship/uncertainty, evidence, partial-result, public CLI, and shared public visible journey in the approved [TypeScript implementation slice](architecture/analyze-source/typescript-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module hierarchy, static relationships, uncertainty/evidence, and shared canonical output path in [the Rust implementation slice](architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace adapter, static dependency and uncertainty handling, platform/polymorphic metadata, safety boundary, and shared public visible journey in [the Clojure implementation slice](architecture/analyze-source/clojure-compatibility/implementation-slice.md).
 
 ## Verification strategy
 

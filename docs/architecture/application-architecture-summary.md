@@ -39,7 +39,7 @@ The upstream [unclebob/arch-view reference implementation](https://github.com/un
 
 The analyzer receives a repository or project root plus analysis options, selects one language analyzer, and returns validated modules, static dependency relationships, source evidence, metadata, and diagnostics. It does not assign layers, render diagrams, or export files.
 
-The plugin runtime and language adapters are specified around this contract. The current deployment uses in-process Go, Python, Rust, and Clojure analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, Clojure, TypeScript, and Rust uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
+The plugin runtime and language adapters are specified around this contract. The current deployment uses in-process Go, Python, TypeScript, Rust, and Clojure analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, TypeScript, Rust, and Clojure uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
 
 The first graph uses package or module nodes. Files remain attached evidence. Project-local modules are shown by default. Tests, generated code, vendor directories, caches, build outputs, and directories named `external` are excluded by default. Unresolved dependencies produce partial results with diagnostics.
 
@@ -133,13 +133,15 @@ ELK option registry, and canonical model normalization. Issue 017 adds the
 first in-process Python project/module-discovery adapter; issue 018 extends it
 through static relationships, uncertainty, evidence, and partial results, and
 issue 019 completes the shared visible journey after automated verification
-and explicit visual approval. Completed issues 023–025 add the Rust Cargo boundary,
+and explicit visual approval. The approved TypeScript slice has completed
+issues 020–022 for project discovery, static dependencies, and the shared
+visible journey. Completed issues 023–025 add the Rust Cargo boundary,
 module/evidence discovery, static relationships, uncertainty, and canonical
 output path. Issues 026–029 add the in-process Clojure project/namespace
 adapter, static relationships, platform/polymorphic and safety metadata, and
-shared visible journey through the existing neutral path. TypeScript follows.
-Every adapter follows the same `analysis.Analyzer` contract and registers at the
-composition root; adding one does not modify host orchestration.
+shared visible journey through the existing neutral path. Every adapter follows
+the same `analysis.Analyzer` contract and registers at the composition root;
+adding one does not modify host orchestration.
 Issue 009 implements the bounded supported node/edge ELK option tranche at the
 layout adapter boundary without changing the renderer-neutral scene or
 configuration schemas. Issue 016 activates the reserved cubic route

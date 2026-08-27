@@ -29,6 +29,8 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	module := fs.String("module", "", "explicit Go module path or workspace-relative directory")
 	crate := fs.String("crate", "", "explicit Rust package name or workspace-relative crate directory")
 	target := fs.String("target", "", "explicit Rust target triple or target selector")
+	config := fs.String("config", "", "explicit TypeScript tsconfig path")
+	includeJS := fs.Bool("include-js", false, "include JavaScript and JSX files")
 	includeTests := fs.Bool("include-tests", false, "include test files")
 	includeExamples := fs.Bool("include-examples", false, "include Rust examples and benches")
 	includeGenerated := fs.Bool("include-generated", false, "include generated files")
@@ -37,6 +39,7 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	pythonVersion := fs.String("python-version", "", "Python major/minor version for static analysis")
 	includeStubs := fs.Bool("include-stubs", false, "include Python .pyi stub files")
 	platform := fs.String("platform", "", "Clojure reader-conditional platform: clj, cljs, or both")
+	runtime := fs.String("runtime", "auto", "TypeScript runtime context: auto, esm, or cjs")
 	port := fs.Int("port", 0, "loopback TCP port; 0 chooses an available port")
 	var buildTags stringList
 	var features stringList
@@ -83,6 +86,8 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			crate:            crate,
 			features:         &features,
 			target:           target,
+			config:           config,
+			includeJS:        includeJS,
 			includeTests:     includeTests,
 			includeExamples:  includeExamples,
 			includeGenerated: includeGenerated,
@@ -94,6 +99,7 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			pythonVersion:    pythonVersion,
 			includeStubs:     includeStubs,
 			platform:         platform,
+			runtime:          runtime,
 		})
 		result, err := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
 		if err != nil {

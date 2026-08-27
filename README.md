@@ -208,6 +208,48 @@ embedded in v1, and an existing output requires `--overwrite`. Use the live
 viewer's Download SVG button for a standalone SVG of the current canvas; it is
 distinct from the deterministic Go CLI SVG.
 
+### TypeScript/JavaScript project prerequisites
+
+Arch View analyzes TypeScript and JavaScript projects statically. It reads
+configuration, package metadata, and source files as data; it does not run
+`tsc`, Node.js, package scripts, bundlers, or the target application.
+
+The minimum project prerequisite is a readable `tsconfig.json` in the selected
+project root. Pass `--config <path>` when the project contains more than one
+TypeScript configuration, or when the intended configuration is in a
+subdirectory. The selected configuration must remain inside the project root.
+`tsconfig.json` may contain JSONC comments/trailing commas and a safe local
+`extends` chain.
+
+`package.json` is optional for local static analysis. When present, Arch View
+reads package context and local `exports`, `imports`, `type`, `types`,
+`typings`, `module`, and `main` metadata when it can use them to resolve a
+module. A `package.json` by itself can be recognized as a TypeScript project
+marker, but it is not sufficient to run analysis without a selected readable
+`tsconfig.json`. Dependencies do not need to be installed: unavailable or
+external packages remain external/unresolved references with diagnostics as
+appropriate.
+
+By default, the analyzer includes `.ts` and `.tsx` files. JavaScript and JSX
+files require either `compilerOptions.allowJs` in `tsconfig.json` or the
+explicit `--include-js` option. Test/spec files and directories are excluded
+unless `--include-tests` is supplied. Generated/output, cache, vendor,
+`node_modules`, `.git`, and `external` directories are excluded by default;
+repeatable `--exclude <glob>` options add project-relative exclusions.
+
+The analyzer reads the relevant static settings from `tsconfig.json`,
+including `files`, `include`, `exclude`, `references`, `baseUrl`, `paths`,
+`rootDir`, `rootDirs`, `outDir`, `allowJs`, module settings, JSX settings, and
+`resolveJsonModule`. It does not perform type checking or compiler-semantic
+analysis, and it does not use the host machine's Node/npm environment to make
+resolution decisions.
+
+Example:
+
+```text
+arch-view analyze --project ./my-app --language typescript --config ./tsconfig.json --include-js --format analysis-json --output analysis.json
+```
+
 ## Final documentation backlog (working notes)
 
 > This is a capture list for the future final documentation. It is not the

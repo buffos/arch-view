@@ -23,6 +23,8 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	module := fs.String("module", "", "explicit Go module path or workspace-relative directory")
 	crate := fs.String("crate", "", "explicit Rust package name or workspace-relative crate directory")
 	target := fs.String("target", "", "explicit Rust target triple or target selector")
+	config := fs.String("config", "", "explicit TypeScript tsconfig path")
+	includeJS := fs.Bool("include-js", false, "include JavaScript and JSX files")
 	includeTests := fs.Bool("include-tests", false, "include test files")
 	includeExamples := fs.Bool("include-examples", false, "include Rust examples and benches")
 	includeGenerated := fs.Bool("include-generated", false, "include generated files")
@@ -31,6 +33,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	pythonVersion := fs.String("python-version", "", "Python major/minor version for static analysis")
 	includeStubs := fs.Bool("include-stubs", false, "include Python .pyi stub files")
 	platform := fs.String("platform", "", "Clojure reader-conditional platform: clj, cljs, or both")
+	runtime := fs.String("runtime", "auto", "TypeScript runtime context: auto, esm, or cjs")
 	format := fs.String("format", "analysis-json", "output format")
 	output := fs.String("output", "", "output file, or - for stdout")
 	referenceVisibility := fs.String("reference-visibility", "hidden", "visual reference visibility: hidden, aggregated, or expanded")
@@ -89,6 +92,8 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		crate:            crate,
 		features:         &features,
 		target:           target,
+		config:           config,
+		includeJS:        includeJS,
 		includeTests:     includeTests,
 		includeExamples:  includeExamples,
 		includeGenerated: includeGenerated,
@@ -100,6 +105,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		pythonVersion:    pythonVersion,
 		includeStubs:     includeStubs,
 		platform:         platform,
+		runtime:          runtime,
 	})
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

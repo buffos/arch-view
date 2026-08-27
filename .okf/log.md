@@ -97,6 +97,85 @@
   max ID 029. The application-synthesis gate is current; product scope,
   canonical model semantics, and cross-capability architecture remain
   unchanged until implementation closeout.
+* **Issue 022 complete**: The user explicitly approved the TypeScript result
+  after reviewing the running local viewer in windowed and full-canvas modes,
+  including graph readability, hierarchy, labels, directed arrows,
+  references/diagnostics, evidence/source locations, navigation, Fit/reset,
+  and export controls. The issue is archived and the TypeScript capability
+  advances from `specified` to `implemented`.
+* **Artifact sync**: Updated the README with TypeScript/JavaScript project
+  prerequisites, moved issue 022 to `done/`, removed its active registry row,
+  updated capability/project/index state and implementation-slice references,
+  and synchronized the application PRD, architecture summary, and analyzer
+  orchestration statuses. The parent Analyze source capability remains
+  `specified` for its later Rust, Clojure, and plugin-runtime territories.
+* **Strict review hardening**: Completed the code-review loop over the full
+  uncommitted TypeScript slice. The final pass covers safe package/config
+  boundaries, runtime/package-export provenance, Windows path semantics,
+  lexical false-positive guards, deterministic output, and the shared CLI/
+  viewer boundary; no actionable P0–P2 findings remain.
+* **Final verification and closeout**: Full tests, race, vet, build,
+  Staticcheck, golangci-lint, viewer JavaScript syntax validation, strict OKF
+  validation, and `git diff --check` pass. Issues 020–022 remain archived,
+  the active registry is empty, the maximum issue ID remains 022, and no
+  commit was created.
+
+## 2026-08-27
+
+* **Issue 021 complete**: Extended the registered TypeScript analyzer with
+  conservative lexical import/export/require/dynamic discovery, relative,
+  alias, root-directory, self-package, and package-export resolution, typed
+  dependency metadata, source evidence, uncertainty references, and
+  recoverable diagnostics/partial results. The issue is archived and issue
+  022 is unblocked for the public visible-journey slice; the TypeScript node
+  remains `specified` because the final visual-review gate is still open.
+* **Verification**: Focused and full Go tests, race, vet, build,
+  staticcheck, golangci-lint, strict OKF validation, and `git diff --check`
+  passed for the completed static-dependency slice.
+* **Artifact sync**: Updated the issue registry, dated capability issue
+  references, implementation slice, project/index frontier, application PRD,
+  application architecture summary, and analyzer orchestration records. No
+  topology, canonical schema, viewer, exporter, or upstream-reference change
+  was introduced.
+
+* **Issue 022 automated implementation complete**: Connected the TypeScript
+  analyzer through the public CLI and shared analysis → canonical model →
+  projection/viewer/export path. Added regression coverage for explicit and
+  automatic selection, analyzer options, source evidence, diagnostics,
+  directed relationships, deterministic analysis, and JSON/HTML/SVG output.
+* **Review gate**: Full repository and strict OKF verification passed. Issue
+  022 remains in `pending/` with registry state `awaiting-human-review` for
+  the required windowed/full-canvas visual review; no TypeScript capability
+  state transition or issue archival has been recorded.
+
+## 2026-08-27
+
+* **Issue 020 complete**: Implemented and registered the TypeScript analyzer's
+  safe project/config boundary, JSONC `extends` resolution, effective source
+  scope, package/runtime context, deterministic module discovery, source
+  evidence, and recoverable configuration/scope diagnostics.
+* **Verification**: Focused and full Go tests, race, vet, build,
+  staticcheck, golangci-lint, strict OKF validation, and `git diff --check`
+  passed. Issue 020 is archived; issue 021 is unblocked and issue 022 remains
+  dependent on it. The TypeScript node remains `specified` because its static
+  dependency, visible-journey, and final visual-review work is not exhausted.
+* **Artifact sync**: Updated the active registry, dated capability issue
+  references, implementation slice, project/index frontier, application PRD,
+  application architecture summary, and analyzer orchestration records. No
+  topology, canonical schema, viewer, exporter, or upstream-reference change
+  was introduced.
+
+## 2026-08-27
+
+* **TypeScript delivery slice approved**: Created issues 020–022 for the
+  TypeScript project boundary/module discovery, static dependencies and
+  uncertainty, and public/visible analysis path in dependency order, with
+  acceptance criteria, verification obligations, and artifact-sync rules.
+* **Artifact sync**: Linked the implementation slice and active issue paths
+  from the TypeScript and parent Analyze source capability nodes and updated
+  the project index, application PRD, application architecture summary, and
+  orchestration statuses. The TypeScript node remains `specified` until its
+  scoped implementation and final review gates complete.
 
 ## 2026-08-27
 

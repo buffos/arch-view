@@ -10,6 +10,8 @@ type analyzerCLIFlags struct {
 	crate            *string
 	features         *stringList
 	target           *string
+	config           *string
+	includeJS        *bool
 	includeTests     *bool
 	includeExamples  *bool
 	includeGenerated *bool
@@ -21,6 +23,7 @@ type analyzerCLIFlags struct {
 	pythonVersion    *string
 	includeStubs     *bool
 	platform         *string
+	runtime          *string
 }
 
 // collectAnalyzerCLIOptions sends only explicitly supplied analyzer options
@@ -30,6 +33,9 @@ func collectAnalyzerCLIOptions(fs *flag.FlagSet, flags analyzerCLIFlags) map[str
 	options := map[string]any{}
 	if flagWasSet(fs, "include-tests") {
 		options["include_tests"] = *flags.includeTests
+	}
+	if flagWasSet(fs, "include-js") {
+		options["include_js"] = *flags.includeJS
 	}
 	if flagWasSet(fs, "include-generated") {
 		options["include_generated"] = *flags.includeGenerated
@@ -55,6 +61,9 @@ func collectAnalyzerCLIOptions(fs *flag.FlagSet, flags analyzerCLIFlags) map[str
 	if flagWasSet(fs, "include-examples") {
 		options["include_examples"] = *flags.includeExamples
 	}
+	if flagWasSet(fs, "config") && *flags.config != "" {
+		options["config"] = *flags.config
+	}
 	if len(*flags.buildTags) > 0 {
 		options["build_tags"] = []string(*flags.buildTags)
 	}
@@ -72,6 +81,9 @@ func collectAnalyzerCLIOptions(fs *flag.FlagSet, flags analyzerCLIFlags) map[str
 	}
 	if flagWasSet(fs, "platform") && strings.TrimSpace(*flags.platform) != "" {
 		options["platform"] = strings.TrimSpace(*flags.platform)
+	}
+	if flagWasSet(fs, "runtime") && *flags.runtime != "" {
+		options["runtime"] = *flags.runtime
 	}
 	return options
 }

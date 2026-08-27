@@ -38,3 +38,7 @@ is read-only input to the design. It is not product source.
 # Planning baseline
 
 The confirmed product boundary is static architecture discovery and visualization. Manual diagram authoring, cloud collaboration, runtime tracing, and automatic architectural judgment are outside the initial product scope.
+
+# Current delivery frontier
+
+The approved [TypeScript analysis implementation slice](../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md) is complete through issues 020–022, as are the Rust issues 023–025 and Clojure issues 026–029. The project boundary, module discovery, static dependency, uncertainty, evidence, public journey, and visual review are complete for all four in-process language adapters; the external plugin protocol is the next specified frontier.

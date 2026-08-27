@@ -12,8 +12,8 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 1 `foggy`, 0 `bounded`, 7 `specified`, 3 `implemented`.
-- Current delivery frontier: the current Explore and inspect architecture scope and the [Python analysis implementation slice](../docs/architecture/analyze-source/python-analysis/implementation-slice.md), issues 017–019, are implemented after their repository verification and visual-review gates. The user-selected [Clojure analysis implementation slice](../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md), issues 026–029, is implemented and verified; TypeScript, Rust, the external plugin protocol, and the separate foggy [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md) child remain later frontiers.
+- State totals: 1 `foggy`, 0 `bounded`, 5 `specified`, 5 `implemented`.
+- Current delivery frontier: the current Explore and inspect architecture scope, the [Python analysis implementation slice](../docs/architecture/analyze-source/python-analysis/implementation-slice.md), issues 017–019, the [TypeScript analysis implementation slice](../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md), issues 020–022, the [Rust analysis implementation slice](../docs/architecture/analyze-source/rust-analysis/implementation-slice.md), issues 023–025, and the [Clojure analysis implementation slice](../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md), issues 026–029, are implemented after their repository verification and visual-review gates. The external plugin protocol and the separate foggy [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md) child remain later frontiers.
 
 ## Application synthesis
 

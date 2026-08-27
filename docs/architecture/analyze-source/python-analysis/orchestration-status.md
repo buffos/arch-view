@@ -24,4 +24,4 @@ The [Python repository to visible architecture view](implementation-slice.md) fr
 
 ## Next step and artifact impact
 
-The static Python project/module/import path, public CLI selection/options, canonical model pipeline, local viewer, and JSON/HTML/SVG export paths are implemented and approved. Product and architecture truth are synchronized; TypeScript is the next language in the agreed implementation sequence.
+The static Python project/module/import path, public CLI selection/options, canonical model pipeline, local viewer, and JSON/HTML/SVG export paths are implemented and approved. Product and architecture truth are synchronized; the TypeScript slice is implemented through issues 020–022, the Rust slice through issues 023–025, and the Clojure slice through issues 026–029. The external plugin protocol is the next specified frontier.
