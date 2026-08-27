@@ -2,16 +2,16 @@
 
 ## Selected frontier
 
-The selected implementation frontier remains the specified [Python analysis capability](../../../../.okf/capabilities/analyze-source/python-analysis.md), using the existing [analyzer plugin runtime](../../../../.okf/capabilities/analyze-source/plugin-runtime.md), canonical model, viewer, and export contracts. Issue 017 is complete; issue 018 is the next unblocked implementation frontier.
+The selected implementation frontier remains the specified [Python analysis capability](../../../../.okf/capabilities/analyze-source/python-analysis.md), using the existing [analyzer plugin runtime](../../../../.okf/capabilities/analyze-source/plugin-runtime.md), canonical model, viewer, and export contracts. Issues 017 and 018 are complete; issue 019 is the next unblocked implementation frontier.
 
 The map has no foggy or bounded nodes. Python is the first non-Go language in the agreed implementation sequence, its exact specification is readiness-reviewed, and the host/model/presentation seams needed for a visible result already exist. This slice therefore adds one language adapter without changing host orchestration, canonical model semantics, layout, or renderer code.
 
 ## Current and target truth
 
-- **Observed in code:** the generic `analysis.Analyzer` contract, deterministic host selection, canonical normalization, scene projection, local viewer, and JSON/HTML/SVG paths exist; the built-in Go analyzer and the first Python project/module-discovery adapter are registered.
+- **Observed in code:** the generic `analysis.Analyzer` contract, deterministic host selection, canonical normalization, scene projection, local viewer, and JSON/HTML/SVG paths exist; the built-in Go analyzer and the Python project/module-discovery/static-import adapter are registered.
 - **Inferred from docs:** the Python child contract defines static project/configuration discovery, package/module hierarchy, absolute and relative import resolution, dynamic-import uncertainty, evidence, diagnostics, and safe read-only behavior.
 - **User-confirmed target:** languages are added gradually behind the common plugin contract; adding Python must not require host language switches or changes to the model/viewer.
-- **Mismatch:** none. The Python module-discovery foundation is implemented; import resolution and the visible journey remain explicitly assigned to issues 018 and 019.
+- **Mismatch:** none. The Python project/module-discovery and import-uncertainty foundation is implemented; the public visible journey remains explicitly assigned to issue 019.
 
 ## Vertical outcome
 
@@ -45,7 +45,7 @@ Given a Python repository, a developer can:
 | Issue | Outcome | Owner | Blocked by | Review gate |
 |---|---|---|---|---|
 | [017](../../../agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md) | Registered Python analyzer, project/configuration boundary, source scope, package/module discovery, and deterministic module-only analysis path | Python analysis + plugin composition | None | none |
-| [018](../../../agents/issues/pending/20260827-018-python-static-import-resolution-and-uncertainty.md) | Absolute/relative import relationships, references, evidence, dynamic/conditional diagnostics, confidence, and partial results | Python analysis | 017 | none |
+| [018](../../../agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md) | Absolute/relative import relationships, references, evidence, dynamic/conditional diagnostics, confidence, and partial results | Python analysis | 017 | none |
 | [019](../../../agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md) | Public Python options and end-to-end analyze → model → viewer/export integration with visual acceptance | Python analysis + existing model/viewer/export consumers | 018 | visual-review |
 
 ## Slice acceptance
@@ -66,4 +66,4 @@ Given a Python repository, a developer can:
 
 ## Artifact impact
 
-This is a roadmap implementation slice, not a product-topology change. The product and architecture boundaries remain the same: Python is an additional implementation of the existing analyzer contract. Issue 017 now supplies the registered project/module-discovery foundation; issues 018–019 continue the same slice for relationships, uncertainty, and the visible journey. Delivery sequencing, Python capability references, application synthesis status, the issue registry, and `.okf/log.md` are updated; no new shared concern or capability node is required.
+This is a roadmap implementation slice, not a product-topology change. The product and architecture boundaries remain the same: Python is an additional implementation of the existing analyzer contract. Issue 017 supplies the registered project/module-discovery foundation; issue 018 now supplies relationships, uncertainty, evidence, and partial-result behavior; issue 019 continues the same slice for the visible journey. Delivery sequencing, Python capability references, application synthesis status, the issue registry, and `.okf/log.md` are updated; no new shared concern or capability node is required.

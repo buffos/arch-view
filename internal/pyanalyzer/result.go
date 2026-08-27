@@ -9,6 +9,8 @@ import (
 // BuildResult converts discovery output into the common analyzer contract.
 func BuildResult(project Project, discovery discoveryResult, _ analysis.AnalyzeRequest, manifest analysis.Manifest) analysis.AnalysisResult {
 	diagnostics := append([]analysis.Diagnostic{}, discovery.Diagnostics...)
+	relationships, references, importDiagnostics := buildImportObservations(project, discovery)
+	diagnostics = append(diagnostics, importDiagnostics...)
 	if len(discovery.Modules) == 0 {
 		diagnostics = append(diagnostics, analysis.Diagnostic{
 			Code:        "python_no_modules",
@@ -26,8 +28,8 @@ func BuildResult(project Project, discovery discoveryResult, _ analysis.AnalyzeR
 			ModuleRoot: firstSourceRoot(project.SourceRoots),
 		},
 		Modules:          discovery.Modules,
-		Relationships:    []analysis.RelationshipObservation{},
-		References:       []analysis.Reference{},
+		Relationships:    relationships,
+		References:       references,
 		SourceReferences: discovery.SourceReferences,
 		Diagnostics:      diagnostics,
 	}

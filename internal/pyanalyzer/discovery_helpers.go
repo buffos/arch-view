@@ -16,7 +16,14 @@ import (
 func ensurePackage(values map[string]*packageObservation, qualified string) *packageObservation {
 	value := values[qualified]
 	if value == nil {
-		value = &packageObservation{Qualified: qualified, SourceIDs: map[string]struct{}{}, Paths: map[string]struct{}{}, Tags: map[string]struct{}{}}
+		value = &packageObservation{
+			Qualified:       qualified,
+			SourceIDs:       map[string]struct{}{},
+			Paths:           map[string]struct{}{},
+			SourceRoots:     map[string]struct{}{},
+			InitSourceRoots: map[string]struct{}{},
+			Tags:            map[string]struct{}{},
+		}
 		values[qualified] = value
 	}
 	return value
@@ -83,8 +90,8 @@ func moduleID(kind, qualified string) string {
 	return "py:" + kind + ":" + qualified
 }
 
-func stableID(kind, value string) string {
-	sum := sha256.Sum256([]byte(kind + "\x00" + value))
+func stableID(kind string, values ...string) string {
+	sum := sha256.Sum256([]byte(kind + "\x00" + strings.Join(values, "\x00")))
 	return "py:" + kind + ":" + hex.EncodeToString(sum[:8])
 }
 
@@ -217,6 +224,22 @@ func conflictingObservationDiagnostic(kind, qualified, firstPath, secondPath str
 			"qualified_name": qualified,
 			"first_path":     firstPath,
 			"second_path":    secondPath,
+		},
+	}
+}
+
+func conflictingPackageRootsDiagnostic(qualified string, initRoots, sourceRoots map[string]struct{}) analysis.Diagnostic {
+	return analysis.Diagnostic{
+		Code:        "python_conflicting_layout",
+		Severity:    "warning",
+		Message:     "A regular Python package and namespace content share qualified roots across effective source roots; local resolution was withheld.",
+		Subject:     qualified,
+		Recoverable: true,
+		Metadata: map[string]any{
+			"kind":              "package",
+			"qualified_name":    qualified,
+			"init_source_roots": sortedKeys(initRoots),
+			"source_roots":      sortedKeys(sourceRoots),
 		},
 	}
 }

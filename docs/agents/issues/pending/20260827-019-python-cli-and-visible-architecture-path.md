@@ -34,7 +34,7 @@ This is an integration and acceptance slice, not a new Python-specific viewer. K
 
 ## Blocked by
 
-Blocked by `docs/agents/issues/pending/20260827-018-python-static-import-resolution-and-uncertainty.md`.
+Blocked by None. Issue 018 is complete and archived; this is now the next unblocked Python-analysis frontier.
 
 ## User stories addressed
 

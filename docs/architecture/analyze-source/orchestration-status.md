@@ -5,7 +5,7 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the source-analysis capability with a plugin runtime and language-specific child territories for Go, Python, TypeScript, Rust, and Clojure.
-- Next route: continue the selected Python analyzer child through issues 018–019 after completing issue 017's project-boundary/module-discovery foundation. TypeScript, Rust, Clojure, and the external plugin protocol remain later specified frontiers; analyzer work remains independent of the completed viewer configuration and spline slices.
+- Next route: continue the selected Python analyzer child through issue 019 after completing issues 017–018's project-boundary, module-discovery, static-import, and uncertainty foundation. TypeScript, Rust, Clojure, and the external plugin protocol remain later specified frontiers; analyzer work remains independent of the completed viewer configuration and spline slices.
 
 ## Confirmed boundary
 
@@ -50,7 +50,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Selected frontier: Go analysis.
 - Implementation slice: [Go repository to visible architecture view](go-analysis/implementation-slice.md).
-- Delivery progress: issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout-configuration, analyzer-pipeline, and bounded presentation-extension work. Issue 017 is complete for the Python project-boundary/module-discovery foundation; issues 018–019 remain in the Python implementation slice [017–019](python-analysis/implementation-slice.md). Future TypeScript, Rust, Clojure, and external protocol work remains specified.
+- Delivery progress: issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout-configuration, analyzer-pipeline, and bounded presentation-extension work. Issues 017–018 are complete for the Python project-boundary/module-discovery and static import/uncertainty foundation; issue 019 remains in the Python implementation slice [017–019](python-analysis/implementation-slice.md). Future TypeScript, Rust, Clojure, and external protocol work remains specified.
 - The slice crosses the plugin runtime, Go analyzer, canonical model, local viewer, evidence, and export contracts.
 
 ## Artifact sync
@@ -60,4 +60,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with completed issues 001 through 009, 013, 016, and 017, plus active Python issues 018–019 and their implementation slice. Issue 016 is archived after automated implementation verification and explicit visual approval; the Python node remains specified until its complete delivery path is implemented.
+- Delivery truth: updated with completed issues 001 through 009, 013, and 016–018, plus active Python issue 019 and its implementation slice. Issue 016 is archived after automated implementation verification and explicit visual approval; the Python node remains specified until its complete delivery path is implemented.

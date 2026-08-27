@@ -1,9 +1,8 @@
-// Package pyanalyzer provides the first in-process Python analyzer.
+// Package pyanalyzer provides the in-process Python analyzer.
 //
-// This package deliberately stops at project/module discovery. Import
-// extraction and dependency resolution are added by the following Python
-// delivery issue; the result produced here is already a valid common
-// analysis result and keeps every discovered file as source evidence.
+// This package performs read-only project/module discovery and conservative
+// static import analysis behind the common analyzer contract. It never
+// imports, executes, installs, or introspects the target Python project.
 package pyanalyzer
 
 import (
@@ -89,9 +88,10 @@ func (a Analyzer) Detect(ctx context.Context, request analysis.DetectRequest) (a
 	}, nil
 }
 
-// Analyze resolves the Python boundary and emits module/package observations.
-// The host supplies selection provenance, run identity, and the effective
-// option fingerprint after this method returns.
+// Analyze resolves the Python boundary and emits module/package observations,
+// static dependency observations, references, evidence, and diagnostics. The
+// host supplies selection provenance, run identity, and the effective option
+// fingerprint after this method returns.
 func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) (analysis.AnalysisResult, error) {
 	if ctx == nil {
 		ctx = context.Background()

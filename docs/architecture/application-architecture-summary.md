@@ -55,7 +55,7 @@ Owns analyzer registration, project detection, capability negotiation, configura
 
 Each analyzer owns source discovery, syntax parsing, import or dependency resolution, language-specific classification, source locations, and diagnostics. An analyzer returns data, not UI elements or layout coordinates.
 
-The adapters have exact language-specific contracts; parser/library choices may vary behind those contracts.
+The adapters have exact language-specific contracts; parser/library choices may vary behind those contracts. The in-process Python adapter now extracts absolute, package, re-export, and relative imports through a conservative static pass, resolves only filesystem-proven local modules under effective source roots, and emits standard-library, external, unresolved, conditional, and dynamic references with source evidence, confidence, and recoverable diagnostics. It never imports or executes the analyzed project; unresolved or dynamic behavior remains visible rather than becoming a fabricated local relationship.
 
 ### Architecture model
 
@@ -129,13 +129,13 @@ The first architectural slice is the neutral model and plugin contract. The
 first product slice is Go package analysis connected to headless output and a
 visible viewer result. The completed refactor sequence then isolates routing,
 browser composition/bundling, scene projection, the Go analyzer pipeline, the
-ELK option registry, and canonical model normalization. Issue 017 now adds the
-first in-process Python project/module-discovery adapter; issues 018–019
-continue that adapter through static relationships, uncertainty, and the
-visible journey. TypeScript and Rust follow, while Clojure remains a later
-compatibility slice. Every adapter follows the same `analysis.Analyzer`
-contract and registers at the composition root; adding one does not modify
-host orchestration.
+ELK option registry, and canonical model normalization. Issue 017 adds the
+first in-process Python project/module-discovery adapter; issue 018 extends it
+through static relationships, uncertainty, evidence, and partial results, and
+issue 019 owns the remaining visible journey. TypeScript and Rust follow,
+while Clojure remains a later compatibility slice. Every adapter follows the
+same `analysis.Analyzer` contract and registers at the composition root;
+adding one does not modify host orchestration.
 Issue 009 implements the bounded supported node/edge ELK option tranche at the
 layout adapter boundary without changing the renderer-neutral scene or
 configuration schemas. Issue 016 activates the reserved cubic route

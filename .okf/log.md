@@ -15,6 +15,19 @@
   `go test ./... -count=1`, race tests, vet, build, Staticcheck,
   golangci-lint, and `git diff --check` pass. No canonical schema, topology,
   renderer, or upstream reference repository changed.
+* **Issue 018 complete**: Extended the registered Python analyzer with a
+  conservative static import pass for absolute, relative, package-init
+  re-export, standard-library, external, unresolved, conditional, and dynamic
+  behavior. Proven local targets become deterministic `depends_on`
+  observations with merged source evidence; uncertainty remains references,
+  confidence, and recoverable diagnostics. The analyzer never imports or
+  executes target code, and issue 019 is now the next unblocked Python frontier.
+* **Verification**: Focused Python import/resolution fixtures, common result
+  validation, byte-stable repeated output, `go test ./... -count=1`,
+  `go test -race ./...`, `go vet ./...`, `go build ./...`, `staticcheck ./...`,
+  `golangci-lint run`, JavaScript syntax/pure-module tests, `git diff --check`,
+  and strict OKF validation pass. No canonical schema, topology, renderer, or
+  upstream reference repository changed.
 
 ## 2026-08-27
 

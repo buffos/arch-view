@@ -20,8 +20,8 @@
 
 ## Current delivery slice
 
-The selected frontier is [Python repository to visible architecture view](implementation-slice.md). Issue [017](../../../agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md) is complete; issues [018](../../../agents/issues/pending/20260827-018-python-static-import-resolution-and-uncertainty.md) and [019](../../../agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md) remain in dependency order.
+The selected frontier is [Python repository to visible architecture view](implementation-slice.md). Issues [017](../../../agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md) and [018](../../../agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md) are complete; issue [019](../../../agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md) remains as the next dependent slice.
 
 ## Next step and artifact impact
 
-Continue the static Python project/module/import path after the completed Go contract and shared model/viewer/export boundaries. Issue 017 supplies project/configuration boundary, safe source scope, package/module hierarchy, and deterministic file evidence; issues 018–019 remain for imports, uncertainty, and the public visible journey. Product and architecture truth remain synchronized; the node remains `specified` until the complete slice is implemented and reviewed.
+Continue the static Python project/module/import path after the completed Go contract and shared model/viewer/export boundaries. Issue 017 supplies project/configuration boundary, safe source scope, package/module hierarchy, and deterministic file evidence; issue 018 now supplies absolute/relative relationships, package re-exports, references, uncertainty, evidence aggregation, and partial-result diagnostics; issue 019 remains for the public visible journey. Product and architecture truth remain synchronized; the node remains `specified` until the complete slice is implemented and reviewed.

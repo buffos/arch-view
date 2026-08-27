@@ -13,8 +13,10 @@ import (
 
 type discoveryResult struct {
 	Modules          []analysis.ModuleObservation
+	Imports          []pythonImportObservation
 	SourceReferences []analysis.SourceReference
 	Diagnostics      []analysis.Diagnostic
+	AmbiguousNames   map[string]bool
 }
 
 type fileObservation struct {
@@ -28,11 +30,13 @@ type fileObservation struct {
 }
 
 type packageObservation struct {
-	Qualified string
-	SourceIDs map[string]struct{}
-	Paths     map[string]struct{}
-	HasInit   bool
-	Tags      map[string]struct{}
+	Qualified       string
+	SourceIDs       map[string]struct{}
+	Paths           map[string]struct{}
+	SourceRoots     map[string]struct{}
+	InitSourceRoots map[string]struct{}
+	HasInit         bool
+	Tags            map[string]struct{}
 }
 
 type moduleObservation struct {
@@ -59,7 +63,10 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 	modules := make(map[string]*moduleObservation)
 	sources := make(map[string]analysis.SourceReference)
 	files := make(map[string]fileObservation)
-	result := discoveryResult{Diagnostics: append([]analysis.Diagnostic{}, project.ConfigDiagnostics...)}
+	result := discoveryResult{
+		Diagnostics:    append([]analysis.Diagnostic{}, project.ConfigDiagnostics...),
+		AmbiguousNames: map[string]bool{},
+	}
 
 	for _, sourceRoot := range project.SourceRoots {
 		if err := ctx.Err(); err != nil {
@@ -125,9 +132,14 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 			if existing, ok := files[relativeProject]; ok {
 				if existing.Qualified != file.Qualified || existing.Kind != file.Kind {
 					result.Diagnostics = append(result.Diagnostics, conflictingLayoutDiagnostic(relativeProject, existing, file))
+					result.AmbiguousNames[existing.Qualified] = true
+					result.AmbiguousNames[file.Qualified] = true
 				}
 				return nil
 			}
+			imports, importDiagnostics := extractPythonImports(relativeProject, string(content), moduleID(kind, qualified), kind == "package")
+			result.Imports = append(result.Imports, imports...)
+			result.Diagnostics = append(result.Diagnostics, importDiagnostics...)
 			files[relativeProject] = file
 			sources[file.SourceID] = analysis.SourceReference{
 				ID:     file.SourceID,
@@ -135,10 +147,18 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 				Symbol: qualified,
 				Kind:   "file",
 			}
+			for _, importObservation := range imports {
+				sources[importObservation.Source.ID] = importObservation.Source
+			}
 			if kind == "package" {
 				packageValue := ensurePackage(packages, qualified)
-				if existingPath := firstConflictingPath(packageValue.Paths, relativeProject); existingPath != "" {
-					result.Diagnostics = append(result.Diagnostics, conflictingObservationDiagnostic("package", qualified, existingPath, relativeProject))
+				packageValue.SourceRoots[file.SourceRoot] = struct{}{}
+				packageValue.InitSourceRoots[file.SourceRoot] = struct{}{}
+				if packageValue.HasInit {
+					if existingPath := firstConflictingPath(packageValue.Paths, relativeProject); existingPath != "" {
+						result.Diagnostics = append(result.Diagnostics, conflictingObservationDiagnostic("package", qualified, existingPath, relativeProject))
+						result.AmbiguousNames[qualified] = true
+					}
 				}
 				packageValue.HasInit = true
 				packageValue.SourceIDs[file.SourceID] = struct{}{}
@@ -148,6 +168,7 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 				moduleValue := ensureModule(modules, qualified)
 				if existingPath := firstConflictingPath(moduleValue.Paths, relativeProject); existingPath != "" {
 					result.Diagnostics = append(result.Diagnostics, conflictingObservationDiagnostic("module", qualified, existingPath, relativeProject))
+					result.AmbiguousNames[qualified] = true
 				}
 				moduleValue.SourceIDs[file.SourceID] = struct{}{}
 				moduleValue.Paths[relativeProject] = struct{}{}
@@ -155,6 +176,7 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 			}
 			for _, packageName := range parentPackages(qualified, kind) {
 				packageValue := ensurePackage(packages, packageName)
+				packageValue.SourceRoots[file.SourceRoot] = struct{}{}
 				if !packageValue.HasInit {
 					packageValue.SourceIDs[file.SourceID] = struct{}{}
 					packageValue.Paths[relativeProject] = struct{}{}
@@ -172,8 +194,28 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 			result.Diagnostics = append(result.Diagnostics, unreadableDiagnostic(project.Root, sourceRoot.Absolute, walkErr))
 		}
 	}
+	for _, qualified := range sortedPackageNames(packages) {
+		value := packages[qualified]
+		if len(value.InitSourceRoots) == 0 {
+			continue
+		}
+		ambiguous := len(value.InitSourceRoots) > 1
+		if !ambiguous {
+			for sourceRoot := range value.SourceRoots {
+				if _, hasInit := value.InitSourceRoots[sourceRoot]; !hasInit {
+					ambiguous = true
+					break
+				}
+			}
+		}
+		if ambiguous && !result.AmbiguousNames[qualified] {
+			result.AmbiguousNames[qualified] = true
+			result.Diagnostics = append(result.Diagnostics, conflictingPackageRootsDiagnostic(qualified, value.InitSourceRoots, value.SourceRoots))
+		}
+	}
 	for _, qualified := range sortedModuleNames(modules) {
 		if _, packageExists := packages[qualified]; packageExists {
+			result.AmbiguousNames[qualified] = true
 			result.Diagnostics = append(result.Diagnostics, analysis.Diagnostic{
 				Code:        "python_conflicting_layout",
 				Severity:    "warning",
@@ -187,6 +229,12 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 
 	result.Modules = buildModuleObservations(project, packages, modules)
 	result.SourceReferences = sortedSources(sources)
+	sort.Slice(result.Imports, func(i, j int) bool {
+		if result.Imports[i].FromModuleID == result.Imports[j].FromModuleID {
+			return result.Imports[i].Source.ID < result.Imports[j].Source.ID
+		}
+		return result.Imports[i].FromModuleID < result.Imports[j].FromModuleID
+	})
 	sortDiagnostics(result.Diagnostics)
 	return result, nil
 }

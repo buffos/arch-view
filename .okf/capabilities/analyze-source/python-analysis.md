@@ -3,7 +3,7 @@ type: capability
 title: Python analysis
 description: Build architecture input from Python packages, modules, and import relationships.
 tags: [python, analysis, roadmap]
-timestamp: 2026-08-27T02:14:51Z
+timestamp: 2026-08-27T09:59:46Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -14,7 +14,7 @@ orchestration_status: docs/architecture/analyze-source/python-analysis/orchestra
 implementation_slice: docs/architecture/analyze-source/python-analysis/implementation-slice.md
 issues:
   - docs/agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md
-  - docs/agents/issues/pending/20260827-018-python-static-import-resolution-and-uncertainty.md
+  - docs/agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md
   - docs/agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md
 prd: docs/architecture/analyze-source/python-analysis/prd.md
 glossary: docs/architecture/analyze-source/python-analysis/domain-glossary.md
@@ -44,4 +44,4 @@ This child capability is specified. Its project-marker precedence, source-root r
 
 ## Delivery progress
 
-The current implementation slice is [Python repository to visible architecture view](../../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issue 017 implements the registered project-boundary and module-discovery foundation; issues 018–019 remain for import uncertainty and public model/viewer/export integration. The node remains `specified` until the complete slice is implemented and reviewed.
+The current implementation slice is [Python repository to visible architecture view](../../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issue 017 implements the registered project-boundary and module-discovery foundation, issue 018 implements static imports, local resolution, references, evidence, and uncertainty diagnostics, and issue 019 remains for public model/viewer/export integration. The node remains `specified` until the complete slice is implemented and reviewed.
