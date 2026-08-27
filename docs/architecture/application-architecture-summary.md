@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; their exact contracts are the implementation reference set.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; the verified in-process Clojure adapter now reaches the existing analyzer, model, viewer, and export path without adding a language-specific consumer branch.
 
 ## Boundary summary
 
@@ -39,7 +39,7 @@ The upstream [unclebob/arch-view reference implementation](https://github.com/un
 
 The analyzer receives a repository or project root plus analysis options, selects one language analyzer, and returns validated modules, static dependency relationships, source evidence, metadata, and diagnostics. It does not assign layers, render diagrams, or export files.
 
-The plugin runtime and language adapters are specified around this contract. The current deployment uses in-process Go, Python, and Rust analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, TypeScript, Rust, and Clojure uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
+The plugin runtime and language adapters are specified around this contract. The current deployment uses in-process Go, Python, Rust, and Clojure analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, Clojure, TypeScript, and Rust uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
 
 The first graph uses package or module nodes. Files remain attached evidence. Project-local modules are shown by default. Tests, generated code, vendor directories, caches, build outputs, and directories named `external` are excluded by default. Unresolved dependencies produce partial results with diagnostics.
 
@@ -55,7 +55,7 @@ Owns analyzer registration, project detection, capability negotiation, configura
 
 Each analyzer owns source discovery, syntax parsing, import or dependency resolution, language-specific classification, source locations, and diagnostics. An analyzer returns data, not UI elements or layout coordinates.
 
-The adapters have exact language-specific contracts; parser/library choices may vary behind those contracts. The in-process Python adapter now extracts absolute, package, re-export, and relative imports through a conservative static pass, resolves only filesystem-proven local modules under effective source roots, and emits standard-library, external, unresolved, conditional, and dynamic references with source evidence, confidence, and recoverable diagnostics. The in-process Rust adapter reads one Cargo crate and statically discovers reachable crate/module hierarchy, `use`/`pub use` relationships, dependency declarations, source evidence, and cfg/macro/generated uncertainty without executing Cargo or target code. It never imports or executes the analyzed project; unresolved or dynamic behavior remains visible rather than becoming a fabricated local relationship.
+The adapters have exact language-specific contracts; parser/library choices may vary behind those contracts. The in-process Python adapter now extracts absolute, package, re-export, and relative imports through a conservative static pass, resolves only filesystem-proven local modules under effective source roots, and emits standard-library, external, unresolved, conditional, and dynamic references with source evidence, confidence, and recoverable diagnostics. The in-process Rust adapter reads one Cargo crate and statically discovers reachable crate/module hierarchy, `use`/`pub use` relationships, dependency declarations, source evidence, and cfg/macro/generated uncertainty without executing Cargo or target code. The in-process Clojure adapter resolves `deps.edn`, `project.clj`, and `shadow-cljs.edn` boundaries, emits namespace modules and static require/use/macro relationships, preserves `.cljc` platform and polymorphic metadata, and reports dynamic loading or malformed forms as recoverable evidence. The adapters never import or execute the analyzed project; unresolved or dynamic behavior remains visible rather than becoming a fabricated local relationship.
 
 ### Architecture model
 
@@ -135,10 +135,11 @@ through static relationships, uncertainty, evidence, and partial results, and
 issue 019 completes the shared visible journey after automated verification
 and explicit visual approval. Completed issues 023–025 add the Rust Cargo boundary,
 module/evidence discovery, static relationships, uncertainty, and canonical
-output path; TypeScript follows, while Clojure remains a later compatibility
-slice. Every adapter follows the
-same `analysis.Analyzer` contract and registers at the composition root;
-adding one does not modify host orchestration.
+output path. Issues 026–029 add the in-process Clojure project/namespace
+adapter, static relationships, platform/polymorphic and safety metadata, and
+shared visible journey through the existing neutral path. TypeScript follows.
+Every adapter follows the same `analysis.Analyzer` contract and registers at the
+composition root; adding one does not modify host orchestration.
 Issue 009 implements the bounded supported node/edge ELK option tranche at the
 layout adapter boundary without changing the renderer-neutral scene or
 configuration schemas. Issue 016 activates the reserved cubic route

@@ -23,7 +23,7 @@ func TestAnalyzersCommandListsBuiltInManifests(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &response); err != nil {
 		t.Fatalf("decode response: %v; output=%s", err, stdout.String())
 	}
-	if len(response.Analyzers) != 3 || response.Analyzers[0].ID != "org.archview.go" || response.Analyzers[1].ID != "org.archview.python" || response.Analyzers[2].ID != "org.archview.rust" {
+	if len(response.Analyzers) != 4 || response.Analyzers[0].ID != "org.archview.clojure" || response.Analyzers[1].ID != "org.archview.go" || response.Analyzers[2].ID != "org.archview.python" || response.Analyzers[3].ID != "org.archview.rust" {
 		t.Fatalf("analyzers = %#v", response.Analyzers)
 	}
 }

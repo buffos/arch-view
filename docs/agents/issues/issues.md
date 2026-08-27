@@ -1,7 +1,7 @@
 # Issues Registry
 
-| # | Title | Category | PRD | State | Blocked by |
-|---|---|---|---|---|---|
+| # | Title | Category | Owning Capability | Artifact Root | Issue File | State | Blocked by |
+|---|---|---|---|---|---|---|---|
 
 No active delivery issues.
 

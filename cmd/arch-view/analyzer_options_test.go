@@ -53,3 +53,20 @@ func TestCollectRustAnalyzerCLIOptionsKeepsOnlyExplicitValues(t *testing.T) {
 		t.Fatalf("unset Go option leaked into Rust options: %#v", values)
 	}
 }
+
+func TestCollectAnalyzerCLIOptionsForwardsClojurePlatform(t *testing.T) {
+	fs := flag.NewFlagSet("test", flag.ContinueOnError)
+	platform := fs.String("platform", "", "platform")
+	if err := fs.Parse([]string{"--platform", "cljs"}); err != nil {
+		t.Fatal(err)
+	}
+	options := collectAnalyzerCLIOptions(fs, analyzerCLIFlags{
+		buildTags:   &stringList{},
+		excludes:    &stringList{},
+		sourceRoots: &stringList{},
+		platform:    platform,
+	})
+	if options["platform"] != "cljs" {
+		t.Fatalf("collected options = %#v", options)
+	}
+}

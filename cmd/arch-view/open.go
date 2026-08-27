@@ -36,6 +36,7 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	safeMode := fs.Bool("safe-mode", true, "disable target-code execution and tool-assisted execution")
 	pythonVersion := fs.String("python-version", "", "Python major/minor version for static analysis")
 	includeStubs := fs.Bool("include-stubs", false, "include Python .pyi stub files")
+	platform := fs.String("platform", "", "Clojure reader-conditional platform: clj, cljs, or both")
 	port := fs.Int("port", 0, "loopback TCP port; 0 chooses an available port")
 	var buildTags stringList
 	var features stringList
@@ -45,7 +46,7 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	fs.Var(&features, "feature", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&features, "features", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&excludes, "exclude", "repository-relative exclusion glob; repeatable")
-	fs.Var(&sourceRoots, "source-root", "explicit Python source root; repeatable")
+	fs.Var(&sourceRoots, "source-root", "explicit analyzer source root; repeatable")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -92,6 +93,7 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			sourceRoots:      &sourceRoots,
 			pythonVersion:    pythonVersion,
 			includeStubs:     includeStubs,
+			platform:         platform,
 		})
 		result, err := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
 		if err != nil {

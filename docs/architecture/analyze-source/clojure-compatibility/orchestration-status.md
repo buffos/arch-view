@@ -2,8 +2,9 @@
 
 ## State
 
-- Planning state: `specified`.
+- Planning state: `implemented`.
 - State transition: `bounded -> specified` on 2026-08-25.
+- State transition: `specified -> implemented` on 2026-08-27 after issues 026–029 passed their acceptance and repository verification gates.
 - Exact-spec set is complete and readiness-reviewed.
 
 ## Artifact inventory
@@ -17,7 +18,8 @@
 - [Canonical API/CLI contract](canonical-api-cli-contract.md)
 - [Acceptance scenarios](acceptance-scenarios.md)
 - [Readiness review](readiness-review.md)
+- [Implementation slice](implementation-slice.md)
 
 ## Next step and artifact impact
 
-Implement the reference-compatible static Clojure-family adapter after the common contract is established. Product and architecture truth are synchronized; delivery truth has no impact because no issue was created.
+The reference-compatible static Clojure-family adapter is implemented through the approved [implementation slice](implementation-slice.md) and completed issues 026–029. Product, architecture, application-synthesis, capability, and delivery truth are synchronized; no Clojure issue remains active.

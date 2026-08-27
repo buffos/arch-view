@@ -3,7 +3,7 @@ type: capability
 title: Go analysis
 description: Build architecture input from Go modules, packages, files, and imports.
 tags: [go, analysis, mvp]
-timestamp: 2026-08-26T20:56:17Z
+timestamp: 2026-08-27T14:21:06Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -48,4 +48,4 @@ This child capability is specified. Its module/workspace selection, package/impo
 
 ## Delivery progress
 
-Issues 001, 002, and 013 established the Go project/analyzer path, including the separated scanning, import classification, and observation assembly pipeline behind the same analyzer entrypoint. The remaining Python, TypeScript, Rust, and Clojure analyzers remain separate future implementations.
+Issues 001, 002, and 013 established the Go project/analyzer path, including the separated scanning, import classification, and observation assembly pipeline behind the same analyzer entrypoint. Python and Clojure now have separate implemented adapters behind the same host contract; TypeScript, Rust, and the external plugin protocol remain future implementation territories.

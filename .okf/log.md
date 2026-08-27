@@ -29,6 +29,75 @@
   recorded that issue 025 owns the final application PRD and architecture-summary
   refresh. No planning node state changed during slicing.
 
+* **Issue 029 and Clojure capability complete:** Verified the public
+  `--platform` integration for analyze/open option collection and the shared
+  Clojure path from analysis JSON through canonical normalization, validation,
+  hierarchy projection, local viewer/source inspection, and deterministic
+  JSON/HTML/SVG export. Archived the issue at
+  `docs/agents/issues/done/20260827-029-clojure-public-integration-and-deterministic-exports.md`.
+* **State transition:** Advanced `Clojure compatibility` from `specified` to
+  `implemented` after issues 026–029 were exhausted and verified. Updated the
+  application PRD, application architecture summary, owning/parent
+  orchestration records, implementation slice, issue registry, and OKF index;
+  state totals are now 1 foggy, 0 bounded, 7 specified, and 3 implemented.
+* **Verification:** `go test ./... -count=1`, focused Clojure visible-journey
+  tests, canonical validation, deterministic repeated exports, and no-
+  evaluation safety checks passed.
+
+## 2026-08-27
+
+* **Issue 028 complete:** Added platform-aware `.cljc` reader-conditional
+  selection, spliced/default branch metadata, polymorphic defprotocol/defmulti
+  evidence, dynamic loading references/diagnostics, malformed-reader recovery,
+  and no-evaluation tests. Archived the issue at
+  `docs/agents/issues/done/20260827-028-clojure-platform-polymorphism-and-safety.md`;
+  issue 029 is now the next unblocked Clojure frontier.
+* **Verification:** Focused Clojure safety tests and common result-path tests
+  passed; no application PRD or architecture-summary update was required by
+  issue 028 because the behavior remains inside the confirmed adapter and
+  language-neutral contract.
+
+## 2026-08-27
+
+* **Issue 027 complete:** Added conservative static Clojure namespace
+  dependency extraction for require/use/macro clauses, local module
+  resolution, standard/external/unresolved references, merged aliases and
+  referred-symbol evidence, confidence, source locations, partial diagnostics,
+  deterministic ordering, and cancellation-safe execution. Archived the issue
+  at `docs/agents/issues/done/20260827-027-clojure-static-namespace-dependencies.md`;
+  issue 028 is now the next unblocked Clojure frontier.
+* **Verification:** Focused dependency tests and common result validation
+  passed; no application PRD or architecture-summary update was required by
+  issue 027 because the existing static workflow and language-neutral boundary
+  remained unchanged.
+
+## 2026-08-27
+
+* **Issue 026 complete:** Implemented and verified the registered Clojure
+  analyzer foundation: marker/configuration precedence, safe source roots,
+  flavor and test filtering, namespace modules, deterministic source evidence,
+  recoverable malformed/missing-namespace diagnostics, cancellation, and the
+  no-evaluation boundary. Archived the issue at
+  `docs/agents/issues/done/20260827-026-clojure-project-and-namespace-discovery.md`;
+  issue 027 is now the next unblocked Clojure frontier.
+* **Verification:** Focused Clojure and CLI tests passed; no application PRD
+  or architecture-summary update was required by issue 026 because the common
+  analyzer boundary and confirmed product scope were unchanged.
+
+## 2026-08-27
+
+* **Planning:** Following the specified-node routing in the fog-of-war
+  workflow, created the approved Clojure delivery slice under the existing
+  `Clojure compatibility` capability. Issues 026–029 cover project and
+  namespace discovery, static dependency extraction, platform/polymorphic and
+  safety metadata, and public shared-path integration in dependency order.
+* **Artifact sync:** Linked the four pending issues from the Clojure child and
+  parent analyzer concepts, added the Clojure implementation slice, refreshed
+  analyzer orchestration status, and updated the active issue registry through
+  max ID 029. The application-synthesis gate is current; product scope,
+  canonical model semantics, and cross-capability architecture remain
+  unchanged until implementation closeout.
+
 ## 2026-08-27
 
 * **Issue 019 complete**: The user explicitly approved the corrected Python

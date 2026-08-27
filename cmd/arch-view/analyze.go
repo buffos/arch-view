@@ -30,6 +30,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	safeMode := fs.Bool("safe-mode", true, "disable target-code execution and tool-assisted execution")
 	pythonVersion := fs.String("python-version", "", "Python major/minor version for static analysis")
 	includeStubs := fs.Bool("include-stubs", false, "include Python .pyi stub files")
+	platform := fs.String("platform", "", "Clojure reader-conditional platform: clj, cljs, or both")
 	format := fs.String("format", "analysis-json", "output format")
 	output := fs.String("output", "", "output file, or - for stdout")
 	referenceVisibility := fs.String("reference-visibility", "hidden", "visual reference visibility: hidden, aggregated, or expanded")
@@ -46,7 +47,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	fs.Var(&features, "feature", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&features, "features", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&excludes, "exclude", "repository-relative exclusion glob; repeatable")
-	fs.Var(&sourceRoots, "source-root", "explicit Python source root; repeatable")
+	fs.Var(&sourceRoots, "source-root", "explicit analyzer source root; repeatable")
 	fs.Var(&viewPath, "view-path", "hierarchy segment for visual export; repeatable")
 	fs.Var(&referenceScopes, "reference-scope", "reference scope for visual export; repeatable")
 	if err := fs.Parse(args); err != nil {
@@ -98,6 +99,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		sourceRoots:      &sourceRoots,
 		pythonVersion:    pythonVersion,
 		includeStubs:     includeStubs,
+		platform:         platform,
 	})
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

@@ -3,7 +3,7 @@ type: capability
 title: Analyze source code
 description: Discover supported project structures, modules, and dependency evidence through language analyzers.
 tags: [analysis, plugins, languages]
-timestamp: 2026-08-27T12:09:55Z
+timestamp: 2026-08-27T13:51:53Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -30,6 +30,10 @@ issues:
   - docs/agents/issues/done/20260827-023-rust-cargo-boundary-and-registration.md
   - docs/agents/issues/done/20260827-024-rust-module-discovery-and-evidence.md
   - docs/agents/issues/done/20260827-025-rust-relationships-and-end-to-end-output.md
+  - docs/agents/issues/done/20260827-026-clojure-project-and-namespace-discovery.md
+  - docs/agents/issues/done/20260827-027-clojure-static-namespace-dependencies.md
+  - docs/agents/issues/done/20260827-028-clojure-platform-polymorphism-and-safety.md
+  - docs/agents/issues/done/20260827-029-clojure-public-integration-and-deterministic-exports.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -67,4 +71,4 @@ The capability is specified. Its observation schema, analyzer lifecycle, safety 
 
 ## Delivery progress
 
-Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). TypeScript, Clojure, and the external plugin protocol remain later work, so the parent capability remains `specified`.
+Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace, static dependency, platform/polymorphic metadata, safety, and shared public-path slice in [the Clojure implementation slice](../../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md). TypeScript and the external plugin protocol remain later work, so the parent capability remains `specified`.

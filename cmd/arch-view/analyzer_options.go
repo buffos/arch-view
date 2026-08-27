@@ -1,6 +1,9 @@
 package main
 
-import "flag"
+import (
+	"flag"
+	"strings"
+)
 
 type analyzerCLIFlags struct {
 	module           *string
@@ -17,6 +20,7 @@ type analyzerCLIFlags struct {
 	sourceRoots      *stringList
 	pythonVersion    *string
 	includeStubs     *bool
+	platform         *string
 }
 
 // collectAnalyzerCLIOptions sends only explicitly supplied analyzer options
@@ -65,6 +69,9 @@ func collectAnalyzerCLIOptions(fs *flag.FlagSet, flags analyzerCLIFlags) map[str
 	}
 	if flagWasSet(fs, "include-stubs") {
 		options["include_stubs"] = *flags.includeStubs
+	}
+	if flagWasSet(fs, "platform") && strings.TrimSpace(*flags.platform) != "" {
+		options["platform"] = strings.TrimSpace(*flags.platform)
 	}
 	return options
 }

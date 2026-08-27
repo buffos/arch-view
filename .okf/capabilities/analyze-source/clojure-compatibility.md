@@ -3,9 +3,9 @@ type: capability
 title: Clojure compatibility
 description: Preserve the useful behavior of the reference Clojure analyzer through the language-neutral plugin contract.
 tags: [clojure, compatibility, reference]
-timestamp: 2026-08-25T14:56:24Z
-state: specified
-state_changed: 2026-08-25T17:10:00Z
+timestamp: 2026-08-27T13:51:53Z
+state: implemented
+state_changed: 2026-08-27T13:51:53Z
 project: /project.md
 parent: /capabilities/analyze-source.md
 discovery_notes: docs/architecture/analyze-source/clojure-compatibility/discovery-notes.md
@@ -18,6 +18,11 @@ use_cases: docs/architecture/analyze-source/clojure-compatibility/canonical-use-
 contract: docs/architecture/analyze-source/clojure-compatibility/canonical-api-cli-contract.md
 scenarios: docs/architecture/analyze-source/clojure-compatibility/acceptance-scenarios.md
 readiness_review: docs/architecture/analyze-source/clojure-compatibility/readiness-review.md
+issues:
+  - docs/agents/issues/done/20260827-026-clojure-project-and-namespace-discovery.md
+  - docs/agents/issues/done/20260827-027-clojure-static-namespace-dependencies.md
+  - docs/agents/issues/done/20260827-028-clojure-platform-polymorphism-and-safety.md
+  - docs/agents/issues/done/20260827-029-clojure-public-integration-and-deterministic-exports.md
 ---
 
 # Intent
@@ -36,4 +41,8 @@ The adapter covers Clojure-family source discovery, namespace and dependency ext
 
 # Planning state
 
-This child capability is specified. Its reference-compatible source/configuration rules, namespace/dependency extraction, platform metadata, polymorphic tags, diagnostics, and read-only policy are linked from the exact-spec artifacts.
+This child capability is implemented. Its reference-compatible source/configuration rules, namespace/dependency extraction, platform metadata, polymorphic tags, diagnostics, public shared-path integration, and read-only policy are linked from the exact-spec artifacts.
+
+## Delivery progress
+
+Issues 026–029 are complete: project and namespace discovery, static dependency extraction, platform/polymorphic/safety metadata, and public shared-path integration were implemented and verified on the isolated Clojure analyzer branch.
