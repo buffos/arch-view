@@ -26,7 +26,7 @@ func splitTOMLAssignment(line string) (string, string, bool) {
 		case '\'', '"':
 			if quote == 0 {
 				quote = line[index]
-			} else if quote == line[index] && (index == 0 || line[index-1] != '\\') {
+			} else if quote == line[index] && tomlQuoteCloses(line, index, quote) {
 				quote = 0
 			}
 		case '[', '{':
@@ -52,7 +52,7 @@ func balancedTOMLValue(value string) bool {
 	for index := 0; index < len(value); index++ {
 		char := value[index]
 		if quote != 0 {
-			if char == quote && (index == 0 || value[index-1] != '\\') {
+			if char == quote && tomlQuoteCloses(value, index, quote) {
 				quote = 0
 			}
 			continue
@@ -183,7 +183,7 @@ func splitDelimited(value string, delimiter byte) ([]string, error) {
 		case '\'', '"':
 			if quote == 0 {
 				quote = value[index]
-			} else if quote == value[index] && (index == 0 || value[index-1] != '\\') {
+			} else if quote == value[index] && tomlQuoteCloses(value, index, quote) {
 				quote = 0
 			}
 		case '[', '{':
@@ -223,7 +223,7 @@ func stripTOMLComment(value string) string {
 		case '\'', '"':
 			if quote == 0 {
 				quote = value[index]
-			} else if quote == value[index] && (index == 0 || value[index-1] != '\\') {
+			} else if quote == value[index] && tomlQuoteCloses(value, index, quote) {
 				quote = 0
 			}
 		case '#':
@@ -233,6 +233,17 @@ func stripTOMLComment(value string) string {
 		}
 	}
 	return value
+}
+
+func tomlQuoteCloses(value string, index int, quote byte) bool {
+	if quote == '\'' {
+		return true
+	}
+	backslashes := 0
+	for cursor := index - 1; cursor >= 0 && value[cursor] == '\\'; cursor-- {
+		backslashes++
+	}
+	return backslashes%2 == 0
 }
 
 func splitINIAssignment(value string) (string, string, bool) {

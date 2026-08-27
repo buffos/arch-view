@@ -99,7 +99,7 @@ func TestAnalyzeDiscoversRegularAndNamespacePackagesDeterministically(t *testing
 		t.Fatalf("regular package evidence = %#v", acme)
 	}
 	namespace := findModule(result.Modules, "py:package:ns")
-	if namespace.Metadata["package_kind"] != "namespace" || !containsString(namespace.Tags, "namespace") {
+	if namespace.Metadata["package_kind"] != "namespace" || !containsString(namespace.Tags, "namespace") || len(namespace.SourceReferenceIDs) == 0 {
 		t.Fatalf("namespace package metadata = %#v", namespace)
 	}
 	for _, source := range result.SourceReferences {
@@ -128,6 +128,71 @@ func TestAnalyzeDiscoversRegularAndNamespacePackagesDeterministically(t *testing
 	}
 	if !hasModule(expanded.Modules, "py:module:acme.service") || !containsString(findModule(expanded.Modules, "py:module:acme.service").Tags, "stub") {
 		t.Fatalf("stub evidence was not included: %#v", expanded.Modules)
+	}
+	for _, diagnostic := range expanded.Diagnostics {
+		if diagnostic.Code == "python_conflicting_layout" && diagnostic.Subject == "acme.service" {
+			t.Fatalf("implementation and stub companions must not conflict: %#v", expanded.Diagnostics)
+		}
+	}
+}
+
+func TestAnalyzeHonorsExclusionsAtSourceRootBoundary(t *testing.T) {
+	root := t.TempDir()
+	writePythonFixture(t, filepath.Join(root, "pyproject.toml"), "[project]\nname = 'fixture'\n")
+	writePythonFixture(t, filepath.Join(root, "vendor", "vendored.py"), "VALUE = 1\n")
+
+	defaultExcluded, err := New().Analyze(context.Background(), analysis.AnalyzeRequest{
+		ProjectRoot: root,
+		Options:     pythonOptions(t, map[string]any{"source_roots": []string{"vendor"}}),
+	})
+	if err != nil {
+		t.Fatalf("analyze default-excluded root: %v", err)
+	}
+	if hasModule(defaultExcluded.Modules, "py:module:vendored") {
+		t.Fatalf("default-excluded source root was scanned: %#v", defaultExcluded.Modules)
+	}
+
+	writePythonFixture(t, filepath.Join(root, "src", "excluded.py"), "VALUE = 1\n")
+	configuredExcluded, err := New().Analyze(context.Background(), analysis.AnalyzeRequest{
+		ProjectRoot: root,
+		Options: pythonOptions(t, map[string]any{
+			"source_roots": []string{"src"},
+			"exclude":      []string{"src"},
+		}),
+	})
+	if err != nil {
+		t.Fatalf("analyze configured-excluded root: %v", err)
+	}
+	if hasModule(configuredExcluded.Modules, "py:module:excluded") {
+		t.Fatalf("configured-excluded source root was scanned: %#v", configuredExcluded.Modules)
+	}
+}
+
+func TestResolveProjectReadsPythonRequiresFromSetupOptions(t *testing.T) {
+	root := t.TempDir()
+	writePythonFixture(t, filepath.Join(root, "setup.cfg"), "[options]\npython_requires = >=3.12\n")
+	writePythonFixture(t, filepath.Join(root, "module.py"), "VALUE = 1\n")
+
+	project, err := ResolveProject(root, pythonOptions(t, nil))
+	if err != nil {
+		t.Fatalf("resolve setup.cfg: %v", err)
+	}
+	if project.PythonVersion != "3.12" {
+		t.Fatalf("Python version = %q, want 3.12", project.PythonVersion)
+	}
+}
+
+func TestResolveProjectParsesTOMLRootEndingInEscapedBackslash(t *testing.T) {
+	root := t.TempDir()
+	writePythonFixture(t, filepath.Join(root, "pyproject.toml"), "[tool.setuptools.packages.find]\nwhere = [\"src\\\\\"]\n")
+	writePythonFixture(t, filepath.Join(root, "src", "module.py"), "VALUE = 1\n")
+
+	project, err := ResolveProject(root, pythonOptions(t, nil))
+	if err != nil {
+		t.Fatalf("resolve pyproject.toml: %v", err)
+	}
+	if len(project.SourceRoots) != 1 || project.SourceRoots[0].Relative != "src" || len(project.ConfigDiagnostics) != 0 {
+		t.Fatalf("resolved project = %#v", project)
 	}
 }
 

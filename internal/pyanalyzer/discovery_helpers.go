@@ -221,14 +221,24 @@ func conflictingObservationDiagnostic(kind, qualified, firstPath, secondPath str
 	}
 }
 
-func firstDifferentPath(paths map[string]struct{}, current string) string {
+func firstConflictingPath(paths map[string]struct{}, current string) string {
 	values := sortedKeys(paths)
 	for _, value := range values {
-		if value != current {
+		if value != current && !stubCompanionPaths(value, current) {
 			return value
 		}
 	}
 	return ""
+}
+
+func stubCompanionPaths(first, second string) bool {
+	firstExtension := strings.ToLower(filepath.Ext(first))
+	secondExtension := strings.ToLower(filepath.Ext(second))
+	isCompanionPair := (firstExtension == ".py" && secondExtension == ".pyi") || (firstExtension == ".pyi" && secondExtension == ".py")
+	if !isCompanionPair {
+		return false
+	}
+	return strings.TrimSuffix(first, filepath.Ext(first)) == strings.TrimSuffix(second, filepath.Ext(second))
 }
 
 func addProjectVersion(metadata map[string]any, version string) {

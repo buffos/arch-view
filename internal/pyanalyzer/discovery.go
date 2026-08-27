@@ -75,7 +75,7 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 			}
 			relativeProject := relativeProjectPath(project.Root, filePath)
 			if entry.IsDir() {
-				if relativeProject != sourceRoot.Relative && excludedDirectory(relativeProject, excludePatterns) {
+				if excludedDirectory(relativeProject, excludePatterns) {
 					return fs.SkipDir
 				}
 				return nil
@@ -137,7 +137,7 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 			}
 			if kind == "package" {
 				packageValue := ensurePackage(packages, qualified)
-				if existingPath := firstDifferentPath(packageValue.Paths, relativeProject); existingPath != "" {
+				if existingPath := firstConflictingPath(packageValue.Paths, relativeProject); existingPath != "" {
 					result.Diagnostics = append(result.Diagnostics, conflictingObservationDiagnostic("package", qualified, existingPath, relativeProject))
 				}
 				packageValue.HasInit = true
@@ -146,7 +146,7 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 				addFileTags(packageValue.Tags, file)
 			} else {
 				moduleValue := ensureModule(modules, qualified)
-				if existingPath := firstDifferentPath(moduleValue.Paths, relativeProject); existingPath != "" {
+				if existingPath := firstConflictingPath(moduleValue.Paths, relativeProject); existingPath != "" {
 					result.Diagnostics = append(result.Diagnostics, conflictingObservationDiagnostic("module", qualified, existingPath, relativeProject))
 				}
 				moduleValue.SourceIDs[file.SourceID] = struct{}{}
@@ -155,6 +155,10 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 			}
 			for _, packageName := range parentPackages(qualified, kind) {
 				packageValue := ensurePackage(packages, packageName)
+				if !packageValue.HasInit {
+					packageValue.SourceIDs[file.SourceID] = struct{}{}
+					packageValue.Paths[relativeProject] = struct{}{}
+				}
 				if kind == "module" {
 					addFileTags(packageValue.Tags, file)
 				}

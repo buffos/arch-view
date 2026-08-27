@@ -169,7 +169,7 @@ func parseSetupCFG(content, boundary string) configuration {
 			result.SourceRoots = append(result.SourceRoots, splitConfigRoots(value)...)
 		case section == "options" && normalizeConfigKey(key) == "package_dir":
 			result.SourceRoots = append(result.SourceRoots, parseSetupPackageDir(value)...)
-		case section == "metadata" && normalizeConfigKey(key) == "python_requires":
+		case section == "options" && normalizeConfigKey(key) == "python_requires":
 			if version := firstPythonVersion(value); version != "" {
 				result.PythonVersion = version
 			}
