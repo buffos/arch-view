@@ -3,7 +3,7 @@ type: capability
 title: Analyze source code
 description: Discover supported project structures, modules, and dependency evidence through language analyzers.
 tags: [analysis, plugins, languages]
-timestamp: 2026-08-26T20:56:17Z
+timestamp: 2026-08-27T02:14:51Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -24,7 +24,7 @@ issues:
   - docs/agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md
   - docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md
   - docs/agents/issues/done/20260826-013-go-analyzer-capability-pipeline.md
-  - docs/agents/issues/pending/20260827-017-python-project-boundary-and-module-discovery.md
+  - docs/agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md
   - docs/agents/issues/pending/20260827-018-python-static-import-resolution-and-uncertainty.md
   - docs/agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md
 prd: docs/architecture/analyze-source/prd.md
@@ -64,4 +64,4 @@ The capability is specified. Its observation schema, analyzer lifecycle, safety 
 
 ## Delivery progress
 
-Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. The next delivery frontier is the Python adapter slice [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md); TypeScript, Rust, Clojure, and the external plugin protocol remain later work. The capability remains `specified` because its language and plugin child territories are not all implemented.
+Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issue 017 now provides the registered Python project-boundary and module-discovery foundation; issues 018 and 019 remain the active Python import and visible-journey work in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). TypeScript, Rust, Clojure, and the external plugin protocol remain later work. The capability remains `specified` because its language and plugin child territories are not all implemented.

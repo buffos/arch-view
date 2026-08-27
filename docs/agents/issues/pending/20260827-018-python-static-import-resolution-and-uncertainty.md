@@ -35,7 +35,7 @@ Keep the implementation behind the Python analyzer boundary and the existing `an
 
 ## Blocked by
 
-Blocked by `docs/agents/issues/pending/20260827-017-python-project-boundary-and-module-discovery.md`.
+None. Issue 017 is complete and archived; this issue is the next unblocked Python-analysis frontier.
 
 ## User stories addressed
 

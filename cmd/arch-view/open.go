@@ -31,11 +31,15 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	includeGenerated := fs.Bool("include-generated", false, "include generated files")
 	includeExternal := fs.Bool("include-external", false, "retain non-local reference detail")
 	safeMode := fs.Bool("safe-mode", true, "disable target-code execution and tool-assisted execution")
+	pythonVersion := fs.String("python-version", "", "Python major/minor version for static analysis")
+	includeStubs := fs.Bool("include-stubs", false, "include Python .pyi stub files")
 	port := fs.Int("port", 0, "loopback TCP port; 0 chooses an available port")
 	var buildTags stringList
 	var excludes stringList
+	var sourceRoots stringList
 	fs.Var(&buildTags, "build-tag", "explicit Go build tag; repeatable")
 	fs.Var(&excludes, "exclude", "repository-relative exclusion glob; repeatable")
+	fs.Var(&sourceRoots, "source-root", "explicit Python source root; repeatable")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -67,21 +71,18 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			return analysis.ExitCodeForError(err)
 		}
 	} else {
-		cliOptions := map[string]any{
-			"include_tests":     *includeTests,
-			"include_generated": *includeGenerated,
-			"include_external":  *includeExternal,
-			"safe_mode":         *safeMode,
-		}
-		if *module != "" {
-			cliOptions["module"] = *module
-		}
-		if len(buildTags) > 0 {
-			cliOptions["build_tags"] = []string(buildTags)
-		}
-		if len(excludes) > 0 {
-			cliOptions["exclude"] = []string(excludes)
-		}
+		cliOptions := collectAnalyzerCLIOptions(fs, analyzerCLIFlags{
+			module:           module,
+			includeTests:     includeTests,
+			includeGenerated: includeGenerated,
+			includeExternal:  includeExternal,
+			safeMode:         safeMode,
+			buildTags:        &buildTags,
+			excludes:         &excludes,
+			sourceRoots:      &sourceRoots,
+			pythonVersion:    pythonVersion,
+			includeStubs:     includeStubs,
+		})
 		result, err := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
 		if err != nil {
 			writeError(stderr, err)

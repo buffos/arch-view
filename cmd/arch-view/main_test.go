@@ -12,7 +12,7 @@ import (
 	"github.com/buffo/arch-view/internal/model"
 )
 
-func TestAnalyzersCommandListsBuiltInGoManifest(t *testing.T) {
+func TestAnalyzersCommandListsBuiltInManifests(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	if code := run([]string{"analyzers"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
@@ -23,7 +23,7 @@ func TestAnalyzersCommandListsBuiltInGoManifest(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &response); err != nil {
 		t.Fatalf("decode response: %v; output=%s", err, stdout.String())
 	}
-	if len(response.Analyzers) != 1 || response.Analyzers[0].ID != "org.archview.go" {
+	if len(response.Analyzers) != 2 || response.Analyzers[0].ID != "org.archview.go" || response.Analyzers[1].ID != "org.archview.python" {
 		t.Fatalf("analyzers = %#v", response.Analyzers)
 	}
 }
@@ -62,6 +62,93 @@ func TestAnalyzeCommandSelectsGoBoundaryAndWritesPartialResult(t *testing.T) {
 	}
 	if result.OptionsFingerprint == "" || result.Project.ModulePath != "example.com/service" {
 		t.Fatalf("result metadata = %#v", result)
+	}
+}
+
+func TestAnalyzeCommandSelectsPythonAndNormalizesModuleOnlyResult(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "pyproject.toml"), []byte("[tool.setuptools.packages.find]\nwhere = ['src']\n"), 0o644); err != nil {
+		t.Fatalf("write pyproject.toml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "src", "service"), 0o755); err != nil {
+		t.Fatalf("create Python package: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "service", "__init__.py"), []byte("NAME = 'service'\n"), 0o644); err != nil {
+		t.Fatalf("write __init__.py: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "service", "api.py"), []byte("def handle():\n    return True\n"), 0o644); err != nil {
+		t.Fatalf("write api.py: %v", err)
+	}
+	analysisPath := filepath.Join(t.TempDir(), "python-analysis.json")
+	modelPath := filepath.Join(t.TempDir(), "python-model.json")
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"analyze",
+		"--project", root,
+		"--language", "python",
+		"--source-root", "src",
+		"--include-stubs=false",
+		"--format", "analysis-json",
+		"--output", analysisPath,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("Python analyze exit code = %d, stderr = %s", code, stderr.String())
+	}
+	data, err := os.ReadFile(analysisPath)
+	if err != nil {
+		t.Fatalf("read Python analysis: %v", err)
+	}
+	var result analysis.AnalysisResult
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("decode Python analysis: %v", err)
+	}
+	if result.Analyzer.ID != "org.archview.python" || result.Status != analysis.StatusComplete || len(result.Modules) != 2 {
+		t.Fatalf("Python analysis result = %#v", result)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"model", "normalize", "--input", analysisPath, "--output", modelPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("Python model normalize exit code = %d, stderr = %s", code, stderr.String())
+	}
+	modelData, err := os.ReadFile(modelPath)
+	if err != nil {
+		t.Fatalf("read Python model: %v", err)
+	}
+	var normalized model.Model
+	if err := json.Unmarshal(modelData, &normalized); err != nil {
+		t.Fatalf("decode Python model: %v", err)
+	}
+	if normalized.Project.Language != "python" || normalized.SchemaVersion != model.SchemaVersion || len(normalized.Modules) != 2 {
+		t.Fatalf("normalized Python model = %#v", normalized)
+	}
+}
+
+func TestAnalyzeCommandAutoDetectsPythonProject(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "setup.cfg"), []byte("[options.packages.find]\nwhere = src\n"), 0o644); err != nil {
+		t.Fatalf("write setup.cfg: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "src", "auto"), 0o755); err != nil {
+		t.Fatalf("create Python package: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "auto", "module.py"), []byte("VALUE = 1\n"), 0o644); err != nil {
+		t.Fatalf("write module.py: %v", err)
+	}
+	output := filepath.Join(t.TempDir(), "auto-python-analysis.json")
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"analyze", "--project", root, "--output", output, "--format", "analysis-json"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("auto-detect exit code = %d, stderr = %s", code, stderr.String())
+	}
+	data, err := os.ReadFile(output)
+	if err != nil {
+		t.Fatalf("read auto-detected analysis: %v", err)
+	}
+	var result analysis.AnalysisResult
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("decode auto-detected analysis: %v", err)
+	}
+	if result.Analyzer.ID != "org.archview.python" || result.Project.Boundary != "setup.cfg" {
+		t.Fatalf("auto-detected result = %#v", result)
 	}
 }
 

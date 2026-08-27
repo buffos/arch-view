@@ -2,7 +2,7 @@
 
 Execution type: AFK
 Review gate: none
-Status: ready-for-agent
+Status: done
 
 ## Parent PRD
 
@@ -16,15 +16,21 @@ The slice may emit an empty relationship collection until issue 018, but its mod
 
 ## Acceptance criteria
 
-- [ ] The manifest is valid and stable: `id=org.archview.python`, `language=python`, `api_version=arch-view.analyzer/v1`, detection markers for `pyproject.toml`, `setup.cfg`, and `setup.py`, capabilities `detect`, `static_dependencies`, and `dynamic_diagnostics`, and the typed options from the Python contract.
-- [ ] The analyzer is registered only at the composition root; analyzer listing, explicit Python selection, and unambiguous auto-detection work through the existing host without modifying host orchestration or adding a Python-specific switch.
-- [ ] Project-marker precedence is deterministic: `pyproject.toml` is preferred, then supported `setup.cfg`/`setup.py` metadata; `setup.py` is parsed as data and is never imported or executed. Invalid or unreadable configuration produces a recoverable diagnostic where the rest of the project remains usable.
-- [ ] Effective source roots follow explicit `source_roots` option > supported project configuration > `src/` when present > selected project root. Paths are normalized relative to the project boundary and remain safe within that root.
-- [ ] Eligible `.py` files are discovered deterministically; `.pyi` files are excluded by default and included only with `include_stubs=true`; test files, `__pycache__`, generated/build/cache/vendor directories, `.git`, `external`, and configured exclusions follow the Python contract.
-- [ ] Regular packages, namespace packages, package `__init__` evidence, and modules are represented with stable project-scoped IDs, qualified names, explicit hierarchy, kind metadata, tags, and repository-relative source references. A file is evidence and is not silently promoted to an unrelated graph node.
-- [ ] Syntax, unreadable-file, unsupported-version, and conflicting-layout problems are recoverable diagnostics with partial status where appropriate; unrelated eligible files still produce usable module observations.
-- [ ] The analyzer and its tests never import, install, execute, or invoke the target Python project or its build scripts. Repeating the same analysis with unchanged source/options produces byte-stable output and stable IDs/order.
-- [ ] A CLI smoke fixture can run `arch-view analyze --project <python-root> --language python --format analysis-json --output <file>` and normalize the result through `arch-view model normalize` without changing the existing Go path.
+- [x] The manifest is valid and stable: `id=org.archview.python`, `language=python`, `api_version=arch-view.analyzer/v1`, detection markers for `pyproject.toml`, `setup.cfg`, and `setup.py`, capabilities `detect`, `static_dependencies`, and `dynamic_diagnostics`, and the typed options from the Python contract.
+- [x] The analyzer is registered only at the composition root; analyzer listing, explicit Python selection, and unambiguous auto-detection work through the existing host without modifying host orchestration or adding a Python-specific switch.
+- [x] Project-marker precedence is deterministic: `pyproject.toml` is preferred, then supported `setup.cfg`/`setup.py` metadata; `setup.py` is parsed as data and is never imported or executed. Invalid or unreadable configuration produces a recoverable diagnostic where the rest of the project remains usable.
+- [x] Effective source roots follow explicit `source_roots` option > supported project configuration > `src/` when present > selected project root. Paths are normalized relative to the project boundary and remain safe within that root.
+- [x] Eligible `.py` files are discovered deterministically; `.pyi` files are excluded by default and included only with `include_stubs=true`; test files, `__pycache__`, generated/build/cache/vendor directories, `.git`, `external`, and configured exclusions follow the Python contract.
+- [x] Regular packages, namespace packages, package `__init__` evidence, and modules are represented with stable project-scoped IDs, qualified names, explicit hierarchy, kind metadata, tags, and repository-relative source references. A file is evidence and is not silently promoted to an unrelated graph node.
+- [x] Syntax, unreadable-file, unsupported-version, and conflicting-layout problems are recoverable diagnostics with partial status where appropriate; unrelated eligible files still produce usable module observations.
+- [x] The analyzer and its tests never import, install, execute, or invoke the target Python project or its build scripts. Repeating the same analysis with unchanged source/options produces byte-stable output and stable IDs/order.
+- [x] A CLI smoke fixture can run `arch-view analyze --project <python-root> --language python --format analysis-json --output <file>` and normalize the result through `arch-view model normalize` without changing the existing Go path.
+
+## Implementation notes
+
+- Added `internal/pyanalyzer` as an in-process implementation of the common analyzer contract. It reads `pyproject.toml`, `setup.cfg`, or `setup.py` as data, resolves safe source roots, and emits package/module observations with file evidence.
+- Python import relationships remain intentionally empty until issue 018. Issue 019 still owns the public Python visible-journey/export acceptance path.
+- CLI analyzer options are passed only when explicitly supplied, preserving Go defaults while allowing Python's typed options to resolve through the generic host.
 
 ## Artifact sync required
 

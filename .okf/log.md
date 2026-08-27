@@ -2,6 +2,22 @@
 
 ## 2026-08-27
 
+* **Issue 017 complete**: Added the registered in-process Python analyzer
+  foundation. Marker precedence is `pyproject.toml`, `setup.cfg`, then
+  `setup.py`; configuration and roots are read safely as data, with `src/`
+  and repository-root fallback rules. Regular and namespace packages, modules,
+  stubs, tests, exclusions, source evidence, stable IDs, and recoverable
+  diagnostics are emitted through the common analyzer contract. The CLI now
+  supports Python selection/options without adding language-specific host
+  orchestration. Python import relationships remain assigned to issue 018 and
+  the visible journey to issue 019.
+* **Verification**: Focused Python fixtures and CLI/model normalization pass;
+  `go test ./... -count=1`, race tests, vet, build, Staticcheck,
+  golangci-lint, and `git diff --check` pass. No canonical schema, topology,
+  renderer, or upstream reference repository changed.
+
+## 2026-08-27
+
 * **Implementation verification**: Audited the Explore and inspect architecture
   capability against its 17 acceptance scenarios, issues 003–016, the exact
   PRD, and the repository verification gates. The current specified scope is

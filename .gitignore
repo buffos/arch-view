@@ -19,3 +19,6 @@
 # Local export previews
 /architecture.html
 /architecture.svg
+
+# Upstream reference checkout; never part of the product repository
+/external/

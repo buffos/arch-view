@@ -25,6 +25,8 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	includeGenerated := fs.Bool("include-generated", false, "include generated files")
 	includeExternal := fs.Bool("include-external", false, "retain non-local reference detail")
 	safeMode := fs.Bool("safe-mode", true, "disable target-code execution and tool-assisted execution")
+	pythonVersion := fs.String("python-version", "", "Python major/minor version for static analysis")
+	includeStubs := fs.Bool("include-stubs", false, "include Python .pyi stub files")
 	format := fs.String("format", "analysis-json", "output format")
 	output := fs.String("output", "", "output file, or - for stdout")
 	referenceVisibility := fs.String("reference-visibility", "hidden", "visual reference visibility: hidden, aggregated, or expanded")
@@ -33,10 +35,12 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	embedSource := fs.Bool("embed-source", false, "embed source contents; unsupported in v1")
 	var buildTags stringList
 	var excludes stringList
+	var sourceRoots stringList
 	var viewPath stringList
 	var referenceScopes stringList
 	fs.Var(&buildTags, "build-tag", "explicit Go build tag; repeatable")
 	fs.Var(&excludes, "exclude", "repository-relative exclusion glob; repeatable")
+	fs.Var(&sourceRoots, "source-root", "explicit Python source root; repeatable")
 	fs.Var(&viewPath, "view-path", "hierarchy segment for visual export; repeatable")
 	fs.Var(&referenceScopes, "reference-scope", "reference scope for visual export; repeatable")
 	if err := fs.Parse(args); err != nil {
@@ -73,21 +77,18 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
-	cliOptions := map[string]any{
-		"include_tests":     *includeTests,
-		"include_generated": *includeGenerated,
-		"include_external":  *includeExternal,
-		"safe_mode":         *safeMode,
-	}
-	if *module != "" {
-		cliOptions["module"] = *module
-	}
-	if len(buildTags) > 0 {
-		cliOptions["build_tags"] = []string(buildTags)
-	}
-	if len(excludes) > 0 {
-		cliOptions["exclude"] = []string(excludes)
-	}
+	cliOptions := collectAnalyzerCLIOptions(fs, analyzerCLIFlags{
+		module:           module,
+		includeTests:     includeTests,
+		includeGenerated: includeGenerated,
+		includeExternal:  includeExternal,
+		safeMode:         safeMode,
+		buildTags:        &buildTags,
+		excludes:         &excludes,
+		sourceRoots:      &sourceRoots,
+		pythonVersion:    pythonVersion,
+		includeStubs:     includeStubs,
+	})
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	result, err := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
