@@ -24,7 +24,7 @@
 
 The scene schema, local HTTP/CLI surface, source-root safety rules, progressive-disclosure/reference-boundary behavior, accessibility requirements, renderer direction, layout-option catalog, and project-config discovery/persistence rules are defined in the exact-spec artifacts. Frontend framework, theme tokens, and renderer performance benchmarks remain implementation risks behind the renderer-neutral boundary; issue 007's settings-page review is complete.
 
-The implementation risks for the configuration extension are covered by the complete pinned ELK catalog, typed validation, explicit unsupported/non-applicable treatment, platform-specific atomic-write tests, and the approved settings-surface review. Benchmark fixtures and broader ELK option support remain later implementation concerns.
+The implementation risks for the configuration extension are covered by the complete pinned ELK catalog, typed validation, explicit unsupported/non-applicable treatment, platform-specific atomic-write tests, and the approved settings-surface review. Benchmark fixtures remain verification work, while broader ELK renderer support is now explicitly tracked in the [Advanced ELK renderer support future-work register](advanced-elk-renderer-support/future-work.md).
 
 ## Readiness
 

@@ -5,7 +5,7 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the source-analysis capability with a plugin runtime and language-specific child territories for Go, Python, TypeScript, Rust, and Clojure.
-- Next route: continue the language-neutral analyzer roadmap alongside the next viewer option slices. Analyzer/plugin implementation remains scoped independently from the completed viewer configuration slice.
+- Next route: implement the selected Python analyzer child through its bounded vertical slice. TypeScript, Rust, Clojure, and the external plugin protocol remain later specified frontiers; analyzer work remains independent of the completed viewer configuration and spline slices.
 
 ## Confirmed boundary
 
@@ -50,7 +50,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Selected frontier: Go analysis.
 - Implementation slice: [Go repository to visible architecture view](go-analysis/implementation-slice.md).
-- Delivery progress: issues 001 through 008 are complete for the first Go analyzer/model, viewer, export, and layout-configuration slice. Issue 013 now isolates the Go scanner, import classifier, and observation assembler behind the existing analyzer entrypoint; future language-adapter work remains specified.
+- Delivery progress: issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout-configuration, analyzer-pipeline, and bounded presentation-extension work. The next selected frontier is the Python implementation slice [017–019](python-analysis/implementation-slice.md); future TypeScript, Rust, Clojure, and external protocol work remains specified.
 - The slice crosses the plugin runtime, Go analyzer, canonical model, local viewer, evidence, and export contracts.
 
 ## Artifact sync
@@ -60,4 +60,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with completed issues 001 through 009, 013, and 016; issue 016 is archived after automated implementation verification and explicit visual approval, while future language-adapter work remains in the specified roadmap.
+- Delivery truth: updated with completed issues 001 through 009, 013, and 016, plus the ready-for-agent Python issues 017–019 and their implementation slice. Issue 016 is archived after automated implementation verification and explicit visual approval; the Python node remains specified until its complete delivery path is implemented.

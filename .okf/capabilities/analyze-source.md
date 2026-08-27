@@ -24,6 +24,9 @@ issues:
   - docs/agents/issues/done/20260825-001-analyzer-host-and-go-project-selection.md
   - docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md
   - docs/agents/issues/done/20260826-013-go-analyzer-capability-pipeline.md
+  - docs/agents/issues/pending/20260827-017-python-project-boundary-and-module-discovery.md
+  - docs/agents/issues/pending/20260827-018-python-static-import-resolution-and-uncertainty.md
+  - docs/agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -61,4 +64,4 @@ The capability is specified. Its observation schema, analyzer lifecycle, safety 
 
 ## Delivery progress
 
-Issues 001 through 008 and 013 are complete for the first Go analyzer/model, viewer, export, layout, and analyzer-pipeline slice. The capability remains `specified` because the Python, TypeScript, Rust, and Clojure adapter territories and the external plugin protocol remain future delivery work.
+Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. The next delivery frontier is the Python adapter slice [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md); TypeScript, Rust, Clojure, and the external plugin protocol remain later work. The capability remains `specified` because its language and plugin child territories are not all implemented.

@@ -11,6 +11,11 @@ parent: /capabilities/analyze-source.md
 discovery_notes: docs/architecture/analyze-source/python-analysis/discovery-notes.md
 gap_analysis: docs/architecture/analyze-source/python-analysis/requirements-gap-analysis.md
 orchestration_status: docs/architecture/analyze-source/python-analysis/orchestration-status.md
+implementation_slice: docs/architecture/analyze-source/python-analysis/implementation-slice.md
+issues:
+  - docs/agents/issues/pending/20260827-017-python-project-boundary-and-module-discovery.md
+  - docs/agents/issues/pending/20260827-018-python-static-import-resolution-and-uncertainty.md
+  - docs/agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md
 prd: docs/architecture/analyze-source/python-analysis/prd.md
 glossary: docs/architecture/analyze-source/python-analysis/domain-glossary.md
 domain_model: docs/architecture/analyze-source/python-analysis/canonical-domain-model.md
@@ -36,3 +41,7 @@ The analyzer will detect common project layouts, resolve absolute and relative i
 # Planning state
 
 This child capability is specified. Its project-marker precedence, source-root rules, package/module semantics, static resolution, uncertainty behavior, options, and safety policy are linked from the exact-spec artifacts.
+
+## Delivery progress
+
+The next implementation slice is [Python repository to visible architecture view](../../../docs/architecture/analyze-source/python-analysis/implementation-slice.md), with issues 017–019 covering project/module discovery, import uncertainty, and public model/viewer/export integration. The node remains `specified` until the complete slice is implemented and reviewed.

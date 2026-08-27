@@ -14,4 +14,4 @@ Namespace-package edge cases and Python-version syntax coverage require fixtures
 
 ## Artifact impact
 
-Capability truth updated; no additional product/architecture boundary change beyond the synchronized parent analysis and model contracts; delivery truth has no impact.
+Capability truth remains aligned with the parent analysis and model contracts. No product or architecture boundary change is required for the Python adapter; delivery truth now links the [implementation slice](implementation-slice.md) and issues 017–019.

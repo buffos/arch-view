@@ -1,5 +1,26 @@
 # Update Log
 
+## 2026-08-27
+
+* **Implementation verification**: Audited the Explore and inspect architecture
+  capability against its 17 acceptance scenarios, issues 003–016, the exact
+  PRD, and the repository verification gates. The current specified scope is
+  complete, so the parent node moves from `specified` to `implemented`.
+* **Topology**: Added the foggy child capability [Advanced ELK renderer
+  support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
+  so ports, labels, junctions, compound geometry, broader target-specific
+  options, and spline-specific refinements are visible future work rather than
+  residual notes hidden under implementation.
+* **Planning**: Recorded the candidate renderer workstreams and entry criteria
+  in the [future-work register](../docs/architecture/explore-architecture/advanced-elk-renderer-support/future-work.md).
+  No delivery issues were created for the child because its supported subset,
+  contract impact, and acceptance behavior still need fog clearing.
+* **Verification**: `go test ./... -count=1`, `go test -race ./...`, `go vet
+  ./...`, `go build ./...`, `staticcheck ./...`, `golangci-lint run`, the
+  JavaScript syntax/pure-module tests, strict OKF validation, and `git diff
+  --check` pass. State totals are now 1 `foggy`, 0 `bounded`, 9 `specified`,
+  and 1 `implemented`.
+
 ## 2026-08-26
 
 * **Architecture refactor**: Implemented issues 010–015 while preserving the
@@ -69,6 +90,26 @@
   registry, and synchronized across the Explore capability, implementation
   slice, application records, and OKF references. The upstream reference
   repository remains outside the product and untouched.
+
+* **Frontier selection**: After issue 016 closeout, selected the specified
+  Python analysis child as the next implementation frontier. The map has no
+  foggy or bounded nodes; Python is the first non-Go language in the agreed
+  sequence and the common analyzer, model, viewer, and export boundaries are
+  ready for a visible adapter result.
+
+* **Slice preparation**: Created the Python repository-to-visible-architecture
+  implementation slice and ready-for-agent issues 017–019 in dependency order:
+  project/module discovery, static import resolution and uncertainty, and
+  public CLI/model/viewer/export integration with the final visual review.
+  No new capability node or shared concern was needed.
+
+* **Artifact sync**: Linked the Python slice and issues from the parent and
+  child analysis concepts, refreshed the analysis orchestration status,
+  application PRD, and application architecture summary with the next
+  implementation order, and updated the issue registry through max ID 019.
+  State totals remain 0 `foggy`, 0 `bounded`, 10 `specified`, and 0
+  `implemented`; the Python node will advance only after its complete slice is
+  implemented and reviewed. The upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.
 
 ## 2026-08-26
 

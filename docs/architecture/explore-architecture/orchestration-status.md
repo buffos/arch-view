@@ -2,10 +2,10 @@
 
 ## State
 
-- Planning state: `specified`.
-- State transition: `bounded -> specified` on 2026-08-25.
+- Planning state: `implemented`.
+- State transition: `bounded -> specified` on 2026-08-25; `specified -> implemented` on 2026-08-27 after the complete issue/scenario audit and repository verification gate.
 - Topology: confirmed as the interactive investigation capability.
-- Next route: Issue 016 and the refactor issues 010–015 are implemented, reviewed, and archived. The capability remains specified for future layout, scale, and inspection extensions.
+- Next route: the current 17-scenario Explore scope is complete. Future ELK renderer extensions are tracked by the foggy [Advanced ELK renderer support child](../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md); the next selected implementation frontier is the Python analysis slice in issues 017–019.
 
 ## Confirmed boundary
 
@@ -38,7 +38,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Observed in reference: the viewer supports layers, dependency indicators, drill-down, back navigation, cycle display, scrolling, zooming, reanalysis, and a source window.
 - User-confirmed target: the Go product should retain the useful investigation workflow while allowing language-neutral source evidence.
-- Required follow-up: implement the local web host, renderer-neutral scene contract, accessible interaction modes, and source-root safety checks.
+- Current scope outcome: the local web host, renderer-neutral scene contract, accessible interaction modes, source-root safety checks, layout settings, spline browser path, and current-canvas SVG download are implemented and verified through issues 003–016.
 
 ## Current delivery slice
 
@@ -47,7 +47,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Issue 004 adds evidence, imports list/detail inspection, drill-down, source safety, accessible inspection, viewport controls, session layout state, read-only reanalysis replacement, compact expanded-canvas controls, centered dense-scene fitting, explicit 100% zoom reset behavior, reset-to-calculated layout, and deterministic manual edge routing. Its implementation, automated verification, and declared visual review are complete.
 - Issue 005 reuses the view contract for visual export parity, including reference visibility and import/evidence metadata. Its implementation, automated verification, and explicit user-approved visual parity review are complete; the issue is archived. Issue 016 extends the self-contained HTML artifact with embedded profile/catalog data and the pinned ELK runtime, and adds browser current-canvas SVG download; Go static SVG remains deterministic orthogonal.
 - Issue 007 implements the ELK option catalog/settings surface, explicit profile application/reset, nearest-ancestor `.archview.json` discovery, active-file `Save`, and explicit custom-folder `Save As`. Its automated verification and declared visual review are complete and it is archived. Issue 008 implements the bounded parent-level option tranche; its automated verification and declared visual review are complete and it is archived. Issue 009 implements the bounded target-aware node/edge priority tranche; its automated verification and visual review are complete and it is archived. Issues 010, 011, 012, and 014 implement the routing, browser composition, scene, and layout-registry refactor slices and are archived after review approval. Issue 016 implements the bounded layered spline route path with cubic normalization and deterministic fallback; its automated verification and visual review are complete and it is archived. Advanced ports, labels, junctions, compound-graph geometry, and broader target-specific options remain future work. Project-backed HTML consumes the discovered layout profile; raw model export has no source-root discovery context and uses built-in defaults, while Go static SVG remains deterministic orthogonal.
-- Issues 003–016 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md); issues 013 and 015 are owned by the analyzer/model boundaries respectively.
+- Issues 003–016 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md); issues 013 and 015 are owned by the analyzer/model boundaries respectively. This closes the current Explore scope. The separately visible Advanced ELK renderer support child tracks ports, labels, junctions, compound geometry, broader target-specific options, and spline-specific refinements; those are future extensions rather than untracked completion criteria.
 
 ## Implementation progress
 

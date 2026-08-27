@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. All capability territories are now `specified`; their exact contracts are the implementation reference set.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; their exact contracts are the implementation reference set.
 
 ## Boundary summary
 
@@ -129,19 +129,23 @@ The first architectural slice is the neutral model and plugin contract. The
 first product slice is Go package analysis connected to headless output and a
 visible viewer result. The completed refactor sequence then isolates routing,
 browser composition/bundling, scene projection, the Go analyzer pipeline, the
-ELK option registry, and canonical model normalization. Python, TypeScript,
-Rust, and Clojure analyzers follow the same `analysis.Analyzer` contract and
-register at the composition root; adding one does not modify host orchestration.
+ELK option registry, and canonical model normalization. Python is the next
+selected adapter slice, followed by TypeScript and Rust; Clojure remains a
+later compatibility slice. Every adapter follows the same
+`analysis.Analyzer` contract and registers at the composition root; adding one
+does not modify host orchestration.
 Issue 009 implements the bounded supported node/edge ELK option tranche at the
 layout adapter boundary without changing the renderer-neutral scene or
 configuration schemas. Issue 016 activates the reserved cubic route
 representation for supported ELK spline output; automated verification and
-visual review are complete.
+visual review are complete. The current Explore scope is implemented. Future
+renderer extensions are tracked in the [Advanced ELK renderer support future
+work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
 
 ## Residual implementation decisions
 
 - Benchmarking and tuning frontend/rendering thresholds.
-- Reference-boundary aggregation, import-list density, session-scoped layout behavior, and broader target-specific ELK option support.
+- Reference-boundary aggregation, import-list density, and session-scoped layout behavior remain verification/tuning concerns. Broader target-specific ELK option support is tracked in the [Advanced ELK renderer support future-work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
 - Publishing/migrating JSON and NDJSON schemas.
 - Process sandbox/resource-limit implementation.
 - Future call-graph/type-level relation capabilities.
@@ -161,5 +165,6 @@ These are implementation and extension risks, not blockers to the specified v1 s
 - [Analyze source code](../../.okf/capabilities/analyze-source.md)
 - [Generate architecture models](../../.okf/capabilities/generate-models.md)
 - [Explore and inspect architecture](../../.okf/capabilities/explore-architecture.md)
+- [Advanced ELK renderer support](explore-architecture/advanced-elk-renderer-support/future-work.md)
 - [Export and automate](../../.okf/capabilities/export-and-automate.md)
 - [Application PRD](../prd.md)

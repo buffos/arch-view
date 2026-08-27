@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the application-level planning baseline. It records confirmed product scope and links to the capability map. All capability territories are now `specified`; their exact specification sets are linked below.
+This is the application-level planning baseline. It records confirmed product scope and links to the capability map. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; their exact specification sets are linked below.
 
 ## Product
 
@@ -64,7 +64,7 @@ reading only. It is not part of the product source tree.
 
 - [Analyze source code](/.okf/capabilities/analyze-source.md): `specified`, including specified plugin-runtime, Go, Python, TypeScript, Rust, and Clojure child contracts.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `specified`, including the v1 canonical model and graph-projection contract.
-- [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `specified`, including the local web/scene/evidence contract.
+- [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) remains `foggy` for future extensions.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `specified`, including JSON v1 and HTML/SVG/CI behavior.
 
 ## Cross-capability dependencies
@@ -78,10 +78,10 @@ Source analyzers produce evidence for the language-neutral model. The model owns
 3. Build headless JSON output and model validation.
 4. Build the first local web viewer with local-first reference visibility, imports/evidence inspection, and source workflow.
 5. Add cycle and layout diagnostics plus user-selectable ELK settings and project configuration discovery.
-6. Add Python, TypeScript, and Rust analyzers.
+6. Add the Python analyzer first, then TypeScript and Rust analyzers through the same common contract.
 7. Add Clojure compatibility and an external, versioned plugin protocol if third-party analyzers are needed.
 
-The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, local viewer implementation, deterministic JSON/HTML artifact generation, static SVG export, and the issue 007 layout-settings/configuration backend and browser surface are implemented and visually approved. Issue 008's bounded parent-level ELK option tranche and issue 009's bounded target-aware node/edge mapping are implemented and visually approved. Issue 016's spline-route implementation, embedded HTML ELK runtime, and browser current-canvas SVG download are implemented, visually approved, and archived.
+The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, local viewer implementation, deterministic JSON/HTML artifact generation, static SVG export, and the issue 007 layout-settings/configuration backend and browser surface are implemented and visually approved. Issue 008's bounded parent-level ELK option tranche and issue 009's bounded target-aware node/edge mapping are implemented and visually approved. Issue 016's spline-route implementation, embedded HTML ELK runtime, and browser current-canvas SVG download are implemented, visually approved, and archived. The current Explore capability scope is complete and its future Advanced ELK renderer support work is explicitly tracked as a separate foggy child. The next selected implementation frontier is the Python adapter slice in issues 017–019, defined in [the Python implementation slice](architecture/analyze-source/python-analysis/implementation-slice.md).
 
 ## Verification strategy
 

@@ -73,3 +73,7 @@ The detailed scenarios are in [acceptance scenarios](acceptance-scenarios.md). T
 
 - The first complete implementation is Go; other adapters follow the same contract.
 - Optional environment/tool-assisted resolution is disabled by default and cannot change the read-only safety promise.
+
+## Current delivery frontier
+
+The Go analyzer/model and the shared viewer/export path are complete for the first slice. The next implementation target is the readiness-reviewed [Python analysis capability](python-analysis/prd.md), delivered through the [Python repository to visible architecture view slice](python-analysis/implementation-slice.md) and issues 017–019. The Python adapter must register through the existing composition root and common `analysis.Analyzer` contract; the host, canonical model, layout, viewer, and export boundaries remain language-neutral.

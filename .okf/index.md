@@ -12,8 +12,8 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 0 `foggy`, 0 `bounded`, 10 `specified`, 0 `implemented`.
-- Current delivery frontier: issue 009's bounded target-aware ELK option tranche, refactor issues 010–015, and issue 016's bounded ELK spline route extension are implemented, reviewed, and archived. Future language adapters and other specified follow-up work remain outside this closed delivery slice.
+- State totals: 1 `foggy`, 0 `bounded`, 9 `specified`, 1 `implemented`.
+- Current delivery frontier: the current Explore and inspect architecture scope is implemented after issues 003–016 and the repository-level verification gate. The next selected implementation frontier is the specified [Python analysis implementation slice](../docs/architecture/analyze-source/python-analysis/implementation-slice.md), issues 017–019. The separate foggy [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md) child tracks future renderer features and must be specified before it receives delivery issues.
 
 ## Application synthesis
 
