@@ -192,6 +192,9 @@ func TestAnalyzeCommandExportsSelfContainedHTML(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte("package main\n\nimport \"fmt\"\n\nfunc main() { fmt.Println(\"ok\") }\n"), 0o644); err != nil {
 		t.Fatalf("write main.go: %v", err)
 	}
+	if err := os.WriteFile(filepath.Join(root, ".archview.json"), []byte(`{"schema_version":"arch-view.config/v1","layout":{"algorithm":"layered","options":{"org.eclipse.elk.edgeRouting":"SPLINES"}}}`), 0o644); err != nil {
+		t.Fatalf("write layout config: %v", err)
+	}
 	output := filepath.Join(t.TempDir(), "architecture.html")
 	var stdout, stderr bytes.Buffer
 	code := run([]string{
@@ -209,7 +212,7 @@ func TestAnalyzeCommandExportsSelfContainedHTML(t *testing.T) {
 		t.Fatalf("read HTML export: %v", err)
 	}
 	html := string(data)
-	if !strings.Contains(html, "window.__ARCH_VIEW_EXPORT__") || strings.Contains(html, "<script src=") || strings.Contains(html, "<link rel=\"stylesheet\"") {
+	if !strings.Contains(html, "window.__ARCH_VIEW_EXPORT__") || !strings.Contains(html, `"org.eclipse.elk.edgeRouting":"SPLINES"`) || strings.Contains(html, "<script src=") || strings.Contains(html, "<link rel=\"stylesheet\"") {
 		t.Fatalf("HTML export is not self-contained: %s", html[:minTestStringLength(len(html), 500)])
 	}
 	var metadata struct {

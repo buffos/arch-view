@@ -81,7 +81,7 @@ Source analyzers produce evidence for the language-neutral model. The model owns
 6. Add Python, TypeScript, and Rust analyzers.
 7. Add Clojure compatibility and an external, versioned plugin protocol if third-party analyzers are needed.
 
-The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, local viewer implementation, deterministic JSON/HTML/SVG export, and the issue 007 layout-settings/configuration backend and browser surface are implemented and visually approved. Issue 008's bounded parent-level ELK option tranche is implemented and visually approved; issue 009 follows with target-aware node/edge mapping.
+The specification set is complete and readiness-reviewed. Issue slicing is active through the normal delivery plan; the Go analyzer, canonical model, headless projection path, local viewer implementation, deterministic JSON/HTML artifact generation, static SVG export, and the issue 007 layout-settings/configuration backend and browser surface are implemented and visually approved. Issue 008's bounded parent-level ELK option tranche and issue 009's bounded target-aware node/edge mapping are implemented and visually approved. Issue 016's spline-route implementation, embedded HTML ELK runtime, and browser current-canvas SVG download are implemented, visually approved, and archived.
 
 ## Verification strategy
 

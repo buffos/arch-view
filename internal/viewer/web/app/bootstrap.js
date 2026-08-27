@@ -1,6 +1,7 @@
 import { createContext } from "./context.js";
 import { createAPI } from "./api.js";
 import { renderGraph } from "./graph.js";
+import { downloadCurrentSVG } from "./export.js";
 import { applyLayoutProfile, closeLayoutSettings, loadLayoutConfig, openLayoutSettings, prepareLayout, renderLayoutSettings, resetLayoutProfile, saveLayoutProfile, saveLayoutProfileAs, updateLayoutDraftAlgorithm, updateLayoutDraftOption } from "./layout.js";
 import { createNavigation } from "./navigation.js";
 import { changeZoom, fitViewport, persistViewport, renderViewportControls, resetLayout, resetZoom, syncFocusButton, toggleFocusMode } from "./viewport.js";
@@ -70,6 +71,7 @@ export function bootstrap() {
   context.elements.layoutSettingsSave.addEventListener("click", function () { saveLayoutProfile(context, api, services); });
   context.elements.layoutSettingsSaveAs.addEventListener("click", function () { saveLayoutProfileAs(context, api, services); });
   context.elements.focusToggle.addEventListener("click", function () { toggleFocusMode(context); });
+  context.elements.downloadSVG.addEventListener("click", function () { downloadCurrentSVG(context); });
   document.addEventListener("fullscreenchange", function () { syncFocusButton(context); });
   context.elements.reanalysisButton.addEventListener("click", navigation.reanalyze);
   if (context.embeddedExport && context.embeddedExport.initial_reference_visibility) context.state.referenceVisibility = context.embeddedExport.initial_reference_visibility;

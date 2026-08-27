@@ -2,7 +2,7 @@
 
 Execution type: AFK
 Review gate: visual-review
-Status: deferred
+Status: done
 
 ## Parent PRD
 
@@ -33,22 +33,22 @@ eligible visible node or edge in the current scene.
 
 ## Acceptance criteria
 
-- [ ] The adapter partitions each validated option using its catalog target
+- [x] The adapter partitions each validated option using its catalog target
   metadata and emits it at the correct ELK graph element level.
-- [ ] The initial node/edge tranche is editable only when its value type,
+- [x] The initial node/edge tranche is editable only when its value type,
   algorithm applicability, target, and renderer-visible effect are covered by
   tests; all other target-specific entries remain catalog-only.
-- [ ] A configured value is applied uniformly and deterministically to the
+- [x] A configured value is applied uniformly and deterministically to the
   eligible visible nodes or edges, with no hidden per-element state or change
   to the v1 configuration schema.
-- [ ] Options are never silently misplaced on the root graph, and output-only
+- [x] Options are never silently misplaced on the root graph, and output-only
   ELK metadata such as junction points is never exposed as an editable input.
-- [ ] Apply, Reset, Save, Save As, nearest-ancestor discovery, fallback
+- [x] Apply, Reset, Save, Save As, nearest-ancestor discovery, fallback
   behavior, and manual-position clearing retain their existing semantics.
-- [ ] Focused tests assert root/node/edge request placement, typed validation,
+- [x] Focused tests assert root/node/edge request placement, typed validation,
   algorithm compatibility, unsupported target rejection, deterministic output,
   and canonical model immutability.
-- [ ] A visual review confirms that supported node/edge-targeted settings do
+- [x] A visual review confirms that supported node/edge-targeted settings do
   not introduce invalid attachments, unreadable routes, or renderer-only
   styling surprises in windowed and full-canvas views.
 
@@ -73,10 +73,9 @@ eligible visible node or edge in the current scene.
 
 ## Scheduling note
 
-Deferred by explicit user direction on 2026-08-26. The current implementation
-continues to support the approved parent-level option tranche; node- and
-edge-targeted ELK options remain catalog-only until this issue is deliberately
-resumed.
+Resumed by explicit user direction on 2026-08-27. The current implementation
+continues to support the approved parent-level option tranche; this issue now
+implements the bounded node- and edge-targeted ELK option tranche.
 
 ## User stories addressed
 
@@ -89,11 +88,11 @@ resumed.
 
 ## Scenario traceability and verification plan
 
-| Source rule / use case | Scenario | Issue criterion | Planned verification | State |
+| Source rule / use case | Scenario | Issue criterion | Verification evidence | State |
 |---|---|---|---|---|
-| ELK option targets determine where presentation settings are applied | SC-EX-012 | Root/node/edge options are placed according to catalog metadata | Adapter request-shape and catalog tests | planned |
-| Layout application changes geometry only | SC-EX-013 | Targeted options produce valid positions/routes without model mutation | Scene/layout integration and immutability tests | planned |
-| Unsupported target-specific behavior remains safe and visible | SC-EX-016 | Options needing unsupported scene features remain catalog-only | Validation, fallback, and browser diagnostics review | planned |
+| ELK option targets determine where presentation settings are applied | SC-EX-012 | Root/node/edge options are placed according to catalog metadata | `go test ./internal/viewer/layout -count=1`; `node internal/viewer/web/layout_request_test.js` | complete |
+| Layout application changes geometry only | SC-EX-013 | Targeted options produce valid positions/routes without model mutation | `go test ./... -count=1`, race suite, profile/request immutability assertions, and user visual review | complete |
+| Unsupported target-specific behavior remains safe and visible | SC-EX-016 | Options needing unsupported scene features remain catalog-only | Targeted catalog/validation tests and user visual support/applicability review | complete |
 
 ## Verification surfaces
 
@@ -108,5 +107,45 @@ resumed.
 
 ## Review handoff
 
-Do not close this issue until automated verification passes and the user has
-visually approved target-aware layout behavior in normal and full-canvas views.
+Automated verification passed. The user confirmed on 2026-08-27 that the
+target-aware settings review passes in normal and full-canvas views, including
+the resulting routes and supported/unsupported option treatment.
+
+## Implementation result
+
+The layout registry now supports the bounded simple-scene target tranche:
+`org.eclipse.elk.priority` is applied to every eligible visible node and edge,
+and the layered direction, shortness, and straightness priority options are
+applied to every eligible visible edge. Parent options remain on the root
+graph. Unsupported node/edge/port/label/junction options remain catalog-only;
+the v1 flat configuration schema and canonical model are unchanged.
+
+Verification passed on 2026-08-27:
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `staticcheck ./...`
+- `golangci-lint run`
+- `node --check internal/viewer/web/layout_request.js`
+- `node internal/viewer/web/layout_request_test.js`
+- `git diff --check`
+
+The user-approved visual review covered the editable targeted priority options
+in the settings surface, application in windowed and full-canvas views,
+readable routes, and correct target placement.
+
+## Artifact sync result
+
+- Application PRD: no impact; the existing layout-settings journey and product
+  scope are unchanged.
+- Application architecture summary: no external contract impact; target
+  mapping remains inside the layout adapter and the renderer-neutral scene,
+  configuration schema, and canonical model remain unchanged.
+- Owning capability artifacts: synchronized with the target-level application
+  rule, supported tranche, and current verification status in the Explore exact
+  specification set.
+- Delivery truth: the issue is complete and archived; the owning capability
+  and implementation-slice references are synchronized.
+- Reference boundary: the upstream [reference repository](https://github.com/unclebob/arch-view) remains read-only and untouched.

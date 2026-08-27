@@ -27,6 +27,10 @@ func renderHTML(value model.Model, request Request) ([]byte, map[string]any, err
 	if err != nil {
 		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export stylesheet could not be loaded", err, nil)
 	}
+	elkData, err := viewer.Asset("vendor/elk.bundled.js")
+	if err != nil {
+		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export ELK runtime could not be loaded", err, nil)
+	}
 	appBundle, err := bundleViewer()
 	if err != nil {
 		return nil, nil, analysis.WrapHostError(analysis.ErrHostFailure, "HTML export application bundle could not be built", err, nil)
@@ -38,7 +42,7 @@ func renderHTML(value model.Model, request Request) ([]byte, map[string]any, err
 	if err != nil {
 		return nil, nil, err
 	}
-	template, err = replaceRequired(template, "    <script src=\"/assets/vendor/elk.bundled.js\" defer></script>\n", "")
+	template, err = replaceRequired(template, "    <script src=\"/assets/vendor/elk.bundled.js\" defer></script>\n", "    <script>\n"+string(elkData)+"\n    </script>\n")
 	if err != nil {
 		return nil, nil, err
 	}

@@ -52,6 +52,7 @@ Fields: `session_id`, `model_id`, `project_root_label`, `model_revision`, `state
 - A discovered `.archview.json` is selected by nearest-ancestor precedence from the selected target directory toward the filesystem root; v1 does not merge files. No file means built-in defaults.
 - A malformed or unsupported nearest configuration is surfaced as a configuration diagnostic and uses safe defaults for the active session; it does not silently select a farther configuration.
 - Applying a new layout profile recalculates presentation geometry and clears manual positions for the affected hierarchy path. Configuration never changes canonical model facts, analyzer options, viewport state, or source content.
+- Validated layout options are applied at the graph-element level declared by their catalog targets: `PARENTS` on the root graph, `NODES` on each eligible visible node, and `EDGES` on each eligible visible edge. A multi-target option may be applied uniformly to each declared eligible target; unsupported target-specific options remain catalog-only.
 - Ordinary `Save` is explicit and atomic and overwrites exactly the active discovered `.archview.json`; it never creates a replacement in another folder. If no file is active, it returns `save_as_required` rather than creating one. `Save As` is the only operation that accepts a custom destination folder, writes the fixed `.archview.json` filename atomically after explicit confirmation, and may make that file active for the current session. Model-only sessions cannot persist a project file.
 
 ## Domain events
@@ -66,5 +67,12 @@ Renderer adapters, themes, filters, layout algorithms, layout option catalogs, p
 
 The issue 007 implementation realizes the `LayoutConfiguration` boundary with
 the pinned ELK catalog, typed profiles, nearest-file origin, session reset,
-and explicit persistence actions. The canonical model remains unchanged by
-these presentation operations.
+and explicit persistence actions. Issue 009 adds target-aware application for
+the bounded simple node/edge priority tranche while keeping the canonical model
+unchanged by these presentation operations; its implementation and visual
+review are complete.
+
+Issue 016 implements the presentation-only route projection for general ELK
+spline output. Spline control points are geometry, not new semantic
+relationships, and invalid geometry falls back to the existing deterministic
+orthogonal route.

@@ -16,12 +16,16 @@ Export canonical versioned JSON, self-contained interactive HTML, and scalable S
 ## Rules
 
 - JSON is the canonical durable interchange format and is distinct from the future analyzer NDJSON protocol.
-- HTML/SVG are projections of the same model/view contract.
+- HTML/SVG are projections of the same model/view contract. Self-contained
+  HTML embeds the pinned browser ELK runtime and effective presentation
+  profile; the Go CLI SVG remains a deterministic static artifact.
 - Visual exports use the viewer's local-first reference visibility policy by default; canonical JSON retains every reference and explicit view options can aggregate or expand reference scopes.
 - Stable IDs/order, normalized paths, explicit versions, and layout provenance are required.
 - Source contents are not embedded by default; paths/locations are retained.
 - Complete and partial artifacts may be written; fatal input/render/write errors are non-zero.
 - No automatic architectural approval or policy judgment is performed.
+- The browser viewer may separately download its current canvas as SVG; that
+  action is distinct from the deterministic Go CLI SVG artifact.
 
 ## Functional requirements
 

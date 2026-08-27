@@ -67,6 +67,36 @@ Option keys are the pinned adapter's catalog IDs. The local host also accepts
 the conventional `elk.*` shorthand on input and normalizes it to the catalog
 ID when saving.
 
+When a validated profile is handed to the ELK adapter, each option is emitted
+at the graph-element level declared by its catalog targets: `PARENTS` options
+are placed on the root graph, `NODES` options are copied uniformly to each
+eligible visible node, and `EDGES` options are copied uniformly to each
+eligible visible edge. The current editable target-aware tranche is
+`org.eclipse.elk.priority` for nodes and edges plus the layered direction,
+shortness, and straightness edge-priority options. Options that require ports,
+labels, junctions, per-element values, or renderer-owned styling remain
+catalog-only and are rejected if supplied as editable profile values. This
+mapping does not change the flat `arch-view.config/v1` schema or canonical
+model facts.
+
+### Spline routing extension
+
+Issue 016 activates `org.eclipse.elk.edgeRouting=SPLINES` for the pinned
+layered adapter. Valid ELK spline sections and control points are normalized
+into the existing renderer-neutral route representation as finite cubic
+segments, then consumed by the live browser and browser current-canvas SVG
+serializers. The
+self-contained HTML export embeds the effective profile/catalog and pinned ELK
+runtime, so it recalculates the scene in the browser without network access.
+The browser Download SVG action serializes the current canvas, including valid
+ELK spline routes. Missing or malformed control data uses the deterministic
+orthogonal fallback; it never changes canonical relationships or emits an
+invalid path. Go's static `--format svg` export remains explicitly
+deterministic orthogonal. The configuration schema remains flat and versioned.
+Spline-specific tuning, ports, labels, junctions, compound geometry, and
+manual spline routing remain outside this bounded extension unless separately
+covered by implementation and tests.
+
 Discovery starts at the selected target directory and walks parent directories toward the filesystem root. The nearest file wins as a complete profile; v1 does not merge files. If none exists, built-in defaults apply. An invalid nearest file produces a visible configuration diagnostic and does not silently select a farther file.
 
 The settings surface may maintain an unsaved session draft. Applying a valid profile recalculates the current scene with the selected layout adapter, consumes its node positions and edge routes, and clears manual positions for that hierarchy path. Reset restores built-in defaults for the session without deleting a project file. Ordinary `Save` is explicit and overwrites the exact active discovered file; it never creates a file when none is active. `Save As` is the only operation that accepts a custom destination folder and writes the fixed `.archview.json` filename there after explicit confirmation; the resulting file becomes active for the current session. Automatic discovery in a later session still follows the target-to-filesystem-root ancestor chain, so a custom file outside that chain requires a later explicit configuration-selection capability, which is outside issue 007. Analyzer options, canonical model facts, viewport state, and manual node positions are not persisted in `.archview.json`.

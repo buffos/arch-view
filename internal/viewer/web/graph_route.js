@@ -100,8 +100,88 @@
     return route;
   }
 
+  function cubicPoint(start, control1, control2, to, ratio) {
+    const inverse = 1 - ratio;
+    return {
+      x: (inverse * inverse * inverse * start.x)
+        + (3 * inverse * inverse * ratio * control1.x)
+        + (3 * inverse * ratio * ratio * control2.x)
+        + (ratio * ratio * ratio * to.x),
+      y: (inverse * inverse * inverse * start.y)
+        + (3 * inverse * inverse * ratio * control1.y)
+        + (3 * inverse * ratio * ratio * control2.y)
+        + (ratio * ratio * ratio * to.y)
+    };
+  }
+
+  function splineLabel(sections) {
+    let segmentCount = 0;
+    sections.forEach(function (section) { segmentCount += section.segments.length; });
+    const target = Math.floor(segmentCount / 2);
+    let current = 0;
+    for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
+      const section = sections[sectionIndex];
+      for (let segmentIndex = 0; segmentIndex < section.segments.length; segmentIndex += 1) {
+        if (current === target) {
+          const segment = section.segments[segmentIndex];
+          const start = segmentIndex === 0 ? section.start : section.segments[segmentIndex - 1].to;
+          const point = cubicPoint(start, segment.control1, segment.control2, segment.to, 0.5);
+          return { x: point.x, y: point.y - 7 };
+        }
+        current += 1;
+      }
+    }
+    return { x: 0, y: -7 };
+  }
+
+  function splineSection(section, offset) {
+    if (!section) return null;
+    const start = normalizedPoint(section.startPoint, offset);
+    const end = normalizedPoint(section.endPoint, offset);
+    const bendPoints = section.bendPoints == null ? [] : section.bendPoints;
+    if (!start || !end || !Array.isArray(bendPoints) || bendPoints.length < 2 || (bendPoints.length + 1) % 3 !== 0) return null;
+    const segments = [];
+    const anchors = [start];
+    for (let bendIndex = 0; bendIndex < bendPoints.length; bendIndex += 3) {
+      const control1 = normalizedPoint(bendPoints[bendIndex], offset);
+      const control2 = normalizedPoint(bendPoints[bendIndex + 1], offset);
+      const to = bendIndex + 2 < bendPoints.length
+        ? normalizedPoint(bendPoints[bendIndex + 2], offset)
+        : end;
+      if (!control1 || !control2 || !to) return null;
+      segments.push({ kind: "cubic", control1: control1, control2: control2, to: to });
+      anchors.push(to);
+    }
+    return { start: start, segments: segments, anchors: anchors };
+  }
+
+  function routeFromSplineSections(sections, offset) {
+    if (!Array.isArray(sections) || sections.length === 0) return null;
+    const normalizedSections = [];
+    const flattened = [];
+    for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
+      const spline = splineSection(sections[sectionIndex], offset);
+      if (!spline) return null;
+      normalizedSections.push({ start: spline.start, segments: spline.segments });
+      spline.anchors.forEach(function (point) { appendUnique(flattened, point); });
+    }
+    if (!normalizedSections.length) return null;
+    const label = splineLabel(normalizedSections);
+    return {
+      kind: "spline",
+      sections: normalizedSections,
+      label: label,
+      // Keep the legacy fields while callers migrate to sections. For a
+      // spline, points contains route anchors, not the control-point stream.
+      points: flattened,
+      labelX: label.x,
+      labelY: label.y
+    };
+  }
+
   function routePoints(route) {
     if (!route) return null;
+    if (route.kind === "self-loop") return null;
     if (Object.prototype.hasOwnProperty.call(route, "sections")) {
       if (!Array.isArray(route.sections) || route.sections.length === 0) return null;
       const points = [];
@@ -113,7 +193,14 @@
         for (let segmentIndex = 0; segmentIndex < section.segments.length; segmentIndex += 1) {
           const segment = section.segments[segmentIndex];
           const to = pointValue(segment && segment.to);
-          if (!segment || segment.kind !== "line" || !to) return null;
+          if (!segment || !to) return null;
+          if (segment.kind === "cubic") {
+            const control1 = pointValue(segment.control1);
+            const control2 = pointValue(segment.control2);
+            if (!control1 || !control2) return null;
+            if (!appendUnique(points, control1) || !appendUnique(points, control2)) return null;
+          }
+          if (segment.kind !== "line" && segment.kind !== "cubic") return null;
           if (!appendUnique(points, to)) return null;
         }
       }
@@ -137,6 +224,12 @@
     }
     if (!appendUnique(points, route.targetPoint)) return null;
     return points.length > 1 ? points : null;
+  }
+
+  function routeFromLegacyLayoutEdge(route) {
+    if (!route || Object.prototype.hasOwnProperty.call(route, "sections")) return route;
+    if (!Object.prototype.hasOwnProperty.call(route, "points")) return route;
+    return lineRoute(route.points, route.label_x, route.label_y, "orthogonal");
   }
 
   function pathForRoute(route) {
@@ -168,11 +261,12 @@
   }
 
   function geometryFromRoute(route, labelX, labelY) {
-    const path = pathForRoute(route);
+    const normalizedRoute = routeFromLegacyLayoutEdge(route);
+    const path = pathForRoute(normalizedRoute);
     if (!path) return null;
-    const points = routePoints(route);
+    const points = routePoints(normalizedRoute);
     const middle = midpoint(points || []);
-    const label = route.label || {};
+    const label = normalizedRoute.label || {};
     return {
       path: path,
       labelX: finiteNumber(labelX, finiteNumber(label.x, middle.x)),
@@ -222,9 +316,9 @@
   }
 
   function edgeGeometry(relationship, from, to, route) {
+    if (relationship.from_visible_id === relationship.to_visible_id) return geometryFromRoute(selfLoopRoute(from));
     const routed = geometryFromRoute(route, route && route.labelX, route && route.labelY);
     if (routed) return routed;
-    if (relationship.from_visible_id === relationship.to_visible_id) return geometryFromRoute(selfLoopRoute(from));
     // Any missing or malformed route is deterministic orthogonal fallback.
     // This keeps layout failures and manual-position routing on the same
     // renderer-neutral path representation.
@@ -237,6 +331,7 @@ export {
   orthogonalRoute,
   pathForRoute,
   routeFromSections as fromELKSections,
+  routeFromSplineSections as fromELKSplineSections,
   routePoints,
   selfLoopRoute
 };

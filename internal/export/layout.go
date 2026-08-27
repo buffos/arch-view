@@ -34,6 +34,10 @@ type deterministicLayoutEdge struct {
 	Points []routing.Point `json:"points"`
 	LabelX float64         `json:"label_x"`
 	LabelY float64         `json:"label_y"`
+	// Route is the in-process representation consumed by the SVG renderer.
+	// Keep the established points/label JSON shape for embedded HTML exports;
+	// the browser reconstructs the same route at its boundary.
+	Route *routing.Route `json:"-"`
 }
 
 func buildDeterministicLayout(snapshot scene.SceneSnapshot) deterministicLayout {
@@ -104,7 +108,7 @@ func orthogonalEdge(from, to deterministicLayoutNode) deterministicLayoutEdge {
 	}, routing.NodeBox{
 		X: to.X, Y: to.Y, Width: to.Width, Height: to.Height,
 	})
-	return deterministicLayoutEdge{Points: route.PolylinePoints(), LabelX: route.Label.X, LabelY: route.Label.Y}
+	return deterministicLayoutEdge{Points: route.PolylinePoints(), LabelX: route.Label.X, LabelY: route.Label.Y, Route: &route}
 }
 
 func maxInt(left, right int) int {

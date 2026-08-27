@@ -45,4 +45,4 @@ This capability is specified. Its versioned JSON, deterministic HTML/SVG artifac
 
 ## Delivery progress
 
-Issue 005 implemented the shared JSON, self-contained HTML, and static SVG export path, including deterministic layouts, reference visibility, evidence metadata, atomic writes, and CLI analyze-to-export wiring. Issue 011 completed the browser module/bundling boundary without changing the export contract. The capability remains `specified` because broader reanalysis and future CI expansion remain specified but are outside the closed issue.
+Issue 005 implemented the shared JSON, self-contained HTML, and static SVG export path, including deterministic layouts, reference visibility, evidence metadata, atomic writes, and CLI analyze-to-export wiring. Issue 011 completed the browser module/bundling boundary. Issue 016 extends HTML with an embedded profile/catalog and pinned ELK runtime, and adds current-canvas SVG download in the browser; the Go static SVG contract remains deterministic orthogonal. The capability remains `specified` because broader reanalysis and future CI expansion remain specified but are outside the closed issue.

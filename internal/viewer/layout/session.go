@@ -11,6 +11,11 @@ import (
 // NewSession discovers the nearest profile and keeps its source root for
 // subsequent Save and Save As operations.
 func NewSession(sourceRoot string) Session {
+	if sourceRoot != "" {
+		if absolute, err := filepath.Abs(sourceRoot); err == nil {
+			sourceRoot = filepath.Clean(absolute)
+		}
+	}
 	session := discoverLayoutSession(sourceRoot)
 	session.sourceRoot = sourceRoot
 	return session

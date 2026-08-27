@@ -15,6 +15,7 @@ import (
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/routing"
+	"github.com/buffo/arch-view/internal/viewer/layout"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -54,14 +55,22 @@ func TestRenderJSONIsCanonicalAndPreservesPartialFacts(t *testing.T) {
 
 func TestRenderHTMLIsSelfContainedAndUsesEmbeddedSceneCatalog(t *testing.T) {
 	value := exportFixtureModel(t)
-	metadata, data, err := Render(value, Request{
+	request := Request{
 		Format:              FormatHTML,
 		ReferenceVisibility: scene.ReferenceVisibilityHidden,
-	})
+	}
+	metadata, data, err := Render(value, request)
 	if err != nil {
 		t.Fatalf("HTML render: %v", err)
 	}
-	if metadata.LayoutProvenance["engine"] != "deterministic-export" {
+	repeatMetadata, repeatData, err := Render(value, request)
+	if err != nil {
+		t.Fatalf("repeat HTML render: %v", err)
+	}
+	if !bytes.Equal(data, repeatData) || metadata.ContentHash != repeatMetadata.ContentHash {
+		t.Fatal("identical HTML exports are not byte-stable")
+	}
+	if metadata.LayoutProvenance["engine"] != "embedded-browser" {
 		t.Fatalf("HTML layout provenance = %#v", metadata.LayoutProvenance)
 	}
 	html := string(data)
@@ -88,9 +97,53 @@ func TestRenderHTMLIsSelfContainedAndUsesEmbeddedSceneCatalog(t *testing.T) {
 		"standard_library",
 		`"scenes"`,
 		`"layouts"`,
+		`"layout_profile"`,
+		`"layout_catalog"`,
+		`window.ELK`,
+		`Download SVG`,
 	} {
 		if !strings.Contains(strings.ToLower(html), strings.ToLower(required)) {
 			t.Fatalf("self-contained HTML is missing %q", required)
+		}
+	}
+}
+
+func TestRenderHTMLEmbedsTheRequestedLayoutProfile(t *testing.T) {
+	value := exportFixtureModel(t)
+	profile := layout.LayoutProfile{
+		Algorithm: "layered",
+		Options: map[string]any{
+			"org.eclipse.elk.edgeRouting": "SPLINES",
+		},
+	}
+	metadata, data, err := Render(value, Request{Format: FormatHTML, LayoutProfile: &profile})
+	if err != nil {
+		t.Fatalf("HTML render with layout profile: %v", err)
+	}
+	if metadata.LayoutProvenance["algorithm"] != "layered" || metadata.LayoutProvenance["adapter"] != "elkjs" || metadata.LayoutProvenance["fallback_engine"] != "deterministic-export" {
+		t.Fatalf("HTML profile provenance = %#v", metadata.LayoutProvenance)
+	}
+	if !strings.Contains(string(data), `"org.eclipse.elk.edgeRouting":"SPLINES"`) {
+		t.Fatal("HTML export did not embed the requested spline profile")
+	}
+}
+
+func TestRenderSVGKeepsTheDeterministicGoLayoutWhenProfileIsPresent(t *testing.T) {
+	value := exportFixtureModel(t)
+	profile := layout.LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.edgeRouting": "SPLINES"}}
+	withoutProfile := renderedBytes(t, value, Request{Format: FormatSVG})
+	withProfile := renderedBytes(t, value, Request{Format: FormatSVG, LayoutProfile: &profile})
+	if !bytes.Equal(withoutProfile, withProfile) {
+		t.Fatal("static Go SVG changed when an HTML layout profile was supplied")
+	}
+}
+
+func TestRenderIgnoresHTMLOnlyLayoutProfileForNonHTMLFormats(t *testing.T) {
+	value := exportFixtureModel(t)
+	invalid := layout.LayoutProfile{Algorithm: "not-a-pinned-algorithm"}
+	for _, format := range []string{FormatJSON, FormatSVG} {
+		if _, _, err := Render(value, Request{Format: format, LayoutProfile: &invalid}); err != nil {
+			t.Fatalf("%s rejected an ignored HTML-only profile: %v", format, err)
 		}
 	}
 }
@@ -153,6 +206,68 @@ func TestSVGRouteSerializerRejectsInvalidGeometry(t *testing.T) {
 	}
 	if pathFromRoute(route) != "" {
 		t.Fatal("SVG route serializer accepted a non-finite coordinate")
+	}
+}
+
+func TestSVGRouteSerializerRendersCubicGeometry(t *testing.T) {
+	control1 := routing.Point{X: 10, Y: 0}
+	control2 := routing.Point{X: 10, Y: 20}
+	route := routing.Route{
+		Kind: routing.RouteKindSpline,
+		Sections: []routing.RouteSection{{
+			Start: routing.Point{X: 0, Y: 0},
+			Segments: []routing.RouteSegment{{
+				Kind:     routing.SegmentKindCubic,
+				Control1: &control1,
+				Control2: &control2,
+				To:       routing.Point{X: 20, Y: 20},
+			}},
+		}},
+	}
+	if got, want := pathFromRoute(route), "M 0 0 C 10 0, 10 20, 20 20"; got != want {
+		t.Fatalf("cubic SVG path = %q, want %q", got, want)
+	}
+}
+
+func TestExportLayoutUsesRoutesWithoutChangingEmbeddedShape(t *testing.T) {
+	control1 := routing.Point{X: 10, Y: 0}
+	control2 := routing.Point{X: 10, Y: 20}
+	route := routing.Route{
+		Kind: routing.RouteKindSpline,
+		Sections: []routing.RouteSection{{
+			Start: routing.Point{X: 0, Y: 0},
+			Segments: []routing.RouteSegment{{
+				Kind:     routing.SegmentKindCubic,
+				Control1: &control1,
+				Control2: &control2,
+				To:       routing.Point{X: 20, Y: 20},
+			}},
+		}},
+	}
+	routed := deterministicLayoutEdge{Route: &route}
+	pathValue, labelX, labelY := svgEdgeGeometry(scene.VisibleRelationship{FromVisibleID: "a", ToVisibleID: "b"}, deterministicLayoutNode{}, deterministicLayoutNode{}, routed)
+	if pathValue != "M 0 0 C 10 0, 10 20, 20 20" || labelX != 0 || labelY != 0 {
+		t.Fatalf("SVG renderer did not consume the route representation: path=%q label=(%v,%v)", pathValue, labelX, labelY)
+	}
+
+	data, err := json.Marshal(routed)
+	if err != nil {
+		t.Fatalf("marshal embedded layout edge: %v", err)
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		t.Fatalf("decode embedded layout edge: %v", err)
+	}
+	if len(fields) != 3 {
+		t.Fatalf("embedded layout edge fields = %d, want established shape of 3: %s", len(fields), data)
+	}
+	for _, field := range []string{"points", "label_x", "label_y"} {
+		if _, ok := fields[field]; !ok {
+			t.Fatalf("embedded layout edge lost established field %q: %s", field, data)
+		}
+	}
+	if _, ok := fields["route"]; ok {
+		t.Fatal("in-process route leaked into the embedded layout schema")
 	}
 }
 

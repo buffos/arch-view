@@ -1,7 +1,7 @@
 package layout
 
 type optionHandler struct {
-	targetScope      string
+	targetScopes     []string
 	rendererSupport  string
 	enrich           func(*LayoutOptionDefinition)
 	validate         func(LayoutOptionDefinition, any) error
@@ -9,11 +9,8 @@ type optionHandler struct {
 }
 
 var layoutOptionHandlers = map[string]optionHandler{
-	"org.eclipse.elk.direction": genericOptionHandler("RIGHT", enumValues("RIGHT", "LEFT", "DOWN", "UP")),
-	// SPLINES remains cataloged by ELK but is deliberately excluded from the
-	// editable values until the browser and export renderers support cubic
-	// spline control data end to end.
-	"org.eclipse.elk.edgeRouting":                                      genericOptionHandler("ORTHOGONAL", enumValues("NONE", "POLYLINE", "ORTHOGONAL")),
+	"org.eclipse.elk.direction":                                        genericOptionHandler("RIGHT", enumValues("RIGHT", "LEFT", "DOWN", "UP")),
+	"org.eclipse.elk.edgeRouting":                                      genericOptionHandler("ORTHOGONAL", enumValues("NONE", "POLYLINE", "ORTHOGONAL", "SPLINES")),
 	"org.eclipse.elk.aspectRatio":                                      genericOptionHandlerWithBounds("engine default", nil, numberPointer(0), nil, true, false),
 	"org.eclipse.elk.spacing.nodeNode":                                 genericOptionHandlerWithBounds(35.0, nil, numberPointer(0), nil, false, false),
 	"org.eclipse.elk.spacing.edgeNode":                                 genericOptionHandlerWithBounds(10.0, nil, numberPointer(0), nil, false, false),
@@ -27,6 +24,10 @@ var layoutOptionHandlers = map[string]optionHandler{
 	"org.eclipse.elk.layered.crossingMinimization.strategy":            genericOptionHandler("LAYER_SWEEP", enumValues("LAYER_SWEEP", "MEDIAN_LAYER_SWEEP", "INTERACTIVE", "NONE")),
 	"org.eclipse.elk.layered.nodePlacement.strategy":                   genericOptionHandler("BRANDES_KOEPF", enumValues("SIMPLE", "INTERACTIVE", "LINEAR_SEGMENTS", "BRANDES_KOEPF", "NETWORK_SIMPLEX")),
 	"org.eclipse.elk.layered.compaction.connectedComponents":           genericOptionHandler(false, nil),
+	"org.eclipse.elk.priority":                                         genericOptionHandlerForTargets([]string{"NODES", "EDGES"}, "engine default", nil),
+	"org.eclipse.elk.layered.priority.direction":                       genericOptionHandlerForTargets([]string{"EDGES"}, "engine default", nil),
+	"org.eclipse.elk.layered.priority.shortness":                       genericOptionHandlerForTargets([]string{"EDGES"}, "engine default", nil),
+	"org.eclipse.elk.layered.priority.straightness":                    genericOptionHandlerForTargets([]string{"EDGES"}, "engine default", nil),
 	"org.eclipse.elk.layered.thoroughness":                             genericOptionHandlerWithBounds(7.0, nil, numberPointer(1), numberPointer(100), false, false),
 	"org.eclipse.elk.layered.mergeEdges":                               genericOptionHandler(false, nil),
 	"org.eclipse.elk.layered.mergeHierarchyEdges":                      genericOptionHandler(false, nil),
@@ -39,14 +40,21 @@ var layoutOptionHandlers = map[string]optionHandler{
 }
 
 func genericOptionHandler(defaultValue any, allowedValues []string) optionHandler {
-	return genericOptionHandlerWithBounds(defaultValue, allowedValues, nil, nil, false, false)
+	return genericOptionHandlerForTargets([]string{"PARENTS"}, defaultValue, allowedValues)
 }
 
 func genericOptionHandlerWithBounds(defaultValue any, allowedValues []string, minimum, maximum *float64, minimumExclusive, maximumExclusive bool) optionHandler {
-	targetScope := "PARENTS"
+	return genericOptionHandlerForTargetsWithBounds([]string{"PARENTS"}, defaultValue, allowedValues, minimum, maximum, minimumExclusive, maximumExclusive)
+}
+
+func genericOptionHandlerForTargets(targetScopes []string, defaultValue any, allowedValues []string) optionHandler {
+	return genericOptionHandlerForTargetsWithBounds(targetScopes, defaultValue, allowedValues, nil, nil, false, false)
+}
+
+func genericOptionHandlerForTargetsWithBounds(targetScopes []string, defaultValue any, allowedValues []string, minimum, maximum *float64, minimumExclusive, maximumExclusive bool) optionHandler {
 	rendererSupport := "supported"
 	return optionHandler{
-		targetScope:     targetScope,
+		targetScopes:    append([]string(nil), targetScopes...),
 		rendererSupport: rendererSupport,
 		enrich: func(option *LayoutOptionDefinition) {
 			if allowedValues != nil {
@@ -59,7 +67,7 @@ func genericOptionHandlerWithBounds(defaultValue any, allowedValues []string, mi
 			option.Maximum = maximum
 			option.MinimumExclusive = minimumExclusive
 			option.MaximumExclusive = maximumExclusive
-			if !layoutOptionTargets(*option, targetScope) {
+			if !layoutOptionTargetsAll(*option, targetScopes) {
 				return
 			}
 			option.DefaultValue = defaultValue
@@ -107,6 +115,15 @@ func layoutOptionTargets(option LayoutOptionDefinition, target string) bool {
 
 func layoutOptionTargetsParent(option LayoutOptionDefinition) bool {
 	return layoutOptionTargets(option, "PARENTS")
+}
+
+func layoutOptionTargetsAll(option LayoutOptionDefinition, targets []string) bool {
+	for _, target := range targets {
+		if !layoutOptionTargets(option, target) {
+			return false
+		}
+	}
+	return true
 }
 
 func catalogOptionApplies(option LayoutOptionDefinition, algorithm string) bool {

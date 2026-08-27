@@ -12,6 +12,36 @@
       && optionAppliesToAlgorithm(option, algorithm);
   }
 
+  function isEditableTargetOption(option, algorithm, target) {
+    return Boolean(option)
+      && option.editable === true
+      && option.renderer_support === "supported"
+      && Array.isArray(option.targets)
+      && option.targets.includes(target)
+      && optionAppliesToAlgorithm(option, algorithm);
+  }
+
+  function buildTargetLayoutOptions(profile, catalog, target) {
+    const selectedProfile = profile || { algorithm: "layered", options: {} };
+    const algorithm = selectedProfile.algorithm || "layered";
+    const profileOptions = selectedProfile.options || {};
+    const catalogOptions = catalog && Array.isArray(catalog.options) ? catalog.options : [];
+    const targetLayoutOptions = {};
+    Object.keys(profileOptions).sort().forEach(function (key) {
+      const value = profileOptions[key];
+      const option = catalogOptions.find(function (item) { return item.id === key; });
+      if (value !== undefined && value !== null && isEditableTargetOption(option, algorithm, target)) {
+        targetLayoutOptions[key] = String(value);
+      }
+    });
+    return targetLayoutOptions;
+  }
+
+  function copyLayoutOptions(element, options) {
+    if (Object.keys(options).length) element.layoutOptions = Object.assign({}, options);
+    return element;
+  }
+
   function buildRootLayoutOptions(profile, catalog) {
     const selectedProfile = profile || { algorithm: "layered", options: {} };
     const algorithm = selectedProfile.algorithm || "layered";
@@ -29,11 +59,18 @@
       rootLayoutOptions["elk.layered.spacing.nodeNodeBetweenLayers"] = "84";
     }
     const catalogOptions = catalog && Array.isArray(catalog.options) ? catalog.options : [];
-    Object.keys(profileOptions).forEach(function (key) {
+    Object.keys(profileOptions).sort().forEach(function (key) {
       const value = profileOptions[key];
       const option = catalogOptions.find(function (item) { return item.id === key; });
       if (value !== undefined && value !== null && isEditableRootOption(option, algorithm)) {
-        rootLayoutOptions[key] = String(value);
+        // ELK's short root keys are the canonical request keys for these
+        // built-in options. Avoid sending a default short key together with a
+        // conflicting fully-qualified alias so the selected value is applied
+        // deterministically by the engine.
+        const requestKey = key === "org.eclipse.elk.direction" || key === "org.eclipse.elk.edgeRouting"
+          ? key.replace("org.eclipse.elk.", "elk.")
+          : key;
+        rootLayoutOptions[requestKey] = String(value);
       }
     });
     return rootLayoutOptions;
@@ -42,16 +79,18 @@
   function buildELKGraph(scene, profile, catalog) {
     const nodeWidth = 190;
     const nodeHeight = 82;
+    const nodeLayoutOptions = buildTargetLayoutOptions(profile, catalog, "NODES");
+    const edgeLayoutOptions = buildTargetLayoutOptions(profile, catalog, "EDGES");
     return {
       id: "root",
       layoutOptions: buildRootLayoutOptions(profile, catalog),
       children: scene.visible_nodes.map(function (node) {
-        return { id: node.id, width: nodeWidth, height: nodeHeight };
+        return copyLayoutOptions({ id: node.id, width: nodeWidth, height: nodeHeight }, nodeLayoutOptions);
       }),
       edges: scene.visible_relationships.map(function (relationship) {
-        return { id: relationship.id, sources: [relationship.from_visible_id], targets: [relationship.to_visible_id] };
+        return copyLayoutOptions({ id: relationship.id, sources: [relationship.from_visible_id], targets: [relationship.to_visible_id] }, edgeLayoutOptions);
       })
     };
   }
 
-export { buildELKGraph, buildRootLayoutOptions };
+export { buildELKGraph, buildRootLayoutOptions, buildTargetLayoutOptions };

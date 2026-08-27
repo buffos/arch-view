@@ -11,6 +11,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	exporter "github.com/buffo/arch-view/internal/export"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/viewer/layout"
 )
 
 func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
@@ -100,7 +101,12 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 			writeError(stderr, err)
 			return analysis.ExitCodeForError(err)
 		}
-		return writeExport(value, exporter.Request{Format: formatValue, OutputPath: *output, ViewPath: []string(viewPath), ReferenceVisibility: *referenceVisibility, ReferenceScopes: []string(referenceScopes), Overwrite: *overwrite, EmbedSource: *embedSource, Context: ctx}, stdout, stderr)
+		var layoutProfile *layout.LayoutProfile
+		if formatValue == exporter.FormatHTML {
+			profile := layout.NewSession(*project).Response().Layout
+			layoutProfile = &profile
+		}
+		return writeExport(value, exporter.Request{Format: formatValue, OutputPath: *output, ViewPath: []string(viewPath), ReferenceVisibility: *referenceVisibility, ReferenceScopes: []string(referenceScopes), LayoutProfile: layoutProfile, Overwrite: *overwrite, EmbedSource: *embedSource, Context: ctx}, stdout, stderr)
 	}
 	if *output == "-" {
 		return writeJSON(stdout, result)

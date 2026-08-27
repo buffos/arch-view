@@ -12,6 +12,7 @@ type RouteKind string
 const (
 	RouteKindPolyline   RouteKind = "polyline"
 	RouteKindOrthogonal RouteKind = "orthogonal"
+	RouteKindSpline     RouteKind = "spline"
 	RouteKindSelfLoop   RouteKind = "self-loop"
 )
 
@@ -79,9 +80,8 @@ func Polyline(points []Point, label Point) Route {
 }
 
 // SelfLoop returns the established self-loop geometry used for a relationship
-// whose visible source and target are the same node. General spline routing is
-// intentionally not introduced here; this cubic segment only preserves the
-// existing self-loop presentation.
+// whose visible source and target are the same node. The cubic segment is kept
+// classified as a self-loop so renderers can preserve its established styling.
 func SelfLoop(box NodeBox) Route {
 	x := box.X + box.Width/2
 	start := Point{X: x, Y: box.Y}

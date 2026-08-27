@@ -18,8 +18,11 @@ Fields: `job_id`, `input_model_id`, `input_revision`, `format`, `output_path`, `
 
 - A written artifact is atomic: write temporary sibling, flush/close, then replace target according to platform-safe policy.
 - JSON includes the complete/partial status and diagnostics.
-- HTML is self-contained and makes no network requests by default.
-- SVG contains semantic labels/metadata and no executable scripts.
+- HTML is self-contained, embeds the pinned ELK runtime/profile data, and makes
+  no network requests by default.
+- Go CLI SVG contains semantic labels/metadata and no executable scripts; the
+  browser's current-canvas SVG download is a separate interactive artifact
+  path.
 - Output ordering and rendering use stable IDs, normalized paths, explicit algorithm/version, and no wall-clock timestamps unless an explicit future option exists.
 - A partial artifact is valid; a fatal job does not claim an artifact was written.
 

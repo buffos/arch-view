@@ -53,5 +53,16 @@ The local viewer now implements the confirmed layout-settings boundary through
 the pinned catalog and the versioned `.archview.json` resolver. Automated
 validation and persistence checks, plus the normal/full-canvas browser review,
 are complete for issue 007. Issue 008 implements the next bounded parent-level
-option tranche and its visual review is complete; target-aware node/edge option
-support remains in issue 009.
+option tranche and its visual review is complete. Issue 009 implements the
+bounded target-aware node/edge priority tranche; automated verification and
+its normal/full-canvas visual review are complete.
+
+## Issue 016 delivery note
+
+The reserved cubic route segment is now active for the bounded Issue 016
+extension. The layered adapter maps valid ELK spline control streams to cubic
+routes with live-browser/self-contained-HTML parity and deterministic
+orthogonal fallback. Browser Download SVG captures the current canvas; Go
+static SVG remains deterministic orthogonal. It is an in-node extension of
+this capability, not a new planning node; visual review is complete and the
+issue is archived.

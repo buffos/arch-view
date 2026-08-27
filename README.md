@@ -176,12 +176,15 @@ remains outside all of these product boundaries.
 
 ### Refactor boundary
 
-Issues 010–015 implement the architecture refactor before spline support. They
-preserve the model, scene, configuration, CLI, HTTP, and export schemas while
-making the replaceable boundaries explicit. The route model reserves cubic
-segments for a future spline issue; current rendering remains deterministic
-orthogonal/polyline plus the established self-loop behavior. Issue 009's
-node/edge ELK option mapping is deferred.
+Issues 010–015 implement the architecture refactor before general spline
+rendering. They preserve the model, scene, configuration, CLI, HTTP, and
+export schemas while making the replaceable boundaries explicit. Issue 016
+now activates general ELK spline routes for the layered viewer and
+self-contained HTML export: valid ELK control-point streams become cubic route
+segments, while malformed data and manual movement retain deterministic
+orthogonal fallback. The browser Download SVG action serializes the current
+canvas. Go's static SVG export remains a separate deterministic orthogonal
+artifact.
 
 ### Export artifacts
 
@@ -197,5 +200,10 @@ arch-view export --input model.json --format svg --output architecture.svg
 Visual exports are local-first by default. Use `--reference-visibility
 aggregated` or `--reference-visibility expanded` to show non-local boundaries
 or individual imports; the canonical JSON always retains every reference and
-source location. Source contents are not embedded in v1, and an existing
-output requires `--overwrite`.
+source location. Project-backed `analyze --format html` embeds the effective
+nearest-ancestor `.archview.json` layout profile; model-only `export --input`
+embeds built-in defaults. The HTML file recalculates its layout with the pinned
+browser ELK runtime when opened and needs no server. Source contents are not
+embedded in v1, and an existing output requires `--overwrite`. Use the live
+viewer’s Download SVG button for a standalone SVG of the current canvas; it is
+distinct from the deterministic Go CLI SVG.

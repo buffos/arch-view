@@ -14,13 +14,21 @@ Verification: backend-boundary `when-supported`; frontend-integration `when-supp
 
 ## SC-EXPT-003 — Produce self-contained local-first HTML
 
-Given a model and HTML format, when export completes, then the file opens without network access and exposes a local-first overview, navigation, evidence/import details, reference-boundary controls, cycle/diagnostic states, and accessible list/details mode.
+Given a model and HTML format, when export completes, then the file opens
+without network access, contains the pinned ELK runtime and embedded layout
+profile/catalog, recalculates the selected scene in the browser, and exposes a
+local-first overview, navigation, evidence/import details, reference-boundary
+controls, cycle/diagnostic states, and accessible list/details mode.
 
 Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
 
 ## SC-EXPT-004 — Produce accessible SVG
 
-Given a model and SVG format, when export completes, then the artifact is scalable, script-free, has accessible metadata/labels, stable IDs, reference scope/confidence metadata, and deterministic geometry.
+Given a model and SVG format, when Go export completes, then the artifact is
+scalable, script-free, has accessible metadata/labels, stable IDs, reference
+scope/confidence metadata, and deterministic orthogonal geometry. The browser
+Download SVG action separately produces a standalone serialization of the
+current canvas route geometry.
 
 Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
 

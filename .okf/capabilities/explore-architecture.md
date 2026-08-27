@@ -3,7 +3,7 @@ type: capability
 title: Explore and inspect architecture
 description: Let users navigate generated architecture views and inspect the code and dependency evidence behind them.
 tags: [viewer, navigation, evidence, layout]
-timestamp: 2026-08-26T20:56:17Z
+timestamp: 2026-08-27T00:54:56Z
 state: specified
 state_changed: 2026-08-26T00:00:00Z
 project: /project.md
@@ -17,7 +17,8 @@ issues:
   - docs/agents/issues/done/20260826-006-viewer-semantic-summary-and-elk-routing.md
   - docs/agents/issues/done/20260826-007-elk-layout-settings-and-project-config.md
   - docs/agents/issues/done/20260826-008-expand-elk-parent-options.md
-  - docs/agents/issues/pending/009-elk-node-edge-option-targets.md
+  - docs/agents/issues/done/20260827-009-elk-node-edge-option-targets.md
+  - docs/agents/issues/done/20260827-016-spline-routing-and-cubic-rendering.md
   - docs/agents/issues/done/20260826-010-renderer-neutral-routing-and-geometry.md
   - docs/agents/issues/done/20260826-011-browser-composition-and-self-contained-bundling.md
   - docs/agents/issues/done/20260826-012-scene-projection-capability.md
@@ -54,4 +55,4 @@ This capability is specified. Its local web surface, renderer-neutral scene cont
 
 ## Delivery progress
 
-Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, the ELK settings/project-configuration slice, and the expanded parent-level ELK option tranche. Issue 009 is explicitly deferred by the user. Refactor issues 010, 011, 012, and 014 are archived after automated implementation verification and the user's integrated visual review. The route model reserves spline segments, but spline rendering remains a later specification frontier.
+Issues 003, 004, 005, 006, 007, and 008 are archived after explicit visual approval of the local-first/reference-boundary baseline, the evidence/inspection workflow, deterministic export parity, semantic/ELK refinement, the ELK settings/project-configuration slice, and the expanded parent-level ELK option tranche. Issue 009 implements the bounded target-aware node/edge priority tranche and is archived after automated verification and the user's visual approval. Refactor issues 010, 011, 012, and 014 are archived after automated implementation verification and the user's integrated visual review. Issue 016 is archived after automated verification and the user's visual approval of general ELK spline routing. The route model's reserved spline segments are now active for the supported layered path; self-contained HTML embeds the profile/catalog and pinned ELK runtime, and browser Download SVG captures the current canvas while Go static SVG remains deterministic orthogonal.

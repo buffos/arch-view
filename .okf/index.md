@@ -13,7 +13,7 @@
 
 - Initial topology: confirmed on 2026-08-25.
 - State totals: 0 `foggy`, 0 `bounded`, 10 `specified`, 0 `implemented`.
-- Current delivery frontier: issue 009 is explicitly deferred; refactor issues 010–015 are implemented, reviewed, and archived. Spline routing remains deferred until a dedicated future issue.
+- Current delivery frontier: issue 009's bounded target-aware ELK option tranche, refactor issues 010–015, and issue 016's bounded ELK spline route extension are implemented, reviewed, and archived. Future language adapters and other specified follow-up work remain outside this closed delivery slice.
 
 ## Application synthesis
 

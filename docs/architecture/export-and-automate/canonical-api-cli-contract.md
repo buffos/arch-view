@@ -36,10 +36,21 @@ JSON is the exact `arch-view.model/v1` envelope defined by the model capability.
 ## HTML contract
 
 HTML is self-contained: model/view data, CSS, and JavaScript are embedded; no network fetch is required. It exposes a local-first overview, hierarchy navigation, search, evidence/details, cycle/diagnostic states, reference-boundary controls, and accessible list/details/import inspection. Source contents are not embedded; source paths/locations are shown.
+The export also embeds the effective layout profile and catalog plus the pinned
+ELK runtime. A project-backed `analyze --format html` supplies the discovered
+`.archview.json` profile; model-only `export --input` uses built-in defaults.
+The file recalculates layout in the browser when opened. The viewer's Download
+SVG action is a separate browser export of the current canvas.
 
 ## SVG contract
 
-SVG is static and scalable. It includes a title, descriptive metadata, accessible node labels, stable `data-module-id`/`data-relationship-id` attributes, reference scope/confidence metadata, cycle/diagnostic styling, and deterministic geometry derived from recorded layout provenance. It contains no scripts or network references.
+SVG is static and scalable. The Go CLI `--format svg` artifact includes a
+title, descriptive metadata, accessible node labels, stable
+`data-module-id`/`data-relationship-id` attributes, reference scope/confidence
+metadata, cycle/diagnostic styling, and deterministic orthogonal geometry
+derived from recorded layout provenance. It contains no scripts or network
+references. The browser Download SVG action is intentionally separate: it
+serializes the current live canvas and may contain the active ELK spline routes.
 
 ## HTTP mapping
 
@@ -47,4 +58,10 @@ SVG is static and scalable. It includes a title, descriptive metadata, accessibl
 
 ## Determinism and parity
 
-CLI and HTTP preserve format meaning, status vocabulary, diagnostics, hashes, and artifact semantics. The future NDJSON plugin protocol is not an export format.
+CLI and HTTP preserve format meaning, status vocabulary, diagnostics, hashes,
+and artifact semantics. HTML file bytes remain deterministic for identical
+inputs and embedded profile data, while its pinned browser runtime calculates
+the interactive layout on open. The Go static SVG contract remains
+deterministic orthogonal; the browser Download SVG is a current-canvas export,
+not a replacement for that headless artifact. The future NDJSON plugin
+protocol is not an export format.

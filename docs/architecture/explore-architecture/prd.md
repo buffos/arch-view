@@ -43,6 +43,7 @@ The first surface is a local web application. It presents a renderer-neutral vie
 - Node identity stability and relationship confidence are separate inspection facts. A local module/group is not assigned a computed confidence score merely because its ID is stable.
 - Layout, viewport, and optional user positioning belong to viewer session state. They never mutate the canonical model and may be persisted only with a model/revision/hierarchy key.
 - Layout settings are presentation policy. The settings surface exposes the pinned ELK algorithms/options with their types, defaults, current values, descriptions, and applicability; unknown or invalid values cannot be applied.
+- The layout adapter applies validated options at their catalog target: parent options go to the root graph, supported node options are copied to each eligible visible node, and supported edge options are copied to each eligible visible edge. Options requiring unsupported scene features remain catalog-only.
 - Project configuration is versioned `.archview.json`. Discovery checks the selected target directory and its ancestors toward the filesystem root; the nearest file wins as a complete profile, with no v1 merging. A malformed or unsupported nearest file is surfaced as a configuration diagnostic instead of silently falling through to another file.
 - Ordinary `Save` is an explicit atomic replacement of the active discovered `.archview.json`; it never creates a new file or copies settings to the project root. When no file is active, `Save` is unavailable and the user must choose `Save As`. `Save As` is the only operation that accepts a custom destination folder, writes the fixed `.archview.json` filename atomically after explicit confirmation, and makes it active for the current session. A model-only session can apply settings temporarily but cannot persist project configuration. Analyzer options, viewport state, and manual node positions are not stored in this file.
 - Applying a new layout profile recalculates the current scene and routes with the selected layout adapter, discarding manual positions for that hierarchy path as `Reset layout` does. If the adapter is unavailable, the deterministic fallback remains available and the failure is visible.
@@ -77,8 +78,14 @@ Issue 007 implements the specified layout catalog, profile application/reset,
 nearest-ancestor configuration discovery, active-file `Save`, and explicit
 custom-folder `Save As`. Issue 008 extends the catalog with the bounded,
 root-safe parent-level option tranche; its automated checks and visual review
-are complete. Issue 009 is explicitly deferred. Refactor issues 010, 011, 012,
-and 014 preserve the viewer contract while isolating routing, browser
-composition, scene projection, and ELK option handling; their automated checks
-are complete and their review handoffs remain open. Spline rendering is
-deferred until after the refactor.
+are complete. Issue 009 implements target-aware mapping for the bounded simple
+node/edge priority tranche; its automated checks and visual review are
+complete. Refactor issues 010, 011, 012, and 014 preserve
+the viewer contract while isolating routing, browser composition, scene
+projection, and ELK option handling; their automated checks and review
+handoffs are complete. Issue 016 implements the bounded layered spline route
+path without expanding the canonical model or configuration schema;
+self-contained HTML embeds the profile/catalog and pinned runtime, the browser
+Download SVG captures the current canvas, and Go static SVG remains
+deterministic orthogonal. Automated verification and visual review are
+complete, and the issue is archived.

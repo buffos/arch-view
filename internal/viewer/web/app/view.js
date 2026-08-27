@@ -60,12 +60,12 @@ export function renderSceneState(context) {
   if (scene.cycle_indicators.length) pills.push('<span class="state-pill error">' + escapeHTML(scene.cycle_indicators.length) + " cycle(s)</span>");
   if (scene.diagnostic_indicators.length) pills.push('<span class="state-pill warning">' + escapeHTML(scene.diagnostic_indicators.length) + " diagnostic(s)</span>");
   pills.push('<span class="state-pill">' + escapeHTML(referenceVisibilityLabel(scene.reference_visibility)) + " references</span>");
-  if (context.embeddedExport) {
-    pills.push('<span class="state-pill ok">deterministic export layout</span>');
-  } else if (state.layout && state.layout.key === sceneLayoutKey(scene)) {
+  if (state.layout && state.layout.key === sceneLayoutKey(scene)) {
     pills.push('<span class="state-pill ok">ELK ' + escapeHTML((state.layoutProfile && state.layoutProfile.algorithm) || "layered") + " layout</span>");
   } else if (state.layoutError) {
     pills.push('<span class="state-pill warning">deterministic fallback layout</span>');
+  } else if (context.embeddedExport) {
+    pills.push('<span class="state-pill ok">ELK ' + escapeHTML((state.layoutProfile && state.layoutProfile.algorithm) || "layered") + " layout loading</span>");
   }
   context.elements.sceneState.innerHTML = pills.join("");
 }

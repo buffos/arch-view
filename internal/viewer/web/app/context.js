@@ -9,6 +9,14 @@ export const constants = Object.freeze({
   expandedFitZoom: 1
 });
 
+function embeddedLayoutProfile(exportData) {
+  const profile = exportData && exportData.layout_profile ? exportData.layout_profile : {};
+  return {
+    algorithm: profile.algorithm || "layered",
+    options: Object.assign({}, profile.options || {})
+  };
+}
+
 export function createContext() {
   const modelID = document.querySelector('meta[name="model-id"]').content;
   const embeddedExport = window.__ARCH_VIEW_EXPORT__ || null;
@@ -23,8 +31,8 @@ export function createContext() {
     referenceVisibility: "hidden",
     importScope: "all",
     layout: null,
-    layoutProfile: { algorithm: "layered", options: {} },
-    layoutCatalog: null,
+    layoutProfile: embeddedLayoutProfile(embeddedExport),
+    layoutCatalog: embeddedExport && embeddedExport.layout_catalog ? embeddedExport.layout_catalog : null,
     layoutConfig: null,
     layoutDraft: null,
     layoutOptionSearch: "",
@@ -74,6 +82,7 @@ export function createContext() {
     backButton: document.getElementById("back-button"),
     breadcrumbs: document.getElementById("breadcrumbs"),
     focusToggle: document.getElementById("focus-toggle"),
+    downloadSVG: document.getElementById("download-svg"),
     zoomOut: document.getElementById("zoom-out"),
     zoomIn: document.getElementById("zoom-in"),
     zoomValue: document.getElementById("zoom-value"),

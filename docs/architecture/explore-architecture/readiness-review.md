@@ -9,7 +9,7 @@ No High or Medium architecture findings remain. A product-level visual review id
 - Renderer performance thresholds and layout implementation require benchmark fixtures.
 - Reference visibility defaults and import-list behavior require representative small/large graph fixtures.
 - Manual position persistence must remain scoped to model revision and hierarchy path and must never leak into canonical model or export semantics.
-- The complete pinned-ELK option catalog and unsupported option combinations are implemented with typed validation and explicit UI treatment; issue 007's settings surface has passed human visual approval.
+- The complete pinned-ELK option catalog and unsupported option combinations are implemented with typed validation and explicit UI treatment; issue 007's settings surface has passed human visual approval. Issue 009 adds the bounded target-aware node/edge priority tranche; automated verification and visual review are complete. Issue 016 adds layered ELK spline normalization and cubic route serialization; automated verification and visual review are complete.
 - Project configuration writes now have platform-specific atomic replacement and destination-handling coverage: ordinary `Save` overwrites the exact active discovered file, while only explicit `Save As` may choose a custom folder; nearest-ancestor selection remains deterministic.
 - Browser compatibility, theme tokens, and detailed visual styling are implementation-level choices bounded by the scene contract.
 - Source-serving policy needs security tests for symlinks and large/unreadable files.
@@ -27,4 +27,4 @@ Frontend integration and end-to-end surfaces are explicitly covered; backend bou
 - Capability truth: exact-spec set refreshed with reference visibility, import inspection, session-owned layout rules, typed ELK settings, and `.archview.json` discovery/persistence.
 - Product truth: updated with the layout-settings journey and project-scoped presentation preferences.
 - Architecture truth: viewer/local host owns presentation configuration resolution, active-file `Save`, and explicit custom-folder `Save As`; analyzer options, canonical model facts, and export semantics remain separate.
-- Delivery truth: issues 003, 004, 005, 006, 007, and 008 are complete after their explicit visual reviews; issue 009 remains the next target-aware ELK option extension.
+- Delivery truth: issues 003 through 009 are complete after their explicit visual reviews. Issue 016 is complete after its automated gates and explicit visual review of spline presentation.

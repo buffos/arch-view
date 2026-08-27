@@ -5,7 +5,7 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the interactive investigation capability.
-- Next route: issue 009's node/edge target mapping is explicitly deferred. Refactor issues 010, 011, 012, and 014 are implemented, reviewed, and archived; spline routing remains a later specification frontier.
+- Next route: Issue 016 and the refactor issues 010–015 are implemented, reviewed, and archived. The capability remains specified for future layout, scale, and inspection extensions.
 
 ## Confirmed boundary
 
@@ -45,9 +45,9 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Issue 003 delivered the first visible local top-level view with local-first reference policy, semantic confidence labels, and bounded baseline layout; automated acceptance and the required visual review are complete.
 - Issue 006 refined the approved baseline with honest non-cycle internal-relationship summaries, separate node identity/relationship confidence wording, the contributor-facing viewer guide, and a locally served ELK/elkjs layered layout with SVG edge-route consumption. The deterministic layer-based layout remains the replaceable fallback; its visual review is complete.
 - Issue 004 adds evidence, imports list/detail inspection, drill-down, source safety, accessible inspection, viewport controls, session layout state, read-only reanalysis replacement, compact expanded-canvas controls, centered dense-scene fitting, explicit 100% zoom reset behavior, reset-to-calculated layout, and deterministic manual edge routing. Its implementation, automated verification, and declared visual review are complete.
-- Issue 005 reuses the view contract for visual export parity, including reference visibility and import/evidence metadata. Its implementation, automated verification, and explicit user-approved visual parity review are complete; the issue is archived.
-- Issue 007 implements the ELK option catalog/settings surface, explicit profile application/reset, nearest-ancestor `.archview.json` discovery, active-file `Save`, and explicit custom-folder `Save As`. Its automated verification and declared visual review are complete and it is archived. Issue 008 implements the bounded parent-level option tranche; its automated verification and declared visual review are complete and it is archived. Issue 009 is explicitly deferred. Issues 010, 011, 012, and 014 implement the routing, browser composition, scene, and layout-registry refactor slices and are archived after review approval. Advanced ports, labels, junctions, compound-graph geometry, and spline rendering require later work. Export configuration consumption remains intentionally outside this slice.
-- Issues 003–015 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md); issues 013 and 015 are owned by the analyzer/model boundaries respectively.
+- Issue 005 reuses the view contract for visual export parity, including reference visibility and import/evidence metadata. Its implementation, automated verification, and explicit user-approved visual parity review are complete; the issue is archived. Issue 016 extends the self-contained HTML artifact with embedded profile/catalog data and the pinned ELK runtime, and adds browser current-canvas SVG download; Go static SVG remains deterministic orthogonal.
+- Issue 007 implements the ELK option catalog/settings surface, explicit profile application/reset, nearest-ancestor `.archview.json` discovery, active-file `Save`, and explicit custom-folder `Save As`. Its automated verification and declared visual review are complete and it is archived. Issue 008 implements the bounded parent-level option tranche; its automated verification and declared visual review are complete and it is archived. Issue 009 implements the bounded target-aware node/edge priority tranche; its automated verification and visual review are complete and it is archived. Issues 010, 011, 012, and 014 implement the routing, browser composition, scene, and layout-registry refactor slices and are archived after review approval. Issue 016 implements the bounded layered spline route path with cubic normalization and deterministic fallback; its automated verification and visual review are complete and it is archived. Advanced ports, labels, junctions, compound-graph geometry, and broader target-specific options remain future work. Project-backed HTML consumes the discovered layout profile; raw model export has no source-root discovery context and uses built-in defaults, while Go static SVG remains deterministic orthogonal.
+- Issues 003–016 are tracked in [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md); issues 013 and 015 are owned by the analyzer/model boundaries respectively.
 
 ## Implementation progress
 
@@ -56,6 +56,20 @@ validation and root-only request mapping while preserving the same
 model/scene boundary. Its automated verification and visual review are
 complete.
 
+The target-aware ELK option tranche is implemented and visually approved:
+`org.eclipse.elk.priority` is mapped to visible nodes and edges, and the
+layered direction, shortness, and straightness priorities are mapped to visible
+edges. All remaining target-specific options stay catalog-only.
+
+Issue 016 activates general ELK spline routing for the layered adapter, maps
+valid control data to cubic route segments, preserves deterministic orthogonal
+fallback/manual routing, and keeps browser/SVG/embedded-browser geometry on
+the shared route representation. Its self-contained HTML path embeds the
+effective profile/catalog and pinned ELK runtime; browser Download SVG captures
+the current canvas, while Go static SVG remains deterministic orthogonal.
+Automated verification and the user's visual review are complete; the issue is
+archived.
+
 The architecture-refactor sequence is implemented and reviewed. Issue 010 adds the
 renderer-neutral route representation and dedicated SVG serialization; issue
 011 isolates native browser modules, in-memory esbuild export bundling, and
@@ -63,7 +77,8 @@ focused host/CLI composition; issue 012 isolates scene projection; issue 013
 splits the Go analyzer pipeline; issue 014 introduces the ELK option handler
 registry; and issue 015 moves canonical normalization/validation behind
 `internal/model/canonical`. All automated gates pass. Issues 010–015 are
-archived after explicit user approval, and issue 009 remains deferred.
+archived after explicit user approval, including issue 009's target-aware
+settings review.
 
 The first viewer slice serves validated model files and Go project analyses through a loopback-only HTTP boundary. Its renderer-neutral scene preserves hierarchy aggregation, directed relationships, layers, cycles, diagnostics, confidence, stable contributor IDs, evidence links, reference-boundary summaries, and accessible import details. Issue 003 now defaults to local-first visibility and supports aggregated/expanded policies. Issue 006 adds explicit internal-relationship summaries for collapsed groups, separates stable node identity from relationship confidence without changing canonical model data, and routes the projected graph through the local ELK adapter with a deterministic fallback. Issue 004 adds hierarchy breadcrumbs/back navigation, selected-node import filters, source-root-confined excerpts, atomic reanalysis replacement, keyboard/list parity, full-canvas navigation, compact expanded-canvas layout, an explicit 100% zoom reset, session-scoped viewport/manual positions, reset-to-calculated layout, and deterministic orthogonal routing for manual positions; the canonical model remains unchanged.
 
@@ -74,6 +89,6 @@ The first viewer slice serves validated model files and Go project analyses thro
 - Exact specification: refreshed in the linked PRD, domain model, use cases, contract, scenarios, gap analysis, and readiness review with local-first reference visibility and import inspection.
 - Product truth: refreshed in [the application PRD](../../prd.md).
 - Architecture truth: refreshed in [the application architecture summary](../application-architecture-summary.md); no new boundary or capability was introduced.
-- Delivery truth: issues 003, 004, 005, 006, 007, and 008 are archived after visual approval; issue 009 is deferred; issues 010–015 are archived after review approval.
-- No impact: issues 008–015 do not change capability topology, product scope, or the external layout contract. Issue 009's target-aware mapping and advanced ELK geometry are deferred; issue 010 reserves route shapes needed for future spline support without enabling it.
-- No impact: `.archview.json`, analyzer/plugin contracts, canonical model JSON, scene schema, export formats, and external reference behavior remain unchanged. The implementation-only package boundaries are recorded in the issue handoffs and architecture summary.
+- Delivery truth: issues 003 through 009 are archived after visual approval; issues 010–015 are archived after review approval; issue 016 is archived after automated implementation verification and explicit visual approval.
+- No impact: issues 008–015 do not change capability topology, product scope, or the external layout contract. Issue 009's target-aware mapping remains inside the layout adapter and leaves the scene/configuration schemas unchanged; issue 016 activates the route shapes reserved by issue 010 without changing canonical model semantics or the flat configuration schema.
+- No impact: `.archview.json`, analyzer/plugin contracts, canonical model JSON, scene schema, and external reference behavior remain unchanged. Issue 016 activates the reserved presentation route shape and adds browser-side HTML/runtime and current-canvas SVG behavior; Go static SVG remains deterministic orthogonal. The implementation-only package boundaries are recorded in the issue handoff and architecture summary.

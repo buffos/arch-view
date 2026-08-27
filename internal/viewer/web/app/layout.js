@@ -1,4 +1,4 @@
-import { fromELKSections } from "../graph_route.js";
+import { fromELKSections, fromELKSplineSections } from "../graph_route.js";
 import { buildELKGraph } from "../layout_request.js";
 import { sceneLayoutKey } from "./view.js";
 import { cloneLayoutProfile, escapeHTML, formatOptionValue, numberOrZero, optionBoundsText, layoutRequestPayload } from "./utils.js";
@@ -41,15 +41,23 @@ export function fallbackLayout(context, scene) {
   return { engine: "fallback", key: sceneLayoutKey(scene), width: width, height: height, positions: positions, edges: {} };
 }
 
-export function adaptELKLayout(scene, result, key, algorithm) {
+function profileEdgeRouting(profile) {
+  const options = profile && profile.options ? profile.options : {};
+  return String(options["org.eclipse.elk.edgeRouting"] || options["elk.edgeRouting"] || "ORTHOGONAL").toUpperCase();
+}
+
+export function adaptELKLayout(scene, result, key, algorithm, profile) {
   const offset = 24;
   const positions = {};
   (result.children || []).forEach(function (child) {
     positions[child.id] = { x: numberOrZero(child.x) + offset, y: numberOrZero(child.y) + offset, width: numberOrZero(child.width) || 190, height: numberOrZero(child.height) || 82 };
   });
   const edges = {};
+  const edgeRouting = profileEdgeRouting(profile);
   (result.edges || []).forEach(function (edge) {
-    const route = fromELKSections(edge.sections, offset);
+    const route = edgeRouting === "SPLINES"
+      ? fromELKSplineSections(edge.sections, offset)
+      : fromELKSections(edge.sections, offset);
     if (route) edges[edge.id] = route;
   });
   const fallback = fallbackLayout({ embeddedExport: null }, scene);
@@ -64,16 +72,16 @@ export function adaptELKLayout(scene, result, key, algorithm) {
 }
 
 export async function prepareLayout(context, scene, profile, services) {
-  if (context.embeddedExport || !context.workerURL || !scene || !scene.visible_nodes.length || typeof window.ELK !== "function") return;
+  if (!scene || !scene.visible_nodes.length || typeof window.ELK !== "function") return;
   const key = sceneLayoutKey(scene);
   context.state.layoutKey = key;
   const request = ++context.state.layoutRequest;
   let elk;
   try {
-    elk = new window.ELK({ workerUrl: context.workerURL });
+    elk = context.workerURL ? new window.ELK({ workerUrl: context.workerURL }) : new window.ELK();
     const result = await elk.layout(buildELKGraph(scene, profile || context.state.layoutProfile, context.state.layoutCatalog));
     if (request !== context.state.layoutRequest || context.state.scene !== scene) return;
-    context.state.layout = adaptELKLayout(scene, result, key, (context.state.layoutProfile && context.state.layoutProfile.algorithm) || "layered");
+    context.state.layout = adaptELKLayout(scene, result, key, (context.state.layoutProfile && context.state.layoutProfile.algorithm) || "layered", profile || context.state.layoutProfile);
     context.state.layoutError = false;
     services.renderSceneState();
     services.renderViewportControls();

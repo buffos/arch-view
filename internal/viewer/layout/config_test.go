@@ -36,7 +36,7 @@ func TestLayoutCatalogMatchesPinnedELKSurface(t *testing.T) {
 		t.Fatalf("padding metadata = %#v", unsupported)
 	}
 	edgeRouting, ok := layoutOptionByID("org.eclipse.elk.edgeRouting")
-	if !ok || !edgeRouting.Editable || edgeRouting.RendererSupport != "supported" || !reflect.DeepEqual(edgeRouting.AllowedValues, []any{"NONE", "POLYLINE", "ORTHOGONAL"}) {
+	if !ok || !edgeRouting.Editable || edgeRouting.RendererSupport != "supported" || !reflect.DeepEqual(edgeRouting.AllowedValues, []any{"NONE", "POLYLINE", "ORTHOGONAL", "SPLINES"}) {
 		t.Fatalf("edge routing metadata = %#v", edgeRouting)
 	}
 }
@@ -169,6 +169,96 @@ func TestParentLayoutOptionTrancheHasPinnedMetadata(t *testing.T) {
 	}
 }
 
+func TestTargetedLayoutOptionTrancheHasPinnedMetadata(t *testing.T) {
+	tests := []struct {
+		id         string
+		typeName   string
+		targets    []string
+		algorithms []string
+	}{
+		{
+			id:         "org.eclipse.elk.priority",
+			typeName:   "INT",
+			targets:    []string{"NODES", "EDGES"},
+			algorithms: []string{"box", "layered", "mrtree", "force"},
+		},
+		{
+			id:         "org.eclipse.elk.layered.priority.direction",
+			typeName:   "INT",
+			targets:    []string{"EDGES"},
+			algorithms: []string{"layered"},
+		},
+		{
+			id:         "org.eclipse.elk.layered.priority.shortness",
+			typeName:   "INT",
+			targets:    []string{"EDGES"},
+			algorithms: []string{"layered"},
+		},
+		{
+			id:         "org.eclipse.elk.layered.priority.straightness",
+			typeName:   "INT",
+			targets:    []string{"EDGES"},
+			algorithms: []string{"layered"},
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.id, func(t *testing.T) {
+			option, ok := layoutOptionByID(testCase.id)
+			if !ok {
+				t.Fatalf("option is not in the pinned catalog")
+			}
+			if !option.Editable || option.RendererSupport != "supported" {
+				t.Fatalf("option is not editable/supported: %#v", option)
+			}
+			if option.Type != testCase.typeName || !reflect.DeepEqual(option.Targets, testCase.targets) || !reflect.DeepEqual(option.Algorithms, testCase.algorithms) {
+				t.Fatalf("type/targets/algorithms = %q/%#v/%#v, want %q/%#v/%#v", option.Type, option.Targets, option.Algorithms, testCase.typeName, testCase.targets, testCase.algorithms)
+			}
+			if option.DefaultValue != "engine default" || len(option.AllowedValues) != 0 || option.Minimum != nil || option.Maximum != nil {
+				t.Fatalf("unexpected value constraints = %#v", option)
+			}
+		})
+	}
+
+	priority, _ := layoutOptionByID("org.eclipse.elk.priority")
+	if layoutOptionTargetsParent(priority) || !layoutOptionTargetsAll(priority, []string{"NODES", "EDGES"}) {
+		t.Fatalf("priority target mapping = %#v", priority.Targets)
+	}
+}
+
+func TestTargetedLayoutOptionTrancheAcceptsPinnedValuesAndRejectsUnsafeValues(t *testing.T) {
+	valid := LayoutProfile{Algorithm: "layered", Options: map[string]any{
+		"org.eclipse.elk.priority":                      4,
+		"org.eclipse.elk.layered.priority.direction":    8,
+		"org.eclipse.elk.layered.priority.shortness":    6,
+		"org.eclipse.elk.layered.priority.straightness": 7,
+	}}
+	if _, err := validateLayoutProfile(valid); err != nil {
+		t.Fatalf("valid targeted tranche rejected: %v", err)
+	}
+	forcePriority := LayoutProfile{Algorithm: "force", Options: map[string]any{"org.eclipse.elk.priority": 4}}
+	if _, err := validateLayoutProfile(forcePriority); err != nil {
+		t.Fatalf("priority should apply to force: %v", err)
+	}
+	cases := []struct {
+		name    string
+		profile LayoutProfile
+		code    analysis.ErrorCode
+	}{
+		{name: "priority wrong type", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.priority": "high"}}, code: analysis.ErrInvalidOptions},
+		{name: "edge priority algorithm incompatibility", profile: LayoutProfile{Algorithm: "force", Options: map[string]any{"org.eclipse.elk.layered.priority.direction": 8}}, code: analysis.ErrInvalidOptions},
+		{name: "unsupported node target remains catalog-only", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.alignment": "CENTER"}}, code: analysis.ErrUnsupportedOption},
+		{name: "output-only edge metadata remains catalog-only", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.junctionPoints": []any{}}}, code: analysis.ErrUnsupportedOption},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := validateLayoutProfile(testCase.profile)
+			if analysis.ErrorCodeOf(err) != testCase.code {
+				t.Fatalf("error code = %q, want %q (%v)", analysis.ErrorCodeOf(err), testCase.code, err)
+			}
+		})
+	}
+}
+
 func TestParentLayoutOptionTrancheAcceptsPinnedValuesAndRejectsUnsafeValues(t *testing.T) {
 	valid := map[string]any{
 		"org.eclipse.elk.aspectRatio":                            1.6,
@@ -242,6 +332,10 @@ func TestValidateLayoutProfileRejectsUnknownAndUnsafeOptions(t *testing.T) {
 	if _, err := validateLayoutProfile(valid); err != nil {
 		t.Fatalf("valid profile rejected: %v", err)
 	}
+	spline := LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.edgeRouting": "SPLINES"}}
+	if _, err := validateLayoutProfile(spline); err != nil {
+		t.Fatalf("spline profile rejected: %v", err)
+	}
 	cases := []struct {
 		name    string
 		profile LayoutProfile
@@ -250,7 +344,7 @@ func TestValidateLayoutProfileRejectsUnknownAndUnsafeOptions(t *testing.T) {
 		{name: "unknown option", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"elk.notReal": true}}, code: analysis.ErrUnsupportedOption},
 		{name: "wrong type", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": 1.0}}, code: analysis.ErrInvalidOptions},
 		{name: "bad enum", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.edgeRouting": "curved"}}, code: analysis.ErrInvalidOptions},
-		{name: "spline rendering is deferred", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.edgeRouting": "SPLINES"}}, code: analysis.ErrInvalidOptions},
+		{name: "spline algorithm incompatibility", profile: LayoutProfile{Algorithm: "force", Options: map[string]any{"org.eclipse.elk.edgeRouting": "SPLINES"}}, code: analysis.ErrInvalidOptions},
 		{name: "unsupported object", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.padding": "10"}}, code: analysis.ErrUnsupportedOption},
 		{name: "unknown algorithm", profile: LayoutProfile{Algorithm: "not-real", Options: map[string]any{}}, code: analysis.ErrUnsupportedOption},
 		{name: "missing algorithm", profile: LayoutProfile{Options: map[string]any{}}, code: analysis.ErrInvalidOptions},
@@ -336,6 +430,31 @@ func TestDiscoverLayoutSessionUsesNearestCompleteConfiguration(t *testing.T) {
 	session = discoverLayoutSession(root)
 	if session.origin != "project" || !samePath(session.activePath, filepath.Join(root, layoutConfigFileName)) || session.profile.Options["org.eclipse.elk.direction"] != "DOWN" {
 		t.Fatalf("project session = %#v", session)
+	}
+}
+
+func TestNewSessionNormalizesRelativeSourceRoots(t *testing.T) {
+	root := t.TempDir()
+	profile := LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": "LEFT"}}
+	data, err := encodeLayoutConfig(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, layoutConfigFileName), data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	relative, err := filepath.Rel(workingDirectory, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	session := NewSession(relative)
+	response := session.Response()
+	if response.Origin != "project" || response.Layout.Options["org.eclipse.elk.direction"] != "LEFT" {
+		t.Fatalf("relative session = %#v", response)
 	}
 }
 

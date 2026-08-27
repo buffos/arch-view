@@ -10,6 +10,10 @@
 - `WriteInteractiveHtml`
 - `WriteSvg`
 
+The live viewer also exposes a current-canvas SVG download. It is intentionally
+separate from `WriteSvg`: the former serializes the browser's active ELK/manual
+route geometry, while the latter remains the deterministic Go static export.
+
 ### AutomationService
 
 - `RunHeadlessAnalysisAndExport`

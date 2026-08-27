@@ -13,6 +13,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/viewer/layout"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -40,9 +41,12 @@ type Request struct {
 	ViewPath            []string
 	ReferenceVisibility string
 	ReferenceScopes     []string
-	Overwrite           bool
-	EmbedSource         bool
-	Context             context.Context
+	// LayoutProfile is consumed only by self-contained HTML exports. Static
+	// Go-generated SVG deliberately retains its deterministic export layout.
+	LayoutProfile *layout.LayoutProfile
+	Overwrite     bool
+	EmbedSource   bool
+	Context       context.Context
 }
 
 // ArtifactMetadata is the stable status returned after an artifact is
@@ -70,6 +74,8 @@ type htmlBundle struct {
 	Model                      model.Model                    `json:"model"`
 	Scenes                     map[string]scene.SceneSnapshot `json:"scenes"`
 	Layouts                    map[string]deterministicLayout `json:"layouts"`
+	LayoutProfile              layout.LayoutProfile           `json:"layout_profile"`
+	LayoutCatalog              layout.LayoutOptionsResponse   `json:"layout_catalog"`
 	InitialPath                []string                       `json:"initial_path"`
 	InitialReferenceVisibility string                         `json:"initial_reference_visibility"`
 }
@@ -172,6 +178,13 @@ func normalizeRequest(request Request) (Request, error) {
 	if request.EmbedSource {
 		return Request{}, analysis.NewHostError(analysis.ErrUnsupportedOption, "source embedding is unsupported in v1", map[string]any{"embed_source": true})
 	}
+	if request.Format == FormatHTML && request.LayoutProfile != nil {
+		profile, err := layout.ValidateProfile(*request.LayoutProfile)
+		if err != nil {
+			return Request{}, err
+		}
+		request.LayoutProfile = &profile
+	}
 	return request, nil
 }
 
@@ -216,6 +229,10 @@ func summarizeDiagnostics(value model.Model) DiagnosticSummary {
 }
 
 func sceneCatalog(value model.Model, request Request) (htmlBundle, map[string]any, error) {
+	profile := layout.DefaultProfile()
+	if request.LayoutProfile != nil {
+		profile = *request.LayoutProfile
+	}
 	paths := hierarchyPaths(value)
 	pathSet := make(map[string]struct{}, len(paths))
 	for _, path := range paths {
@@ -227,7 +244,6 @@ func sceneCatalog(value model.Model, request Request) (htmlBundle, map[string]an
 
 	scenes := make(map[string]scene.SceneSnapshot, len(paths)*len(visualFormats)+len(paths))
 	layouts := make(map[string]deterministicLayout, len(scenes))
-	var provenance map[string]any
 	for _, path := range paths {
 		for _, visibility := range []string{scene.ReferenceVisibilityHidden, scene.ReferenceVisibilityAggregated, scene.ReferenceVisibilityExpanded} {
 			if err := request.Context.Err(); err != nil {
@@ -244,18 +260,17 @@ func sceneCatalog(value model.Model, request Request) (htmlBundle, map[string]an
 			scenes[key] = snapshot
 			layout := buildDeterministicLayout(snapshot)
 			layouts[sceneLayoutKey(snapshot)] = layout
-			if provenance == nil {
-				provenance = layoutProvenance()
-			}
 		}
 	}
 	return htmlBundle{
 		Model:                      value,
 		Scenes:                     scenes,
 		Layouts:                    layouts,
+		LayoutProfile:              profile,
+		LayoutCatalog:              layout.Catalog(),
 		InitialPath:                append([]string{}, request.ViewPath...),
 		InitialReferenceVisibility: request.ReferenceVisibility,
-	}, provenance, nil
+	}, embeddedHTMLLayoutProvenance(profile), nil
 }
 
 func hierarchyPaths(value model.Model) [][]string {
@@ -338,6 +353,20 @@ func layoutProvenance() map[string]any {
 		"node_height":             deterministicNodeHeight,
 		"column_gap":              deterministicColumnGap,
 		"row_gap":                 deterministicRowGap,
+		"reference_layout_policy": "scene-reference-visibility",
+	}
+}
+
+func embeddedHTMLLayoutProvenance(profile layout.LayoutProfile) map[string]any {
+	return map[string]any{
+		"engine":                  "embedded-browser",
+		"algorithm":               profile.Algorithm,
+		"adapter":                 "elkjs",
+		"algorithm_version":       "pinned-bundle",
+		"fallback_engine":         "deterministic-export",
+		"fallback_algorithm":      "layered-orthogonal-v1",
+		"node_width":              deterministicNodeWidth,
+		"node_height":             deterministicNodeHeight,
 		"reference_layout_policy": "scene-reference-visibility",
 	}
 }

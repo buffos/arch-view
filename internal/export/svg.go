@@ -171,6 +171,11 @@ func svgNodeMarkup(node scene.VisibleNode, position deterministicLayoutNode) str
 }
 
 func svgEdgeGeometry(relationship scene.VisibleRelationship, from, to deterministicLayoutNode, routed deterministicLayoutEdge) (string, float64, float64) {
+	if routed.Route != nil {
+		if path := pathFromRoute(*routed.Route); path != "" {
+			return path, routed.Route.Label.X, routed.Route.Label.Y
+		}
+	}
 	if len(routed.Points) > 1 {
 		route := routing.Polyline(routed.Points, routing.Point{X: routed.LabelX, Y: routed.LabelY})
 		if path := pathFromRoute(route); path != "" {

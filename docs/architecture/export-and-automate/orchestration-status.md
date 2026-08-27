@@ -30,14 +30,14 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 - Observed in reference: the tool supports headless analysis and writes an EDN architecture representation.
 - User-confirmed target: the Go product should support repeatable machine-readable output and future automation.
-- Delivered in issue 005: versioned JSON, self-contained HTML, deterministic accessible SVG, atomic writes, documented CLI exit behavior, and analyze-to-export wiring. The user explicitly approved visual parity, so the initial export slice is complete.
+- Delivered in issue 005: versioned JSON, self-contained HTML, deterministic accessible SVG, atomic writes, documented CLI exit behavior, and analyze-to-export wiring. Issue 016 now extends self-contained HTML with embedded profile/catalog data and pinned ELK runtime, and the browser viewer can download its current canvas as SVG; the Go static SVG artifact remains deterministic orthogonal. The user explicitly approved visual parity for the initial export slice.
 
 ## Current delivery slice
 
 - Issue 005 implements deterministic JSON, HTML, and SVG artifacts from the validated model/view contract.
 - Issue 005 also owns export parity for reference visibility, scope, confidence, and import/evidence traceability.
 - The issue is archived after automated verification and explicit user approval of HTML/SVG visual parity with the local viewer.
-- Issue 011 is archived after automated verification and explicit user approval of live/exported browser composition and self-contained bundling.
+- Issue 011 is archived after automated verification and explicit user approval of live/exported browser composition and self-contained bundling. Issue 016 is archived after automated verification and explicit user approval of the presentation/export extension.
 - It is part of [the first Go implementation slice](../analyze-source/go-analysis/implementation-slice.md).
 
 ## Artifact sync

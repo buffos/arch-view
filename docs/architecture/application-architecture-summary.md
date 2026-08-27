@@ -82,13 +82,13 @@ graph orchestration or path rendering.
 
 ### Presentation and export
 
-The viewer owns a local web presentation, renderer-neutral scene/view state, interaction, navigation, progressive disclosure, reference-boundary visibility, import/evidence inspection, source inspection, tooltips, layout/session state, configurable ELK presentation settings, and accessibility concerns. The default overview is local-first; non-local references remain canonical but are hidden, aggregated, or expanded by view policy. The current SVG renderer owns arrowhead styling and consumes node positions plus edge sections/bend points from the locally served ELK/elkjs layered adapter. A deterministic layer-based layout remains the replaceable fallback; neither layout choice changes relationship meaning. Exporters consume the same view policy and own versioned JSON, deterministic HTML/SVG, and CI status behavior. Neither presentation nor export knows how a source language is parsed.
+The viewer owns a local web presentation, renderer-neutral scene/view state, interaction, navigation, progressive disclosure, reference-boundary visibility, import/evidence inspection, source inspection, tooltips, layout/session state, configurable ELK presentation settings, and accessibility concerns. The default overview is local-first; non-local references remain canonical but are hidden, aggregated, or expanded by view policy. The locally served ELK/elkjs layered adapter now normalizes valid `SPLINES` sections into cubic routes; the browser serializer preserves arrowheads, labels, and the established self-loop route, while malformed spline data falls back to deterministic orthogonal geometry. A deterministic layer-based layout remains the replaceable fallback; neither layout choice changes relationship meaning. Self-contained HTML embeds the effective profile/catalog and pinned ELK runtime, recalculates its scene in the browser, and uses the same route serializer. The browser Download SVG action serializes the current canvas. Go headless SVG remains explicitly deterministic orthogonal and does not consume project layout configuration. Neither presentation nor export knows how a source language is parsed.
 
 ### Project configuration and layout settings
 
 The local host resolves the nearest versioned `.archview.json` from the selected target directory through its ancestors toward the filesystem root. A discovered file is selected as one complete profile; v1 does not merge multiple files. The viewer settings surface obtains a typed/catalogued list of the pinned ELK algorithms and options, validates applicability, and applies profiles explicitly to the current scene. Applying a profile may recalculate node positions and edge routes and clears session manual positions for that hierarchy path, but it cannot mutate canonical model semantics.
 
-Configuration writes distinguish two actions. Ordinary `Save` has no destination input and atomically overwrites exactly the active discovered `.archview.json`; it never creates a new file or copies settings to the analyzed project root, and it requires `Save As` when no active file exists. `Save As` is the only operation that accepts a user-selected custom destination folder; it writes the fixed `.archview.json` filename there atomically after explicit confirmation and makes that path active for the current session. Model-only sessions can use session settings but cannot persist a project file. Analyzer options, viewport state, and manual positions are separate from this configuration. Headless export continues to use its explicit deterministic contract unless a future issue deliberately adds configuration consumption.
+Configuration writes distinguish two actions. Ordinary `Save` has no destination input and atomically overwrites exactly the active discovered `.archview.json`; it never creates a new file or copies settings to the analyzed project root, and it requires `Save As` when no active file exists. `Save As` is the only operation that accepts a user-selected custom destination folder; it writes the fixed `.archview.json` filename there atomically after explicit confirmation and makes that path active for the current session. Model-only sessions can use session settings but cannot persist a project file. Analyzer options, viewport state, and manual positions are separate from this configuration. Project-backed HTML analysis embeds the discovered profile for browser use; raw model-only export uses defaults because it has no source-root discovery context. Go static SVG continues to use its explicit deterministic contract.
 
 The layout catalog, profile validation, option-handler registry, session state,
 and persistence are grouped under `internal/viewer/layout`; HTTP handlers only
@@ -132,15 +132,16 @@ browser composition/bundling, scene projection, the Go analyzer pipeline, the
 ELK option registry, and canonical model normalization. Python, TypeScript,
 Rust, and Clojure analyzers follow the same `analysis.Analyzer` contract and
 register at the composition root; adding one does not modify host orchestration.
-Issue 009's node/edge ELK target mapping is explicitly deferred. Spline
-control-point mapping/rendering is a separate future issue after refactor
-review.
+Issue 009 implements the bounded supported node/edge ELK option tranche at the
+layout adapter boundary without changing the renderer-neutral scene or
+configuration schemas. Issue 016 activates the reserved cubic route
+representation for supported ELK spline output; automated verification and
+visual review are complete.
 
 ## Residual implementation decisions
 
 - Benchmarking and tuning frontend/rendering thresholds.
-- Reference-boundary aggregation, import-list density, session-scoped layout behavior, and broader ELK option support.
-- Target-aware node/edge ELK mapping (issue 009) and cubic/spline route rendering.
+- Reference-boundary aggregation, import-list density, session-scoped layout behavior, and broader target-specific ELK option support.
 - Publishing/migrating JSON and NDJSON schemas.
 - Process sandbox/resource-limit implementation.
 - Future call-graph/type-level relation capabilities.

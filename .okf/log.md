@@ -23,12 +23,52 @@
 
 ## 2026-08-27
 
+* **Implementation**: Resumed issue 009 after the user's explicit direction. The
+  layout registry now supports `org.eclipse.elk.priority` on visible nodes and
+  edges plus the layered direction, shortness, and straightness edge-priority
+  options. Catalog targets control whether values are emitted on the root,
+  node, or edge ELK element; unsupported target-specific options remain
+  catalog-only. Automated verification passes and visual review is pending.
+
+* **Closeout**: The user approved issue 009's target-aware settings behavior in
+  normal and full-canvas views. The issue was archived, removed from the active
+  registry, and synchronized across the owning capability and implementation
+  slice; spline rendering remains a separate future issue.
+
+* **Planning**: Added issue 016 under the existing Explore and inspect
+  architecture capability for bounded ELK spline-route activation. It will map
+  valid ELK spline control data to the reserved cubic route representation,
+  preserve orthogonal fallback/manual routing, and verify browser/SVG/HTML
+  parity. No new OKF capability node was created and implementation has not
+  started.
+
+* **Implementation**: Issue 016 now accepts layered `SPLINES` profiles,
+  normalizes ELK's `3n−1` control-point streams into finite cubic routes, and
+  renders them through the shared browser/SVG route serializers. Malformed
+  spline data falls back to deterministic orthogonal geometry; manual
+  movement remains orthogonal and no Libavoid routing is used. Automated
+  verification passes and visual review is pending.
+
 * **Review and closeout**: The user explicitly approved the integrated visual
   review for issues 010, 011, 012, and 014 and the repository review for
   issues 013 and 015. Issues 010–015 were moved to the dated delivery archive,
   removed from the active registry, and synchronized across the owning OKF
-  capabilities and implementation slice. Issue 009 remains explicitly
-  deferred; spline rendering remains a later issue.
+  capabilities and implementation slice. At that point issue 009 remained
+  deferred; it was subsequently resumed and closed after visual approval.
+
+* **Export extension**: Issue 016 now embeds the effective layout profile and
+  catalog plus the pinned ELK runtime in Go-generated HTML, allowing the file
+  to recalculate its scene without a server. The browser adds Download SVG for
+  the current canvas; Go static SVG remains the deterministic orthogonal
+  headless artifact. Automated checks pass and visual review remains pending.
+
+* **Closeout**: The user approved issue 016's visual review of windowed and
+  full-canvas spline routes, self-contained HTML, browser Download SVG,
+  labels, arrowheads, navigation, self-loops, and deterministic fallback.
+  The issue was archived at the dated delivery path, removed from the active
+  registry, and synchronized across the Explore capability, implementation
+  slice, application records, and OKF references. The upstream reference
+  repository remains outside the product and untouched.
 
 ## 2026-08-26
 

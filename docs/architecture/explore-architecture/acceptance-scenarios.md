@@ -102,9 +102,37 @@ Given a malformed/unsupported nearest `.archview.json` or a model-only session, 
 
 Verification: backend-boundary `when-supported`; frontend-integration `when-supported`; end-to-end `when-supported`.
 
+## SC-EX-017 — Render ELK spline routes
+
+Given a layered layout profile with `org.eclipse.elk.edgeRouting=SPLINES`,
+when the developer applies it, then valid ELK spline sections are represented
+as cubic route segments and the live viewer/full-canvas view plus the
+self-contained HTML export preserve directed curves with readable labels and
+arrowheads. The browser Download SVG action preserves the current route
+geometry. The Go headless SVG export remains explicitly deterministic
+orthogonal in v1. When spline control data is missing or malformed, then the
+viewer and browser export use the deterministic orthogonal fallback without
+changing canonical model facts. Manual node movement and drop continue to use
+the existing orthogonal session routing.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`when-supported`; end-to-end `when-supported`.
+
 ## Issue 007 verification status
 
 The backend portions of SC-EX-012 through SC-EX-016 are covered by catalog,
 validation, discovery, destination, and model-only endpoint tests. The browser
 settings surface and its windowed/full-canvas workflow have passed the declared
 human visual review; no scenario changes the language-neutral model contract.
+
+## Issue 009 verification status
+
+The target-aware layout adapter maps the bounded supported tranche according to
+catalog metadata: `org.eclipse.elk.priority` is copied to visible nodes and
+edges, while the layered direction, shortness, and straightness priorities are
+copied to visible edges. Other target-specific options remain catalog-only.
+The Go catalog/validation tests, full Go test and race suites, vet, build,
+staticcheck, golangci-lint, JavaScript syntax test, request-shape test, and
+diff check pass. The normal and full-canvas visual review of the resulting
+settings and routes was approved by the user on 2026-08-27; issue 009 is
+complete and archived.
