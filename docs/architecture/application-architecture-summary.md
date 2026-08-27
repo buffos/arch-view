@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; the verified in-process Clojure adapter now reaches the existing analyzer, model, viewer, and export path without adding a language-specific consumer branch.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; the verified in-process Clojure adapter reaches the existing analyzer, model, viewer, and export path without adding a language-specific consumer branch, and the next frontier is the opt-in external Python process pilot.
 
 ## Boundary summary
 
@@ -13,8 +13,10 @@ CLI / local web entrypoint
 Plugin manager and project detection
         |
         v
-Language analyzers
-  Go, Python, TypeScript, Rust, Clojure
+Analyzer implementations
+  built-in Go/Python/TypeScript/Rust/Clojure
+  or opt-in external process
+    descriptor + versioned NDJSON
         |
         v
 Language-neutral architecture model
@@ -39,7 +41,7 @@ The upstream [unclebob/arch-view reference implementation](https://github.com/un
 
 The analyzer receives a repository or project root plus analysis options, selects one language analyzer, and returns validated modules, static dependency relationships, source evidence, metadata, and diagnostics. It does not assign layers, render diagrams, or export files.
 
-The plugin runtime and language adapters are specified around this contract. The current deployment uses in-process Go, Python, TypeScript, Rust, and Clojure analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, TypeScript, Rust, and Clojure uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
+The plugin runtime and language adapters are specified around this contract. The current deployment uses in-process Go, Python, TypeScript, Rust, and Clojure analyzers; the next deployment adds an explicitly loaded external process that implements the same Analyzer contract. Each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and process safety. Python, TypeScript, Rust, and Clojure uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
 
 The first graph uses package or module nodes. Files remain attached evidence. Project-local modules are shown by default. Tests, generated code, vendor directories, caches, build outputs, and directories named `external` are excluded by default. Unresolved dependencies produce partial results with diagnostics.
 
@@ -49,13 +51,25 @@ Owns command parsing, project selection, analyzer selection, analyzer-option con
 
 ### Plugin manager
 
-Owns analyzer registration, project detection, capability negotiation, configuration, result validation, and plugin version compatibility. The first version can use built-in Go implementations. A later process protocol can allow analyzers written in other languages.
+Owns analyzer registration, project detection, capability negotiation,
+configuration, result validation, and plugin version compatibility. Built-in
+analyzers remain in-process. An explicitly supplied descriptor can register an
+external process analyzer; the host validates its manifest/hello agreement,
+launches it with argv rather than a shell, reserves stdout for versioned
+NDJSON, treats stderr as bounded logs, and owns cancellation, timeout, and
+child cleanup.
 
 ### Language analyzers
 
 Each analyzer owns source discovery, syntax parsing, import or dependency resolution, language-specific classification, source locations, and diagnostics. An analyzer returns data, not UI elements or layout coordinates.
 
 The adapters have exact language-specific contracts; parser/library choices may vary behind those contracts. The in-process Python adapter now extracts absolute, package, re-export, and relative imports through a conservative static pass, resolves only filesystem-proven local modules under effective source roots, and emits standard-library, external, unresolved, conditional, and dynamic references with source evidence, confidence, and recoverable diagnostics. The in-process Rust adapter reads one Cargo crate and statically discovers reachable crate/module hierarchy, `use`/`pub use` relationships, dependency declarations, source evidence, and cfg/macro/generated uncertainty without executing Cargo or target code. The in-process Clojure adapter resolves `deps.edn`, `project.clj`, and `shadow-cljs.edn` boundaries, emits namespace modules and static require/use/macro relationships, preserves `.cljc` platform and polymorphic metadata, and reports dynamic loading or malformed forms as recoverable evidence. The adapters never import or execute the analyzed project; unresolved or dynamic behavior remains visible rather than becoming a fabricated local relationship.
+
+The external Python pilot lives as a separately launched plugin deployment,
+uses Python ast and safe configuration readers, and is compared with the
+in-process Python adapter for semantic parity. It is explicitly selected
+through a local descriptor; it is not a new language, an implicit project
+plugin, or a replacement for the built-in adapter.
 
 ### Architecture model
 
@@ -100,12 +114,13 @@ escapes the exported artifact.
 ## Data flow
 
 1. The CLI selects a repository and either an explicit analyzer or an analyzer detected from project files.
-2. The plugin manager runs the analyzer with source-scope and filtering options.
-3. The analyzer returns modules, relationships, evidence, diagnostics, and source references.
-4. The canonical model capability normalizes observations, validates identity and relationship integrity, and asks the model graph capability to derive cycles/layers.
-5. The scene capability projects the model into the renderer-neutral interactive contract.
-6. The local host resolves project layout configuration and exposes the effective profile/catalog to the viewer.
-7. The routing/layout adapters calculate positions and route sections; the renderer-neutral viewer or exporter serializes the resulting view.
+2. The plugin manager validates any explicitly supplied descriptors and registers their manifests.
+3. The plugin manager runs the selected analyzer with source-scope and filtering options, in-process or through the versioned external process boundary.
+4. The analyzer returns modules, relationships, evidence, diagnostics, and source references.
+5. The canonical model capability normalizes observations, validates identity and relationship integrity, and asks the model graph capability to derive cycles/layers.
+6. The scene capability projects the model into the renderer-neutral interactive contract.
+7. The local host resolves project layout configuration and exposes the effective profile/catalog to the viewer.
+8. The routing/layout adapters calculate positions and route sections; the renderer-neutral viewer or exporter serializes the resulting view.
 
 ## Shared policies
 
@@ -142,6 +157,11 @@ adapter, static relationships, platform/polymorphic and safety metadata, and
 shared visible journey through the existing neutral path. Every adapter follows
 the same `analysis.Analyzer` contract and registers at the composition root;
 adding one does not modify host orchestration.
+Issues 030–033 define the next external runtime slice: published protocol and
+descriptor schemas, the process-backed Analyzer adapter, external Python
+parity, and explicit CLI/shared-path integration. The process adapter remains
+behind the same host/model/viewer/export boundary and does not add external
+protocol fields to the canonical model.
 Issue 009 implements the bounded supported node/edge ELK option tranche at the
 layout adapter boundary without changing the renderer-neutral scene or
 configuration schemas. Issue 016 activates the reserved cubic route
@@ -154,8 +174,10 @@ work register](explore-architecture/advanced-elk-renderer-support/future-work.md
 
 - Benchmarking and tuning frontend/rendering thresholds.
 - Reference-boundary aggregation, import-list density, and session-scoped layout behavior remain verification/tuning concerns. Broader target-specific ELK option support is tracked in the [Advanced ELK renderer support future-work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
-- Publishing/migrating JSON and NDJSON schemas.
-- Process sandbox/resource-limit implementation.
+- Protocol migration and plugin distribution beyond the published v1,
+  explicitly supplied descriptor contract.
+- Benchmark-driven tuning of process frame/stderr limits, timeout defaults,
+  and platform-specific external-plugin launch behavior.
 - Future call-graph/type-level relation capabilities.
 
 These are implementation and extension risks, not blockers to the specified v1 scope.

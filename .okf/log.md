@@ -2,6 +2,41 @@
 
 ## 2026-08-27
 
+* **Issue 030 completed:** Archived [external protocol schema and conformance
+  fixture](../docs/agents/issues/done/20260827-030-external-protocol-schema-and-conformance-fixture.md)
+  after implementing the bounded typed NDJSON codec, strict descriptor
+  validation, stateful one-request protocol checks, streamed-diagnostic merge,
+  and test-only subprocess fixture.
+* **Artifact sync:** Refreshed the protocol contract, external implementation
+  slice, plugin-runtime and analyze-source delivery records, issue registry,
+  and capability references. Product/model/viewer/export architecture is
+  unchanged; issue 031 is now unblocked.
+* **Verification:** Focused protocol tests, `go test ./... -count=1`,
+  `go vet ./...`, schema parsing, and OKF validation pass. The external
+  fixture remains test-only and is not publicly registered.
+
+## 2026-08-27
+
+* **External plugin slice approved:** Following the confirmed direction to
+  port an existing language externally, selected the specified Analyzer plugin
+  runtime as the next frontier and chose an opt-in external Python parity
+  pilot rather than a new language.
+* **Spec slicing:** Added the external analyzer implementation slice and
+  tightened the descriptor, manifest handshake, detect/analyze NDJSON
+  lifecycle, stdout/stderr policy, cancellation, timeout/size limits, and
+  published protocol/descriptor schemas.
+* **Delivery slicing:** Created ready-for-agent issues 030–033 in dependency
+  order for the protocol schema/conformance fixture, Go process-backed host,
+  external Python parity analyzer, and explicit CLI/shared model-viewer-export
+  integration.
+* **Artifact sync:** Updated the plugin-runtime and Python capability
+  references, parent/project frontiers, analyzer orchestration records,
+  application PRD, application architecture summary, and issue registry.
+  Topology and capability states are unchanged; the active registry now ends
+  at issue 033.
+
+## 2026-08-27
+
 * **Rust implementation complete**: Accepted and archived issues 023–025 after
   implementing the data-only Cargo boundary, safe crate/workspace selection,
   reachable module/evidence discovery, static relationships, uncertainty, and

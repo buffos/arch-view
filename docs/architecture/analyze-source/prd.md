@@ -63,17 +63,19 @@ The capability does not own canonical graph normalization, cycle/layer calculati
 - Cancellation-aware and bounded by host timeouts where supported.
 - Language-neutral result vocabulary.
 - Evidence must remain traceable after downstream aggregation.
-- A future process analyzer must be able to produce the same observation semantics.
+- An external process analyzer must be able to produce the same observation
+  semantics through the versioned plugin-runtime contract.
 
 ## Acceptance summary
 
-The detailed scenarios are in [acceptance scenarios](acceptance-scenarios.md). The capability is ready for implementation when all required observation fields and status/error semantics are honored by built-in and future analyzers.
+The detailed scenarios are in [acceptance scenarios](acceptance-scenarios.md). The capability is ready for implementation when all required observation fields and status/error semantics are honored by built-in and process analyzers.
 
 ## Assumptions
 
-- The first complete implementation is Go; other adapters follow the same contract.
+- The first complete implementation is Go; other adapters follow the same
+  contract. The first external deployment is the opt-in Python parity pilot.
 - Optional environment/tool-assisted resolution is disabled by default and cannot change the read-only safety promise.
 
 ## Current delivery frontier
 
-The Go analyzer/model and the shared viewer/export path are complete for the first slice. The readiness-reviewed [Python analysis capability](python-analysis/prd.md) is implemented through the [Python repository to visible architecture view slice](python-analysis/implementation-slice.md) and issues 017–019. The TypeScript capability is implemented through the [TypeScript repository to visible architecture view slice](typescript-analysis/implementation-slice.md) and issues 020–022; Rust is implemented through issues 023–025, and Clojure through issues 026–029. All adapters register through the existing composition root and common `analysis.Analyzer` contract; the host, canonical model, layout, viewer, and export boundaries remain language-neutral. The external plugin protocol is the next specified frontier.
+The Go analyzer/model and the shared viewer/export path are complete for the first slice. The readiness-reviewed [Python analysis capability](python-analysis/prd.md) is implemented through the [Python repository to visible architecture view slice](python-analysis/implementation-slice.md) and issues 017–019. The TypeScript capability is implemented through the [TypeScript repository to visible architecture view slice](typescript-analysis/implementation-slice.md) and issues 020–022; Rust is implemented through issues 023–025, and Clojure through issues 026–029. All adapters register through the existing composition root and common `analysis.Analyzer` contract; the host, canonical model, layout, viewer, and export boundaries remain language-neutral. Issues 030–033 now deliver the opt-in external process protocol and Python parity pilot through the plugin-runtime implementation slice.

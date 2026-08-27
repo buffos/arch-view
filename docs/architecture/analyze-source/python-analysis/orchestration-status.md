@@ -17,6 +17,8 @@
 - [Canonical API/CLI contract](canonical-api-cli-contract.md)
 - [Acceptance scenarios](acceptance-scenarios.md)
 - [Readiness review](readiness-review.md)
+- External process parity is tracked by the [plugin-runtime implementation
+  slice](../plugin-runtime/implementation-slice.md).
 
 ## Current delivery slice
 
@@ -24,4 +26,10 @@ The [Python repository to visible architecture view](implementation-slice.md) fr
 
 ## Next step and artifact impact
 
-The static Python project/module/import path, public CLI selection/options, canonical model pipeline, local viewer, and JSON/HTML/SVG export paths are implemented and approved. Product and architecture truth are synchronized; the TypeScript slice is implemented through issues 020–022, the Rust slice through issues 023–025, and the Clojure slice through issues 026–029. The external plugin protocol is the next specified frontier.
+The static Python project/module/import path, public CLI selection/options,
+canonical model pipeline, local viewer, and JSON/HTML/SVG export paths are
+implemented and approved. Product and architecture truth are synchronized;
+issues 032–033 now reuse the completed Python capability as the external
+process parity and public shared-path pilot, while the TypeScript slice is
+implemented through issues 020–022, the Rust slice through issues 023–025,
+and the Clojure slice through issues 026–029.

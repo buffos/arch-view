@@ -16,6 +16,8 @@ issues:
   - docs/agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md
   - docs/agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md
   - docs/agents/issues/done/20260827-019-python-cli-and-visible-architecture-path.md
+  - docs/agents/issues/pending/20260827-032-external-python-analyzer-parity.md
+  - docs/agents/issues/pending/20260827-033-external-plugin-cli-and-visible-journey.md
 prd: docs/architecture/analyze-source/python-analysis/prd.md
 glossary: docs/architecture/analyze-source/python-analysis/domain-glossary.md
 domain_model: docs/architecture/analyze-source/python-analysis/canonical-domain-model.md

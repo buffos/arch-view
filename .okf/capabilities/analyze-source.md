@@ -37,6 +37,10 @@ issues:
   - docs/agents/issues/done/20260827-027-clojure-static-namespace-dependencies.md
   - docs/agents/issues/done/20260827-028-clojure-platform-polymorphism-and-safety.md
   - docs/agents/issues/done/20260827-029-clojure-public-integration-and-deterministic-exports.md
+  - docs/agents/issues/done/20260827-030-external-protocol-schema-and-conformance-fixture.md
+  - docs/agents/issues/pending/20260827-031-process-backed-analyzer-host-runtime.md
+  - docs/agents/issues/pending/20260827-032-external-python-analyzer-parity.md
+  - docs/agents/issues/pending/20260827-033-external-plugin-cli-and-visible-journey.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -70,8 +74,10 @@ This capability owns project detection, source scope, language-specific parsing,
 
 The reference tool reads Clojure forms and currently recognizes Clojure-family source files. The target design keeps that behavior inside a language adapter and exposes a language-neutral result.
 
-The capability is specified. Its observation schema, analyzer lifecycle, safety rules, language adapter contracts, and external protocol direction are linked from the exact-spec artifacts.
+The capability is specified. Its observation schema, analyzer lifecycle,
+safety rules, language adapter contracts, and external process pilot are
+linked from the exact-spec artifacts.
 
 ## Delivery progress
 
-Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 020–022 complete the registered TypeScript project/module boundary, deterministic discovery, static dependency resolution, uncertainty, evidence, public CLI, and shared visible-journey path after automated verification and explicit visual approval in [the TypeScript slice](../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace, static dependency, platform/polymorphic metadata, safety, and shared public-path slice in [the Clojure implementation slice](../../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md). The external plugin protocol remains later work, so the parent capability remains `specified`.
+Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 020–022 complete the registered TypeScript project/module boundary, deterministic discovery, static dependency resolution, uncertainty, evidence, public CLI, and shared visible-journey path after automated verification and explicit visual approval in [the TypeScript slice](../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace, static dependency, platform/polymorphic metadata, safety, and shared public-path slice in [the Clojure implementation slice](../../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md). Issue 030 completes the protocol foundation of the opt-in external process slice in [the plugin-runtime implementation slice](../../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md); issues 031–033 remain for the process host, external Python parity, and public path, so the parent capability remains `specified`.

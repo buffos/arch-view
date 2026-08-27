@@ -17,11 +17,18 @@ The runtime owns analyzer registration, manifest validation, project detection, 
 - CLI options override project configuration, which overrides analyzer defaults. The host passes the resolved options to the analyzer.
 - Each run is cancellable, read-only, and isolated from other runs. An analyzer cannot emit UI objects or arbitrary application code execution.
 - The host validates, deduplicates, sorts, and hands normalized analyzer results to the architecture-model capability.
-- External analyzers are a later versioned NDJSON/JSON-Schema boundary. The future protocol reserves stdout for protocol messages, stderr for logs, and carries version/capability negotiation, cancellation, timeouts, and diagnostics.
+- External analyzers are an opt-in versioned NDJSON/JSON-Schema boundary loaded
+  from an explicitly supplied local descriptor. The protocol reserves stdout
+  for protocol messages, stderr for bounded logs, and carries version/capability
+  negotiation, detection, analysis, cancellation, terminal status, and
+  diagnostics.
+- The first external deployment is an existing Python analyzer port using the
+  standard-library ast module. It is a parity pilot, not a new language and not
+  a replacement for the in-process Python adapter.
 
 ## Runtime flow
 
-`register -> validate manifests -> detect/select -> resolve options -> analyze with context -> validate result -> normalize -> return partial result/diagnostics`.
+`load descriptor -> validate manifest -> register -> detect/select -> resolve options -> launch one process -> handshake/frame validation -> analyze with context -> validate result -> normalize -> return partial result/diagnostics`.
 
 ## Open questions for exact specification
 
@@ -29,4 +36,6 @@ The runtime owns analyzer registration, manifest validation, project detection, 
 - Detection scoring and project-root normalization rules.
 - Cancellation, timeout, panic/error recovery, and resource-limit behavior.
 - Whether built-in analyzers run in separate goroutines or processes when optional tool-assisted resolution is enabled.
-- Exact external protocol envelope and compatibility policy; this remains intentionally deferred until the in-process contract stabilizes.
+- Protocol migration beyond v1, distribution/package management, and broader
+  machine-wide discovery remain outside the pilot and require a later
+  capability decision.

@@ -37,7 +37,10 @@ Given a Python repository, a developer can:
 
 - Executing, importing, installing, or introspecting target Python code.
 - Environment-assisted `importlib` resolution, type checking, call graphs, symbol graphs, or runtime plugin discovery.
-- TypeScript, Rust, Clojure, or external NDJSON process analyzers.
+- TypeScript, Rust, or Clojure adapter implementation.
+- External NDJSON process packaging; that deployment is owned by the
+  plugin-runtime external implementation slice and uses this completed
+  in-process capability as its semantic baseline.
 - Changes to the canonical model JSON shape, layout configuration, renderer routing, or the upstream [reference repository](https://github.com/unclebob/arch-view).
 
 ## Ordered delivery issues
@@ -66,4 +69,4 @@ Given a Python repository, a developer can:
 
 ## Artifact impact
 
-This is a completed roadmap implementation slice, not a product-topology change. The product and architecture boundaries remain the same: Python is an additional implementation of the existing analyzer contract. Issue 017 supplies the registered project/module-discovery foundation; issue 018 supplies relationships, uncertainty, evidence, and partial-result behavior; issue 019 completes the visible journey after automated verification and visual approval. Delivery sequencing, Python capability references, application synthesis status, the issue registry, and `.okf/log.md` are synchronized; no new shared concern or capability node is required.
+This is a completed roadmap implementation slice, not a product-topology change. The product and architecture boundaries remain the same: Python is an additional implementation of the existing analyzer contract. Issue 017 supplies the registered project/module-discovery foundation; issue 018 supplies relationships, uncertainty, evidence, and partial-result behavior; issue 019 completes the visible journey after automated verification and visual approval. The external Python process pilot in issues 032–033 is a separate plugin-runtime deployment that reuses this slice as its semantic parity baseline. Delivery sequencing, Python capability references, application synthesis status, the issue registry, and `.okf/log.md` are synchronized; no new language or capability node is required.
