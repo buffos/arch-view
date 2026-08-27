@@ -205,5 +205,115 @@ nearest-ancestor `.archview.json` layout profile; model-only `export --input`
 embeds built-in defaults. The HTML file recalculates its layout with the pinned
 browser ELK runtime when opened and needs no server. Source contents are not
 embedded in v1, and an existing output requires `--overwrite`. Use the live
-viewer’s Download SVG button for a standalone SVG of the current canvas; it is
+viewer's Download SVG button for a standalone SVG of the current canvas; it is
 distinct from the deterministic Go CLI SVG.
+
+## Final documentation backlog (working notes)
+
+> This is a capture list for the future final documentation. It is not the
+> final user-facing documentation and should be rewritten, shortened, and
+> validated against the shipped behavior before publication.
+
+### Python project recognition
+
+The final documentation should answer the question "does Python require
+`pyproject.toml`?" directly:
+
+- Python does not specifically require `pyproject.toml`, but the current
+  analyzer requires a project marker at the selected root: `pyproject.toml`,
+  `setup.cfg`, or `setup.py`.
+- Marker precedence is `pyproject.toml` → `setup.cfg` → `setup.py`. If more
+  than one exists, only the preferred boundary is read.
+- Auto-detection is conservative. A directory containing only `.py` files,
+  `requirements.txt`, `Pipfile`, or similar files is not currently inferred to
+  be a Python project. Explicit Python selection still requires a supported
+  marker today.
+- If Python and another analyzer have competing project markers, automatic
+  selection can be ambiguous. `--language python` or
+  `--analyzer org.archview.python` makes the selection explicit.
+- The marker requirement is a detection/boundary policy, not a technical
+  requirement for static parsing. A future explicit markerless-Python mode is
+  a possible product decision; it must be kept distinct from riskier automatic
+  language inference.
+
+### What `pyproject.toml` contributes
+
+The final documentation should explain both the general meaning of the file
+and the narrower set of fields consumed by the current analyzer:
+
+- `[project].requires-python` supplies a Python major/minor version for
+  version-sensitive static rules and conditional imports. The CLI
+  `--python-version` overrides it.
+- `[tool.setuptools.packages.find].where`, setuptools package-dir settings,
+  Poetry package `from` settings, and supported `source_roots` values can
+  provide source roots. The CLI `--source-root` overrides configured roots.
+- If no source root is configured, the analyzer falls back to `src/` when it
+  exists and then to the project root.
+- `[project].name` is useful packaging metadata but currently does not define
+  the architecture graph label; the analyzer derives that label from the
+  selected directory.
+- General build metadata and dependency declarations are not executed or used
+  as an environment resolver. The analyzer reads Python syntax statically and
+  does not install packages, import the target project, or run `setup.py`.
+
+The minimal fixture used during issue 019 intentionally contains
+`where = ['configured_src']` while the CLI supplies `--source-root src` and
+`--source-root extensions`. Therefore, in that run, the file primarily proves
+the Python project boundary; `name` is unused, `requires-python` is overridden,
+and `where` is overridden. This is useful test rationale, not an example to
+copy into final user documentation.
+
+### Include in the final documentation
+
+- Supported Python project markers and their precedence.
+- The difference between automatic detection and explicit analyzer selection.
+- Source-root precedence and the Python CLI options for tests, stubs, excludes,
+  and Python version.
+- The fields of `pyproject.toml` that currently affect Arch View, alongside a
+  clear statement about fields that are ignored by the analyzer.
+- Static-analysis safety: no target-code execution, imports, installation, or
+  environment-assisted dependency resolution.
+- How unresolved, external, standard-library, conditional, and dynamic imports
+  appear as references, confidence, diagnostics, or partial results.
+- Small valid examples for a root-layout project, a `src/` project, and an
+  explicit `--source-root` invocation.
+
+### Keep out of the final documentation
+
+- Test-only tricks such as the deliberately wrong `configured_src` fixture,
+  temporary paths, internal test names, and implementation-specific regex or
+  parser details.
+- Claims that `project.name` or `[project].dependencies` currently drive graph
+  discovery or import resolution.
+- A claim that a markerless Python directory is supported before that behavior
+  is deliberately implemented and tested.
+- Internal state-transition mechanics, issue IDs, and planning-map details
+  unless a separate contributor/development guide needs them.
+
+### Agent automation and future skills backlog
+
+The existing planning and delivery skills already cover issue processing,
+artifact synchronization, closeout, and OKF validation. The remaining
+documentation work would benefit from explicit automation skills:
+
+- `final-documentation-curator`: collect user questions and confirmed answers
+  into a working backlog, classify each item as user documentation,
+  contributor documentation, test rationale, or internal planning, and only
+  generate final prose when requested.
+- `documentation-gap-auditor`: compare README backlog notes with the PRD,
+  canonical contracts, issue evidence, and shipped behavior; report stale,
+  unsupported, or missing claims before publication.
+- `architecture-example-author`: generate small deterministic CLI/configuration
+  examples and safe fixtures for the final documentation without executing
+  target-project code.
+- `agent-skill-gap-analyzer`: inspect repeated manual steps in a delivery run,
+  map them to existing skills, and propose a new skill only when the workflow
+  is reusable and independently bounded. The existing `skill-creator` and
+  `write-a-skill` skills can then scaffold and refine it.
+
+Automation must preserve the evidence hierarchy: code and tests establish
+current behavior, canonical artifacts establish intended product behavior, and
+explicit user decisions establish target or approval. An agent may automate
+capture, drafting, consistency checks, and fixture generation; it must not
+invent visual approval or silently convert a working note into final product
+documentation.
