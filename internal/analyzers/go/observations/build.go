@@ -6,8 +6,8 @@ import (
 	"sort"
 
 	"github.com/buffo/arch-view/internal/analysis"
-	"github.com/buffo/arch-view/internal/goanalyzer/imports"
-	"github.com/buffo/arch-view/internal/goanalyzer/scanner"
+	"github.com/buffo/arch-view/internal/analyzers/go/imports"
+	"github.com/buffo/arch-view/internal/analyzers/go/scanner"
 )
 
 func Build(scan scanner.ScanResult, request analysis.AnalyzeRequest, project scanner.Project, manifest analysis.Manifest) analysis.AnalysisResult {

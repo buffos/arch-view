@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
-	"github.com/buffo/arch-view/internal/clojureanalyzer"
-	"github.com/buffo/arch-view/internal/goanalyzer"
-	"github.com/buffo/arch-view/internal/pyanalyzer"
-	"github.com/buffo/arch-view/internal/rustanalyzer"
-	"github.com/buffo/arch-view/internal/tsanalyzer"
+	"github.com/buffo/arch-view/internal/analyzers/clojure"
+	"github.com/buffo/arch-view/internal/analyzers/go"
+	"github.com/buffo/arch-view/internal/analyzers/python"
+	"github.com/buffo/arch-view/internal/analyzers/rust"
+	"github.com/buffo/arch-view/internal/analyzers/typescript"
 )
 
 type stringList []string

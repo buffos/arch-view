@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
-	"github.com/buffo/arch-view/internal/goanalyzer/scanner"
+	"github.com/buffo/arch-view/internal/analyzers/go/scanner"
 )
 
 type Target struct {

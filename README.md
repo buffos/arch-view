@@ -158,7 +158,7 @@ Model-only sessions can apply settings but cannot persist a project file.
   model-owned identities, and hierarchy projection data. The
   `internal/model/canonical` capability owns normalization, merge/recovery
   diagnostics, and validation.
-- `internal/goanalyzer` remains the public Go analyzer entrypoint while its
+- `internal/analyzers/go` remains the public Go analyzer entrypoint while its
   implementation is split into scanner, import classification, and common
   observation assembly capabilities. Other languages can register separate
   implementations of the common analyzer contract.
