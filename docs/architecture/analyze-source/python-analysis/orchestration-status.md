@@ -2,8 +2,8 @@
 
 ## State
 
-- Planning state: `specified`.
-- State transition: `bounded -> specified` on 2026-08-25.
+- Planning state: `implemented`.
+- State transition: `bounded -> specified` on 2026-08-25; `specified -> implemented` on 2026-08-27 after issues 017–019, repository verification, and visual approval.
 - Exact-spec set is complete and readiness-reviewed.
 
 ## Artifact inventory
@@ -20,8 +20,8 @@
 
 ## Current delivery slice
 
-The selected frontier is [Python repository to visible architecture view](implementation-slice.md). Issues [017](../../../agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md) and [018](../../../agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md) are complete; issue [019](../../../agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md) remains as the next dependent slice.
+The [Python repository to visible architecture view](implementation-slice.md) frontier is complete. Issues [017](../../../agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md), [018](../../../agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md), and [019](../../../agents/issues/done/20260827-019-python-cli-and-visible-architecture-path.md) are archived after automated verification and the declared visual review.
 
 ## Next step and artifact impact
 
-Continue the static Python project/module/import path after the completed Go contract and shared model/viewer/export boundaries. Issue 017 supplies project/configuration boundary, safe source scope, package/module hierarchy, and deterministic file evidence; issue 018 now supplies absolute/relative relationships, package re-exports, references, uncertainty, evidence aggregation, and partial-result diagnostics; issue 019 remains for the public visible journey. Product and architecture truth remain synchronized; the node remains `specified` until the complete slice is implemented and reviewed.
+The static Python project/module/import path, public CLI selection/options, canonical model pipeline, local viewer, and JSON/HTML/SVG export paths are implemented and approved. Product and architecture truth are synchronized; TypeScript is the next language in the agreed implementation sequence.

@@ -2,6 +2,7 @@ import { routePoints } from "../graph_route.js";
 import { fallbackLayout } from "./layout.js";
 import { sceneLayoutKey } from "./view.js";
 import { clampNumber } from "./utils.js";
+import { fitViewportTransform, visibleGraphArea } from "./viewport_math.js";
 
 export function viewportKey(scene) {
   return "arch-view:viewport:" + [scene.model_revision || scene.model_id, (scene.hierarchy_path || []).join("/"), scene.reference_visibility].join("|");
@@ -147,22 +148,31 @@ export function fitViewport(context, services) {
   if (!scene) return;
   const fallback = fallbackLayout(context, scene);
   const active = context.state.layout && context.state.layout.key === sceneLayoutKey(scene) ? context.state.layout : fallback;
+  const available = visibleGraphArea(context.elements.graph.clientWidth, context.elements.graph.clientHeight);
+  const availableWidth = available.width;
+  const availableHeight = available.height;
   const svg = context.elements.graph.querySelector("svg");
-  const availableWidth = Math.max(360, svg ? svg.clientWidth : context.elements.graph.clientWidth - 12);
-  const availableHeight = Math.max(260, svg ? svg.clientHeight : context.elements.graph.clientHeight - 12);
+  const renderedWidth = Math.max(1, svg ? svg.clientWidth : availableWidth);
+  const renderedHeight = Math.max(1, svg ? svg.clientHeight : availableHeight);
   const positions = currentGraphPositions(context, scene);
   const bounds = layoutBounds(context, scene, active, positions);
-  const baseScale = Math.min(availableWidth / active.width, availableHeight / active.height);
-  const contentWidth = Math.max(1, bounds.maxX - bounds.minX);
-  const contentHeight = Math.max(1, bounds.maxY - bounds.minY);
-  const contentFitZoom = Math.min(availableWidth / (contentWidth * baseScale), availableHeight / (contentHeight * baseScale));
   if (!context.state.viewport) context.state.viewport = defaultViewport();
   const maximumFitZoom = isExpandedCanvas() ? context.constants.expandedFitZoom : context.constants.windowedFitZoom;
-  context.state.viewport.zoom = clampNumber(Math.max(1, contentFitZoom), 1, maximumFitZoom, 1);
-  const offsetX = (availableWidth - active.width * baseScale) / 2;
-  const offsetY = (availableHeight - active.height * baseScale) / 2;
-  context.state.viewport.panX = clampNumber((availableWidth / 2 - offsetX) / baseScale - bounds.centerX * context.state.viewport.zoom, -context.constants.panLimit, context.constants.panLimit, 0);
-  context.state.viewport.panY = clampNumber((availableHeight / 2 - offsetY) / baseScale - bounds.centerY * context.state.viewport.zoom, -context.constants.panLimit, context.constants.panLimit, 0);
+  const fitted = fitViewportTransform({
+    availableWidth: availableWidth,
+    availableHeight: availableHeight,
+    renderedWidth: renderedWidth,
+    renderedHeight: renderedHeight,
+    layoutWidth: active.width,
+    layoutHeight: active.height,
+    bounds: bounds,
+    minimumZoom: context.constants.minZoom,
+    maximumZoom: maximumFitZoom,
+    panLimit: context.constants.panLimit
+  });
+  context.state.viewport.zoom = fitted.zoom;
+  context.state.viewport.panX = fitted.panX;
+  context.state.viewport.panY = fitted.panY;
   persistViewport(context);
   renderViewportControls(context);
   services.renderGraph();

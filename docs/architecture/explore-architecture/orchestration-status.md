@@ -5,7 +5,7 @@
 - Planning state: `implemented`.
 - State transition: `bounded -> specified` on 2026-08-25; `specified -> implemented` on 2026-08-27 after the complete issue/scenario audit and repository verification gate.
 - Topology: confirmed as the interactive investigation capability.
-- Next route: the current 17-scenario Explore scope is complete. Future ELK renderer extensions are tracked by the foggy [Advanced ELK renderer support child](../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md); the next selected implementation frontier is the Python analysis slice in issues 017–019.
+- Next route: the current 17-scenario Explore scope and the consuming Python analysis slice in issues 017–019 are complete. Future ELK renderer extensions are tracked by the foggy [Advanced ELK renderer support child](../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md); TypeScript is the next language in the agreed analyzer sequence.
 
 ## Confirmed boundary
 

@@ -39,7 +39,7 @@ The upstream [unclebob/arch-view reference implementation](https://github.com/un
 
 The analyzer receives a repository or project root plus analysis options, selects one language analyzer, and returns validated modules, static dependency relationships, source evidence, metadata, and diagnostics. It does not assign layers, render diagrams, or export files.
 
-The plugin runtime and language adapters are specified around this contract. The first deployment uses in-process Go analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, TypeScript, Rust, and Clojure uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
+The plugin runtime and language adapters are specified around this contract. The current deployment uses in-process Go and Python analyzers; each adapter owns project-boundary and static-resolution rules, while the host owns selection, option precedence, validation, normalization, and safety. Python, TypeScript, Rust, and Clojure uncertainty is returned as evidence, confidence, or diagnostics rather than fabricated relationships.
 
 The first graph uses package or module nodes. Files remain attached evidence. Project-local modules are shown by default. Tests, generated code, vendor directories, caches, build outputs, and directories named `external` are excluded by default. Unresolved dependencies produce partial results with diagnostics.
 
@@ -132,7 +132,8 @@ browser composition/bundling, scene projection, the Go analyzer pipeline, the
 ELK option registry, and canonical model normalization. Issue 017 adds the
 first in-process Python project/module-discovery adapter; issue 018 extends it
 through static relationships, uncertainty, evidence, and partial results, and
-issue 019 owns the remaining visible journey. TypeScript and Rust follow,
+issue 019 completes the shared visible journey after automated verification
+and explicit visual approval. TypeScript and Rust follow,
 while Clojure remains a later compatibility slice. Every adapter follows the
 same `analysis.Analyzer` contract and registers at the composition root;
 adding one does not modify host orchestration.

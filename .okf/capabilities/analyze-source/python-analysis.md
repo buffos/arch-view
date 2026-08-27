@@ -3,9 +3,9 @@ type: capability
 title: Python analysis
 description: Build architecture input from Python packages, modules, and import relationships.
 tags: [python, analysis, roadmap]
-timestamp: 2026-08-27T09:59:46Z
-state: specified
-state_changed: 2026-08-25T17:10:00Z
+timestamp: 2026-08-27T12:09:55Z
+state: implemented
+state_changed: 2026-08-27T12:09:55Z
 project: /project.md
 parent: /capabilities/analyze-source.md
 discovery_notes: docs/architecture/analyze-source/python-analysis/discovery-notes.md
@@ -15,7 +15,7 @@ implementation_slice: docs/architecture/analyze-source/python-analysis/implement
 issues:
   - docs/agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md
   - docs/agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md
-  - docs/agents/issues/pending/20260827-019-python-cli-and-visible-architecture-path.md
+  - docs/agents/issues/done/20260827-019-python-cli-and-visible-architecture-path.md
 prd: docs/architecture/analyze-source/python-analysis/prd.md
 glossary: docs/architecture/analyze-source/python-analysis/domain-glossary.md
 domain_model: docs/architecture/analyze-source/python-analysis/canonical-domain-model.md
@@ -40,8 +40,8 @@ The analyzer will detect common project layouts, resolve absolute and relative i
 
 # Planning state
 
-This child capability is specified. Its project-marker precedence, source-root rules, package/module semantics, static resolution, uncertainty behavior, options, and safety policy are linked from the exact-spec artifacts.
+This child capability is implemented. Its project-marker precedence, source-root rules, package/module semantics, static resolution, uncertainty behavior, options, and safety policy remain defined by the linked exact-spec artifacts.
 
 ## Delivery progress
 
-The current implementation slice is [Python repository to visible architecture view](../../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issue 017 implements the registered project-boundary and module-discovery foundation, issue 018 implements static imports, local resolution, references, evidence, and uncertainty diagnostics, and issue 019 remains for public model/viewer/export integration. The node remains `specified` until the complete slice is implemented and reviewed.
+The [Python repository to visible architecture view](../../../docs/architecture/analyze-source/python-analysis/implementation-slice.md) slice is complete. Issue 017 implements the registered project-boundary and module-discovery foundation, issue 018 implements static imports, local resolution, references, evidence, and uncertainty diagnostics, and issue 019 connects the public CLI to the shared model/viewer/export path. Automated verification and the declared visual review are complete, so the node is `implemented`.

@@ -12,8 +12,8 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 1 `foggy`, 0 `bounded`, 9 `specified`, 1 `implemented`.
-- Current delivery frontier: the current Explore and inspect architecture scope is implemented after issues 003–016 and the repository-level verification gate. The next selected implementation frontier is the specified [Python analysis implementation slice](../docs/architecture/analyze-source/python-analysis/implementation-slice.md), issues 017–019. The separate foggy [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md) child tracks future renderer features and must be specified before it receives delivery issues.
+- State totals: 1 `foggy`, 0 `bounded`, 8 `specified`, 2 `implemented`.
+- Current delivery frontier: the current Explore and inspect architecture scope and the [Python analysis implementation slice](../docs/architecture/analyze-source/python-analysis/implementation-slice.md), issues 017–019, are implemented after their repository verification and visual-review gates. No delivery issue remains active; TypeScript is the next language in the agreed sequence, while the separate foggy [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md) child must be specified before it receives delivery issues.
 
 ## Application synthesis
 

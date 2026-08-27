@@ -2,6 +2,33 @@
 
 ## 2026-08-27
 
+* **Issue 019 complete**: The user explicitly approved the corrected Python
+  top-level and drilled hierarchy in windowed and full-canvas modes, including
+  directed edges, labels, references, evidence, diagnostics, viewport controls,
+  and the existing export surface. The issue is archived, its active registry
+  row is removed, and the Python analysis capability advances from `specified`
+  to `implemented`; the parent Analyze source code capability remains
+  `specified` while later language and plugin territories remain.
+* **Issue 019 automated implementation complete**: Connected the public Python
+  CLI options and deterministic analyzer selection to the existing
+  analysis → canonical model → local viewer/export journey. The representative
+  integration fixture verifies package/module hierarchy, directed imports,
+  source evidence, references, confidence, dynamic/unresolved diagnostics,
+  model normalization/validation/projection, self-contained HTML, static SVG,
+  current-canvas download markers, and repeated byte-stable output without
+  Python-specific branches in the shared model, scene, layout, or browser
+  paths.
+* **Verification**: `go test ./... -count=1`, `go test -race ./...`, `go vet
+  ./...`, `go build ./...`, `staticcheck ./...`, `golangci-lint run`, the
+  viewer JavaScript syntax/pure-module tests, and the issue-focused Python
+  journey tests pass. At this automated checkpoint, issue 019 remained active
+  until the declared visual-review gate could be completed.
+* **Visual-review correction**: The live Python journey exposed windowed
+  **Fit** measuring an aspect-ratio-expanded SVG instead of its clipped graph
+  viewport, which could leave right-side modules outside the visible canvas.
+  Fit now derives its available area from the visible graph container, with a
+  pure browser-module regression test covering the mismatch.
+
 * **Issue 017 complete**: Added the registered in-process Python analyzer
   foundation. Marker precedence is `pyproject.toml`, `setup.cfg`, then
   `setup.py`; configuration and roots are read safely as data, with `src/`
