@@ -28,6 +28,16 @@ func (h *Host) ListManifests() []Manifest {
 	return h.registry.ListManifests()
 }
 
+// Register adds an analyzer to the host registry. Callers that load optional
+// analyzers can validate and register them before any selection or analysis
+// request is run.
+func (h *Host) Register(analyzer Analyzer) error {
+	if h == nil {
+		return NewHostError(ErrInvalidManifest, "cannot register an analyzer on a nil host", nil)
+	}
+	return h.registry.Register(analyzer)
+}
+
 func (h *Host) Run(ctx context.Context, request RunRequest) (result AnalysisResult, err error) {
 	if ctx == nil {
 		ctx = context.Background()

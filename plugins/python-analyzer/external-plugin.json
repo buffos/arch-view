@@ -1,0 +1,25 @@
+{
+  "schema_version": "arch-view.plugin/v1",
+  "manifest": {
+    "id": "org.archview.python.external",
+    "version": "1.0.0",
+    "language": "python",
+    "api_version": "arch-view.analyzer/v1",
+    "detection_markers": [
+      {"kind": "file", "value": "pyproject.toml", "weight": 1},
+      {"kind": "file", "value": "setup.cfg", "weight": 0.9},
+      {"kind": "file", "value": "setup.py", "weight": 0.8}
+    ],
+    "capabilities": ["detect", "static_dependencies", "dynamic_diagnostics"],
+    "options": [
+      {"name": "source_roots", "type": "string[]", "default": [], "description": "Explicit repository-relative Python source roots.", "sensitive": false},
+      {"name": "python_version", "type": "string", "default": null, "description": "Optional Python major/minor version used for static interpretation.", "sensitive": false},
+      {"name": "include_stubs", "type": "boolean", "default": false, "description": "Include .pyi stub files as module evidence.", "sensitive": false},
+      {"name": "include_tests", "type": "boolean", "default": false, "description": "Include Python test files and test directories.", "sensitive": false},
+      {"name": "exclude", "type": "string[]", "default": [], "description": "Additional repository-relative exclusion globs.", "sensitive": false}
+    ]
+  },
+  "command": "python",
+  "args": ["-B", "launcher.py"],
+  "working_directory": "."
+}

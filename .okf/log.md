@@ -2,6 +2,23 @@
 
 ## 2026-08-27
 
+* **Issues 031–033 completed:** Archived the process-backed analyzer host,
+  external Python parity deployment, and explicit plugin CLI/shared journey at
+  the dated records in `docs/agents/issues/done/`. The external Python pilot
+  is standard-library-only, opt-in through a local descriptor, and remains
+  separate from the built-in Python analyzer.
+* **Artifact sync:** Updated the plugin-runtime contract, readiness review,
+  implementation slice, orchestration status, Python and Analyze source
+  capability records, parent/project planning frontier, application PRD,
+  application architecture summary, and issue registry. The plugin-runtime
+  capability remains `specified` because no next external frontier was chosen.
+* **Verification:** External/in-process parity, repeat byte stability,
+  no-target-execution, canonical model/viewer/source/export integration,
+  `go test ./... -count=1`, `go vet ./...`, `git diff --check`, and strict OKF
+  validation pass with zero errors and zero warnings.
+
+## 2026-08-27
+
 * **Issue 030 completed:** Archived [external protocol schema and conformance
   fixture](../docs/agents/issues/done/20260827-030-external-protocol-schema-and-conformance-fixture.md)
   after implementing the bounded typed NDJSON codec, strict descriptor

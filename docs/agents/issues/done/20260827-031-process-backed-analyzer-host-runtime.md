@@ -5,11 +5,11 @@
 - Issue number: 031
 - Owning capability node: /.okf/capabilities/analyze-source/plugin-runtime.md
 - Artifact root: docs/architecture/analyze-source/plugin-runtime/
-- Issue file: docs/agents/issues/pending/20260827-031-process-backed-analyzer-host-runtime.md
+- Issue file: docs/agents/issues/done/20260827-031-process-backed-analyzer-host-runtime.md
 - Category: feature
 - Execution type: AFK
 - Review gate: none
-- Suggested state: ready-for-agent
+- Suggested state: done
 
 ## Parent Artifacts
 
@@ -40,37 +40,37 @@ back to the existing Go types.
 
 ## Acceptance criteria
 
-- [ ] A validated descriptor constructs a process-backed Analyzer whose
+- [x] A validated descriptor constructs a process-backed Analyzer whose
   Manifest method is deterministic and does not execute the command. Invalid
   manifests, unsupported API versions, empty commands, duplicate options, and
   unsafe descriptor values are rejected before registration.
-- [ ] Detect launches the command with argv arguments, reads hello first,
+- [x] Detect launches the command with argv arguments, reads hello first,
   verifies the protocol/API version and exact manifest agreement, sends one
   detect frame, accepts one candidate, requires done, and returns the
   existing DetectionCandidate type.
-- [ ] Analyze forwards the normalized project root, selection, and effective
+- [x] Analyze forwards the normalized project root, selection, and effective
   options in one analyze frame, retains streamed diagnostics, accepts one
   canonical result, requires done, and leaves final result validation to the
   common Host path.
-- [ ] Process launch never invokes a shell or concatenates untrusted
+- [x] Process launch never invokes a shell or concatenates untrusted
   descriptor values into a shell command. The child working directory and
   argument resolution are deterministic and remain under descriptor control.
-- [ ] Every process reaches a terminal cleanup path. Context cancellation or
+- [x] Every process reaches a terminal cleanup path. Context cancellation or
   deadline sends best-effort cancel, terminates the child, waits for it, and
   returns the existing cancelled host outcome; no result arriving after
   cancellation is accepted.
-- [ ] Handshake and operation reads enforce the documented frame-size and
+- [x] Handshake and operation reads enforce the documented frame-size and
   bounded stderr limits. Timeout, non-zero exit, malformed JSON, unknown
   frames, wrong request IDs, missing result/candidate, duplicate terminal
   frames, hello mismatch, and invalid status map to stable host errors with
   useful details.
-- [ ] Stderr is retained only as bounded diagnostic context and never
+- [x] Stderr is retained only as bounded diagnostic context and never
   contaminates protocol parsing or canonical analysis output. Stdout
   protocol violations fail closed.
-- [ ] Conformance tests pass with every issue 030 fixture mode, including
+- [x] Conformance tests pass with every issue 030 fixture mode, including
   valid complete/partial results, fatal errors, delayed output,
   cancellation, oversized frames, and stdout contamination.
-- [ ] Existing in-process analyzer tests and all common host result,
+- [x] Existing in-process analyzer tests and all common host result,
   selection, option, cancellation, and deterministic-ordering tests remain
   green; no public CLI flag is added in this issue.
 
@@ -133,11 +133,23 @@ None — issue 030 is complete and its protocol/fixture artifacts are available.
 
 | Scenario | Backend boundary | Frontend integration | End-to-end journey |
 |---|---|---|---|
-| SC-PR-001/002 | planned: process analyzer registration and manifest/API validation tests | not-applicable | not-applicable |
-| SC-PR-003/004 | planned: fixture detection candidate and ambiguity tests through analysis.Host | not-applicable | not-applicable |
-| SC-PR-005 | planned: effective options forwarded byte-for-byte to analyze frame | not-applicable | not-applicable |
-| SC-PR-006/011 | planned: cancellation, timeout, output-limit, stderr, and child-cleanup tests | not-applicable | not-applicable |
-| SC-PR-007/009/010 | planned: protocol conformance tests using all issue 030 fixture modes | not-applicable | not-applicable |
+| SC-PR-001/002 | passed: descriptor construction, manifest/API validation, duplicate-option, and unsafe-value tests in `internal/analysis/processanalyzer` | not-applicable | not-applicable |
+| SC-PR-003/004 | passed: fixture detection and common-host selection tests in `internal/analysis/processanalyzer` | not-applicable | not-applicable |
+| SC-PR-005 | passed: effective option forwarding and streamed diagnostic merge tests | not-applicable | not-applicable |
+| SC-PR-006/011 | passed: cancellation, timeout, frame/stderr limits, and child-cleanup tests | not-applicable | not-applicable |
+| SC-PR-007/009/010 | passed: protocol conformance tests covering all issue 030 fixture modes | not-applicable | not-applicable |
+
+## Implementation and verification
+
+- Added `internal/analysis/processanalyzer`, an argv-only process-backed
+  `analysis.Analyzer` with descriptor loading, hello/manifest agreement,
+  bounded NDJSON and stderr handling, streamed diagnostic merge, cancellation,
+  timeout, and terminal cleanup.
+- Added focused conformance coverage for the valid, partial, fatal, delayed,
+  cancellation, oversized, malformed, stdout-contamination, mismatch, and
+  late-frame fixture behaviors.
+- Verification passed: `go test ./internal/analysis/processanalyzer -count=1`,
+  `go test ./... -count=1`, `go vet ./...`, and `git diff --check`.
 
 ## Handoff
 

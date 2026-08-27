@@ -44,6 +44,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	var features stringList
 	var excludes stringList
 	var sourceRoots stringList
+	var plugins stringList
 	var viewPath stringList
 	var referenceScopes stringList
 	fs.Var(&buildTags, "build-tag", "explicit Go build tag; repeatable")
@@ -51,6 +52,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	fs.Var(&features, "features", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&excludes, "exclude", "repository-relative exclusion glob; repeatable")
 	fs.Var(&sourceRoots, "source-root", "explicit analyzer source root; repeatable")
+	fs.Var(&plugins, "plugin", "external analyzer descriptor; repeatable")
 	fs.Var(&viewPath, "view-path", "hierarchy segment for visual export; repeatable")
 	fs.Var(&referenceScopes, "reference-scope", "reference scope for visual export; repeatable")
 	if err := fs.Parse(args); err != nil {
@@ -84,6 +86,10 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	}
 	if formatValue == "analysis-json" && (*referenceVisibility != "hidden" || len(viewPath) > 0 || len(referenceScopes) > 0 || *overwrite || !*deterministic || *embedSource) {
 		err := analysis.NewHostError(analysis.ErrInvalidRequest, "export options require json, html, or svg format", nil)
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	}
+	if err := loadExternalPlugins(host, plugins); err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}

@@ -7,11 +7,11 @@
 - Supporting capability node: /.okf/capabilities/analyze-source/python-analysis.md
 - Artifact root: docs/architecture/analyze-source/plugin-runtime/
 - Supporting artifact root: docs/architecture/analyze-source/python-analysis/
-- Issue file: docs/agents/issues/pending/20260827-032-external-python-analyzer-parity.md
+- Issue file: docs/agents/issues/done/20260827-032-external-python-analyzer-parity.md
 - Category: feature
 - Execution type: AFK
 - Review gate: none
-- Suggested state: ready-for-agent
+- Suggested state: done
 
 ## Parent Artifacts
 
@@ -27,7 +27,7 @@
 - docs/architecture/analyze-source/python-analysis/acceptance-scenarios.md
 - docs/architecture/analyze-source/python-analysis/implementation-slice.md
 - docs/agents/issues/done/20260827-030-external-protocol-schema-and-conformance-fixture.md
-- docs/agents/issues/pending/20260827-031-process-backed-analyzer-host-runtime.md
+- docs/agents/issues/done/20260827-031-process-backed-analyzer-host-runtime.md
 
 ## What to build
 
@@ -45,37 +45,37 @@ human logs go to stderr.
 
 ## Acceptance criteria
 
-- [ ] The external descriptor has a stable external manifest ID,
+- [x] The external descriptor has a stable external manifest ID,
   org.archview.python.external, language python, API arch-view.analyzer/v1,
   the required detection markers, and the Python option descriptors needed
   by the current adapter: source_roots, python_version, include_stubs,
   include_tests, and exclude.
-- [ ] The plugin responds to detect and analyze with the protocol handshake,
+- [x] The plugin responds to detect and analyze with the protocol handshake,
   returns a valid detection candidate, forwards effective options without
   lossy renaming, emits a canonical complete or partial result, and exits
   with one terminal done or fatal frame.
-- [ ] Safe project-boundary behavior matches the in-process baseline:
+- [x] Safe project-boundary behavior matches the in-process baseline:
   pyproject.toml/setup.cfg/setup.py marker precedence, configured or src/
   source roots, repository-root fallback, regular and namespace packages,
   stubs/tests/exclusions, stable module IDs, and repository-relative source
   evidence.
-- [ ] Static imports match the baseline fixture semantics for absolute,
+- [x] Static imports match the baseline fixture semantics for absolute,
   relative, package-init re-export, standard-library, external,
   unresolved, conditional, and dynamic imports. Uncertain behavior remains
   references, confidence, or recoverable diagnostics rather than invented
   local relationships.
-- [ ] A parity harness compares the external and in-process analyzers after
+- [x] A parity harness compares the external and in-process analyzers after
   removing only allowed run/analyzer provenance. Modules, relationships,
   references, source evidence, project boundary, option effects, diagnostic
   codes/severity/recoverability, and complete/partial status must agree for
   the representative fixture.
-- [ ] Repeated external runs with unchanged source, descriptor, interpreter,
+- [x] Repeated external runs with unchanged source, descriptor, interpreter,
   options, and protocol version produce byte-stable analysis JSON after
   common host normalization.
-- [ ] A target fixture containing import-time and file-write side effects
+- [x] A target fixture containing import-time and file-write side effects
   proves that the external analyzer never executes target code; the
   sentinel file is not created and the result remains static-analysis data.
-- [ ] The external plugin contains no viewer, model-normalization, layout,
+- [x] The external plugin contains no viewer, model-normalization, layout,
   or export-specific code. Existing in-process Python behavior and all
   repository tests remain green.
 
@@ -106,8 +106,8 @@ change rendered UI/UX or navigation.
 
 ## Blocked by
 
-Blocked by issue 031:
-docs/agents/issues/pending/20260827-031-process-backed-analyzer-host-runtime.md
+Satisfied by archived issue 031:
+docs/agents/issues/done/20260827-031-process-backed-analyzer-host-runtime.md
 
 ## Artifact anchors
 
@@ -137,14 +137,31 @@ docs/agents/issues/pending/20260827-031-process-backed-analyzer-host-runtime.md
 
 | Scenario | Backend boundary | Frontend integration | End-to-end journey |
 |---|---|---|---|
-| SC-PY-001/002 | planned: external marker/configuration and module-discovery tests | not-applicable | not-applicable |
-| SC-PY-003/004 | planned: external static import/uncertainty/evidence tests and parity harness | not-applicable | not-applicable |
-| SC-PY-005 | planned: AST-only side-effect sentinel and malformed-input recovery tests | not-applicable | not-applicable |
-| SC-AS-001/002/004/005/006/008 | planned: process adapter integration with common host normalization and deterministic repeated output | not-applicable | deferred to issue 033 |
+| SC-PY-001/002 | passed: external marker/configuration, source-root, package/module, stubs/tests, exclusion, and evidence checks through the Python parity harness | not-applicable | not-applicable |
+| SC-PY-003/004 | passed: external static import, re-export, standard-library, external, unresolved, conditional, dynamic, and diagnostic parity checks | not-applicable | not-applicable |
+| SC-PY-005 | passed: AST/token-only side-effect sentinel, safe configuration reads, and recoverable-result checks | not-applicable | not-applicable |
+| SC-AS-001/002/004/005/006/008 | passed: process adapter integration, explicit selection, common host normalization, partial results, evidence, exclusions, and repeated byte-stable output | not-applicable | passed through issue 033 shared-path journey |
+
+## Implementation and verification
+
+- Added the standard-library-only external deployment under
+  `plugins/python-analyzer/`: descriptor, `-B` launcher, static analyzer port,
+  and invocation documentation.
+- The external implementation uses `ast`, `tokenize`, and safe configuration
+  readers only; it does not import, execute, install, type-check, or inspect
+  target code and keeps protocol frames on stdout.
+- Added a parity and shared-path harness in
+  `cmd/arch-view/external_python_test.go`. It compares normalized external and
+  in-process results, verifies repeat stability and the side-effect sentinel,
+  and confirms the external result reaches model, viewer, source, and export
+  consumers.
+- Verification passed: `python -m py_compile` for the launcher/analyzer,
+  focused external Python tests, `go test ./... -count=1`, `go vet ./...`, and
+  `git diff --check`.
 
 ## Handoff
 
-Issue 033 may begin after the external plugin passes parity and direct
-process-adapter tests. The CLI integration should load the descriptor
-explicitly and must not make the external Python implementation the default
-for ordinary Python projects.
+Issue 033 was unblocked after the external plugin passed parity and direct
+process-adapter tests. The CLI integration loads the descriptor explicitly
+and does not make the external Python implementation the default for ordinary
+Python projects.

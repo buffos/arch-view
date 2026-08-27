@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; the verified in-process Clojure adapter reaches the existing analyzer, model, viewer, and export path without adding a language-specific consumer branch, and the next frontier is the opt-in external Python process pilot.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked as future foggy work; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The next frontier is a later explicitly selected plugin-runtime extension.
 
 ## Boundary summary
 
@@ -66,8 +66,8 @@ Each analyzer owns source discovery, syntax parsing, import or dependency resolu
 The adapters have exact language-specific contracts; parser/library choices may vary behind those contracts. The in-process Python adapter now extracts absolute, package, re-export, and relative imports through a conservative static pass, resolves only filesystem-proven local modules under effective source roots, and emits standard-library, external, unresolved, conditional, and dynamic references with source evidence, confidence, and recoverable diagnostics. The in-process Rust adapter reads one Cargo crate and statically discovers reachable crate/module hierarchy, `use`/`pub use` relationships, dependency declarations, source evidence, and cfg/macro/generated uncertainty without executing Cargo or target code. The in-process Clojure adapter resolves `deps.edn`, `project.clj`, and `shadow-cljs.edn` boundaries, emits namespace modules and static require/use/macro relationships, preserves `.cljc` platform and polymorphic metadata, and reports dynamic loading or malformed forms as recoverable evidence. The adapters never import or execute the analyzed project; unresolved or dynamic behavior remains visible rather than becoming a fabricated local relationship.
 
 The external Python pilot lives as a separately launched plugin deployment,
-uses Python ast and safe configuration readers, and is compared with the
-in-process Python adapter for semantic parity. It is explicitly selected
+uses Python ast and safe configuration readers, and has been verified against
+the in-process Python adapter for semantic parity. It is explicitly selected
 through a local descriptor; it is not a new language, an implicit project
 plugin, or a replacement for the built-in adapter.
 

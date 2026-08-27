@@ -28,12 +28,13 @@
 - Issue 030 completed the published external protocol/descriptor schemas,
   bounded typed frame codec, stateful conformance validator, and test-only
   subprocess fixture in [the external implementation slice](implementation-slice.md).
-- The remaining delivery slice is the opt-in external process boundary and
-  external Python parity pilot in issues 031–033.
+- Issues 031–033 completed the opt-in external process boundary, external
+  Python parity pilot, and explicit CLI/shared model-viewer-export path in
+  [the external implementation slice](implementation-slice.md).
 
 ## Next step and artifact impact
 
-Issue 030 is complete. Issues 031–033 remain ready in dependency order for the
-process-backed host runtime, external Python parity, and public CLI/shared-path
-integration. Product and architecture truth remain unchanged; delivery truth
-records the completed protocol foundation and the three remaining issue paths.
+Issues 030–033 are complete. Product and architecture truth remain unchanged;
+delivery truth now records the verified process host, external Python parity,
+and public shared-path integration. The capability remains `specified` because
+no subsequent external plugin-runtime frontier has been selected.

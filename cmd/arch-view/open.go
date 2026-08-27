@@ -45,11 +45,13 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	var features stringList
 	var excludes stringList
 	var sourceRoots stringList
+	var plugins stringList
 	fs.Var(&buildTags, "build-tag", "explicit Go build tag; repeatable")
 	fs.Var(&features, "feature", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&features, "features", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&excludes, "exclude", "repository-relative exclusion glob; repeatable")
 	fs.Var(&sourceRoots, "source-root", "explicit analyzer source root; repeatable")
+	fs.Var(&plugins, "plugin", "external analyzer descriptor; repeatable")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -65,6 +67,15 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	}
 	if *port < 0 || *port > 65535 {
 		err := analysis.NewHostError(analysis.ErrInvalidRequest, "open --port must be between 0 and 65535", map[string]any{"port": *port})
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	}
+	if *modelInput != "" && len(plugins) > 0 {
+		err := analysis.NewHostError(analysis.ErrInvalidRequest, "open --plugin requires --project", nil)
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	}
+	if err := loadExternalPlugins(host, plugins); err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}

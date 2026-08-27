@@ -112,13 +112,13 @@ The hello protocol and manifest API version must be supported by the host, and
 the hello manifest must match the descriptor manifest. The host does not
 silently downgrade an incompatible major version.
 
-The first executable contract slice is implemented by the typed
-`internal/analysis/processprotocol` package. It provides bounded frame
-encoding/decoding, strict descriptor validation, stateful one-request
-conformance checks, and deterministic streamed-diagnostic merging. Its
-subprocess fixture is test-only and is not registered as a public analyzer;
-process launch, child cleanup, and shared host integration remain in issues
-031–033.
+The executable contract is implemented by the typed
+`internal/analysis/processprotocol` and `internal/analysis/processanalyzer`
+packages. They provide bounded frame encoding/decoding, strict descriptor
+validation, stateful one-request conformance checks, deterministic
+streamed-diagnostic merging, argv-only process launch, child cleanup, and
+common-host integration. The conformance subprocess fixture remains test-only
+and is not registered as a public analyzer.
 
 ### Lifecycle and safety
 
@@ -174,4 +174,14 @@ HTTP, CLI, in-process analyzers, and process analyzers preserve status,
 diagnostics, identifiers, and result meaning. Paths are normalized relative
 to the project boundary. The external Python pilot is compared with the
 in-process Python analyzer after allowing only analyzer/run provenance to
-differ.
+differ. The repository CLI accepts an explicit local descriptor for
+`analyzers`, `analyze`, and project-backed `open`; without that flag the
+built-in registry is unchanged.
+
+## Implementation verification
+
+Issues 030–033 verified the published schema/fixture, process lifecycle,
+external Python parity, explicit descriptor loading, ambiguity and duplicate
+handling, canonical model/viewer/source integration, deterministic JSON/HTML/
+SVG output, and no-target-execution behavior. The external path introduces no
+new canonical model or consumer-specific protocol fields.

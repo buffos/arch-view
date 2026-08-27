@@ -6,11 +6,11 @@
 - Owning capability node: /.okf/capabilities/analyze-source/plugin-runtime.md
 - Supporting capability node: /.okf/capabilities/analyze-source/python-analysis.md
 - Artifact root: docs/architecture/analyze-source/plugin-runtime/
-- Issue file: docs/agents/issues/pending/20260827-033-external-plugin-cli-and-visible-journey.md
+- Issue file: docs/agents/issues/done/20260827-033-external-plugin-cli-and-visible-journey.md
 - Category: feature
 - Execution type: AFK
 - Review gate: none
-- Suggested state: ready-for-agent
+- Suggested state: done
 
 ## Parent Artifacts
 
@@ -26,7 +26,7 @@
 - docs/architecture/analyze-source/plugin-runtime/readiness-review.md
 - docs/architecture/analyze-source/plugin-runtime/implementation-slice.md
 - docs/architecture/analyze-source/python-analysis/implementation-slice.md
-- docs/agents/issues/pending/20260827-032-external-python-analyzer-parity.md
+- docs/agents/issues/done/20260827-032-external-python-analyzer-parity.md
 
 ## What to build
 
@@ -46,40 +46,40 @@ outputs remain unchanged.
 
 ## Acceptance criteria
 
-- [ ] analyzers, analyze, and open accept repeatable --plugin <descriptor>
+- [x] analyzers, analyze, and open accept repeatable --plugin <descriptor>
   options. Descriptor paths are normalized and validated before any analysis
   starts; malformed descriptors, invalid manifests, duplicate IDs, missing
   commands, and hello mismatches return stable errors without partial
   registration.
-- [ ] arch-view analyzers --plugin <descriptor> lists built-in and external
+- [x] arch-view analyzers --plugin <descriptor> lists built-in and external
   manifests in deterministic ID order. Without --plugin it returns the same
   five built-in manifests and bytes as before.
-- [ ] Explicit --analyzer org.archview.python.external selects the external
+- [x] Explicit --analyzer org.archview.python.external selects the external
   Python process and records stable analyzer, selection, boundary, run, and
   option-fingerprint metadata. Explicit language and auto-detection preserve
   the common host contract; when built-in and external Python candidates tie,
   automatic selection fails as the existing ambiguity rule requires.
-- [ ] analyze forwards every selected analyzer option through the common
+- [x] analyze forwards every selected analyzer option through the common
   precedence and validation path and produces a valid analysis-json result
   with no external protocol fields leaking into canonical output.
-- [ ] open --project retains the descriptor-backed analyzer for reanalysis,
+- [x] open --project retains the descriptor-backed analyzer for reanalysis,
   cancellation, and error reporting. A missing or invalid descriptor is
   reported clearly rather than silently falling back to the in-process
   analyzer.
-- [ ] A representative external Python project reaches model normalize,
+- [x] A representative external Python project reaches model normalize,
   model validate, model projection, viewer model/scene/source inspection,
   and the existing JSON, self-contained HTML, and SVG outputs without a
   Python-specific branch in internal/model, internal/viewer, layout, or
   export code.
-- [ ] The external and in-process Python paths expose equivalent hierarchy,
+- [x] The external and in-process Python paths expose equivalent hierarchy,
   directed relationships, references, evidence, confidence, diagnostics,
   and partial-result semantics. Repeated CLI/model/export runs are
   byte-stable under unchanged inputs.
-- [ ] Existing Go, Python in-process, TypeScript, Rust, and Clojure CLI,
+- [x] Existing Go, Python in-process, TypeScript, Rust, and Clojure CLI,
   model, viewer, export, deterministic-output, and safety tests remain
   green. No target repository code is executed and no external Python
   runtime or source is embedded in exported HTML/SVG.
-- [ ] After issues 030–033 pass their verification obligations, update the
+- [x] After issues 030–033 pass their verification obligations, update the
   plugin-runtime and parent orchestration records, the application PRD and
   architecture summary, the implementation slice, capability issue lists,
   issue registry, and OKF log. Keep the plugin-runtime node specified until
@@ -116,8 +116,8 @@ changing rendered UI/UX or navigation behavior.
 
 ## Blocked by
 
-Blocked by issue 032:
-docs/agents/issues/pending/20260827-032-external-python-analyzer-parity.md
+Satisfied by archived issue 032:
+docs/agents/issues/done/20260827-032-external-python-analyzer-parity.md
 
 ## Artifact anchors
 
@@ -141,11 +141,27 @@ docs/agents/issues/pending/20260827-032-external-python-analyzer-parity.md
 
 | Scenario | Backend boundary | Frontend integration | End-to-end journey |
 |---|---|---|---|
-| SC-PR-001/002/008/009 | planned: descriptor loading, manifest listing, duplicate/mismatch, and no-flag regression tests | not-applicable | planned: external manifest through CLI |
-| SC-PR-003/004/005 | planned: explicit/automatic selection, ambiguity, options, and stable metadata tests | not-applicable | planned: external Python analysis JSON |
-| SC-PR-006/007/010/011 | planned: cancellation, protocol, output-limit, stderr, and lifecycle regression suite | not-applicable | planned: failed/cancelled external runs |
-| SC-PY-001 through SC-PY-005 | passed or planned from issue 032 parity evidence | not-applicable | planned: external Python shared path |
-| SC-AS-001/002/004/005/006/008 | planned: common host/model/export assertions | planned: existing viewer model/scene/source routes | planned: external Python repository to viewer and JSON/HTML/SVG |
+| SC-PR-001/002/008/009 | passed: descriptor loading, manifest listing, duplicate/mismatch, and no-flag regression tests | not-applicable | passed: external manifest through CLI |
+| SC-PR-003/004/005 | passed: explicit/automatic selection, ambiguity, options, and stable metadata tests | not-applicable | passed: external Python analysis JSON |
+| SC-PR-006/007/010/011 | passed by the process adapter conformance and lifecycle suite | not-applicable | passed by external process integration |
+| SC-PY-001 through SC-PY-005 | passed by the issue 032 parity and safety harness | not-applicable | passed: external Python shared path |
+| SC-AS-001/002/004/005/006/008 | passed: common host/model/export assertions | passed: existing viewer model/scene/source routes | passed: external Python repository to viewer and JSON/HTML/SVG |
+
+## Implementation and verification
+
+- Added repeatable `--plugin` descriptor loading to `analyzers`, `analyze`,
+  and project-backed `open`; descriptors are normalized and fully validated
+  before atomic registration, and the same host registry is retained by open
+  reanalysis callbacks.
+- Kept the default five built-in analyzer listing and selection behavior
+  unchanged. External Python selection remains explicit, while automatic
+  built-in/external ties remain ambiguous.
+- Verified the shared external journey through analysis JSON, canonical
+  normalization/validation/projection, viewer model/scene/source routes, and
+  deterministic JSON, HTML, and SVG exports without consumer-specific plugin
+  branches.
+- Verification passed: focused external Python/CLI tests, `go test ./...
+  -count=1`, `go vet ./...`, strict OKF validation, and `git diff --check`.
 
 ## Closeout expectations
 

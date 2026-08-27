@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -58,8 +59,19 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 	switch args[0] {
 	case "analyzers":
-		if len(args) != 1 {
+		fs := flag.NewFlagSet("arch-view analyzers", flag.ContinueOnError)
+		fs.SetOutput(stderr)
+		var plugins stringList
+		fs.Var(&plugins, "plugin", "external analyzer descriptor; repeatable")
+		if err := fs.Parse(args[1:]); err != nil {
+			return 2
+		}
+		if fs.NArg() != 0 {
 			err := analysis.NewHostError(analysis.ErrInvalidRequest, "analyzers does not accept positional arguments", nil)
+			writeError(stderr, err)
+			return analysis.ExitCodeForError(err)
+		}
+		if err := loadExternalPlugins(host, plugins); err != nil {
 			writeError(stderr, err)
 			return analysis.ExitCodeForError(err)
 		}
@@ -85,11 +97,11 @@ func run(args []string, stdout, stderr io.Writer) int {
 }
 
 func printUsage(writer io.Writer) {
-	_, _ = fmt.Fprintln(writer, "arch-view analyzers")
-	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] --format analysis-json|json|html|svg --output <file>")
+	_, _ = fmt.Fprintln(writer, "arch-view analyzers [--plugin <descriptor>]")
+	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--plugin <descriptor>] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] --format analysis-json|json|html|svg --output <file>")
 	_, _ = fmt.Fprintln(writer, "arch-view export --input <model.json> --format json|html|svg --output <file>")
 	_, _ = fmt.Fprintln(writer, "arch-view open --model <model.json> [--port <n>]")
-	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] [--port <n>]")
+	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--plugin <descriptor>] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] [--port <n>]")
 	_, _ = fmt.Fprintln(writer, "arch-view model normalize --input <analysis-json> --output <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model validate --input <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model projection --input <model-json> [--path <segment>] --output <projection-json>")

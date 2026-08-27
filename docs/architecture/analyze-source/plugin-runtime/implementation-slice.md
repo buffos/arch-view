@@ -8,10 +8,10 @@ This slice does not add a language or a capability node. It ports the existing P
 
 ## Current and target truth
 
-- **Observed in code:** the common analysis.Analyzer contract, deterministic host selection, option resolution, result validation, canonical model normalization, local viewer, and JSON/HTML/SVG paths exist. Registry registration is still in-process only, while issue 030 now adds the published protocol/descriptor schemas, bounded typed NDJSON codec, strict descriptor validation, stateful session validator, and test-only subprocess fixture. The process adapter, public descriptor loader, and shared opt-in path remain pending.
+- **Observed in code:** the common analysis.Analyzer contract, deterministic host selection, option resolution, result validation, canonical model normalization, local viewer, and JSON/HTML/SVG paths exist. Issues 030–033 add the published protocol/descriptor schemas, bounded typed NDJSON codec, strict descriptor validation, stateful session validator, argv-only process adapter, external Python deployment, public descriptor loader, and shared opt-in path.
 - **Inferred from the exact specification:** an external analyzer needs version negotiation, manifest agreement, detection and analysis operations, canonical result validation, diagnostics, cancellation, timeout/size limits, protocol-only stdout, and log-only stderr.
 - **User-confirmed target:** the first external deployment is an existing Python analyzer port, not a sixth language. It must be explicitly opted into and must not require model, layout, viewer, or exporter changes.
-- **Target mismatch:** the process host lifecycle, external Python implementation, and public opt-in path are still absent; the protocol/descriptor schema and conformance-fixture portion is implemented by issue 030.
+- **Verified implementation:** the process host lifecycle, external Python implementation, and public opt-in path are complete; the external Python result reaches the unchanged model, viewer/source, and export consumers.
 
 ## Vertical outcome
 
@@ -39,9 +39,9 @@ Given an explicit external-plugin descriptor and a Python repository, a develope
 | Issue | Outcome | Owner | Blocked by | Review gate |
 |---|---|---|---|---|
 | [030](../../../agents/issues/done/20260827-030-external-protocol-schema-and-conformance-fixture.md) | Completed: publish the v1 protocol and descriptor schemas, bounded wire-frame rules, and a test-only process fixture covering valid and invalid streams | Plugin runtime contract | none | none |
-| [031](../../../agents/issues/pending/20260827-031-process-backed-analyzer-host-runtime.md) | Add the Go process-backed Analyzer adapter with handshake, detection/analysis lifecycle, limits, cancellation, stderr handling, and conformance tests | Plugin runtime host | 030 | none |
-| [032](../../../agents/issues/pending/20260827-032-external-python-analyzer-parity.md) | Port the existing Python static-analysis semantics to an external stdlib-only Python plugin and compare it with the in-process baseline | External Python plugin + analysis | 031 | none |
-| [033](../../../agents/issues/pending/20260827-033-external-plugin-cli-and-visible-journey.md) | Add explicit descriptor loading to analyzers, analyze, and open; prove shared model/viewer/export behavior and synchronize final application records | CLI + existing consumers | 032 | none |
+| [031](../../../agents/issues/done/20260827-031-process-backed-analyzer-host-runtime.md) | Completed: Go process-backed Analyzer adapter with handshake, detection/analysis lifecycle, limits, cancellation, stderr handling, and conformance tests | Plugin runtime host | 030 | none |
+| [032](../../../agents/issues/done/20260827-032-external-python-analyzer-parity.md) | Completed: external stdlib-only Python plugin with parity harness and no-target-execution evidence | External Python plugin + analysis | 031 | none |
+| [033](../../../agents/issues/done/20260827-033-external-plugin-cli-and-visible-journey.md) | Completed: explicit descriptor loading for analyzers, analyze, and open with shared model/viewer/export verification | CLI + existing consumers | 032 | none |
 
 ## Slice acceptance
 
@@ -70,4 +70,10 @@ Given an explicit external-plugin descriptor and a Python repository, a develope
 
 ## Artifact impact
 
-The slice refines an already confirmed plugin-runtime boundary; it does not change product topology or canonical model semantics. The capability exact-spec set, application PRD, application architecture summary, parent orchestration, capability references, issue registry, and OKF log are synchronized to make the external Python pilot the next delivery frontier. Issue 033 owns the consolidated final application-status refresh after the shared public path is verified.
+The slice refines an already confirmed plugin-runtime boundary; it does not
+change product topology or canonical model semantics. Issues 030–033 are
+complete and the capability exact-spec set, application PRD, application
+architecture summary, parent orchestration, capability references, issue
+registry, and OKF log record the verified external Python pilot. The
+plugin-runtime node remains `specified` until a later external capability
+frontier is explicitly chosen.
