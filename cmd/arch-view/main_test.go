@@ -23,7 +23,7 @@ func TestAnalyzersCommandListsBuiltInManifests(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &response); err != nil {
 		t.Fatalf("decode response: %v; output=%s", err, stdout.String())
 	}
-	if len(response.Analyzers) != 2 || response.Analyzers[0].ID != "org.archview.go" || response.Analyzers[1].ID != "org.archview.python" {
+	if len(response.Analyzers) != 3 || response.Analyzers[0].ID != "org.archview.go" || response.Analyzers[1].ID != "org.archview.python" || response.Analyzers[2].ID != "org.archview.rust" {
 		t.Fatalf("analyzers = %#v", response.Analyzers)
 	}
 }
@@ -149,6 +149,186 @@ func TestAnalyzeCommandAutoDetectsPythonProject(t *testing.T) {
 	}
 	if result.Analyzer.ID != "org.archview.python" || result.Project.Boundary != "setup.cfg" {
 		t.Fatalf("auto-detected result = %#v", result)
+	}
+}
+
+func TestAnalyzeCommandSelectsRustAndPassesRustOptions(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "Cargo.toml"), []byte("[package]\nname = \"cli-rust\"\nedition = \"2021\"\n"), 0o644); err != nil {
+		t.Fatalf("write Cargo.toml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatalf("create Rust source directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "lib.rs"), []byte("pub fn answer() -> u32 { 42 }\n"), 0o644); err != nil {
+		t.Fatalf("write Rust source: %v", err)
+	}
+	output := filepath.Join(t.TempDir(), "rust-analysis.json")
+	var stdout, stderr bytes.Buffer
+	code := run([]string{
+		"analyze",
+		"--project", root,
+		"--language", "rust",
+		"--crate", "cli-rust",
+		"--feature", "api",
+		"--feature", "serde",
+		"--target", "x86_64-unknown-linux-gnu",
+		"--include-tests=false",
+		"--include-examples=false",
+		"--exclude", "ignored/**",
+		"--format", "analysis-json",
+		"--output", output,
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("Rust analyze exit code = %d, stderr=%s", code, stderr.String())
+	}
+	data, err := os.ReadFile(output)
+	if err != nil {
+		t.Fatalf("read Rust analysis: %v", err)
+	}
+	var result analysis.AnalysisResult
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("decode Rust analysis: %v", err)
+	}
+	if result.Analyzer.ID != "org.archview.rust" || result.Project.ModulePath != "cli-rust" || len(result.Modules) != 1 {
+		t.Fatalf("Rust result = %#v", result)
+	}
+	features, _ := result.Modules[0].Metadata["features"].([]any)
+	if len(features) != 2 {
+		t.Fatalf("Rust feature metadata = %#v", result.Modules[0].Metadata["features"])
+	}
+}
+
+func TestAnalyzeCommandAutoDetectsRustProject(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "Cargo.toml"), []byte("[package]\nname = \"auto-rust\"\nedition = \"2021\"\n"), 0o644); err != nil {
+		t.Fatalf("write Cargo.toml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatalf("create Rust source directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "main.rs"), []byte("fn main() {}\n"), 0o644); err != nil {
+		t.Fatalf("write Rust source: %v", err)
+	}
+	output := filepath.Join(t.TempDir(), "auto-rust-analysis.json")
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"analyze", "--project", root, "--output", output, "--format", "analysis-json"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("Rust auto-detect exit code = %d, stderr=%s", code, stderr.String())
+	}
+	data, err := os.ReadFile(output)
+	if err != nil {
+		t.Fatalf("read auto-detected Rust analysis: %v", err)
+	}
+	var result analysis.AnalysisResult
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("decode auto-detected Rust analysis: %v", err)
+	}
+	if result.Analyzer.ID != "org.archview.rust" || result.Project.Boundary != "Cargo.toml" || len(result.Modules) != 1 {
+		t.Fatalf("auto-detected Rust result = %#v", result)
+	}
+}
+
+func TestRustAnalysisUsesCanonicalModelAndDeterministicExportPaths(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "Cargo.toml"), []byte(`[package]
+name = "rust-journey"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = "1"
+`), 0o644); err != nil {
+		t.Fatalf("write Cargo.toml: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatalf("create Rust source directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "lib.rs"), []byte(`pub mod api;
+use crate::api::Answer;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub struct Root(Answer);
+`), 0o644); err != nil {
+		t.Fatalf("write Rust source: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "api.rs"), []byte(`pub type Answer = u32;
+`), 0o644); err != nil {
+		t.Fatalf("write Rust module: %v", err)
+	}
+
+	runCommand := func(args ...string) {
+		t.Helper()
+		var stdout, stderr bytes.Buffer
+		if code := run(args, &stdout, &stderr); code != 0 {
+			t.Fatalf("command %q exit code = %d, stderr=%s", args, code, stderr.String())
+		}
+	}
+
+	analysisPaths := []string{
+		filepath.Join(t.TempDir(), "rust-analysis-a.json"),
+		filepath.Join(t.TempDir(), "rust-analysis-b.json"),
+	}
+	for _, output := range analysisPaths {
+		runCommand("analyze", "--project", root, "--language", "rust", "--format", "analysis-json", "--output", output)
+	}
+	analysisA, err := os.ReadFile(analysisPaths[0])
+	if err != nil {
+		t.Fatalf("read first Rust analysis: %v", err)
+	}
+	analysisB, err := os.ReadFile(analysisPaths[1])
+	if err != nil {
+		t.Fatalf("read second Rust analysis: %v", err)
+	}
+	if !bytes.Equal(analysisA, analysisB) {
+		t.Fatal("repeated Rust analysis output is not byte-stable")
+	}
+
+	modelPaths := []string{
+		filepath.Join(t.TempDir(), "rust-model-a.json"),
+		filepath.Join(t.TempDir(), "rust-model-b.json"),
+	}
+	for index, output := range modelPaths {
+		runCommand("model", "normalize", "--input", analysisPaths[index], "--output", output)
+	}
+	modelA, err := os.ReadFile(modelPaths[0])
+	if err != nil {
+		t.Fatalf("read first Rust model: %v", err)
+	}
+	modelB, err := os.ReadFile(modelPaths[1])
+	if err != nil {
+		t.Fatalf("read second Rust model: %v", err)
+	}
+	if !bytes.Equal(modelA, modelB) {
+		t.Fatal("repeated Rust model normalization is not byte-stable")
+	}
+
+	runCommand("model", "validate", "--input", modelPaths[0])
+	projectionPath := filepath.Join(t.TempDir(), "rust-projection.json")
+	runCommand("model", "projection", "--input", modelPaths[0], "--output", projectionPath)
+	if projection, err := os.ReadFile(projectionPath); err != nil || len(projection) == 0 {
+		t.Fatalf("Rust model projection = %d bytes, error=%v", len(projection), err)
+	}
+
+	for _, format := range []string{"json", "html", "svg"} {
+		outputs := []string{
+			filepath.Join(t.TempDir(), "rust-export-a."+format),
+			filepath.Join(t.TempDir(), "rust-export-b."+format),
+		}
+		for _, output := range outputs {
+			runCommand("export", "--input", modelPaths[0], "--format", format, "--output", output)
+		}
+		first, err := os.ReadFile(outputs[0])
+		if err != nil {
+			t.Fatalf("read first Rust %s export: %v", format, err)
+		}
+		second, err := os.ReadFile(outputs[1])
+		if err != nil {
+			t.Fatalf("read second Rust %s export: %v", format, err)
+		}
+		if !bytes.Equal(first, second) {
+			t.Fatalf("repeated Rust %s export is not byte-stable", format)
+		}
 	}
 }
 

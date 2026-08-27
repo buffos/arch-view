@@ -4,7 +4,11 @@ import "flag"
 
 type analyzerCLIFlags struct {
 	module           *string
+	crate            *string
+	features         *stringList
+	target           *string
 	includeTests     *bool
+	includeExamples  *bool
 	includeGenerated *bool
 	includeExternal  *bool
 	safeMode         *bool
@@ -34,6 +38,18 @@ func collectAnalyzerCLIOptions(fs *flag.FlagSet, flags analyzerCLIFlags) map[str
 	}
 	if flagWasSet(fs, "module") && *flags.module != "" {
 		options["module"] = *flags.module
+	}
+	if flagWasSet(fs, "crate") && *flags.crate != "" {
+		options["crate"] = *flags.crate
+	}
+	if flags.features != nil && len(*flags.features) > 0 {
+		options["features"] = []string(*flags.features)
+	}
+	if flagWasSet(fs, "target") && *flags.target != "" {
+		options["target"] = *flags.target
+	}
+	if flagWasSet(fs, "include-examples") {
+		options["include_examples"] = *flags.includeExamples
 	}
 	if len(*flags.buildTags) > 0 {
 		options["build_tags"] = []string(*flags.buildTags)

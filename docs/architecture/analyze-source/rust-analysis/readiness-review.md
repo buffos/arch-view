@@ -14,4 +14,7 @@ Macro and cfg fixture coverage will determine confidence quality. Optional Cargo
 
 ## Artifact impact
 
-Capability truth updated; no additional product/architecture boundary change beyond synchronized parent contracts; delivery truth has no impact.
+Capability truth and delivery truth are synchronized in the Rust capability,
+orchestration, implementation-slice, and archived issue records; no additional
+product/architecture boundary change was introduced beyond the synchronized
+parent contracts.

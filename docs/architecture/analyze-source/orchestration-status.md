@@ -5,7 +5,7 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the source-analysis capability with a plugin runtime and language-specific child territories for Go, Python, TypeScript, Rust, and Clojure.
-- Next route: the Python child is implemented after issues 017–019 and its visual-review gate. TypeScript is the next language in the agreed sequence, followed by Rust; Clojure and the external plugin protocol remain later specified frontiers. Analyzer work remains independent of the completed viewer configuration and spline slices.
+- Next route: the Python child is implemented after issues 017–019 and its visual-review gate. Rust is implemented after issues 023–025; TypeScript is the next specified language frontier, while Clojure and the external plugin protocol remain later specified territories. Analyzer work remains independent of the completed viewer configuration and spline slices.
 
 ## Confirmed boundary
 
@@ -33,7 +33,7 @@ The capability receives a repository or project root plus analysis options, sele
 - [Go analysis](go-analysis/readiness-review.md): `specified`.
 - [Python analysis](python-analysis/readiness-review.md): `implemented`.
 - [TypeScript analysis](typescript-analysis/readiness-review.md): `specified`.
-- [Rust analysis](rust-analysis/readiness-review.md): `specified`.
+- [Rust analysis](rust-analysis/readiness-review.md): `implemented`, with completed delivery slices 023–025.
 - [Clojure compatibility](clojure-compatibility/readiness-review.md): `specified`.
 
 ## Artifact plan
@@ -48,8 +48,8 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 
 ## Current delivery slice
 
-- Completed frontiers: [Go repository to visible architecture view](go-analysis/implementation-slice.md) and [Python repository to visible architecture view](python-analysis/implementation-slice.md).
-- Delivery progress: issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout-configuration, analyzer-pipeline, and bounded presentation-extension work. Issues 017–019 complete the Python project-boundary/module-discovery, static import/uncertainty, and shared visible-journey path after automated verification and visual approval. Future TypeScript, Rust, Clojure, and external protocol work remains specified.
+- Completed frontiers: [Go repository to visible architecture view](go-analysis/implementation-slice.md), [Python repository to visible architecture view](python-analysis/implementation-slice.md), and [Rust repository to language-neutral architecture model](rust-analysis/implementation-slice.md).
+- Delivery progress: issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout-configuration, analyzer-pipeline, and bounded presentation-extension work. Issues 017–019 complete the Python project-boundary/module-discovery, static import/uncertainty, and shared visible-journey path after automated verification and visual approval. Issues 023–025 complete the Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path. Future TypeScript, Clojure, and external protocol work remains specified.
 - The slice crosses the plugin runtime, Go analyzer, canonical model, local viewer, evidence, and export contracts.
 
 ## Artifact sync
@@ -59,4 +59,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with completed issues 001 through 009, 013, and 016–019. Issues 016 and 019 are archived after automated implementation verification and explicit visual approval; the Python node is implemented while the parent remains specified for later analyzer territories.
+- Delivery truth: updated with completed issues 001 through 009, 013, 016–019, and 023–025. Issues 016 and 019 are archived after automated implementation verification and explicit visual approval; issues 023–025 are archived after Rust implementation verification. The Rust node is implemented while the parent remains specified for later analyzer territories.

@@ -27,6 +27,9 @@ issues:
   - docs/agents/issues/done/20260827-017-python-project-boundary-and-module-discovery.md
   - docs/agents/issues/done/20260827-018-python-static-import-resolution-and-uncertainty.md
   - docs/agents/issues/done/20260827-019-python-cli-and-visible-architecture-path.md
+  - docs/agents/issues/done/20260827-023-rust-cargo-boundary-and-registration.md
+  - docs/agents/issues/done/20260827-024-rust-module-discovery-and-evidence.md
+  - docs/agents/issues/done/20260827-025-rust-relationships-and-end-to-end-output.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -64,4 +67,4 @@ The capability is specified. Its observation schema, analyzer lifecycle, safety 
 
 ## Delivery progress
 
-Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). TypeScript, Rust, Clojure, and the external plugin protocol remain later work, so the parent capability remains `specified`.
+Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). TypeScript, Clojure, and the external plugin protocol remain later work, so the parent capability remains `specified`.

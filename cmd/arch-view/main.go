@@ -9,6 +9,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/goanalyzer"
 	"github.com/buffo/arch-view/internal/pyanalyzer"
+	"github.com/buffo/arch-view/internal/rustanalyzer"
 )
 
 type stringList []string
@@ -33,6 +34,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return analysis.ExitCodeForError(err)
 	}
 	if err := registry.Register(pyanalyzer.New()); err != nil {
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	}
+	if err := registry.Register(rustanalyzer.New()); err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
@@ -71,10 +76,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 func printUsage(writer io.Writer) {
 	_, _ = fmt.Fprintln(writer, "arch-view analyzers")
-	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--language <id>] [--analyzer <id>] [--module <path>] [--source-root <path>] [--python-version <3.x>] [--include-stubs] [--include-tests] [--exclude <glob>] --format analysis-json|json|html|svg --output <file>")
+	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--source-root <path>] [--python-version <3.x>] [--include-stubs] [--include-tests] [--include-examples] [--exclude <glob>] --format analysis-json|json|html|svg --output <file>")
 	_, _ = fmt.Fprintln(writer, "arch-view export --input <model.json> --format json|html|svg --output <file>")
 	_, _ = fmt.Fprintln(writer, "arch-view open --model <model.json> [--port <n>]")
-	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--language <id>] [--analyzer <id>] [--module <path>] [--source-root <path>] [--python-version <3.x>] [--include-stubs] [--include-tests] [--exclude <glob>] [--port <n>]")
+	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--source-root <path>] [--python-version <3.x>] [--include-stubs] [--include-tests] [--include-examples] [--exclude <glob>] [--port <n>]")
 	_, _ = fmt.Fprintln(writer, "arch-view model normalize --input <analysis-json> --output <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model validate --input <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model projection --input <model-json> [--path <segment>] --output <projection-json>")

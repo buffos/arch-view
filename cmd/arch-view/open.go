@@ -27,7 +27,10 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	language := fs.String("language", "", "explicit analyzer language")
 	analyzerID := fs.String("analyzer", "", "explicit analyzer id")
 	module := fs.String("module", "", "explicit Go module path or workspace-relative directory")
+	crate := fs.String("crate", "", "explicit Rust package name or workspace-relative crate directory")
+	target := fs.String("target", "", "explicit Rust target triple or target selector")
 	includeTests := fs.Bool("include-tests", false, "include test files")
+	includeExamples := fs.Bool("include-examples", false, "include Rust examples and benches")
 	includeGenerated := fs.Bool("include-generated", false, "include generated files")
 	includeExternal := fs.Bool("include-external", false, "retain non-local reference detail")
 	safeMode := fs.Bool("safe-mode", true, "disable target-code execution and tool-assisted execution")
@@ -35,9 +38,12 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	includeStubs := fs.Bool("include-stubs", false, "include Python .pyi stub files")
 	port := fs.Int("port", 0, "loopback TCP port; 0 chooses an available port")
 	var buildTags stringList
+	var features stringList
 	var excludes stringList
 	var sourceRoots stringList
 	fs.Var(&buildTags, "build-tag", "explicit Go build tag; repeatable")
+	fs.Var(&features, "feature", "explicit Rust Cargo feature; repeatable")
+	fs.Var(&features, "features", "explicit Rust Cargo feature; repeatable")
 	fs.Var(&excludes, "exclude", "repository-relative exclusion glob; repeatable")
 	fs.Var(&sourceRoots, "source-root", "explicit Python source root; repeatable")
 	if err := fs.Parse(args); err != nil {
@@ -73,7 +79,11 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	} else {
 		cliOptions := collectAnalyzerCLIOptions(fs, analyzerCLIFlags{
 			module:           module,
+			crate:            crate,
+			features:         &features,
+			target:           target,
 			includeTests:     includeTests,
+			includeExamples:  includeExamples,
 			includeGenerated: includeGenerated,
 			includeExternal:  includeExternal,
 			safeMode:         safeMode,

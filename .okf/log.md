@@ -2,6 +2,35 @@
 
 ## 2026-08-27
 
+* **Rust implementation complete**: Accepted and archived issues 023–025 after
+  implementing the data-only Cargo boundary, safe crate/workspace selection,
+  reachable module/evidence discovery, static relationships, uncertainty, and
+  the shared canonical/public output path. The Rust analysis capability moved
+  from `specified` to `implemented`; the parent Analyze source code capability
+  remains `specified` for the later TypeScript, Clojure, and plugin-runtime
+  territories.
+* **Artifact sync**: Updated the Rust and parent OKF nodes, orchestration
+  records, implementation slice, application PRD, application architecture
+  summary, and delivery registry. The active registry is empty and current max
+  issue ID remains 029. State totals are now 1 `foggy`, 0 `bounded`, 7
+  `specified`, and 3 `implemented`.
+* **Verification**: Strict OKF v0.1 validation, focused and full Go tests,
+  race tests, vet, build, staticcheck, golangci-lint, Node checks, and diff
+  checks passed. No visual review gate applied to the backend/CLI Rust adapter.
+
+## 2026-08-27
+
+* **Rust delivery slicing approved**: After the application synthesis gate and
+  explicit user approval, created ordered AFK issues 023–025 for Cargo
+  boundary/registration, module discovery/evidence, and relationships/uncertainty
+  plus the end-to-end output path.
+* **Artifact sync**: Linked the Rust implementation slice and issue paths from
+  the Rust capability, updated the Rust and parent orchestration records, and
+  recorded that issue 025 owns the final application PRD and architecture-summary
+  refresh. No planning node state changed during slicing.
+
+## 2026-08-27
+
 * **Issue 019 complete**: The user explicitly approved the corrected Python
   top-level and drilled hierarchy in windowed and full-canvas modes, including
   directed edges, labels, references, evidence, diagnostics, viewport controls,

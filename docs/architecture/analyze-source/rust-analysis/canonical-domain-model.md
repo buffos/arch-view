@@ -10,7 +10,7 @@ Fields: `manifest_path`, `crate_id`, `crate_name`, `workspace_path?`, `features[
 
 ### RustDependencyObservation
 
-`from_module_id`, `spelling`, `kind` (`mod`, `use`, `pub_use`, `dependency`), `to_module_id?`, `reference_id?`, `cfg_conditions[]`, `source_reference_ids[]`, `confidence`.
+`from_module_id`, `spelling`, `kind` (`use`, `pub_use`, `dependency`), `to_module_id?`, `reference_id?`, `cfg_conditions[]`, `source_reference_ids[]`, `confidence`. A `mod` declaration is represented by the containing module's declared-module metadata and the child module hierarchy, not as a semantic dependency edge.
 
 ## Invariants
 

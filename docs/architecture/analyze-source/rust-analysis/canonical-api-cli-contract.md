@@ -19,7 +19,7 @@
 
 `id=org.archview.rust`, `language=rust`, markers=`Cargo.toml`, capabilities=`detect`, `static_dependencies`, `cfg_metadata`.
 
-The adapter emits common `depends_on` observations with `metadata.kind`=`mod|use|pub_use|dependency`; containment stays in hierarchy/module metadata.
+The adapter emits common `depends_on` observations with `metadata.kind`=`use|pub_use|dependency`. `mod` declarations remain structural observations in the module hierarchy and module metadata with source evidence; they are not semantic `depends_on` edges.
 
 ## CLI example
 

@@ -2,8 +2,8 @@
 
 ## State
 
-- Planning state: `specified`.
-- State transition: `bounded -> specified` on 2026-08-25.
+- Planning state: `implemented`.
+- State transition: `specified -> implemented` on 2026-08-27.
 - Exact-spec set is complete and readiness-reviewed.
 
 ## Artifact inventory
@@ -17,7 +17,14 @@
 - [Canonical API/CLI contract](canonical-api-cli-contract.md)
 - [Acceptance scenarios](acceptance-scenarios.md)
 - [Readiness review](readiness-review.md)
+- [Implementation slice](implementation-slice.md)
+
+## Completed delivery slices
+
+- [Issue 023](../../../agents/issues/done/20260827-023-rust-cargo-boundary-and-registration.md): Cargo boundary, crate selection, manifest/options, and host/CLI registration.
+- [Issue 024](../../../agents/issues/done/20260827-024-rust-module-discovery-and-evidence.md): reachable module hierarchy, scope filtering, cfg metadata, and source evidence.
+- [Issue 025](../../../agents/issues/done/20260827-025-rust-relationships-and-end-to-end-output.md): relationships, uncertainty, partial results, canonical output, and end-to-end product/architecture synchronization.
 
 ## Next step and artifact impact
 
-Implement static Cargo/crate/module/use analysis after the common contract is established. Product and architecture truth are synchronized; delivery truth has no impact because no issue was created.
+The approved slices were implemented in dependency order and archived after acceptance verification. Issue 025 completed the required application PRD and architecture-summary refresh. Rust has no remaining delivery blocker; TypeScript is the next language frontier under the still-specified parent capability.
