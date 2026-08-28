@@ -22,6 +22,7 @@ issues:
   - docs/agents/issues/done/20260827-032-external-python-analyzer-parity.md
   - docs/agents/issues/done/20260827-033-external-plugin-cli-and-visible-journey.md
   - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
+  - docs/agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md
 prd: docs/architecture/analyze-source/plugin-runtime/prd.md
 glossary: docs/architecture/analyze-source/plugin-runtime/domain-glossary.md
 domain_model: docs/architecture/analyze-source/plugin-runtime/canonical-domain-model.md
@@ -70,9 +71,11 @@ Issues 030–033 completed the published external protocol and descriptor
 schemas, bounded typed frame codec, stateful conformance validator, process-host
 lifecycle, external Python parity, and explicit public integration. Issue 034
 completed the shared compiled-plugin runner and five compiled analyzer
-entrypoints while preserving the existing in-process implementations. The
-parent remains `specified`; the compiled-distribution child continues through
-issues 035–038 for assembly, trust, runtime selection, and release verification.
+entrypoints while preserving the existing in-process implementations. Issue 035
+completed deterministic distribution assembly and the explicit analyzer/release
+build targets. The parent remains `specified`; the compiled-distribution child
+continues through issues 036–038 for trust, runtime selection, and release
+verification.
 The multi-analyzer and project assignment/view children remain `specified`
 future frontiers, ready for later delivery issue slicing.
 

@@ -60,16 +60,16 @@ Given an explicit external-plugin descriptor and a Python repository, a develope
 
 The approved migration step is issue 034: port and reuse each existing Go,
 Python, TypeScript, Rust, and Clojure implementation behind a compiled plugin
-entrypoint before distribution assembly and packaged-runtime cutover. Issues
-035–038 then assemble the application-managed distribution, verify package
-trust, make packaged execution the default, and close release/parity
-verification.
+entrypoint before distribution assembly and packaged-runtime cutover. Issue
+035 now assembles the application-managed distribution and writes the
+deterministic package index. Issues 036–038 then verify package trust, make
+packaged execution the default, and close release/parity verification.
 
 | Issue | Outcome | Owner | Blocked by | Review gate |
 |---|---|---|---|---|
 | [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md) | Completed: shared child-side runner and five compiled analyzer entrypoints reuse the current implementations with manifest, protocol, option, and result parity | Analyzer entrypoints | none | none |
-| [035](../../../agents/issues/pending/20260828-035-compiled-analyzer-distribution-assembly.md) | Ready: assemble deterministic platform packages and `analyzers/index.json` through the release build | Distribution build | none | none |
-| [036](../../../agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md) | Ready: discover, validate, and checksum-verify only trusted application-managed packages | Package trust boundary | 035 | none |
+| [035](../../../agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md) | Completed: assemble deterministic platform packages and `analyzers/index.json` through explicit `make analyzers` and atomic host-plus-analyzers `make release` builds | Distribution build | 034 | none |
+| [036](../../../agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md) | Ready: discover, validate, and checksum-verify only trusted application-managed packages | Package trust boundary | none | none |
 | [037](../../../agents/issues/pending/20260828-037-packaged-runtime-selection.md) | Ready: make verified packaged execution the default and retain explicit local/in-process migration overrides | Runtime selection | 036 | none |
 | [038](../../../agents/issues/pending/20260828-038-compiled-analyzer-parity-and-release-verification.md) | Ready: verify cross-platform parity, deterministic release behavior, and the full acceptance matrix | Release verification | 037 | none |
 

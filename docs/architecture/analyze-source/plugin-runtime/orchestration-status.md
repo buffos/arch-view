@@ -33,14 +33,17 @@
   [the external implementation slice](implementation-slice.md).
 - Issue 034 completed the shared compiled-plugin runner and five compiled
   analyzer entrypoints while preserving the existing in-process analyzers.
+- Issue 035 completed deterministic package assembly, descriptor/index
+  generation, integrity digests, and explicit analyzer/release build targets.
 
 ## Next step and artifact impact
 
 Issues 030–034 are complete. The current v1 pilot remains an explicitly
 supplied, script-based external Python process with one analyzer selected per
 run, while the five compiled entrypoints now provide the next implementation
-step. The capability remains `specified`; the compiled-distribution child is in
-ordered delivery through issues 035–038 after the application synthesis gate.
+step and issue 035 provides the completed distribution assembly. The capability
+remains `specified`; the compiled-distribution child is in ordered delivery
+through issues 036–038 after the application synthesis gate.
 The multi-analyzer and project assignment/view children remain `specified`
 future frontiers with readiness-reviewed exact artifacts, ready for later
 delivery issue slicing.
@@ -50,9 +53,9 @@ delivery issue slicing.
 - [Project analyzer assignments and view selection](project-analyzer-assignments/discovery-notes.md)
 
 Product and architecture synthesis now record the target compiled-binary,
-multi-job, and assignment/view boundaries. Delivery truth now includes pending
-completed issue 034 and pending issues 035–038 for the compiled-distribution
-child; no delivery issues have yet been created for the multi-analyzer or
+multi-job, and assignment/view boundaries. Delivery truth now includes
+completed issues 034–035 and pending issues 036–038 for the
+compiled-distribution child; no delivery issues have yet been created for the
 project assignment/view children. The child state transitions and
 user-confirmed packaged-artifact trust policy are recorded in the planning map
 and log.

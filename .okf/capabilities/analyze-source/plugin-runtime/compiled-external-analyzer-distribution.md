@@ -21,7 +21,7 @@ scenarios: docs/architecture/analyze-source/plugin-runtime/compiled-external-ana
 readiness_review: docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/readiness-review.md
 issues:
   - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
-  - docs/agents/issues/pending/20260828-035-compiled-analyzer-distribution-assembly.md
+  - docs/agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md
   - docs/agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md
   - docs/agents/issues/pending/20260828-037-packaged-runtime-selection.md
   - docs/agents/issues/pending/20260828-038-compiled-analyzer-parity-and-release-verification.md
@@ -65,7 +65,10 @@ distribution model.
 Issue 034 is complete: the existing Go, Python, TypeScript, Rust, and Clojure
 analyzers now have compiled protocol entrypoints backed by one shared process
 runner, with manifest, option, diagnostic, cancellation, and result parity
-verified through the existing process adapter and host. Issues 035–038 remain
-for deterministic package assembly, package trust verification, packaged
-runtime selection, and release/parity closure. The node remains `specified`
-until that scoped delivery is implemented and verified.
+verified through the existing process adapter and host. Issue 035 is complete:
+the deterministic package assembly, descriptor/index generation, SHA-256
+integrity metadata, exact platform matrix, and atomic `make analyzers`/
+`make release` targets are implemented and verified. Issues 036–038 remain for
+trusted package verification, packaged runtime selection, and release/parity
+closure. The node remains `specified` until that scoped delivery is
+implemented and verified.

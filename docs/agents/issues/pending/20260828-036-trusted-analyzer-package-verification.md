@@ -21,7 +21,7 @@
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/canonical-api-cli-contract.md
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/acceptance-scenarios.md
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/readiness-review.md
-- docs/agents/issues/pending/20260828-035-compiled-analyzer-distribution-assembly.md
+- docs/agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md
 
 ## What to build
 
@@ -86,7 +86,8 @@ UI change.
 
 ## Blocked by
 
-Blocked by `docs/agents/issues/pending/20260828-035-compiled-analyzer-distribution-assembly.md`.
+None. Issue 035 completed the distribution assembly and generated index/package
+tree are now available for verification.
 
 ## Artifact anchors
 

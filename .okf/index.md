@@ -17,8 +17,9 @@
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their
   repository verification and declared review gates. Issue 034 completes the
-  compiled entrypoint migration; the compiled external analyzer distribution
-  remains in active delivery through issues 035–038. Three
+  compiled entrypoint migration; issue 035 completes deterministic distribution
+  assembly, and the compiled external analyzer distribution remains in active
+  delivery through issues 036–038. Three
   leaf capabilities remain ready for delivery issue slicing: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md),
   [Multi-analyzer project orchestration](capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md),
   and [Project analyzer assignments and view selection](capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).

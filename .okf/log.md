@@ -111,6 +111,26 @@
   unchanged; package assembly, trust, runtime selection, and release closure
   remain in issues 035–038.
 
+### Issue 035 completion
+
+* **Implementation:** Added the reusable analyzer distribution and release
+  assembler, exact `windows-amd64`/`linux-amd64`/`darwin-arm64` target matrix,
+  explicit Go/C/C++ build inputs, descriptor and SHA-256 generation, strict
+  canonical index validation, safe replacement checks, atomic publication,
+  and root `make analyzers`/`make release` targets.
+* **Verification:** The focused distribution tests, full `go test ./...` and
+  `go test -race ./...`, `go vet ./...`, `go build ./...`, `staticcheck ./...`,
+  `golangci-lint run`, `go mod verify`, and `git diff --check` pass. Real
+  Windows-target `make analyzers` and `make release` smoke tests
+  pass with all five analyzers; repeated analyzer assembly produces a stable
+  index for unchanged inputs.
+* **Artifact sync:** Archived issue 035, unblocked issue 036, and updated the
+  compiled-distribution node, orchestration status, plugin-runtime
+  implementation slice, project/graph frontiers, issue registry, and this
+  OKF log. Product and application architecture semantics remain unchanged;
+  trust verification, packaged runtime selection, and final release/parity
+  closure remain in issues 036–038.
+
 ## 2026-08-28
 
 * **Topology:** Added three foggy future children under [Analyzer plugin
