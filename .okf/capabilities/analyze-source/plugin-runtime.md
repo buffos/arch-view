@@ -59,31 +59,32 @@ with application-level scope selection.
 The first implementation used built-in Go interfaces. The current staged
 extension is an opt-in versioned JSON process protocol, validated first by an
 external Python parity plugin; it does not replace the built-in analyzers.
-The user-confirmed longer-term direction is to distribute supported analyzers
-as compiled external executables, run multiple applicable analyzers together,
-and persist project-relative analyzer assignments for application scope
-selection. Those future behaviors are represented by specified child nodes and
-are not claimed as implemented.
+Supported analyzers are now also distributed as compiled external executables
+through the implemented child capability, with trusted application-managed
+selection and explicit in-process/descriptor overrides. Running multiple
+applicable analyzers together and persisting project-relative analyzer
+assignments for application scope selection remain specified child frontiers
+and are not claimed as implemented.
 
 ## Delivery progress
 
 Issues 030–033 completed the published external protocol and descriptor
 schemas, bounded typed frame codec, stateful conformance validator, process-host
-lifecycle, external Python parity, and explicit public integration. Issue 034
-completed the shared compiled-plugin runner and five compiled analyzer
-entrypoints while preserving the existing in-process implementations. Issue 035
-completed deterministic distribution assembly and the explicit analyzer/release
-build targets. The parent remains `specified`; the compiled-distribution child
-continues through issues 036–038 for trust, runtime selection, and release
-verification.
+lifecycle, external Python parity, and explicit public integration. Issues
+034–038 completed the shared compiled-plugin runner, five compiled analyzer
+entrypoints, deterministic distribution assembly, trusted package verification,
+packaged runtime selection, explicit fallback, parity, and release
+verification. The parent remains `specified`; the multi-analyzer and project
+assignment/view children remain specified frontiers.
 The multi-analyzer and project assignment/view children remain `specified`
 future frontiers, ready for later delivery issue slicing.
 
 # Planning state
 
 This child capability remains specified after its first external process slice
-was implemented and verified. Its host/plugin API, manifest fields, selection
-rules, lifecycle, safety policy, published external schemas, and external
-Python implementation are linked from the exact-spec artifacts. Broader
-compiled distribution, multi-analyzer execution, and project assignment/view
-selection are now specified future frontiers under the child nodes above.
+and the compiled-distribution child were implemented and verified. Its
+host/plugin API, manifest fields, selection rules, lifecycle, safety policy,
+published external schemas, external Python implementation, and packaged
+distribution boundary are linked from the exact-spec artifacts. Multi-analyzer
+execution and project assignment/view selection remain specified future
+frontiers under the child nodes above.

@@ -5,11 +5,11 @@
 - Issue number: 038
 - Owning capability node: /.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md
 - Artifact root: docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/
-- Issue file: docs/agents/issues/pending/20260828-038-compiled-analyzer-parity-and-release-verification.md
+- Issue file: docs/agents/issues/done/20260828-038-compiled-analyzer-parity-and-release-verification.md
 - Category: feature
 - Execution type: AFK
 - Review gate: none
-- Suggested state: ready-for-agent
+- Suggested state: done
 
 ## Parent artifacts
 
@@ -21,7 +21,7 @@
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/canonical-api-cli-contract.md
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/acceptance-scenarios.md
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/readiness-review.md
-- docs/agents/issues/pending/20260828-037-packaged-runtime-selection.md
+- docs/agents/issues/done/20260828-037-packaged-runtime-selection.md
 
 ## What to build
 
@@ -39,31 +39,31 @@ policy. Do not weaken the package contract to make a local platform pass.
 
 ## Acceptance criteria
 
-- [ ] The supported build matrix produces and validates complete packages for
+- [x] The supported build matrix produces and validates complete packages for
   Go, Python, TypeScript, Rust, and Clojure on `windows-amd64`,
   `linux-amd64`, and `darwin-arm64`, or records a justified platform-specific
   verification deferral.
-- [ ] Packaged and in-process runs for each analyzer agree on normalized
+- [x] Packaged and in-process runs for each analyzer agree on normalized
   modules, relationships, references, source evidence, diagnostics, status,
   options, and downstream canonical model meaning apart from runtime
   provenance.
-- [ ] Repeated packaged builds and analysis runs with unchanged inputs are
+- [x] Repeated packaged builds and analysis runs with unchanged inputs are
   byte-stable where the contracts require determinism.
-- [ ] Tampering with either a descriptor or executable is detected before
+- [x] Tampering with either a descriptor or executable is detected before
   launch and returns `analyzer_package_integrity_mismatch` without implicit
   fallback.
-- [ ] Missing package, unsupported platform, manifest mismatch, API mismatch,
+- [x] Missing package, unsupported platform, manifest mismatch, API mismatch,
   malformed index, and launch failure produce the documented stable errors.
-- [ ] A release package runs without the analyzer language runtimes installed,
+- [x] A release package runs without the analyzer language runtimes installed,
   and the analyzer still returns its own complete, partial, or diagnostic
   outcome through the common protocol.
-- [ ] A target repository containing a plausible descriptor or executable does
+- [x] A target repository containing a plausible descriptor or executable does
   not cause discovery or execution unless the explicit developer/test override
   is supplied.
-- [ ] Existing external protocol conformance tests, built-in analyzer tests,
+- [x] Existing external protocol conformance tests, built-in analyzer tests,
   model normalization, viewer/source, JSON/HTML/SVG export, and deterministic
   output tests remain green.
-- [ ] The compiled-distribution orchestration record contains scenario-linked
+- [x] The compiled-distribution orchestration record contains scenario-linked
   verification evidence, any justified deferrals, and the final artifact-sync
   status before the node can be considered implemented.
 
@@ -90,7 +90,7 @@ coverage remains automated and reuses the unchanged consumer contracts.
 
 ## Blocked by
 
-Blocked by `docs/agents/issues/pending/20260828-037-packaged-runtime-selection.md`.
+Blocked by `docs/agents/issues/done/20260828-037-packaged-runtime-selection.md`.
 
 ## Artifact anchors
 
@@ -127,3 +127,50 @@ After this issue passes, the owning node may move to `implemented` only after
 the artifact synchronization contract is complete and the scoped work is
 actually exhausted. The node must remain `specified` while any material
 package, runtime, or parity gap remains.
+
+## Scenario traceability
+
+| Source rule | Scenario | Issue criterion | Verification evidence |
+| --- | --- | --- | --- |
+| CED-FR-001/002/003 | SC-CED-001/002/003 | complete package matrix, exact selection, and pre-launch verification | `release_test.go` matrix plus real Windows release/package smoke |
+| CED-FR-004/005/006 | SC-CED-004/005/006 | tamper, manifest/API, missing, and launch failure outcomes | `catalog_test.go` and runtime stable-error tests |
+| CED-FR-007/008 | SC-CED-007/008 | parity, explicit fallback, and target-repository boundary | `runtime_test.go` packaged/in-process parity and deception/override cases |
+| CED-FR-009/010 | SC-CED-009 | deterministic result/model meaning and unchanged consumers | full Go regression, race, vet/build, and release CLI analysis smoke |
+
+## Implementation and verification
+
+The five compiled analyzers now run through the verified packaged catalog and
+the existing NDJSON process adapter. The parity harness covers Go, Python,
+TypeScript, Rust, and Clojure; it compares normalized analysis meaning apart
+from runtime provenance. Repeated assembly/build fixtures verify deterministic
+bytes, while the real Windows release smoke proves the assembled host launches
+the packaged Go analyzer without a language-runtime command in the package.
+
+Platform evidence:
+
+| Platform | Result |
+| --- | --- |
+| `windows-amd64` | Verified: matrix/index tests, `make analyzers`, atomic `make release`, packaged listing, and packaged Go analysis all pass. |
+| `linux-amd64` | Deferred under the root `when-supported` policy: this run is on Windows amd64 and no Linux target runner/toolchain is available. Re-enter on a Linux amd64 runner (or a supported cross-toolchain plus target execution environment) and run the same matrix, package smoke, and parity commands. |
+| `darwin-arm64` | Deferred under the root `when-supported` policy: this run is on Windows amd64 and no Darwin arm64 target runner/toolchain is available. Re-enter on a Darwin arm64 runner (or a supported cross-toolchain plus target execution environment) and run the same matrix, package smoke, and parity commands. |
+
+Repository verification passed:
+
+- `go test ./... -count=1`
+- `go test -race ./... -count=1`
+- `go vet ./...`
+- `go build ./...`
+- `staticcheck ./...`
+- `golangci-lint run`
+- `go mod verify`
+- `node --check internal/viewer/web/app.js`
+- `node --test` for all viewer JavaScript tests
+- Python analyzer launcher/source AST parsing
+- strict OKF validation
+- `git diff --check`
+
+Artifact sync: the owning capability is advanced to `implemented`; its
+orchestration record, parent/plugin-runtime delivery records, issue registry,
+and OKF log are synchronized. The application PRD and application architecture
+summary remain unchanged because no product actor/workflow or architectural
+boundary changed.

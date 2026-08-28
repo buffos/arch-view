@@ -5,11 +5,11 @@
 - Issue number: 037
 - Owning capability node: /.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md
 - Artifact root: docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/
-- Issue file: docs/agents/issues/pending/20260828-037-packaged-runtime-selection.md
+- Issue file: docs/agents/issues/done/20260828-037-packaged-runtime-selection.md
 - Category: feature
 - Execution type: AFK
 - Review gate: none
-- Suggested state: ready-for-agent
+- Suggested state: done
 
 ## Parent artifacts
 
@@ -21,7 +21,7 @@
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/canonical-api-cli-contract.md
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/acceptance-scenarios.md
 - docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/readiness-review.md
-- docs/agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md
+- docs/agents/issues/done/20260828-036-trusted-analyzer-package-verification.md
 
 ## What to build
 
@@ -40,33 +40,33 @@ must retain the selected runtime mode.
 
 ## Acceptance criteria
 
-- [ ] `analyzers`, `analyze`, and project-backed `open` accept the documented
+- [x] `analyzers`, `analyze`, and project-backed `open` accept the documented
   analyzer runtime selection. Packaged mode is the default for normal release
   execution.
-- [ ] Packaged selection resolves a stable logical analyzer ID through the
+- [x] Packaged selection resolves a stable logical analyzer ID through the
   verified application index and launches the selected executable through the
   existing process adapter and NDJSON protocol.
-- [ ] `--analyzer-runtime in-process` explicitly selects the built-in analyzer
+- [x] `--analyzer-runtime in-process` explicitly selects the built-in analyzer
   for development, tests, or migration and records that choice in result
   provenance.
-- [ ] Explicit local descriptors require `--analyzer-runtime explicit` and
+- [x] Explicit local descriptors require `--analyzer-runtime explicit` and
   the documented untrusted-plugin opt-in. `--plugin` is rejected in packaged
   mode and target-repository descriptors are never discovered automatically.
-- [ ] Missing, unavailable, tampered, incompatible, or failed packaged
+- [x] Missing, unavailable, tampered, incompatible, or failed packaged
   analyzers return the stable package/runtime error outcome and do not switch
   to an in-process implementation implicitly.
-- [ ] Descriptor/index/hello logical ID, version, language, API major, and
+- [x] Descriptor/index/hello logical ID, version, language, API major, and
   runtime source agree before a result is accepted. Existing host result
   validation, option precedence, cancellation, timeout, and cleanup remain
   authoritative.
-- [ ] `open --project` retains the packaged or explicit runtime selection for
+- [x] `open --project` retains the packaged or explicit runtime selection for
   reanalysis, cancellation, and error reporting. Model-only `open` remains
   independent of analyzer runtime selection.
-- [ ] Analyzer listing reports packaged availability, platform, version, and
+- [x] Analyzer listing reports packaged availability, platform, version, and
   runtime source without launching analyzers. Existing no-flag built-in
   behavior and the external Python pilot remain compatible with their explicit
   modes.
-- [ ] Focused CLI, host, and open-session tests cover default packaged mode,
+- [x] Focused CLI, host, and open-session tests cover default packaged mode,
   explicit in-process mode, explicit descriptor mode, missing packages,
   rejected overrides, runtime provenance, and no silent fallback.
 
@@ -93,7 +93,7 @@ rendered UI or navigation change.
 
 ## Blocked by
 
-Blocked by `docs/agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md`.
+Blocked by `docs/agents/issues/done/20260828-036-trusted-analyzer-package-verification.md`.
 
 ## Artifact anchors
 
@@ -129,3 +129,36 @@ supports parent stories US-PR-001, US-PR-002, and US-PR-003.
 
 Issue 038 can run the full release matrix and parity gate after packaged
 runtime selection is available from the public commands.
+
+## Scenario traceability
+
+| Source rule | Scenario | Issue criterion | Verification |
+| --- | --- | --- | --- |
+| CED-FR-005/007 | SC-CED-003/005 | verified package selection, hello agreement, and process-adapter launch | packaged CLI fixture and catalog/runtime tests |
+| CED-FR-008/009 | SC-CED-007/008 | explicit fallback/descriptor opt-in, no silent fallback, and application-only discovery | runtime override, tamper, and target-repository deception tests |
+| CED-FR-010 | SC-CED-009 | runtime provenance and unchanged downstream consumers | host result validation and project-backed open reanalysis test |
+
+## Implementation and verification
+
+Implemented `packaged`, `in-process`, and `explicit` runtime selection across
+`analyzers`, `analyze`, and project-backed `open`. Normal release execution
+uses the exact current-platform application index; in-process use is explicit;
+local descriptors require the explicit untrusted-plugin opt-in. Runtime mode,
+source, and platform are retained in selections/results, and reanalysis keeps
+the selected host. Proper explicit mode contains only the supplied descriptors;
+the legacy no-mode plugin path remains compatible without claiming uniform
+runtime provenance. Package rejection and launch failures never fall back
+implicitly, while listing continues to expose rejected packages safely.
+
+Focused and repository verification passed:
+
+- `go test ./cmd/arch-view -run 'Test(PackagedRuntime|ExplicitDescriptorRuntime|TamperedPackagedRuntime|ProjectViewerReanalysis)' -count=1`
+- `go test ./... -count=1`
+- `go test -race ./... -count=1`
+- real Windows release smoke: `make release` for `windows-amd64`, `arch-view.exe analyzers`, and packaged Go `analyze`
+
+Artifact sync: the compiled-distribution capability/orchestration records,
+plugin-runtime implementation slice, issue registry, and OKF log are updated
+during closeout. Product and application architecture artifacts require no
+change because the implementation follows the already approved runtime
+workflow and keeps model/viewer/export consumers neutral.

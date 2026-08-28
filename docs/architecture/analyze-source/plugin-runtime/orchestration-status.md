@@ -35,15 +35,18 @@
   analyzer entrypoints while preserving the existing in-process analyzers.
 - Issue 035 completed deterministic package assembly, descriptor/index
   generation, integrity digests, and explicit analyzer/release build targets.
+- Issues 036–038 completed trusted package verification, packaged-by-default
+  runtime selection, explicit fallback/override handling, runtime provenance,
+  five-analyzer parity, deterministic assembly checks, and release behavior.
 
 ## Next step and artifact impact
 
-Issues 030–034 are complete. The current v1 pilot remains an explicitly
+Issues 030–038 are complete. The current v1 pilot remains an explicitly
 supplied, script-based external Python process with one analyzer selected per
-run, while the five compiled entrypoints now provide the next implementation
-step and issue 035 provides the completed distribution assembly. The capability
-remains `specified`; the compiled-distribution child is in ordered delivery
-through issues 036–038 after the application synthesis gate.
+run, while the compiled-distribution child is now the verified packaged
+runtime path for release execution. The parent capability remains `specified`
+because its separate multi-analyzer and project assignment/view children are
+not implemented.
 The multi-analyzer and project assignment/view children remain `specified`
 future frontiers with readiness-reviewed exact artifacts, ready for later
 delivery issue slicing.
@@ -54,8 +57,8 @@ delivery issue slicing.
 
 Product and architecture synthesis now record the target compiled-binary,
 multi-job, and assignment/view boundaries. Delivery truth now includes
-completed issues 034–035 and pending issues 036–038 for the
-compiled-distribution child; no delivery issues have yet been created for the
-project assignment/view children. The child state transitions and
+completed issues 034–038 for the compiled-distribution child; no delivery
+issues have yet been created for the project assignment/view children. The
+child state transition to `implemented`, platform deferrals, and
 user-confirmed packaged-artifact trust policy are recorded in the planning map
 and log.

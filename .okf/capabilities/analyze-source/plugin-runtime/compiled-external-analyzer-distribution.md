@@ -4,8 +4,8 @@ title: Compiled external analyzer distribution
 description: Distribute each language analyzer as a versioned compiled executable without requiring its language runtime.
 tags: [plugins, distribution, executables, extensibility]
 timestamp: 2026-08-28T06:08:59Z
-state: specified
-state_changed: 2026-08-28T00:00:00Z
+state: implemented
+state_changed: 2026-08-28T16:13:46Z
 project: /project.md
 parent: /capabilities/analyze-source/plugin-runtime.md
 artifact_root: docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution
@@ -22,9 +22,9 @@ readiness_review: docs/architecture/analyze-source/plugin-runtime/compiled-exter
 issues:
   - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
   - docs/agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md
-  - docs/agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md
-  - docs/agents/issues/pending/20260828-037-packaged-runtime-selection.md
-  - docs/agents/issues/pending/20260828-038-compiled-analyzer-parity-and-release-verification.md
+  - docs/agents/issues/done/20260828-036-trusted-analyzer-package-verification.md
+  - docs/agents/issues/done/20260828-037-packaged-runtime-selection.md
+  - docs/agents/issues/done/20260828-038-compiled-analyzer-parity-and-release-verification.md
 ---
 
 # Intent
@@ -49,15 +49,15 @@ language semantics, the protocol contract, or the canonical architecture model.
 
 # Planning state
 
-This child is specified and readiness-reviewed. The user-confirmed target is a
-compiled external analyzer binary that reuses the same implementation as the
+This child is implemented and readiness-reviewed. The user-confirmed target is
+a compiled external analyzer binary that reuses the same implementation as the
 in-process adapter, with no Python, Rust, Node, or other language runtime
 required by the end user. The compiled artifact is the production
 implementation for a logical analyzer ID; the in-process adapter remains only
 for development, tests, or an explicit migration fallback. The exact package
 index, platform matrix, SHA-256 integrity policy, build targets, runtime modes,
 and acceptance scenarios are linked above. The current external Python
-deployment is a script-based parity pilot and is not treated as the target
+deployment remains a script-based parity pilot and is not treated as the target
 distribution model.
 
 ## Delivery progress
@@ -68,7 +68,11 @@ runner, with manifest, option, diagnostic, cancellation, and result parity
 verified through the existing process adapter and host. Issue 035 is complete:
 the deterministic package assembly, descriptor/index generation, SHA-256
 integrity metadata, exact platform matrix, and atomic `make analyzers`/
-`make release` targets are implemented and verified. Issues 036–038 remain for
-trusted package verification, packaged runtime selection, and release/parity
-closure. The node remains `specified` until that scoped delivery is
-implemented and verified.
+`make release` targets are implemented and verified. Issues 036–038 are now
+complete: trusted package verification, packaged runtime selection, explicit
+fallback policy, runtime provenance, five-analyzer parity, deterministic
+assembly, and Windows release behavior are verified. Linux amd64 and Darwin
+arm64 execution remain explicitly deferred under the root `when-supported`
+policy until matching runners/toolchains are available. This node is
+`implemented`; the parent plugin-runtime capability remains `specified` for
+its later multi-analyzer and assignment/view children.

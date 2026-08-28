@@ -2,6 +2,14 @@
 
 ## 2026-08-28
 
+### Compiled distribution closeout
+
+* **Implementation**: Completed issues 036–038. Added trusted application-managed analyzer catalog verification with strict metadata, exact-platform selection, safe paths, symlink rejection, descriptor/executable SHA-256 checks, manifest/API agreement, stable package errors, and process-free listing.
+* **Runtime**: Made packaged analyzers the normal release path for `analyzers`, `analyze`, and project-backed `open`; retained explicit in-process and opt-in local-descriptor modes, runtime provenance, no implicit fallback, and reanalysis runtime retention.
+* **Parity/release**: Verified all five compiled analyzers against their in-process implementations, deterministic matrix assembly, stable tamper/missing/API/launch outcomes, target-repository discovery isolation, and a real Windows amd64 `make release` plus packaged Go analysis. Fixed the Windows `StdoutPipe`/`Cmd.Wait` lifecycle race so large terminal results drain before reaping the child.
+* **Deferral**: Linux amd64 and Darwin arm64 execution remain deferred under the root `when-supported` policy because this host has no matching target runner/toolchain; re-entry requires the corresponding runner/toolchain and the same matrix, package-smoke, and parity commands.
+* **Verification**: `go test ./... -count=1`, targeted race tests, `go vet ./...`, `go build ./...`, `git diff --check`, real `make analyzers`/`make release`, packaged listing, and packaged CLI analysis passed. The compiled-distribution capability moved to `implemented`; the parent plugin-runtime and analyze-source capabilities remain specified for later multi-analyzer and assignment/view work. Product and application-architecture artifacts were unchanged; no commit was created.
+
 ### Brownfield implementation verification
 
 * **Observed in code:** The Go analyzer covers module selection, eligible

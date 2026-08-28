@@ -8,23 +8,26 @@ This slice does not add a language or a capability node. It ports the existing P
 
 ## Current and target truth
 
-- **Observed in code:** the common analysis.Analyzer contract, deterministic host selection, option resolution, result validation, canonical model normalization, local viewer, and JSON/HTML/SVG paths exist. Issues 030–033 add the published protocol/descriptor schemas, bounded typed NDJSON codec, strict descriptor validation, stateful session validator, argv-only process adapter, external Python deployment, public descriptor loader, and shared opt-in path.
+- **Observed in code:** the common analysis.Analyzer contract, deterministic host selection, option resolution, result validation, canonical model normalization, local viewer, and JSON/HTML/SVG paths exist. Issues 030–035 add the published protocol/descriptor schemas, bounded typed NDJSON codec, strict descriptor validation, stateful session validator, argv-only process adapter, external Python deployment, public descriptor loader, shared opt-in path, five compiled entrypoints, and deterministic package/release assembly.
 - **Inferred from the exact specification:** an external analyzer needs version negotiation, manifest agreement, detection and analysis operations, canonical result validation, diagnostics, cancellation, timeout/size limits, protocol-only stdout, and log-only stderr.
 - **User-confirmed target:** the first external deployment is an existing Python analyzer port, not a sixth language. It must be explicitly opted into and must not require model, layout, viewer, or exporter changes.
-- **Verified implementation:** the process host lifecycle, external Python implementation, and public opt-in path are complete; the external Python result reaches the unchanged model, viewer/source, and export consumers.
+- **Verified implementation:** the process host lifecycle, external Python implementation, public opt-in path, compiled entrypoints, trusted package catalog, packaged runtime selection, explicit fallback policy, and public packaged path are complete; packaged and in-process results reach the unchanged model, viewer/source, and export consumers.
 
 ## Next future frontiers
 
-The user-confirmed target beyond this completed slice is represented by three
-specified child capabilities rather than being folded into this implemented pilot:
+The remaining user-confirmed target beyond this completed slice is represented
+by two specified child capabilities rather than being folded into the
+implemented runtime/distribution work:
 
-- [Compiled external analyzer distribution](../../../../.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md)
-  replaces the script-based external deployment with compiled executables that
-  reuse the in-process analyzer implementations.
 - [Multi-analyzer project orchestration](../../../../.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
   plans and merges concurrent analyzer jobs for mixed or nested projects.
 - [Project analyzer assignments and view selection](../../../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
   adds repository-relative assignments and application scope switching.
+
+The [compiled external analyzer distribution](../../../../.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md)
+child is implemented. Its Linux amd64 and Darwin arm64 execution checks remain
+explicitly deferred under the root `when-supported` policy until matching
+runners/toolchains are available.
 
 ## Vertical outcome
 
@@ -69,9 +72,9 @@ packaged execution the default, and close release/parity verification.
 |---|---|---|---|---|
 | [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md) | Completed: shared child-side runner and five compiled analyzer entrypoints reuse the current implementations with manifest, protocol, option, and result parity | Analyzer entrypoints | none | none |
 | [035](../../../agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md) | Completed: assemble deterministic platform packages and `analyzers/index.json` through explicit `make analyzers` and atomic host-plus-analyzers `make release` builds | Distribution build | 034 | none |
-| [036](../../../agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md) | Ready: discover, validate, and checksum-verify only trusted application-managed packages | Package trust boundary | none | none |
-| [037](../../../agents/issues/pending/20260828-037-packaged-runtime-selection.md) | Ready: make verified packaged execution the default and retain explicit local/in-process migration overrides | Runtime selection | 036 | none |
-| [038](../../../agents/issues/pending/20260828-038-compiled-analyzer-parity-and-release-verification.md) | Ready: verify cross-platform parity, deterministic release behavior, and the full acceptance matrix | Release verification | 037 | none |
+| [036](../../../agents/issues/done/20260828-036-trusted-analyzer-package-verification.md) | Completed: discover, validate, and checksum-verify only trusted application-managed packages | Package trust boundary | none | none |
+| [037](../../../agents/issues/done/20260828-037-packaged-runtime-selection.md) | Completed: make verified packaged execution the default and retain explicit local/in-process migration overrides | Runtime selection | 036 | none |
+| [038](../../../agents/issues/done/20260828-038-compiled-analyzer-parity-and-release-verification.md) | Completed: verify cross-platform parity, deterministic release behavior, and the full acceptance matrix, with documented non-host deferrals | Release verification | 037 | none |
 
 ## Slice acceptance
 
@@ -94,20 +97,22 @@ packaged execution the default, and close release/parity verification.
 
 - **Backend boundary:** descriptor and manifest validation, frame schema/conformance, argv-only process launch, handshake, detection, analysis, option forwarding, result validation, diagnostics, cancellation, timeout/size limits, stderr isolation, and child-process cleanup.
 - **External plugin boundary:** Python syntax-only analysis, project-marker/source-root/options parity, deterministic serialization, no target-code execution, and usable partial results.
+- **Compiled distribution boundary:** application-managed index validation, exact platform selection, trusted path/digest/manifest checks, packaged-by-default runtime selection, explicit fallback, five-analyzer parity, and atomic release assembly.
 - **Frontend integration:** the existing language-neutral model, hierarchy projection, viewer evidence/details/source routes, and export serializers consume external Python results without language-specific branches.
-- **End-to-end:** descriptor → external Python process → analysis JSON → canonical model → local viewer and deterministic JSON/HTML/SVG artifacts.
+- **End-to-end:** verified package or explicit descriptor → NDJSON process → analysis JSON → canonical model → local viewer and deterministic JSON/HTML/SVG artifacts.
 - **Repository/OKF integrity:** full repository gates, strict OKF validation, synchronized issue references, and the untouched upstream reference boundary.
 
 ## Artifact impact
 
-Issue 034 is now implemented and verified: all five compiled commands reuse
+Issues 034–038 are implemented and verified: all five compiled commands reuse
 the existing analyzer constructors and reach the existing process adapter and
-host validation path. The slice refines an already confirmed plugin-runtime boundary; it does not
-change product topology or canonical model semantics. Issues 030–033 are
-complete and the capability exact-spec set, application PRD, application
-architecture summary, parent orchestration, capability references, issue
-registry, and OKF log record the verified external Python pilot. The
-plugin-runtime node remains `specified` while the compiled-distribution child
-is delivered through issues 034–038 and the multi-analyzer and assignment/view
-frontiers await later delivery issue slicing. Issues 030–033 remain the
-completed delivery record for the v1 pilot.
+host validation path; trusted package verification, packaged runtime selection,
+explicit fallback, parity, deterministic assembly, and Windows release
+behavior are complete. Linux amd64 and Darwin arm64 execution remain
+documented `when-supported` deferrals. The slice refines an already confirmed
+plugin-runtime boundary; it does not change product topology or canonical model
+semantics. Issues 030–033 remain the completed delivery record for the v1
+external Python pilot, while the multi-analyzer and assignment/view frontiers
+await later delivery issue slicing. The application PRD and application
+architecture summary remain unchanged because no product actor/workflow or
+architectural boundary changed.

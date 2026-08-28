@@ -5,11 +5,11 @@
 - Issue number: 036
 - Owning capability node: /.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md
 - Artifact root: docs/architecture/analyze-source/plugin-runtime/compiled-external-analyzer-distribution/
-- Issue file: docs/agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md
+- Issue file: docs/agents/issues/done/20260828-036-trusted-analyzer-package-verification.md
 - Category: feature
 - Execution type: AFK
 - Review gate: none
-- Suggested state: ready-for-agent
+- Suggested state: done
 
 ## Parent artifacts
 
@@ -39,29 +39,29 @@ packaged verification must not cause implicit in-process fallback.
 
 ## Acceptance criteria
 
-- [ ] The loader validates `schema_version`, `host_api_version`, package
+- [x] The loader validates `schema_version`, `host_api_version`, package
   uniqueness, logical IDs, semantic versions, languages, API versions,
   platform names, relative paths, and lowercase 64-character SHA-256 digests.
-- [ ] Executable and descriptor paths normalize beneath the application-owned
+- [x] Executable and descriptor paths normalize beneath the application-owned
   analyzer root and cannot escape through `..`, absolute paths, alternate
   separators, or symlink substitution.
-- [ ] Selection accepts only the exact normalized host platform and returns
+- [x] Selection accepts only the exact normalized host platform and returns
   `analyzer_package_not_found` or `analyzer_platform_unsupported` when the
   requested package is absent. It never chooses a nearest or cross-platform
   binary.
-- [ ] Verification computes both file digests before launch, loads the
+- [x] Verification computes both file digests before launch, loads the
   descriptor, validates its manifest, and checks logical ID, version, language,
   API major, and descriptor/executable paths against the selected index entry.
-- [ ] The package query/list path does not start a process, read the target
+- [x] The package query/list path does not start a process, read the target
   repository for plugin descriptors, or mutate the registry when an entry is
   rejected.
-- [ ] Stable errors cover malformed index, missing package, unsupported
+- [x] Stable errors cover malformed index, missing package, unsupported
   platform, integrity mismatch, manifest mismatch, and API incompatibility.
   Error details identify the package and failing validation without exposing
   uncontrolled command text.
-- [ ] A verified package can be handed to the existing process adapter, while
+- [x] A verified package can be handed to the existing process adapter, while
   an invalid package is rejected before `exec.Cmd.Start` or equivalent launch.
-- [ ] Focused tests cover valid packages, duplicate entries, traversal,
+- [x] Focused tests cover valid packages, duplicate entries, traversal,
   symlink substitution, missing files, descriptor tampering, executable
   tampering, manifest mismatch, API mismatch, and exact platform behavior.
 
@@ -122,3 +122,39 @@ availability safe and inspectable.
 
 Issue 037 can use the verified package query and selection boundary to make
 packaged execution the default while preserving explicit development modes.
+
+## Scenario traceability
+
+| Source rule | Scenario | Issue criterion | Verification |
+| --- | --- | --- | --- |
+| CED-FR-003/004/005 | SC-CED-002 | exact platform selection, safe paths, and metadata validation | `internal/analysis/distribution/catalog_test.go` exact-platform, traversal, symlink, duplicate, and malformed-index cases |
+| CED-FR-005/006 | SC-CED-003/004 | descriptor and executable digests, manifest agreement, and pre-launch rejection | catalog verification tests for valid, missing, tampered, and manifest-mismatch packages |
+| CED-FR-009 | SC-CED-008 | process-free application-boundary listing and stable rejection reasons | listing tests plus package-root-only discovery in `cmd/arch-view/runtime_test.go` |
+
+## Implementation and verification
+
+Implemented the application-managed catalog in `internal/analysis/distribution`.
+It validates the trusted index path, index membership, and package metadata;
+rejects unsafe paths and symlink substitution; verifies both SHA-256 digests
+and descriptor/index identity; and re-verifies the selected package immediately
+before every process operation. Listing is deterministic and process-free;
+rejected entries remain visible with stable availability/error status, and
+packaged failures are terminal.
+
+Focused and repository verification passed:
+
+- `go test ./internal/analysis/distribution -count=1`
+- `go test ./... -count=1`
+- `go test -race ./... -count=1`
+- `go vet ./...`
+- `go build ./...`
+- `staticcheck ./...`
+- `golangci-lint run`
+- `go mod verify`
+- `git diff --check`
+
+Artifact sync: the owning capability node, compiled-distribution orchestration
+status, plugin-runtime implementation slice, issue registry, and OKF log are
+updated during closeout. The application PRD and application architecture
+summary require no change because the verified trust boundary matches the
+approved future workflow; this is a delivery-truth update only.

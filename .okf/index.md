@@ -12,14 +12,14 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 0 `foggy`, 0 `bounded`, 6 `specified`, 8 `implemented`.
+- State totals: 0 `foggy`, 0 `bounded`, 5 `specified`, 9 `implemented`.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their
-  repository verification and declared review gates. Issue 034 completes the
-  compiled entrypoint migration; issue 035 completes deterministic distribution
-  assembly, and the compiled external analyzer distribution remains in active
-  delivery through issues 036–038. Three
+  repository verification and declared review gates. Issues 034–038 complete
+  the compiled entrypoint migration, deterministic distribution assembly,
+  trusted package verification, packaged runtime selection, parity, and
+  release verification. Three
   leaf capabilities remain ready for delivery issue slicing: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md),
   [Multi-analyzer project orchestration](capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md),
   and [Project analyzer assignments and view selection](capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).

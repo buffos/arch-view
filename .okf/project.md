@@ -52,10 +52,11 @@ The canonical model, export and automation, and current Explore scopes are
 implemented as well. Issues 030–033 complete the approved [external analyzer
 implementation slice](../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md),
 including the process host, external Python parity deployment, and explicit
-CLI/shared consumer path. Issue 034 now completes the compiled entrypoint
-migration, and issue 035 completes deterministic distribution assembly; issues
-036–038 remain in active delivery for trust, packaged runtime selection, and
-release verification. The
-multi-analyzer orchestration, project
-analyzer assignments/view selection, and advanced ELK renderer support leaves
-remain ready for delivery issue slicing without delivery issues.
+CLI/shared consumer path. Issues 034–038 complete the compiled entrypoint
+migration, deterministic distribution assembly, trusted package verification,
+packaged runtime selection, parity, and release verification. The compiled
+distribution child is implemented; its Linux amd64 and Darwin arm64 execution
+checks remain documented under the root `when-supported` policy. The
+multi-analyzer orchestration, project analyzer assignments/view selection, and
+advanced ELK renderer support leaves remain ready for delivery issue slicing
+without delivery issues.
