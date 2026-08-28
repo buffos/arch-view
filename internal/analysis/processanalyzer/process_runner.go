@@ -30,6 +30,7 @@ type processRunner struct {
 	stopOnce      sync.Once
 	stdinOnce     sync.Once
 	killOnce      sync.Once
+	waitOnce      sync.Once
 	wait          chan error
 }
 
@@ -75,7 +76,6 @@ func startRunner(analyzer *Analyzer, operation processprotocol.FrameType) (*proc
 		_, _ = io.Copy(runner.stderrBuffer, runner.stderr)
 		close(runner.stderrDone)
 	}()
-	go func() { runner.wait <- command.Wait() }()
 	return runner, nil
 }
 
@@ -207,6 +207,9 @@ func (r *processRunner) stopReaderOnce() {
 func (r *processRunner) awaitWait() error {
 	timer := time.NewTimer(cleanupWaitTimeout)
 	defer timer.Stop()
+	r.waitOnce.Do(func() {
+		go func() { r.wait <- r.command.Wait() }()
+	})
 	select {
 	case err := <-r.wait:
 		return err

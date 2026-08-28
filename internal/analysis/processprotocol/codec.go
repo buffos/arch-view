@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 )
 
 // Decoder reads one JSON object per line and enforces a bounded line size.
@@ -83,6 +84,14 @@ func readBoundedLine(reader *bufio.Reader, maxBytes int) ([]byte, error) {
 				return nil, io.EOF
 			}
 			return line, nil
+		case errors.Is(err, os.ErrClosed):
+			// Windows may report a closed pipe together with final bytes after a
+			// short-lived analyzer exits. Preserve them so JSON and session
+			// validation can accept a frame or reject malformed trailing data.
+			if len(line) > 0 {
+				return line, nil
+			}
+			return nil, err
 		default:
 			return nil, err
 		}

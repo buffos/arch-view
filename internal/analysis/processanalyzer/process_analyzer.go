@@ -340,7 +340,7 @@ func (a *Analyzer) execute(ctx context.Context, operation processprotocol.FrameT
 			return nil, a.failureWithStderr("external analyzer stopped producing protocol frames", nil, session, nil, runner.stderrText())
 		}
 		if event.err != nil {
-			if errors.Is(event.err, io.EOF) {
+			if errors.Is(event.err, io.EOF) || (terminalSeen && errors.Is(event.err, os.ErrClosed)) {
 				break
 			}
 			if ctx.Err() != nil {
