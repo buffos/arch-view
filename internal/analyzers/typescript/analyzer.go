@@ -10,14 +10,26 @@ import (
 	"path/filepath"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/syntax"
+	tssyntax "github.com/buffo/arch-view/internal/analysis/syntax/typescript"
 )
 
 // Analyzer implements the language-neutral analyzer contract for TypeScript.
-type Analyzer struct{}
+type Analyzer struct {
+	importExtractor tsImportExtractor
+}
 
 // New returns the built-in TypeScript analyzer.
 func New() *Analyzer {
-	return &Analyzer{}
+	return NewWithSyntaxProvider(tssyntax.NewProvider())
+}
+
+// NewWithSyntaxProvider returns a TypeScript analyzer that extracts imports
+// through provider while preserving the existing result and resolution path.
+// Syntax backend failures are reported as recoverable diagnostics; no legacy
+// extraction is performed on the production path.
+func NewWithSyntaxProvider(provider syntax.Provider) *Analyzer {
+	return &Analyzer{importExtractor: treeSitterTSImportExtractor{provider: provider}}
 }
 
 // Manifest describes the stable public TypeScript analyzer contract.
@@ -103,7 +115,11 @@ func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) 
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}
-	return BuildResult(project, discovery, request, a.Manifest()), nil
+	result := buildResult(ctx, project, discovery, request, a.Manifest(), a.importExtractor)
+	if err := ctx.Err(); err != nil {
+		return analysis.AnalysisResult{}, err
+	}
+	return result, nil
 }
 
 func existsAsFile(path string) bool {

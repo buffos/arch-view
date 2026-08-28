@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/syntax"
+	pysyntax "github.com/buffo/arch-view/internal/analysis/syntax/python"
 )
 
 type discoveryResult struct {
@@ -50,6 +52,12 @@ type moduleObservation struct {
 // It never follows Python imports, invokes a Python process, or treats a file
 // as a graph node independently of its package/module observation.
 func Discover(ctx context.Context, project Project, options analysis.EffectiveOptions) (discoveryResult, error) {
+	return DiscoverWithSyntaxProvider(ctx, project, options, pysyntax.NewProvider())
+}
+
+// DiscoverWithSyntaxProvider walks effective source roots and extracts source
+// dependencies through provider.
+func DiscoverWithSyntaxProvider(ctx context.Context, project Project, options analysis.EffectiveOptions, provider syntax.Provider) (discoveryResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -105,16 +113,6 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 				result.Diagnostics = append(result.Diagnostics, unreadableDiagnostic(project.Root, filePath, err))
 				return nil
 			}
-			if issue := validatePythonSyntax(string(content)); issue != nil {
-				result.Diagnostics = append(result.Diagnostics, analysis.Diagnostic{
-					Code:        "python_syntax_error",
-					Severity:    "error",
-					Message:     "Python source has an unsupported or malformed syntax construct; its module evidence was retained.",
-					Path:        relativeProject,
-					Location:    &analysis.Position{Line: issue.Line, Column: issue.Column},
-					Recoverable: true,
-				})
-			}
 			qualified, kind := qualifiedName(sourceRoot.Absolute, filePath, entry.Name())
 			if qualified == "" {
 				return nil
@@ -137,9 +135,12 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 				}
 				return nil
 			}
-			imports, importDiagnostics := extractPythonImports(relativeProject, string(content), moduleID(kind, qualified), kind == "package")
-			result.Imports = append(result.Imports, imports...)
-			result.Diagnostics = append(result.Diagnostics, importDiagnostics...)
+			extraction := extractPythonSyntaxImports(ctx, provider, relativeProject, string(content), moduleID(kind, qualified), kind == "package")
+			result.Imports = append(result.Imports, extraction.Observations...)
+			result.Diagnostics = append(result.Diagnostics, extraction.Diagnostics...)
+			if extraction.BackendError != nil {
+				result.Diagnostics = append(result.Diagnostics, pythonSyntaxBackendDiagnostic(relativeProject, extraction.BackendError))
+			}
 			files[relativeProject] = file
 			sources[file.SourceID] = analysis.SourceReference{
 				ID:     file.SourceID,
@@ -147,7 +148,7 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 				Symbol: qualified,
 				Kind:   "file",
 			}
-			for _, importObservation := range imports {
+			for _, importObservation := range extraction.Observations {
 				sources[importObservation.Source.ID] = importObservation.Source
 			}
 			if kind == "package" {

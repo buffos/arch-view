@@ -2,9 +2,8 @@ package scanner
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"go/parser"
-	"go/token"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,9 +12,18 @@ import (
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/syntax"
+	gosyntax "github.com/buffo/arch-view/internal/analysis/syntax/go"
 )
 
 func ScanProject(ctx context.Context, request analysis.AnalyzeRequest, project Project) (ScanResult, error) {
+	return ScanProjectWithSyntaxProvider(ctx, request, project, gosyntax.NewProvider())
+}
+
+// ScanProjectWithSyntaxProvider scans Go source with the supplied syntax
+// provider. A provider failure is reported as a recoverable diagnostic; source
+// parsing never falls back to a second implementation.
+func ScanProjectWithSyntaxProvider(ctx context.Context, request analysis.AnalyzeRequest, project Project, syntaxProvider syntax.Provider) (ScanResult, error) {
 	options := request.Options.Values
 	includeTests := optionBool(options, "include_tests")
 	includeGenerated := optionBool(options, "include_generated")
@@ -92,17 +100,28 @@ func ScanProject(ctx context.Context, request analysis.AnalyzeRequest, project P
 		if generated && !includeGenerated {
 			return nil
 		}
-		fileSet := token.NewFileSet()
-		parsed, parseErr := parser.ParseFile(fileSet, filePath, content, parser.ParseComments)
-		if parseErr != nil {
-			result.Diagnostics = append(result.Diagnostics, parseDiagnostic(parseErr, relativeProject))
-			if parsed == nil {
-				return nil
-			}
-		}
-		if parsed == nil {
+		if syntaxProvider == nil {
+			result.Diagnostics = append(result.Diagnostics, goSyntaxBackendDiagnostic(relativeProject, errors.New("go tree-sitter syntax provider is not configured")))
 			return nil
 		}
+		parsed, parseErr := syntaxProvider.Parse(ctx, syntax.Source{Path: relativeProject, Content: content})
+		if parseErr != nil {
+			parsed.Close()
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			result.Diagnostics = append(result.Diagnostics, goSyntaxBackendDiagnostic(relativeProject, parseErr))
+			return nil
+		}
+		defer parsed.Close()
+		for _, issue := range parsed.Issues {
+			result.Diagnostics = append(result.Diagnostics, goSyntaxIssueDiagnostic(relativeProject, issue))
+		}
+		if parsed.Tree == nil || parsed.Tree.Root() == nil {
+			result.Diagnostics = append(result.Diagnostics, goSyntaxBackendDiagnostic(relativeProject, errors.New("tree-sitter returned no Go syntax tree")))
+			return nil
+		}
+		root := parsed.Tree.Root()
 		relativeModulePath, relErr := filepath.Rel(project.ModuleRoot, filepath.Dir(filePath))
 		if relErr != nil {
 			return relErr
@@ -126,14 +145,18 @@ func ScanProject(ctx context.Context, request analysis.AnalyzeRequest, project P
 		}
 		fileRecord := File{
 			RelativePath:    relativeProject,
-			PackageName:     parsed.Name.Name,
+			PackageName:     goSyntaxPackageName(root),
 			SourceReference: fileSource,
 			IsTest:          strings.HasSuffix(entry.Name(), "_test.go"),
 			IsGenerated:     generated,
 			Constraints:     constraints,
 		}
-		for _, importSpec := range parsed.Imports {
-			importPath, unquoteErr := strconv.Unquote(importSpec.Path.Value)
+		for _, importSpec := range goSyntaxImportSpecs(root) {
+			pathNode := importSpec.ChildByFieldName("path")
+			if pathNode == nil {
+				continue
+			}
+			importPath, unquoteErr := strconv.Unquote(pathNode.Text())
 			if unquoteErr != nil {
 				result.Diagnostics = append(result.Diagnostics, analysis.Diagnostic{
 					Code:        "go_import_literal_error",
@@ -144,13 +167,16 @@ func ScanProject(ctx context.Context, request analysis.AnalyzeRequest, project P
 				})
 				continue
 			}
-			start := fileSet.Position(importSpec.Path.Pos())
-			end := fileSet.Position(importSpec.Path.End())
+			rangeValue := pathNode.Range()
+			startLine := int(rangeValue.Start.Row) + 1
+			startColumn := int(rangeValue.Start.Column) + 1
+			endLine := int(rangeValue.End.Row) + 1
+			endColumn := int(rangeValue.End.Column) + 1
 			importSource := analysis.SourceReference{
-				ID:     StableID("import", relativeProject, strconv.Itoa(start.Line), strconv.Itoa(start.Column), importPath),
+				ID:     StableID("import", relativeProject, strconv.Itoa(startLine), strconv.Itoa(startColumn), importPath),
 				Path:   relativeProject,
-				Start:  &analysis.Position{Line: start.Line, Column: start.Column},
-				End:    &analysis.Position{Line: end.Line, Column: end.Column},
+				Start:  &analysis.Position{Line: startLine, Column: startColumn},
+				End:    &analysis.Position{Line: endLine, Column: endColumn},
 				Symbol: importPath,
 				Kind:   "import",
 			}

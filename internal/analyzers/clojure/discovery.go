@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/syntax"
+	clojuresyntax "github.com/buffo/arch-view/internal/analysis/syntax/clojure"
 )
 
 type discoveryResult struct {
@@ -68,6 +70,10 @@ type clojureDynamicObservation struct {
 // observations. It parses source as data and never loads, evaluates, or
 // expands a target namespace.
 func Discover(ctx context.Context, project Project, options analysis.EffectiveOptions) (discoveryResult, error) {
+	return DiscoverWithSyntaxProvider(ctx, project, options, clojuresyntax.NewProvider())
+}
+
+func DiscoverWithSyntaxProvider(ctx context.Context, project Project, options analysis.EffectiveOptions, provider syntax.Provider) (discoveryResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -128,12 +134,19 @@ func Discover(ctx context.Context, project Project, options analysis.EffectiveOp
 			if !clojureFlavorSelected(flavor, project.Platform) {
 				return nil
 			}
-			parsed := parseClojureNamespaceFile(string(content))
+			parsed := parseClojureNamespaceFileWithProvider(ctx, provider, string(content))
+			if parsed.BackendError != nil {
+				result.Diagnostics = append(result.Diagnostics, clojureSyntaxBackendDiagnostic(relativeProject, parsed.BackendError))
+			}
 			for _, issue := range parsed.SyntaxIssues {
+				message := "Clojure source contains malformed data-shaped syntax; parseable observations were retained."
+				if issue.Message != "" {
+					message += " " + issue.Message
+				}
 				result.Diagnostics = append(result.Diagnostics, analysis.Diagnostic{
 					Code:        "clojure_syntax_error",
 					Severity:    "warning",
-					Message:     "Clojure source contains malformed data-shaped syntax; parseable observations were retained.",
+					Message:     message,
 					Path:        relativeProject,
 					Location:    &analysis.Position{Line: issue.Line, Column: issue.Column},
 					Recoverable: true,
@@ -233,14 +246,15 @@ type parsedClojureNamespaceFile struct {
 	Namespace                   string
 	NamespaceForm               *cljForm
 	SyntaxIssues                []syntaxIssue
+	BackendError                error
 	NamespaceDiagnosticCode     string
 	NamespaceDiagnosticMessage  string
 	NamespaceDiagnosticLocation *analysis.Position
 }
 
-func parseClojureNamespaceFile(content string) parsedClojureNamespaceFile {
-	forms, issues := parseClojureForms(content)
-	result := parsedClojureNamespaceFile{Forms: forms, SyntaxIssues: issues}
+func parseClojureNamespaceFileWithProvider(ctx context.Context, provider syntax.Provider, content string) parsedClojureNamespaceFile {
+	forms, issues, err := parseClojureFormsWithProvider(ctx, provider, "", content)
+	result := parsedClojureNamespaceFile{Forms: forms, SyntaxIssues: issues, BackendError: err}
 	for _, form := range forms {
 		if form == nil || form.Quoted || form.Kind != formList || len(form.Items) == 0 || formSymbol(form.Items[0]) != "ns" {
 			continue

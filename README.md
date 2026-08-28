@@ -8,6 +8,15 @@ The original reference implementation is available in the upstream
 [unclebob/arch-view repository](https://github.com/unclebob/arch-view). It is
 outside this repository and is not modified as part of Arch View work.
 
+## Build prerequisites
+
+- Go 1.23 or newer.
+- A C compiler available to cgo. The built-in language analyzers link the
+  tree-sitter grammars through cgo, so builds must run with `CGO_ENABLED=1`.
+
+Run `go test ./...` after installing those prerequisites to verify the local
+toolchain.
+
 ## Viewer guide
 
 This is a temporary contributor/user guide. It records the decisions behind

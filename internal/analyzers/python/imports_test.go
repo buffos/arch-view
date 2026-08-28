@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	pysyntax "github.com/buffo/arch-view/internal/analysis/syntax/python"
 	"github.com/buffo/arch-view/internal/model/canonical"
 )
 
@@ -159,9 +160,9 @@ func TestAnalyzeResolvesUnicodePythonModuleNames(t *testing.T) {
 	}
 }
 
-func TestExtractPythonImportsSupportsMultilineAndAliases(t *testing.T) {
+func TestTreeSitterPythonImportsSupportsMultilineAndAliases(t *testing.T) {
 	content := "from .service import (\n    Service,\n    Helper as PublicHelper,\n)\nimport app.models, app.views as views\n"
-	observations, diagnostics := extractPythonImports("src/app/consumer.py", content, "py:module:app.consumer", false)
+	observations, diagnostics := extractPythonImportsForTest(t, "src/app/consumer.py", content, "py:module:app.consumer", false)
 	if len(diagnostics) != 0 || len(observations) != 4 {
 		t.Fatalf("observations=%#v diagnostics=%#v", observations, diagnostics)
 	}
@@ -173,6 +174,16 @@ func TestExtractPythonImportsSupportsMultilineAndAliases(t *testing.T) {
 	}
 	if observations[2].Module != "app.models" || observations[3].Alias != "views" {
 		t.Fatalf("absolute imports = %#v", observations[2:])
+	}
+}
+
+func TestTreeSitterPythonImportsPreservesBareRelativeImportSpelling(t *testing.T) {
+	observations, diagnostics := extractPythonImportsForTest(t, "src/app/__init__.py", "from . import models\n", "py:package:app", true)
+	if len(diagnostics) != 0 {
+		t.Fatalf("diagnostics = %#v", diagnostics)
+	}
+	if len(observations) != 1 || observations[0].Spelling != ".models" || observations[0].RelativeLevel != 1 {
+		t.Fatalf("bare relative import = %#v", observations)
 	}
 }
 
@@ -229,7 +240,7 @@ func TestAnalyzeBlocksMixedRegularAndNamespacePackageRoots(t *testing.T) {
 	}
 }
 
-func TestExtractPythonImportsIgnoresDynamicLookingDefinitionsAndRawStringContents(t *testing.T) {
+func TestTreeSitterPythonImportsIgnoresDynamicLookingDefinitionsAndRawStringContents(t *testing.T) {
 	content := "def eval(value):\n" +
 		"    return value\n\n" +
 		"class ExtensionManager(Base):\n" +
@@ -238,7 +249,7 @@ func TestExtractPythonImportsIgnoresDynamicLookingDefinitionsAndRawStringContent
 		"import fake.module\n" +
 		"\"\"\"\n" +
 		"import real.module\n"
-	observations, diagnostics := extractPythonImports("consumer.py", content, "py:module:consumer", false)
+	observations, diagnostics := extractPythonImportsForTest(t, "consumer.py", content, "py:module:consumer", false)
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %#v", diagnostics)
 	}
@@ -247,12 +258,12 @@ func TestExtractPythonImportsIgnoresDynamicLookingDefinitionsAndRawStringContent
 	}
 }
 
-func TestExtractPythonImportsDetectsDynamicImportAliases(t *testing.T) {
+func TestTreeSitterPythonImportsDetectsDynamicImportAliases(t *testing.T) {
 	content := "from importlib import import_module as load\n" +
 		"from builtins import __import__ as import_name\n" +
 		"load(module_name)\n" +
 		"import_name(target_name)\n"
-	observations, diagnostics := extractPythonImports("consumer.py", content, "py:module:consumer", false)
+	observations, diagnostics := extractPythonImportsForTest(t, "consumer.py", content, "py:module:consumer", false)
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %#v", diagnostics)
 	}
@@ -267,14 +278,14 @@ func TestExtractPythonImportsDetectsDynamicImportAliases(t *testing.T) {
 	}
 }
 
-func TestExtractPythonImportsDoesNotFabricateDynamicCallsFromNamesAlone(t *testing.T) {
+func TestTreeSitterPythonImportsDoesNotFabricateDynamicCallsFromNamesAlone(t *testing.T) {
 	content := "def import_module(value):\n" +
 		"    return value\n\n" +
 		"import_module('ordinary.value')\n" +
 		"manager.ExtensionManager('ordinary.manager')\n" +
 		"eval('1 + 1')\n" +
 		"exec('value = 1')\n"
-	observations, diagnostics := extractPythonImports("consumer.py", content, "py:module:consumer", false)
+	observations, diagnostics := extractPythonImportsForTest(t, "consumer.py", content, "py:module:consumer", false)
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %#v", diagnostics)
 	}
@@ -285,12 +296,12 @@ func TestExtractPythonImportsDoesNotFabricateDynamicCallsFromNamesAlone(t *testi
 	}
 }
 
-func TestExtractPythonImportsDetectsQualifiedModuleAliases(t *testing.T) {
+func TestTreeSitterPythonImportsDetectsQualifiedModuleAliases(t *testing.T) {
 	content := "import importlib as loader\n" +
 		"import importlib.util as import_util\n" +
 		"loader.import_module(module_name)\n" +
 		"import_util.find_spec(module_name)\n"
-	observations, diagnostics := extractPythonImports("consumer.py", content, "py:module:consumer", false)
+	observations, diagnostics := extractPythonImportsForTest(t, "consumer.py", content, "py:module:consumer", false)
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %#v", diagnostics)
 	}
@@ -305,10 +316,10 @@ func TestExtractPythonImportsDetectsQualifiedModuleAliases(t *testing.T) {
 	}
 }
 
-func TestExtractPythonImportsDoesNotInventPartialDynamicLiteralTargets(t *testing.T) {
+func TestTreeSitterPythonImportsDoesNotInventPartialDynamicLiteralTargets(t *testing.T) {
 	content := "importlib.import_module(\"app\" + suffix)\n" +
 		"importlib.import_module(\"app.\" \"models\")\n"
-	observations, diagnostics := extractPythonImports("consumer.py", content, "py:module:consumer", false)
+	observations, diagnostics := extractPythonImportsForTest(t, "consumer.py", content, "py:module:consumer", false)
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %#v", diagnostics)
 	}
@@ -439,4 +450,13 @@ func findPythonReferenceRelationship(values []analysis.RelationshipObservation, 
 		}
 	}
 	return nil
+}
+
+func extractPythonImportsForTest(t *testing.T, path, content, fromModuleID string, packageInit bool) ([]pythonImportObservation, []analysis.Diagnostic) {
+	t.Helper()
+	extraction := extractPythonSyntaxImports(context.Background(), pysyntax.NewProvider(), path, content, fromModuleID, packageInit)
+	if extraction.BackendError != nil {
+		t.Fatalf("Tree-sitter backend failure: %v", extraction.BackendError)
+	}
+	return extraction.Observations, extraction.Diagnostics
 }

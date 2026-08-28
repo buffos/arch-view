@@ -7,14 +7,24 @@ import (
 	"sort"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/syntax"
+	gosyntax "github.com/buffo/arch-view/internal/analysis/syntax/go"
 	"github.com/buffo/arch-view/internal/analyzers/go/observations"
 	"github.com/buffo/arch-view/internal/analyzers/go/scanner"
 )
 
-type Analyzer struct{}
+type Analyzer struct {
+	syntaxProvider syntax.Provider
+}
 
 func New() *Analyzer {
-	return &Analyzer{}
+	return &Analyzer{syntaxProvider: gosyntax.NewProvider()}
+}
+
+// NewWithSyntaxProvider constructs an analyzer with an explicit source syntax
+// provider for acceptance tests and alternate Tree-sitter environments.
+func NewWithSyntaxProvider(provider syntax.Provider) *Analyzer {
+	return &Analyzer{syntaxProvider: provider}
 }
 
 func (Analyzer) Manifest() analysis.Manifest {
@@ -88,7 +98,7 @@ func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) 
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}
-	scan, err := scanner.ScanProject(ctx, request, project)
+	scan, err := scanner.ScanProjectWithSyntaxProvider(ctx, request, project, a.syntaxProvider)
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}

@@ -11,14 +11,24 @@ import (
 	"path/filepath"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/syntax"
+	pysyntax "github.com/buffo/arch-view/internal/analysis/syntax/python"
 )
 
 // Analyzer implements the language-neutral analyzer contract for Python.
-type Analyzer struct{}
+type Analyzer struct {
+	syntaxProvider syntax.Provider
+}
 
 // New returns the built-in Python analyzer.
 func New() *Analyzer {
-	return &Analyzer{}
+	return NewWithSyntaxProvider(pysyntax.NewProvider())
+}
+
+// NewWithSyntaxProvider returns a Python analyzer backed directly by the
+// supplied syntax provider.
+func NewWithSyntaxProvider(provider syntax.Provider) *Analyzer {
+	return &Analyzer{syntaxProvider: provider}
 }
 
 // Manifest describes the stable public Python analyzer contract.
@@ -103,7 +113,7 @@ func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) 
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}
-	discovery, err := Discover(ctx, project, request.Options)
+	discovery, err := DiscoverWithSyntaxProvider(ctx, project, request.Options, a.syntaxProvider)
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}

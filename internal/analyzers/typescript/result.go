@@ -1,15 +1,27 @@
 package tsanalyzer
 
 import (
+	"context"
 	"path/filepath"
 	"sort"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	tssyntax "github.com/buffo/arch-view/internal/analysis/syntax/typescript"
 )
 
-// BuildResult converts project discovery and lexical dependency observations
+// BuildResult converts project discovery and syntax dependency observations
 // into the language-neutral analyzer contract.
 func BuildResult(project Project, discovery discoveryResult, request analysis.AnalyzeRequest, manifest analysis.Manifest) analysis.AnalysisResult {
+	return buildResult(context.Background(), project, discovery, request, manifest, treeSitterTSImportExtractor{provider: tssyntax.NewProvider()})
+}
+
+func buildResult(ctx context.Context, project Project, discovery discoveryResult, request analysis.AnalyzeRequest, manifest analysis.Manifest, extractor tsImportExtractor) analysis.AnalysisResult {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if extractor == nil {
+		extractor = treeSitterTSImportExtractor{provider: tssyntax.NewProvider()}
+	}
 	diagnostics := append([]analysis.Diagnostic{}, discovery.Diagnostics...)
 	index := newTSModuleIndex(discovery)
 	relationships := make(map[string]analysis.RelationshipObservation)
@@ -26,9 +38,12 @@ func BuildResult(project Project, discovery discoveryResult, request analysis.An
 	sort.Strings(paths)
 	for _, relative := range paths {
 		file := discovery.Files[relative]
-		observations, importDiagnostics := extractTSImports(relative, file.Content, file.ModuleID)
-		diagnostics = append(diagnostics, importDiagnostics...)
-		for _, observation := range observations {
+		extraction := extractor.Extract(ctx, relative, file.Content, file.ModuleID)
+		diagnostics = append(diagnostics, extraction.Diagnostics...)
+		if extraction.BackendError != nil {
+			diagnostics = append(diagnostics, tsImportBackendDiagnostic(relative, extraction.BackendError))
+		}
+		for _, observation := range extraction.Observations {
 			sources[observation.Source.ID] = observation.Source
 			resolution := resolveTSImport(project, discovery, observation, index)
 			if resolution.Diagnostic != nil {

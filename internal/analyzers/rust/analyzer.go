@@ -11,14 +11,24 @@ import (
 	"path/filepath"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/syntax"
+	rustsyntax "github.com/buffo/arch-view/internal/analysis/syntax/rust"
 )
 
 // Analyzer implements the language-neutral analyzer contract for Rust.
-type Analyzer struct{}
+type Analyzer struct {
+	syntaxProvider syntax.Provider
+}
 
 // New returns the built-in Rust analyzer.
 func New() *Analyzer {
-	return &Analyzer{}
+	return NewWithSyntaxProvider(rustsyntax.NewProvider())
+}
+
+// NewWithSyntaxProvider constructs a Rust analyzer with an injected syntax
+// provider. The seam keeps Tree-sitter behavior independently testable.
+func NewWithSyntaxProvider(provider syntax.Provider) *Analyzer {
+	return &Analyzer{syntaxProvider: provider}
 }
 
 // Manifest describes the stable public Rust analyzer contract.
@@ -90,7 +100,7 @@ func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) 
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}
-	discovery, err := Discover(ctx, project, request.Options)
+	discovery, err := DiscoverWithSyntaxProvider(ctx, project, request.Options, a.syntaxProvider)
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}

@@ -5,17 +5,12 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"go/build"
-	"go/scanner"
-	"go/token"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/buffo/arch-view/internal/analysis"
 )
 
 var defaultExcludedRootDirectories = map[string]struct{}{
@@ -70,35 +65,6 @@ func buildConstraintLines(filePath string) []string {
 	}
 	sort.Strings(constraints)
 	return constraints
-}
-
-func parseDiagnostic(err error, relativePath string) analysis.Diagnostic {
-	location := &analysis.Position{Line: 1, Column: 1}
-	switch errors := err.(type) {
-	case scanner.ErrorList:
-		if len(errors) > 0 {
-			location = parseErrorPosition(errors[0].Pos, location)
-		}
-	case *scanner.ErrorList:
-		if errors != nil && len(*errors) > 0 {
-			location = parseErrorPosition((*errors)[0].Pos, location)
-		}
-	}
-	return analysis.Diagnostic{
-		Code:        "go_parse_error",
-		Severity:    "error",
-		Message:     fmt.Sprintf("Go source could not be parsed: %v", err),
-		Path:        relativePath,
-		Location:    location,
-		Recoverable: true,
-	}
-}
-
-func parseErrorPosition(position token.Position, fallback *analysis.Position) *analysis.Position {
-	if position.Line <= 0 || position.Column <= 0 {
-		return fallback
-	}
-	return &analysis.Position{Line: position.Line, Column: position.Column}
 }
 
 func isGeneratedSource(content []byte) bool {

@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	tssyntax "github.com/buffo/arch-view/internal/analysis/syntax/typescript"
 )
 
 func TestManifestMatchesTypeScriptContract(t *testing.T) {
@@ -364,7 +365,7 @@ func TestAnalyzeIncludesJavaScriptWhenAllowJSIsConfigured(t *testing.T) {
 	}
 }
 
-func TestExtractImportsSupportsMultilineLiteralsAndSkipsMemberRequire(t *testing.T) {
+func TestTreeSitterExtractsMultilineLiteralsAndSkipsMemberRequire(t *testing.T) {
 	content := `const lazy = import(
   "./lazy",
   { with: { type: "json" } },
@@ -380,7 +381,7 @@ const memberImport = object.import("./member-import");
 if (ready) /require\("\.\/control-regex"\)/;
 const ratio = /a/ / require("./regular");
 const numericRatio = 10 / require("./numeric");`
-	observations, diagnostics := extractTSImports("src/main.ts", content, "ts:module:src/main")
+	observations, diagnostics := extractTreeSitterImports(t, "src/main.ts", content, "ts:module:src/main")
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected import diagnostics: %#v", diagnostics)
 	}
@@ -404,13 +405,13 @@ const numericRatio = 10 / require("./numeric");`
 	}
 }
 
-func TestExtractImportsTreatsDelimiterTextInsideStringsAsModuleSpecifiers(t *testing.T) {
+func TestTreeSitterTreatsDelimiterTextInsideStringsAsModuleSpecifiers(t *testing.T) {
 	content := `import "(";
 import ")";
 import ";";
 const close = import(")");
 const member = object.require(")");`
-	observations, diagnostics := extractTSImports("src/main.ts", content, "ts:module:src/main")
+	observations, diagnostics := extractTreeSitterImports(t, "src/main.ts", content, "ts:module:src/main")
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected delimiter-text diagnostics: %#v", diagnostics)
 	}
@@ -427,8 +428,8 @@ const member = object.require(")");`
 	}
 }
 
-func TestExtractImportsTreatsSideEffectTypeSpecifierAsValueImport(t *testing.T) {
-	observations, diagnostics := extractTSImports("src/main.ts", `import "type";
+func TestTreeSitterTreatsSideEffectTypeSpecifierAsValueImport(t *testing.T) {
+	observations, diagnostics := extractTreeSitterImports(t, "src/main.ts", `import "type";
 	import type from "./default";
 import type { Value } from "./types";`, "ts:module:src/main")
 	if len(diagnostics) != 0 || len(observations) != 3 {
@@ -442,8 +443,8 @@ import type { Value } from "./types";`, "ts:module:src/main")
 	}
 }
 
-func TestExtractImportsReportsUnterminatedCalls(t *testing.T) {
-	observations, diagnostics := extractTSImports("src/main.ts", `const lazy = import("./lazy");
+func TestTreeSitterReportsUnterminatedCalls(t *testing.T) {
+	observations, diagnostics := extractTreeSitterImports(t, "src/main.ts", `const lazy = import("./lazy");
 const broken = require("./broken"`, "ts:module:src/main")
 	if len(observations) != 1 || observations[0].Specifier != "./lazy" {
 		t.Fatalf("valid call was not retained: %#v", observations)
@@ -453,10 +454,10 @@ const broken = require("./broken"`, "ts:module:src/main")
 	}
 }
 
-func TestExtractImportsDistinguishesTypeBindingFromTypeModifier(t *testing.T) {
+func TestTreeSitterDistinguishesTypeBindingFromTypeModifier(t *testing.T) {
 	content := `import { type } from "./value";
 import { type Foo, type Bar as Baz } from "./types";`
-	observations, diagnostics := extractTSImports("src/main.ts", content, "ts:module:src/main")
+	observations, diagnostics := extractTreeSitterImports(t, "src/main.ts", content, "ts:module:src/main")
 	if len(diagnostics) != 0 || len(observations) != 2 {
 		t.Fatalf("type import observations=%#v diagnostics=%#v", observations, diagnostics)
 	}
@@ -475,6 +476,15 @@ func containsStringValue(values []string, expected string) bool {
 		}
 	}
 	return false
+}
+
+func extractTreeSitterImports(t *testing.T, repositoryPath, content, fromModuleID string) ([]tsImportObservation, []analysis.Diagnostic) {
+	t.Helper()
+	extraction := (treeSitterTSImportExtractor{provider: tssyntax.NewProvider()}).Extract(context.Background(), repositoryPath, content, fromModuleID)
+	if extraction.BackendError != nil {
+		t.Fatalf("Tree-sitter backend failure: %v", extraction.BackendError)
+	}
+	return extraction.Observations, extraction.Diagnostics
 }
 
 func TestAnalyzeUsesImportKindForAutoPackageConditions(t *testing.T) {
