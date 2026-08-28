@@ -283,6 +283,48 @@ func TestExitCodesMatchContract(t *testing.T) {
 	}
 }
 
+func TestHostWithRuntimeRecordsValidatedProvenance(t *testing.T) {
+	root := t.TempDir()
+	analyzer := &fakeAnalyzer{manifest: validManifest("org.example.runtime", "runtime")}
+	var selection AnalyzerSelection
+	analyzer.analyze = func(_ context.Context, request AnalyzeRequest) (AnalysisResult, error) {
+		selection = request.Selection
+		return validResult(analyzer.manifest), nil
+	}
+	registry := NewRegistry()
+	if err := registry.Register(analyzer); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	base := NewHost(registry)
+	runtimeHost, err := base.WithRuntime(RuntimeSelection{Mode: RuntimeModePackaged, Source: "application-index", Platform: "windows-amd64"})
+	if err != nil {
+		t.Fatalf("clone host with runtime: %v", err)
+	}
+	result, err := runtimeHost.Run(context.Background(), RunRequest{ProjectRoot: root, AnalyzerID: analyzer.manifest.ID})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if selection.RuntimeMode != RuntimeModePackaged || selection.RuntimeSource != "application-index" || selection.RuntimePlatform != "windows-amd64" {
+		t.Fatalf("selection runtime = %#v", selection)
+	}
+	if result.Analyzer.RuntimeMode != RuntimeModePackaged || result.Analyzer.RuntimeSource != "application-index" || result.Analyzer.RuntimePlatform != "windows-amd64" {
+		t.Fatalf("result runtime = %#v", result.Analyzer)
+	}
+	if base.Runtime() != (RuntimeSelection{}) {
+		t.Fatalf("base runtime changed = %#v", base.Runtime())
+	}
+}
+
+func TestHostRejectsIncompleteRuntimeProvenance(t *testing.T) {
+	base := NewHost(NewRegistry())
+	if _, err := base.WithRuntime(RuntimeSelection{Mode: RuntimeModePackaged}); ErrorCodeOf(err) != ErrInvalidRequest {
+		t.Fatalf("incomplete runtime error code = %q, want %q", ErrorCodeOf(err), ErrInvalidRequest)
+	}
+	if _, err := base.WithRuntime(RuntimeSelection{Source: "application-index"}); ErrorCodeOf(err) != ErrInvalidRequest {
+		t.Fatalf("mode-less runtime error code = %q, want %q", ErrorCodeOf(err), ErrInvalidRequest)
+	}
+}
+
 func TestNormalizeProjectRootRejectsFiles(t *testing.T) {
 	file := t.TempDir() + string(os.PathSeparator) + "file"
 	if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {

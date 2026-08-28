@@ -24,6 +24,8 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	modelInput := fs.String("model", "", "canonical model JSON input file")
 	project := fs.String("project", "", "project root to analyze before opening")
+	analyzerRuntime := fs.String("analyzer-runtime", analyzerRuntimeAuto, "analyzer runtime: auto, packaged, in-process, or explicit")
+	allowUntrustedPlugin := fs.Bool("allow-untrusted-plugin", false, "allow an explicitly supplied local descriptor")
 	language := fs.String("language", "", "explicit analyzer language")
 	analyzerID := fs.String("analyzer", "", "explicit analyzer id")
 	module := fs.String("module", "", "explicit Go module path or workspace-relative directory")
@@ -75,11 +77,6 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
-	if err := loadExternalPlugins(host, plugins); err != nil {
-		writeError(stderr, err)
-		return analysis.ExitCodeForError(err)
-	}
-
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	var value model.Model
@@ -92,6 +89,19 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			return analysis.ExitCodeForError(err)
 		}
 	} else {
+		configuredHost, _, err := configureCommandHost(host, commandRuntimeOptions{
+			Mode:                 *analyzerRuntime,
+			ModeProvided:         runtimeModeWasProvided(fs),
+			AllowUntrustedPlugin: *allowUntrustedPlugin,
+			PluginPaths:          []string(plugins),
+			AnalyzerID:           *analyzerID,
+			Language:             *language,
+		})
+		if err != nil {
+			writeError(stderr, err)
+			return analysis.ExitCodeForError(err)
+		}
+		host = configuredHost
 		cliOptions := collectAnalyzerCLIOptions(fs, analyzerCLIFlags{
 			module:           module,
 			crate:            crate,

@@ -18,6 +18,8 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	fs := flag.NewFlagSet("arch-view analyze", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	project := fs.String("project", "", "project root")
+	analyzerRuntime := fs.String("analyzer-runtime", analyzerRuntimeAuto, "analyzer runtime: auto, packaged, in-process, or explicit")
+	allowUntrustedPlugin := fs.Bool("allow-untrusted-plugin", false, "allow an explicitly supplied local descriptor")
 	language := fs.String("language", "", "explicit analyzer language")
 	analyzerID := fs.String("analyzer", "", "explicit analyzer id")
 	module := fs.String("module", "", "explicit Go module path or workspace-relative directory")
@@ -89,10 +91,19 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
-	if err := loadExternalPlugins(host, plugins); err != nil {
+	configuredHost, _, err := configureCommandHost(host, commandRuntimeOptions{
+		Mode:                 *analyzerRuntime,
+		ModeProvided:         runtimeModeWasProvided(fs),
+		AllowUntrustedPlugin: *allowUntrustedPlugin,
+		PluginPaths:          []string(plugins),
+		AnalyzerID:           *analyzerID,
+		Language:             *language,
+	})
+	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
+	host = configuredHost
 	cliOptions := collectAnalyzerCLIOptions(fs, analyzerCLIFlags{
 		module:           module,
 		crate:            crate,

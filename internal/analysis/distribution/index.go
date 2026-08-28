@@ -75,6 +75,9 @@ func ValidateIndex(outputRoot string, index AnalyzerIndex, expectedIDs []string,
 	if len(index.Packages) == 0 {
 		return fmt.Errorf("index must contain at least one analyzer package")
 	}
+	if err := validateIndexMetadata(index); err != nil {
+		return err
+	}
 
 	targetName := ""
 	if expectedPlatform != "" {
@@ -329,31 +332,7 @@ func validatePackageShape(packageDir, executableName string) error {
 }
 
 func resolveSafePath(root, relative string) (string, error) {
-	if !isSafeRelativePath(relative) {
-		return "", fmt.Errorf("path %q is not a normalized relative path", relative)
-	}
-	rootAbs, err := filepath.Abs(root)
-	if err != nil {
-		return "", fmt.Errorf("resolve distribution root: %w", err)
-	}
-	candidate := filepath.Join(rootAbs, filepath.FromSlash(relative))
-	relativeToRoot, err := filepath.Rel(rootAbs, candidate)
-	if err != nil || filepath.IsAbs(relativeToRoot) || relativeToRoot == ".." || strings.HasPrefix(relativeToRoot, ".."+string(os.PathSeparator)) {
-		return "", fmt.Errorf("path %q escapes distribution root", relative)
-	}
-	rootReal, err := filepath.EvalSymlinks(rootAbs)
-	if err != nil {
-		return "", fmt.Errorf("resolve distribution root symlinks: %w", err)
-	}
-	candidateReal, err := filepath.EvalSymlinks(candidate)
-	if err != nil {
-		return "", fmt.Errorf("resolve package path symlinks: %w", err)
-	}
-	realRelative, err := filepath.Rel(rootReal, candidateReal)
-	if err != nil || filepath.IsAbs(realRelative) || realRelative == ".." || strings.HasPrefix(realRelative, ".."+string(os.PathSeparator)) {
-		return "", fmt.Errorf("path %q escapes distribution root through a symlink", relative)
-	}
-	return candidate, nil
+	return resolveTrustedPath(root, relative)
 }
 
 func isSafeRelativePath(value string) bool {

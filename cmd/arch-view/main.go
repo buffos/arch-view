@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -31,53 +30,18 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer) int {
-	registry := analysis.NewRegistry()
-	if err := registry.Register(goanalyzer.New()); err != nil {
+	host, err := newBuiltInHost()
+	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
-	if err := registry.Register(clojureanalyzer.New()); err != nil {
-		writeError(stderr, err)
-		return analysis.ExitCodeForError(err)
-	}
-	if err := registry.Register(pyanalyzer.New()); err != nil {
-		writeError(stderr, err)
-		return analysis.ExitCodeForError(err)
-	}
-	if err := registry.Register(rustanalyzer.New()); err != nil {
-		writeError(stderr, err)
-		return analysis.ExitCodeForError(err)
-	}
-	if err := registry.Register(tsanalyzer.New()); err != nil {
-		writeError(stderr, err)
-		return analysis.ExitCodeForError(err)
-	}
-	host := analysis.NewHost(registry)
 	if len(args) == 0 {
 		printUsage(stderr)
 		return 2
 	}
 	switch args[0] {
 	case "analyzers":
-		fs := flag.NewFlagSet("arch-view analyzers", flag.ContinueOnError)
-		fs.SetOutput(stderr)
-		var plugins stringList
-		fs.Var(&plugins, "plugin", "external analyzer descriptor; repeatable")
-		if err := fs.Parse(args[1:]); err != nil {
-			return 2
-		}
-		if fs.NArg() != 0 {
-			err := analysis.NewHostError(analysis.ErrInvalidRequest, "analyzers does not accept positional arguments", nil)
-			writeError(stderr, err)
-			return analysis.ExitCodeForError(err)
-		}
-		if err := loadExternalPlugins(host, plugins); err != nil {
-			writeError(stderr, err)
-			return analysis.ExitCodeForError(err)
-		}
-		return writeJSON(stdout, struct {
-			Analyzers []analysis.Manifest `json:"analyzers"`
-		}{Analyzers: host.ListManifests()})
+		return runAnalyzersCommand(host, args[1:], stdout, stderr)
 	case "analyze":
 		return runAnalyze(host, args[1:], stdout, stderr)
 	case "open":
@@ -96,12 +60,28 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 }
 
+func newBuiltInHost() (*analysis.Host, error) {
+	registry := analysis.NewRegistry()
+	for _, analyzer := range []analysis.Analyzer{
+		goanalyzer.New(),
+		clojureanalyzer.New(),
+		pyanalyzer.New(),
+		rustanalyzer.New(),
+		tsanalyzer.New(),
+	} {
+		if err := registry.Register(analyzer); err != nil {
+			return nil, err
+		}
+	}
+	return analysis.NewHost(registry), nil
+}
+
 func printUsage(writer io.Writer) {
-	_, _ = fmt.Fprintln(writer, "arch-view analyzers [--plugin <descriptor>]")
-	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--plugin <descriptor>] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] --format analysis-json|json|html|svg --output <file>")
+	_, _ = fmt.Fprintln(writer, "arch-view analyzers [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin]")
+	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] --format analysis-json|json|html|svg --output <file>")
 	_, _ = fmt.Fprintln(writer, "arch-view export --input <model.json> --format json|html|svg --output <file>")
 	_, _ = fmt.Fprintln(writer, "arch-view open --model <model.json> [--port <n>]")
-	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--plugin <descriptor>] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] [--port <n>]")
+	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] [--port <n>]")
 	_, _ = fmt.Fprintln(writer, "arch-view model normalize --input <analysis-json> --output <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model validate --input <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model projection --input <model-json> [--path <segment>] --output <projection-json>")

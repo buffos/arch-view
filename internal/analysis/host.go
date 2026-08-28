@@ -15,17 +15,54 @@ import (
 
 type Host struct {
 	registry *Registry
+	runtime  RuntimeSelection
 }
 
 func NewHost(registry *Registry) *Host {
+	return NewHostWithRuntime(registry, RuntimeSelection{})
+}
+
+// NewHostWithRuntime creates a host with explicit runtime provenance. The
+// registry still owns analyzer selection; this value only records the trusted
+// boundary through which the registry was assembled.
+func NewHostWithRuntime(registry *Registry, runtimeSelection RuntimeSelection) *Host {
 	if registry == nil {
 		registry = NewRegistry()
 	}
-	return &Host{registry: registry}
+	return &Host{registry: registry, runtime: runtimeSelection}
 }
 
 func (h *Host) ListManifests() []Manifest {
+	if h == nil || h.registry == nil {
+		return nil
+	}
 	return h.registry.ListManifests()
+}
+
+// Runtime returns the host's runtime provenance configuration.
+func (h *Host) Runtime() RuntimeSelection {
+	if h == nil {
+		return RuntimeSelection{}
+	}
+	return h.runtime
+}
+
+// WithRuntime returns a host over the same analyzers with different runtime
+// provenance. The registry copy keeps later registrations isolated.
+func (h *Host) WithRuntime(selection RuntimeSelection) (*Host, error) {
+	if h == nil || h.registry == nil {
+		return nil, NewHostError(ErrHostFailure, "analysis host is not initialized", nil)
+	}
+	if err := validateRuntimeSelection(selection); err != nil {
+		return nil, err
+	}
+	registry := NewRegistry()
+	for _, analyzer := range h.registry.List() {
+		if err := registry.Register(analyzer); err != nil {
+			return nil, err
+		}
+	}
+	return NewHostWithRuntime(registry, selection), nil
 }
 
 // Register adds an analyzer to the host registry. Callers that load optional
@@ -39,8 +76,14 @@ func (h *Host) Register(analyzer Analyzer) error {
 }
 
 func (h *Host) Run(ctx context.Context, request RunRequest) (result AnalysisResult, err error) {
+	if h == nil || h.registry == nil {
+		return AnalysisResult{}, NewHostError(ErrHostFailure, "analysis host is not initialized", nil)
+	}
 	if ctx == nil {
 		ctx = context.Background()
+	}
+	if err := validateRuntimeSelection(h.runtime); err != nil {
+		return AnalysisResult{}, err
 	}
 	if err := validateProjectRoot(request.ProjectRoot); err != nil {
 		return AnalysisResult{}, err
@@ -93,9 +136,15 @@ func (h *Host) Run(ctx context.Context, request RunRequest) (result AnalysisResu
 	if ctx.Err() != nil {
 		return AnalysisResult{}, NewHostError(ErrCancelled, "analysis was cancelled", nil)
 	}
+	if err := validateResultRuntime(result.Analyzer, h.runtime); err != nil {
+		return AnalysisResult{}, err
+	}
 	if result.Analyzer.ID == "" {
 		result.Analyzer = analyzerInfo(manifest)
 	}
+	result.Analyzer.RuntimeMode = h.runtime.Mode
+	result.Analyzer.RuntimeSource = h.runtime.Source
+	result.Analyzer.RuntimePlatform = h.runtime.Platform
 	if result.RunID == "" {
 		result.RunID = deterministicRunID(root, manifest.ID, effectiveOptions.Fingerprint)
 	}
@@ -135,7 +184,8 @@ func (h *Host) selectAnalyzer(ctx context.Context, root string, request RunReque
 		if !ok {
 			return nil, AnalyzerSelection{}, NewHostError(ErrNoAnalyzer, "requested analyzer is not registered", map[string]any{"analyzer_id": request.AnalyzerID})
 		}
-		return h.confirmExplicitSelection(ctx, root, analyzer, "explicit-id")
+		selected, selection, err := h.confirmExplicitSelection(ctx, root, analyzer, "explicit-id")
+		return selected, h.decorateSelection(selection), err
 	}
 	if request.Language != "" {
 		analyzers := h.registry.ByLanguage(request.Language)
@@ -149,7 +199,8 @@ func (h *Host) selectAnalyzer(ctx context.Context, root string, request RunReque
 			}
 			return nil, AnalyzerSelection{}, NewHostError(ErrAmbiguousAnalyzer, "language maps to more than one registered analyzer", map[string]any{"language": request.Language, "analyzer_ids": ids})
 		}
-		return h.confirmExplicitSelection(ctx, root, analyzers[0], "explicit-language")
+		selected, selection, err := h.confirmExplicitSelection(ctx, root, analyzers[0], "explicit-language")
+		return selected, h.decorateSelection(selection), err
 	}
 
 	type detected struct {
@@ -162,6 +213,9 @@ func (h *Host) selectAnalyzer(ctx context.Context, root string, request RunReque
 		if err != nil {
 			if ctx.Err() != nil {
 				return nil, AnalyzerSelection{}, NewHostError(ErrCancelled, "analysis was cancelled during detection", nil)
+			}
+			if h.runtime.Mode == RuntimeModePackaged && IsAnalyzerPackageError(err) {
+				return nil, AnalyzerSelection{}, err
 			}
 			continue
 		}
@@ -193,14 +247,14 @@ func (h *Host) selectAnalyzer(ctx context.Context, root string, request RunReque
 		return nil, AnalyzerSelection{}, NewHostError(ErrAmbiguousAnalyzer, "multiple analyzers have the same highest detection confidence", map[string]any{"analyzer_ids": ids})
 	}
 	chosen := candidates[0]
-	return chosen.analyzer, AnalyzerSelection{
+	return chosen.analyzer, h.decorateSelection(AnalyzerSelection{
 		AnalyzerID:     chosen.analyzer.Manifest().ID,
 		Mode:           "auto",
 		Confidence:     chosen.candidate.Confidence,
 		MatchedMarkers: chosen.candidate.MatchedMarkers,
 		Reason:         chosen.candidate.Reason,
 		BoundaryHint:   chosen.candidate.BoundaryHint,
-	}, nil
+	}), nil
 }
 
 func (h *Host) confirmExplicitSelection(ctx context.Context, root string, analyzer Analyzer, mode string) (Analyzer, AnalyzerSelection, error) {
@@ -230,6 +284,60 @@ func (h *Host) confirmExplicitSelection(ctx context.Context, root string, analyz
 		Reason:         candidate.Reason,
 		BoundaryHint:   candidate.BoundaryHint,
 	}, nil
+}
+
+func (h *Host) decorateSelection(selection AnalyzerSelection) AnalyzerSelection {
+	if h == nil {
+		return selection
+	}
+	selection.RuntimeMode = h.runtime.Mode
+	selection.RuntimeSource = h.runtime.Source
+	selection.RuntimePlatform = h.runtime.Platform
+	return selection
+}
+
+func validateRuntimeSelection(selection RuntimeSelection) error {
+	if selection.Mode == "" {
+		if selection.Source != "" || selection.Platform != "" {
+			return NewHostError(ErrInvalidRequest, "analyzer runtime mode is required when provenance is set", nil)
+		}
+		return nil
+	}
+	switch selection.Mode {
+	case RuntimeModePackaged, RuntimeModeInProcess, RuntimeModeExplicit:
+		if strings.TrimSpace(selection.Source) == "" || strings.TrimSpace(selection.Source) != selection.Source ||
+			strings.TrimSpace(selection.Platform) == "" || strings.TrimSpace(selection.Platform) != selection.Platform {
+			return NewHostError(ErrInvalidRequest, "analyzer runtime source and platform are required", map[string]any{"runtime_mode": selection.Mode})
+		}
+		if strings.ContainsAny(selection.Source+selection.Platform, "\x00\r\n") {
+			return NewHostError(ErrInvalidRequest, "analyzer runtime provenance contains unsafe control characters", map[string]any{"runtime_mode": selection.Mode})
+		}
+		return nil
+	default:
+		return NewHostError(ErrInvalidRequest, "analyzer runtime mode is unsupported", map[string]any{"runtime_mode": selection.Mode})
+	}
+}
+
+func validateResultRuntime(info AnalyzerInfo, expected RuntimeSelection) error {
+	if info.RuntimeMode != "" && info.RuntimeMode != expected.Mode {
+		return NewHostError(ErrResultInvalid, "analysis result runtime mode does not match the selected runtime", map[string]any{
+			"expected": expected.Mode,
+			"actual":   info.RuntimeMode,
+		})
+	}
+	if info.RuntimeSource != "" && info.RuntimeSource != expected.Source {
+		return NewHostError(ErrResultInvalid, "analysis result runtime source does not match the selected runtime", map[string]any{
+			"expected": expected.Source,
+			"actual":   info.RuntimeSource,
+		})
+	}
+	if info.RuntimePlatform != "" && info.RuntimePlatform != expected.Platform {
+		return NewHostError(ErrResultInvalid, "analysis result runtime platform does not match the selected runtime", map[string]any{
+			"expected": expected.Platform,
+			"actual":   info.RuntimePlatform,
+		})
+	}
+	return nil
 }
 
 func validateProjectRoot(root string) error {

@@ -14,8 +14,27 @@ func ValidateAnalysisResult(result AnalysisResult, manifest Manifest, projectRoo
 		return NewHostError(ErrResultInvalid, "analysis result has an invalid status", map[string]any{"status": result.Status})
 	}
 	expected := analyzerInfo(manifest)
-	if result.Analyzer != expected {
+	if result.Analyzer.ID != expected.ID ||
+		result.Analyzer.Version != expected.Version ||
+		result.Analyzer.Language != expected.Language ||
+		result.Analyzer.APIVersion != expected.APIVersion {
 		return NewHostError(ErrResultInvalid, "analysis result analyzer provenance does not match the selected manifest", map[string]any{"expected": expected.ID, "actual": result.Analyzer.ID})
+	}
+	if result.Analyzer.RuntimeMode == "" {
+		if result.Analyzer.RuntimeSource != "" || result.Analyzer.RuntimePlatform != "" {
+			return NewHostError(ErrResultInvalid, "analysis result runtime mode is required when provenance is set", nil)
+		}
+	} else {
+		switch result.Analyzer.RuntimeMode {
+		case RuntimeModePackaged, RuntimeModeInProcess, RuntimeModeExplicit:
+		default:
+			return NewHostError(ErrResultInvalid, "analysis result runtime mode is invalid", map[string]any{"runtime_mode": result.Analyzer.RuntimeMode})
+		}
+		if strings.TrimSpace(result.Analyzer.RuntimeSource) == "" || strings.TrimSpace(result.Analyzer.RuntimeSource) != result.Analyzer.RuntimeSource ||
+			strings.TrimSpace(result.Analyzer.RuntimePlatform) == "" || strings.TrimSpace(result.Analyzer.RuntimePlatform) != result.Analyzer.RuntimePlatform ||
+			strings.ContainsAny(result.Analyzer.RuntimeSource+result.Analyzer.RuntimePlatform, "\x00\r\n") {
+			return NewHostError(ErrResultInvalid, "analysis result runtime provenance is invalid", map[string]any{"runtime_mode": result.Analyzer.RuntimeMode})
+		}
 	}
 	if strings.TrimSpace(result.RunID) == "" {
 		return NewHostError(ErrResultInvalid, "analysis result must include a run id", nil)

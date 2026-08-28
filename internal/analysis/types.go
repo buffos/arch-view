@@ -28,13 +28,31 @@ type RunRequest struct {
 	CLIOptions     map[string]any
 }
 
+// RuntimeSelection describes how the host obtained the analyzer used for a
+// run. The zero value preserves the original direct/in-process Host behavior;
+// command entrypoints set it explicitly so runtime provenance is observable.
+type RuntimeSelection struct {
+	Mode     string `json:"runtime_mode,omitempty"`
+	Source   string `json:"runtime_source,omitempty"`
+	Platform string `json:"runtime_platform,omitempty"`
+}
+
+const (
+	RuntimeModePackaged  = "packaged"
+	RuntimeModeInProcess = "in-process"
+	RuntimeModeExplicit  = "explicit"
+)
+
 type AnalyzerSelection struct {
-	AnalyzerID     string   `json:"analyzer_id"`
-	Mode           string   `json:"mode"`
-	Confidence     float64  `json:"confidence"`
-	MatchedMarkers []string `json:"matched_markers,omitempty"`
-	Reason         string   `json:"reason,omitempty"`
-	BoundaryHint   string   `json:"boundary_hint,omitempty"`
+	AnalyzerID      string   `json:"analyzer_id"`
+	Mode            string   `json:"mode"`
+	Confidence      float64  `json:"confidence"`
+	MatchedMarkers  []string `json:"matched_markers,omitempty"`
+	Reason          string   `json:"reason,omitempty"`
+	BoundaryHint    string   `json:"boundary_hint,omitempty"`
+	RuntimeMode     string   `json:"runtime_mode,omitempty"`
+	RuntimeSource   string   `json:"runtime_source,omitempty"`
+	RuntimePlatform string   `json:"runtime_platform,omitempty"`
 }
 
 type Manifest struct {
@@ -100,10 +118,13 @@ type AnalysisResult struct {
 }
 
 type AnalyzerInfo struct {
-	ID         string `json:"id"`
-	Version    string `json:"version"`
-	Language   string `json:"language"`
-	APIVersion string `json:"api_version"`
+	ID              string `json:"id"`
+	Version         string `json:"version"`
+	Language        string `json:"language"`
+	APIVersion      string `json:"api_version"`
+	RuntimeMode     string `json:"runtime_mode,omitempty"`
+	RuntimeSource   string `json:"runtime_source,omitempty"`
+	RuntimePlatform string `json:"runtime_platform,omitempty"`
 }
 
 type ProjectInfo struct {

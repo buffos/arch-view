@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -8,6 +9,105 @@ import (
 	"strings"
 	"testing"
 )
+
+func TestAssembleBuildsCompleteDefaultAnalyzerMatrix(t *testing.T) {
+	parent := t.TempDir()
+	repositoryRoot := filepath.Join(parent, "repository")
+	if err := os.Mkdir(repositoryRoot, 0o755); err != nil {
+		t.Fatalf("create repository: %v", err)
+	}
+	ids := DefaultAnalyzerIDs()
+	for _, target := range SupportedPlatformTargets() {
+		t.Run(target.Name, func(t *testing.T) {
+			outputRoot := filepath.Join(parent, "analyzers-"+strings.ReplaceAll(target.Name, "-", "_"))
+			index, err := Assemble(context.Background(), AssembleOptions{
+				RepositoryRoot: repositoryRoot,
+				OutputRoot:     outputRoot,
+				Platform:       target.Name,
+				BuildID:        "matrix-" + target.Name,
+				GoCommand:      "matrix-go",
+				CCCommand:      "matrix-cc",
+				CXXCommand:     "matrix-cxx",
+				AnalyzerIDs:    ids,
+				Build: func(_ context.Context, request BuildRequest) error {
+					if err := os.MkdirAll(filepath.Dir(request.OutputPath), 0o755); err != nil {
+						return err
+					}
+					return os.WriteFile(request.OutputPath, []byte("compiled:"+request.Entrypoint+":"+request.GOOS+":"+request.GOARCH), 0o755)
+				},
+			})
+			if err != nil {
+				t.Fatalf("assemble %s: %v", target.Name, err)
+			}
+			if len(index.Packages) != len(ids) {
+				t.Fatalf("package count = %d, want %d", len(index.Packages), len(ids))
+			}
+			if err := ValidateIndex(outputRoot, index, ids, target.Name); err != nil {
+				t.Fatalf("validate %s matrix package: %v", target.Name, err)
+			}
+		})
+	}
+}
+
+func TestAssembleIsByteStableForUnchangedInputs(t *testing.T) {
+	parent := t.TempDir()
+	repositoryRoot := filepath.Join(parent, "repository")
+	if err := os.Mkdir(repositoryRoot, 0o755); err != nil {
+		t.Fatalf("create repository: %v", err)
+	}
+	build := func(_ context.Context, request BuildRequest) error {
+		if err := os.MkdirAll(filepath.Dir(request.OutputPath), 0o755); err != nil {
+			return err
+		}
+		return os.WriteFile(request.OutputPath, []byte("stable:"+request.Entrypoint), 0o755)
+	}
+	options := AssembleOptions{
+		RepositoryRoot: repositoryRoot,
+		Platform:       "windows-amd64",
+		BuildID:        "stable-build",
+		GoCommand:      "stable-go",
+		CCCommand:      "stable-cc",
+		CXXCommand:     "stable-cxx",
+		AnalyzerIDs:    []string{"org.archview.go", "org.archview.python"},
+		Build:          build,
+	}
+	firstRoot := filepath.Join(parent, "first")
+	secondRoot := filepath.Join(parent, "second")
+	options.OutputRoot = firstRoot
+	first, err := Assemble(context.Background(), options)
+	if err != nil {
+		t.Fatalf("first stable assembly: %v", err)
+	}
+	options.OutputRoot = secondRoot
+	second, err := Assemble(context.Background(), options)
+	if err != nil {
+		t.Fatalf("second stable assembly: %v", err)
+	}
+	firstIndex, err := os.ReadFile(filepath.Join(firstRoot, "index.json"))
+	if err != nil {
+		t.Fatalf("read first index: %v", err)
+	}
+	secondIndex, err := os.ReadFile(filepath.Join(secondRoot, "index.json"))
+	if err != nil {
+		t.Fatalf("read second index: %v", err)
+	}
+	if !bytes.Equal(firstIndex, secondIndex) || len(first.Packages) != len(second.Packages) {
+		t.Fatalf("stable indexes differ")
+	}
+	for index := range first.Packages {
+		firstExecutable, err := os.ReadFile(filepath.Join(firstRoot, filepath.FromSlash(first.Packages[index].ExecutablePath)))
+		if err != nil {
+			t.Fatalf("read first executable: %v", err)
+		}
+		secondExecutable, err := os.ReadFile(filepath.Join(secondRoot, filepath.FromSlash(second.Packages[index].ExecutablePath)))
+		if err != nil {
+			t.Fatalf("read second executable: %v", err)
+		}
+		if !bytes.Equal(firstExecutable, secondExecutable) {
+			t.Fatalf("executable %q is not byte-stable", first.Packages[index].LogicalAnalyzerID)
+		}
+	}
+}
 
 func TestAssembleReleasePublishesHostAndAnalyzerTree(t *testing.T) {
 	repositoryRoot := t.TempDir()
