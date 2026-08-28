@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/analysis/processprotocol"
@@ -116,7 +117,11 @@ func TestRunAnalyzeForwardsOptionsAndStreamsDiagnostics(t *testing.T) {
 }
 
 func TestRunCancellationEmitsOnlyCancelledFatal(t *testing.T) {
-	analyzer := &runnerTestAnalyzer{waitForCancellation: true}
+	analyzer := &runnerTestAnalyzer{
+		waitForCancellation:  true,
+		analysisStarted:      make(chan struct{}),
+		cancellationObserved: make(chan struct{}),
+	}
 	request := analyzeRequest(analyzer.manifest().ID, "cancel-1")
 	reader, writer := io.Pipe()
 	var output bytes.Buffer
@@ -128,6 +133,11 @@ func TestRunCancellationEmitsOnlyCancelledFatal(t *testing.T) {
 
 	if err := processprotocol.WriteFrame(writer, request); err != nil {
 		t.Fatalf("write request: %v", err)
+	}
+	select {
+	case <-analyzer.analysisStarted:
+	case <-time.After(5 * time.Second):
+		t.Fatal("analyzer did not start")
 	}
 	cancel := processprotocol.Frame{Type: processprotocol.FrameCancel, RequestID: request.RequestID, Reason: "test cancellation"}
 	if err := processprotocol.WriteFrame(writer, cancel); err != nil {
@@ -149,7 +159,9 @@ func TestRunCancellationEmitsOnlyCancelledFatal(t *testing.T) {
 	if frames[1].Code != "cancelled" || !strings.Contains(frames[1].Message, "test cancellation") {
 		t.Fatalf("fatal frame = %#v", frames[1])
 	}
-	if analyzer.cancellationObserved == nil {
+	select {
+	case <-analyzer.cancellationObserved:
+	case <-time.After(5 * time.Second):
 		t.Fatal("analyzer did not observe cancellation")
 	}
 
@@ -188,6 +200,7 @@ type runnerTestAnalyzer struct {
 	seenSelection        analysis.AnalyzerSelection
 	seenOptions          analysis.EffectiveOptions
 	waitForCancellation  bool
+	analysisStarted      chan struct{}
 	cancellationObserved chan struct{}
 	analyzerError        error
 }
@@ -231,7 +244,7 @@ func (a *runnerTestAnalyzer) Analyze(ctx context.Context, request analysis.Analy
 	a.seenSelection = request.Selection
 	a.seenOptions = request.Options
 	if a.waitForCancellation {
-		a.cancellationObserved = make(chan struct{})
+		close(a.analysisStarted)
 		<-ctx.Done()
 		close(a.cancellationObserved)
 		return analysis.AnalysisResult{}, ctx.Err()
