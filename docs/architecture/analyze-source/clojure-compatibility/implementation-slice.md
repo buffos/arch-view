@@ -50,3 +50,12 @@ Given a Clojure-family repository, a developer can:
 ## Artifact impact
 
 The four approved issues changed delivery truth, and issue 029's closeout now records the verified implementation in the application PRD, application architecture summary, owning capability, parent orchestration, implementation slice, registry, and OKF log. Product scope, topology, canonical model semantics, and cross-capability boundaries remain unchanged.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+adds the compiled `org.archview.clojure` entrypoint at
+`cmd/analyzers/clojure/main.go`. It constructs the existing
+`clojureanalyzer.New()` implementation behind the shared process runner and
+passes manifest and canonical-result parity verification without evaluating
+target code.

@@ -1,5 +1,132 @@
 # Update Log
 
+## 2026-08-28
+
+### Brownfield implementation verification
+
+* **Observed in code:** The Go analyzer covers module selection, eligible
+  package discovery, local import resolution, exclusions, evidence, and
+  non-local diagnostics. Canonical model generation covers normalization,
+  hierarchy, aggregation, cycles, layers, validation, partial results, and
+  deterministic output. Export covers versioned JSON, self-contained HTML,
+  static and browser SVG, reference visibility, overwrite safety, and CLI
+  status behavior.
+* **Delivery evidence:** Issues 001, 002, 005, 011, 013, 015, and 016 are done.
+  Their traceability records cover every acceptance scenario owned by Go
+  analysis, Generate architecture models, and Export and automate.
+* **Verification:** `go test ./...` and
+  `node --test internal/viewer/web/*_test.js` pass on 2026-08-28. Existing
+  visual approvals cover the export behavior that requires human review.
+* **State transitions:** Advanced `Go analysis`, `Generate architecture
+  models`, and `Export and automate` from `specified` to `implemented`.
+  Current totals are 0 `foggy`, 0 `bounded`, 6 `specified`, and 8
+  `implemented`.
+* **Artifact sync:** Updated the three capability nodes and orchestration
+  records, the graph index, application PRD, and application architecture
+  summary. Product behavior, architecture boundaries, topology, and delivery
+  issues have no impact because this audit corrects planning status to match
+  already completed work.
+
+* **Fog clearing:** Resolved the remaining product-boundary decisions for all
+  four foggy frontiers using the user-authorized recommended answers. Compiled
+  analyzers are the production implementation for stable logical IDs, built by
+  a reproducible make/build target into an application-managed analyzer tree;
+  in-process adapters remain only for development, tests, or explicit fallback.
+* **Bounded orchestration:** Confirmed marker-driven nested project discovery,
+  bounded concurrent jobs, namespaced merge identity, no inferred
+  cross-language/cross-root relationships, partial-success behavior, and one
+  combined model backed by per-job results.
+* **Bounded assignments:** Confirmed a separate `analysis` section in
+  `.archview.json`, deterministic nested assignment/CLI precedence, stable
+  analyzer IDs, cached `All` and per-scope views, and affected-scope
+  reanalysis behavior.
+* **Bounded renderer frontier:** Confirmed staged ELK extension priority:
+  route/output features first, structural scene features second, and broader
+  target-specific options only with concrete renderer support. Browser,
+  embedded HTML, and browser SVG share the advanced geometry while Go static
+  SVG retains its deterministic orthogonal contract.
+* **State transitions:** Advanced `Advanced ELK renderer support`, `Compiled
+  external analyzer distribution`, `Multi-analyzer project orchestration`,
+  and `Project analyzer assignments and view selection` from `foggy` to
+  `bounded`. Current totals are 0 `foggy`, 4 `bounded`, 5 `specified`, and 5
+  `implemented`.
+* **Artifact sync:** Updated all four capability concepts, their discovery and
+  orchestration records, parent/source-analysis records, project/index
+  frontiers, application PRD, and application architecture summary. No exact
+  specification set, delivery issue, or ADR was created; those remain
+  downstream of bounded-node specification.
+
+### Exact specification closure
+
+* **Specification pass:** Ran the exact-spec pipeline for all four bounded
+  frontiers: compiled external analyzer distribution, multi-analyzer project
+  orchestration, project analyzer assignments/view selection, and advanced ELK
+  renderer support. Each now has a requirements gap analysis, glossary, PRD,
+  canonical domain model, use-case set, API/CLI contract, acceptance scenarios,
+  and readiness review with no High or Medium findings.
+* **Trust decision:** Recorded the user's confirmation that production may
+  execute only bundled, checksum-verified analyzer executables from the
+  application-managed `analyzers/` tree. User descriptors and in-process
+  adapters remain explicit developer/test or migration overrides.
+* **State transitions:** Advanced the four child nodes from `bounded` to
+  `specified`. Current totals are 0 `foggy`, 0 `bounded`, 9 `specified`, and 5
+  `implemented`.
+* **Artifact sync:** Synchronized the OKF map, parent/source-analysis records,
+  application PRD, application architecture summary, and delivery/orchestration
+  records. No implementation issues or ADRs were created; the specified
+  frontiers are ready for issue slicing after application synthesis.
+
+### Compiled distribution issue slicing
+
+* **Application synthesis gate:** The root PRD and application architecture
+  summary remain current, with no unresolved High or Medium findings for this
+  child. Product and architecture semantics therefore have no impact from this
+  delivery-only update.
+* **Approved migration sequence:** Issue 034 explicitly ports and reuses the
+  existing Go, Python, TypeScript, Rust, and Clojure implementations behind
+  compiled plugin entrypoints. Issues 035–038 then assemble the distribution,
+  verify package trust, make packaged execution the default, and close release
+  and parity verification.
+* **Artifact sync:** Updated the compiled-distribution node, its orchestration
+  status, the plugin-runtime and Analyze source delivery records, the project
+  and graph frontiers, the application PRD and architecture summary, the
+  implementation slice, and the issue registry.
+* **Planning state:** The compiled-distribution node remains `specified`; issue
+  slicing changes delivery truth only. Current totals remain 0 `foggy`, 0
+  `bounded`, 6 `specified`, and 8 `implemented`.
+
+### Issue 034 completion
+
+* **Implementation:** Added one shared child-side NDJSON process runner and
+  compiled entrypoints for the existing Go, Python, TypeScript, Rust, and
+  Clojure analyzers. Each command calls its existing `New()` constructor; no
+  language semantics or registry behavior were duplicated or replaced.
+* **Verification:** Runner protocol tests and the five-language compiled
+  process-adapter parity test pass. `go test ./... -count=1`, `go vet ./...`,
+  `git diff --check`, and strict OKF validation pass with zero errors and zero
+  warnings.
+* **Artifact sync:** Archived issue 034, unblocked issue 035, and updated the
+  compiled-distribution, plugin-runtime, Analyze source, and five supporting
+  analyzer delivery records. Product and architecture semantics remain
+  unchanged; package assembly, trust, runtime selection, and release closure
+  remain in issues 035–038.
+
+## 2026-08-28
+
+* **Topology:** Added three foggy future children under [Analyzer plugin
+  runtime](capabilities/analyze-source/plugin-runtime.md): compiled external
+  analyzer distribution, multi-analyzer project orchestration, and project
+  analyzer assignments/view selection.
+* **Target clarification:** Recorded the user-confirmed direction to replace
+  the script-based external pilot with compiled analyzer executables that reuse
+  the existing analyzer implementations, run multiple applicable analyzers
+  concurrently, and persist folder-to-analyzer assignments with an application
+  scope selector. Current implementation remains separate from this target.
+* **Artifact sync:** Updated the parent/child OKF concepts, project/index
+  frontiers, plugin-runtime discovery and orchestration records, application
+  PRD, and application architecture summary. No delivery issues or ADRs were
+  created; no planning state advanced or regressed.
+
 ## 2026-08-27
 
 * **Issues 031–033 completed:** Archived the process-backed analyzer host,

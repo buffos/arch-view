@@ -3,7 +3,7 @@ type: capability
 title: Clojure compatibility
 description: Preserve the useful behavior of the reference Clojure analyzer through the language-neutral plugin contract.
 tags: [clojure, compatibility, reference]
-timestamp: 2026-08-27T13:51:53Z
+timestamp: 2026-08-28T06:08:59Z
 state: implemented
 state_changed: 2026-08-27T13:51:53Z
 project: /project.md
@@ -23,6 +23,7 @@ issues:
   - docs/agents/issues/done/20260827-027-clojure-static-namespace-dependencies.md
   - docs/agents/issues/done/20260827-028-clojure-platform-polymorphism-and-safety.md
   - docs/agents/issues/done/20260827-029-clojure-public-integration-and-deterministic-exports.md
+  - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
 ---
 
 # Intent
@@ -45,4 +46,4 @@ This child capability is implemented. Its reference-compatible source/configurat
 
 ## Delivery progress
 
-Issues 026–029 are complete: project and namespace discovery, static dependency extraction, platform/polymorphic/safety metadata, and public shared-path integration were implemented and verified on the isolated Clojure analyzer branch.
+Issues 026–029 are complete: project and namespace discovery, static dependency extraction, platform/polymorphic/safety metadata, and public shared-path integration were implemented and verified on the isolated Clojure analyzer branch. Issue 034 adds the compiled `org.archview.clojure` entrypoint through the shared process runner and verifies parity with the in-process analyzer on a Clojure fixture without introducing runtime evaluation.

@@ -2,7 +2,7 @@
 
 ## Selected frontier
 
-The [Analyzer plugin runtime capability](../../../../.okf/capabilities/analyze-source/plugin-runtime.md) is a readiness-reviewed specified child of [Analyze source code](../../../../.okf/capabilities/analyze-source.md). The in-process host, selection rules, options, result validation, and five built-in adapters are implemented; the next confirmed frontier is an opt-in external process boundary validated by an external Python adapter.
+The [Analyzer plugin runtime capability](../../../../.okf/capabilities/analyze-source/plugin-runtime.md) is a readiness-reviewed specified child of [Analyze source code](../../../../.okf/capabilities/analyze-source.md). The in-process host, selection rules, options, result validation, and five built-in adapters are implemented; the first external process boundary has been completed and validated by an external Python adapter.
 
 This slice does not add a language or a capability node. It ports the existing Python analysis semantics to a separately launched Python process and proves that the same language-neutral model, viewer, and export contracts still apply. The existing in-process Python analyzer remains available as the parity baseline and fallback.
 
@@ -12,6 +12,19 @@ This slice does not add a language or a capability node. It ports the existing P
 - **Inferred from the exact specification:** an external analyzer needs version negotiation, manifest agreement, detection and analysis operations, canonical result validation, diagnostics, cancellation, timeout/size limits, protocol-only stdout, and log-only stderr.
 - **User-confirmed target:** the first external deployment is an existing Python analyzer port, not a sixth language. It must be explicitly opted into and must not require model, layout, viewer, or exporter changes.
 - **Verified implementation:** the process host lifecycle, external Python implementation, and public opt-in path are complete; the external Python result reaches the unchanged model, viewer/source, and export consumers.
+
+## Next future frontiers
+
+The user-confirmed target beyond this completed slice is represented by three
+specified child capabilities rather than being folded into this implemented pilot:
+
+- [Compiled external analyzer distribution](../../../../.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md)
+  replaces the script-based external deployment with compiled executables that
+  reuse the in-process analyzer implementations.
+- [Multi-analyzer project orchestration](../../../../.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
+  plans and merges concurrent analyzer jobs for mixed or nested projects.
+- [Project analyzer assignments and view selection](../../../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
+  adds repository-relative assignments and application scope switching.
 
 ## Vertical outcome
 
@@ -43,6 +56,23 @@ Given an explicit external-plugin descriptor and a Python repository, a develope
 | [032](../../../agents/issues/done/20260827-032-external-python-analyzer-parity.md) | Completed: external stdlib-only Python plugin with parity harness and no-target-execution evidence | External Python plugin + analysis | 031 | none |
 | [033](../../../agents/issues/done/20260827-033-external-plugin-cli-and-visible-journey.md) | Completed: explicit descriptor loading for analyzers, analyze, and open with shared model/viewer/export verification | CLI + existing consumers | 032 | none |
 
+## Approved compiled-distribution delivery sequence
+
+The approved migration step is issue 034: port and reuse each existing Go,
+Python, TypeScript, Rust, and Clojure implementation behind a compiled plugin
+entrypoint before distribution assembly and packaged-runtime cutover. Issues
+035–038 then assemble the application-managed distribution, verify package
+trust, make packaged execution the default, and close release/parity
+verification.
+
+| Issue | Outcome | Owner | Blocked by | Review gate |
+|---|---|---|---|---|
+| [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md) | Completed: shared child-side runner and five compiled analyzer entrypoints reuse the current implementations with manifest, protocol, option, and result parity | Analyzer entrypoints | none | none |
+| [035](../../../agents/issues/pending/20260828-035-compiled-analyzer-distribution-assembly.md) | Ready: assemble deterministic platform packages and `analyzers/index.json` through the release build | Distribution build | none | none |
+| [036](../../../agents/issues/pending/20260828-036-trusted-analyzer-package-verification.md) | Ready: discover, validate, and checksum-verify only trusted application-managed packages | Package trust boundary | 035 | none |
+| [037](../../../agents/issues/pending/20260828-037-packaged-runtime-selection.md) | Ready: make verified packaged execution the default and retain explicit local/in-process migration overrides | Runtime selection | 036 | none |
+| [038](../../../agents/issues/pending/20260828-038-compiled-analyzer-parity-and-release-verification.md) | Ready: verify cross-platform parity, deterministic release behavior, and the full acceptance matrix | Release verification | 037 | none |
+
 ## Slice acceptance
 
 - A valid descriptor and hello manifest use the same API version and manifest fields; invalid descriptors or mismatches fail before an analyzer can run.
@@ -70,10 +100,14 @@ Given an explicit external-plugin descriptor and a Python repository, a develope
 
 ## Artifact impact
 
-The slice refines an already confirmed plugin-runtime boundary; it does not
+Issue 034 is now implemented and verified: all five compiled commands reuse
+the existing analyzer constructors and reach the existing process adapter and
+host validation path. The slice refines an already confirmed plugin-runtime boundary; it does not
 change product topology or canonical model semantics. Issues 030–033 are
 complete and the capability exact-spec set, application PRD, application
 architecture summary, parent orchestration, capability references, issue
 registry, and OKF log record the verified external Python pilot. The
-plugin-runtime node remains `specified` until a later external capability
-frontier is explicitly chosen.
+plugin-runtime node remains `specified` while the compiled-distribution child
+is delivered through issues 034–038 and the multi-analyzer and assignment/view
+frontiers await later delivery issue slicing. Issues 030–033 remain the
+completed delivery record for the v1 pilot.

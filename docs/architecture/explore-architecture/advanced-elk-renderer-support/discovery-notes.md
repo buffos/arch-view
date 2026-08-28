@@ -24,6 +24,31 @@ catalog entry is an implemented behavior.
 - Spline-specific tuning and label placement beyond the implemented general
   cubic route path.
 
-These are candidates, not committed requirements. Their exact scope must be
-validated against the pinned ELK runtime and the renderer-neutral scene
-contract before issue slicing.
+## Specified recommendations
+
+The work is organized as one bounded renderer-extension program with staged
+delivery rather than six simultaneous implementation tracks:
+
+1. Route/output extensions: edge labels and label-aware placement, junction
+   points, and spline-specific refinement.
+2. Structural scene extensions: ports/port labels and compound-graph geometry.
+3. Additional target-specific ELK options only when each option has an
+   applicable pinned-runtime behavior, a renderer mapping, and an acceptance
+   fixture.
+
+The browser viewer, self-contained HTML, and browser Download SVG share the
+renderer-neutral scene/route representation. Go static SVG remains its
+deterministic orthogonal output in this specified frontier; adding advanced ELK
+parity to it requires a separate exact decision. Unsupported or malformed ELK
+output falls back deterministically and remains visible as a capability or
+layout diagnostic. Accessibility is provided through the existing semantic
+list/details path; presentation-only ports and junctions do not become fake
+architecture relationships.
+
+## Implementation and verification focus
+
+The exact-spec set enumerates the first concrete ELK features and pinned-runtime
+fixtures, defines the geometry fields for each, and sets visual/browser
+support and deterministic fallback behavior. Implementation and verification
+must now cover the five opt-in features, malformed/disconnected geometry,
+browser/HTML/SVG parity, and semantic accessibility.

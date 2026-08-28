@@ -3,7 +3,7 @@ type: capability
 title: Rust analysis
 description: Build architecture input from Rust crates, modules, and use relationships.
 tags: [rust, analysis, roadmap]
-timestamp: 2026-08-25T15:15:46Z
+timestamp: 2026-08-28T06:08:59Z
 state: implemented
 state_changed: 2026-08-27T13:55:10Z
 project: /project.md
@@ -16,6 +16,7 @@ issues:
   - docs/agents/issues/done/20260827-023-rust-cargo-boundary-and-registration.md
   - docs/agents/issues/done/20260827-024-rust-module-discovery-and-evidence.md
   - docs/agents/issues/done/20260827-025-rust-relationships-and-end-to-end-output.md
+  - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
 prd: docs/architecture/analyze-source/rust-analysis/prd.md
 glossary: docs/architecture/analyze-source/rust-analysis/domain-glossary.md
 domain_model: docs/architecture/analyze-source/rust-analysis/canonical-domain-model.md
@@ -44,4 +45,4 @@ This child capability is implemented. Its crate/workspace selection, module/use 
 
 ## Delivery progress
 
-Issues 023–025 are complete and archived as ordered AFK slices. Issue 023 established the Cargo boundary and host/CLI registration; issue 024 added module discovery and evidence; issue 025 completed relationships, uncertainty, canonical output, and the required application product/architecture refresh. The Rust analyzer is now implemented behind the existing language-neutral host boundary.
+Issues 023–025 are complete and archived as ordered AFK slices. Issue 023 established the Cargo boundary and host/CLI registration; issue 024 added module discovery and evidence; issue 025 completed relationships, uncertainty, canonical output, and the required application product/architecture refresh. The Rust analyzer is now implemented behind the existing language-neutral host boundary. Issue 034 adds the compiled `org.archview.rust` entrypoint through the shared process runner and verifies parity with the in-process analyzer on a Cargo fixture; Cargo semantics remain owned by the existing adapter.

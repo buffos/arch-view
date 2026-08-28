@@ -2,10 +2,12 @@
 
 ## State
 
-- Planning state: `specified`.
-- State transition: `bounded -> specified` on 2026-08-25.
+- Planning state: `implemented`.
+- State transition: `specified -> implemented` on 2026-08-28 after code,
+  issue, scenario, and test verification.
 - Topology: confirmed as the language-neutral model and graph-processing capability.
-- Next route: implement or slice the specified canonical model after application synthesis validation.
+- Next route: maintain the implemented v1 canonical model; route net-new model
+  behavior through feature planning.
 
 ## Confirmed boundary
 
@@ -49,3 +51,6 @@ Issue 002 is complete. Issue 015 implements the planned canonicalization boundar
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
 - Delivery truth: issues 002 and 015 are archived as complete. The active refactor queue is synchronized in `docs/agents/issues/issues.md`.
+- Verification: the 2026-08-28 brownfield audit matched all eight acceptance
+  scenarios to model and CLI tests and confirmed that `go test ./...` passes.
+  The state change adds no behavior or architecture boundary.

@@ -23,3 +23,16 @@ Python pilot boundary are defined in the linked exact-spec artifacts.
 Remaining risks are v1 migration/distribution beyond this opt-in pilot,
 interpreter availability across environments, and benchmark-driven tuning of
 process limits.
+
+## Future target implementation slices
+
+| Target | Current state | Gap to clarify |
+|---|---|---|
+| Compiled external analyzers | The external pilot launches `python launcher.py`; built-in analyzers remain in-process. | Exact specification complete; implement executable packaging, shared implementation entrypoints, platform artifacts, checksum trust, versioning, and explicit runtime overrides. |
+| Multi-analyzer orchestration | The host selects one analyzer and returns one result per run. | Exact specification complete; implement project-root discovery, concurrent job planning, merge identity/provenance, progress, cache reuse, and partial failure semantics. |
+| Project assignments and view selection | `.archview.json` currently owns presentation layout, while analyzer selection is CLI/request scoped. | Exact specification complete; implement folder-to-analyzer configuration, precedence, nested assignments, cached scopes, combined views, and application dropdown behavior. |
+
+These are user-confirmed future capabilities and are intentionally not folded
+into the completed v1 exact-spec contract. They do not reopen the implemented
+external Python pilot; each is now a specified child frontier with its own
+readiness-reviewed exact specification before delivery work.

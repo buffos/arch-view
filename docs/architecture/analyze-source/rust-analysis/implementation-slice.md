@@ -69,3 +69,11 @@ transitioned from `specified` to `implemented` after strict OKF validation and
 repository verification. No frontend visual-review gate applied to this
 backend/CLI adapter; the existing language-neutral viewer/export path remained
 unchanged.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+adds the compiled `org.archview.rust` entrypoint at
+`cmd/analyzers/rust/main.go`. It reuses `rustanalyzer.New()` behind the shared
+process runner and passes Cargo-fixture manifest, protocol, and canonical
+result parity verification.

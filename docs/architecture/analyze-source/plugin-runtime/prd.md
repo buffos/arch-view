@@ -65,6 +65,24 @@ Python ast and safe configuration readers, does not execute target code, and
 returns the same language-neutral observations as the completed in-process
 Python capability for the representative parity fixture.
 
+## Future extension boundary
+
+The v1 pilot is not the final deployment model. The user-confirmed future
+direction is tracked in three specified child capabilities:
+
+- [Compiled external analyzer distribution](../../../../.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md)
+  will provide platform-specific compiled executables that reuse the existing
+  analyzer implementations without requiring language runtimes.
+- [Multi-analyzer project orchestration](../../../../.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
+  will plan and merge concurrent analyzer jobs for mixed or nested projects.
+- [Project analyzer assignments and view selection](../../../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
+  will define repository-relative assignments and combined/per-analyzer
+  application scopes.
+
+These future capabilities do not change the current v1 protocol or canonical
+model contract. Their exact boundaries, contracts, acceptance scenarios, and
+readiness reviews are complete; implementation remains a future delivery step.
+
 ## Acceptance summary
 
 See [acceptance scenarios](acceptance-scenarios.md). A plugin is ready for

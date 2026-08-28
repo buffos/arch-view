@@ -11,12 +11,12 @@ No High or Medium architecture findings remain. A product-level visual review id
 - Manual position persistence must remain scoped to model revision and hierarchy path and must never leak into canonical model or export semantics.
 - The complete pinned-ELK option catalog and unsupported option combinations are implemented with typed validation and explicit UI treatment; issue 007's settings surface has passed human visual approval. Issue 009 adds the bounded target-aware node/edge priority tranche; automated verification and visual review are complete. Issue 016 adds layered ELK spline normalization and cubic route serialization; automated verification and visual review are complete.
 - Project configuration writes now have platform-specific atomic replacement and destination-handling coverage: ordinary `Save` overwrites the exact active discovered file, while only explicit `Save As` may choose a custom folder; nearest-ancestor selection remains deterministic.
-- Browser compatibility, theme tokens, and detailed visual styling are implementation-level choices bounded by the scene contract. Additional ELK renderer features are tracked in the separate foggy Advanced ELK renderer support child rather than treated as hidden v1 requirements.
+- Browser compatibility, theme tokens, and detailed visual styling are implementation-level choices bounded by the scene contract. Additional ELK renderer features are tracked in the separate specified Advanced ELK renderer support child rather than treated as hidden v1 requirements.
 - Source-serving policy needs security tests for symlinks and large/unreadable files.
 
 ## Readiness
 
-`READY FOR ARCHITECTURE IMPLEMENTATION` for the revised local-first viewer, renderer-neutral contract, and the bounded layout-settings/project-configuration extension.
+`READY FOR ARCHITECTURE IMPLEMENTATION` for the revised local-first viewer, renderer-neutral contract, and the implemented layout-settings/project-configuration extension; the specified advanced-renderer child has its own readiness review.
 
 ## Verification and synthesis gate
 

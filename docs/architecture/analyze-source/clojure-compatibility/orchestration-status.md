@@ -23,3 +23,10 @@
 ## Next step and artifact impact
 
 The reference-compatible static Clojure-family adapter is implemented through the approved [implementation slice](implementation-slice.md) and completed issues 026–029. Product, architecture, application-synthesis, capability, and delivery truth are synchronized; no Clojure issue remains active.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+completed the compiled Clojure entrypoint and shared runner integration. The
+existing static analyzer remains the semantic implementation and no target
+runtime is evaluated.

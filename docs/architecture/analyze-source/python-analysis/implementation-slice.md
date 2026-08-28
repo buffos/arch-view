@@ -4,7 +4,7 @@
 
 The [Python analysis capability](../../../../.okf/capabilities/analyze-source/python-analysis.md) implementation frontier is complete, using the existing [analyzer plugin runtime](../../../../.okf/capabilities/analyze-source/plugin-runtime.md), canonical model, viewer, and export contracts. Issues 017 through 019 are archived after automated verification and the declared visual review.
 
-The map has no foggy or bounded nodes. Python is the first non-Go language in the agreed implementation sequence, its exact specification is readiness-reviewed, and the host/model/presentation seams needed for a visible result already exist. This slice therefore adds one language adapter without changing host orchestration, canonical model semantics, layout, or renderer code.
+The map has no unresolved nodes remaining for this path. Python is the first non-Go language in the agreed implementation sequence, its exact specification is readiness-reviewed, and the host/model/presentation seams needed for a visible result already exist. This slice therefore adds one language adapter without changing host orchestration, canonical model semantics, layout, or renderer code.
 
 ## Current and target truth
 
@@ -70,3 +70,11 @@ Given a Python repository, a developer can:
 ## Artifact impact
 
 This is a completed roadmap implementation slice, not a product-topology change. The product and architecture boundaries remain the same: Python is an additional implementation of the existing analyzer contract. Issue 017 supplies the registered project/module-discovery foundation; issue 018 supplies relationships, uncertainty, evidence, and partial-result behavior; issue 019 completes the visible journey after automated verification and visual approval. The external Python process pilot in issues 032–033 is a separate plugin-runtime deployment that reuses this slice as its semantic parity baseline. Delivery sequencing, Python capability references, application synthesis status, the issue registry, and `.okf/log.md` are synchronized; no new language or capability node is required.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+adds the compiled `org.archview.python` entrypoint at
+`cmd/analyzers/python/main.go`. It reuses `pyanalyzer.New()` behind the shared
+process runner; the existing external Python pilot remains unchanged, and the
+compiled parity fixture verifies the common host path.

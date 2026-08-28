@@ -2,10 +2,12 @@
 
 ## State
 
-- Planning state: `specified`.
-- State transition: `bounded -> specified` on 2026-08-25.
+- Planning state: `implemented`.
+- State transition: `specified -> implemented` on 2026-08-28 after code,
+  issue, scenario, automated, and visual verification.
 - Topology: confirmed as the headless and repeatable-workflow capability.
-- Next route: retain the specified capability for future reanalysis and CI expansion; issues 005 and 011's initial export delivery and bundling boundary are archived.
+- Next route: maintain the implemented export contract; route broader
+  reanalysis or CI policy as a future feature addition.
 
 ## Confirmed boundary
 
@@ -48,3 +50,7 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
 - Delivery truth: updated with issues 005 and 011.
+- Verification: the 2026-08-28 brownfield audit matched all nine acceptance
+  scenarios to export and CLI tests, confirmed `go test ./...` and the browser
+  module tests pass, and retained the recorded visual approvals. The state
+  change adds no product behavior or architecture boundary.

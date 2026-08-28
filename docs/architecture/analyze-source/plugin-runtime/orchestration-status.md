@@ -31,10 +31,28 @@
 - Issues 031–033 completed the opt-in external process boundary, external
   Python parity pilot, and explicit CLI/shared model-viewer-export path in
   [the external implementation slice](implementation-slice.md).
+- Issue 034 completed the shared compiled-plugin runner and five compiled
+  analyzer entrypoints while preserving the existing in-process analyzers.
 
 ## Next step and artifact impact
 
-Issues 030–033 are complete. Product and architecture truth remain unchanged;
-delivery truth now records the verified process host, external Python parity,
-and public shared-path integration. The capability remains `specified` because
-no subsequent external plugin-runtime frontier has been selected.
+Issues 030–034 are complete. The current v1 pilot remains an explicitly
+supplied, script-based external Python process with one analyzer selected per
+run, while the five compiled entrypoints now provide the next implementation
+step. The capability remains `specified`; the compiled-distribution child is in
+ordered delivery through issues 035–038 after the application synthesis gate.
+The multi-analyzer and project assignment/view children remain `specified`
+future frontiers with readiness-reviewed exact artifacts, ready for later
+delivery issue slicing.
+
+- [Compiled external analyzer distribution](compiled-external-analyzer-distribution/discovery-notes.md)
+- [Multi-analyzer project orchestration](multi-analyzer-orchestration/discovery-notes.md)
+- [Project analyzer assignments and view selection](project-analyzer-assignments/discovery-notes.md)
+
+Product and architecture synthesis now record the target compiled-binary,
+multi-job, and assignment/view boundaries. Delivery truth now includes pending
+completed issue 034 and pending issues 035–038 for the compiled-distribution
+child; no delivery issues have yet been created for the multi-analyzer or
+project assignment/view children. The child state transitions and
+user-confirmed packaged-artifact trust policy are recorded in the planning map
+and log.

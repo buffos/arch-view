@@ -31,6 +31,15 @@ The capability consumes the canonical model and graph/view preparation outputs a
 12. Saving distinguishes `Save` from `Save As`. If discovery loaded `.archview.json` from folder X, ordinary `Save` atomically overwrites that exact active file and never creates or copies a project-root file. If discovery found no file, ordinary `Save` is unavailable and the user must choose `Save As`. `Save As` is the only operation that accepts a custom destination folder; it writes the fixed `.archview.json` filename atomically after explicit confirmation and makes that file active for the current session. A model-only session can apply settings for the current session but has no project persistence boundary.
 13. The configuration file stores presentation layout preferences only. Analyzer options, canonical model data, viewport state, and manual node positions remain separate concerns. The same resolver may later be reused by headless/export commands, but issue 007 applies it to the interactive viewer.
 
+## Future analyzer-scope consumer
+
+The confirmed future plugin-runtime direction may provide a combined model plus
+individual analyzer/project scopes. The viewer can expose those scopes through
+a dropdown and preserve the current local-first/evidence workflow, but it must
+not own analyzer detection, assignment precedence, process lifecycle, or
+language semantics. The assignment contract is a specified child of the
+plugin-runtime capability and remains outside the implemented Explore v1 scope.
+
 ## Actors and inputs
 
 - A developer or maintainer opens a local analysis session in a browser.
@@ -38,14 +47,13 @@ The capability consumes the canonical model and graph/view preparation outputs a
 - The local host serves the viewer assets and read-only evidence access according to configured repository scope.
 - Exporters may reuse the renderer-neutral view contract without importing interactive session state.
 
-## Open questions for exact specification
+## Implementation and verification focus
 
-- Frontend framework/bundling and local-server packaging.
-- Exact view/scene contract, layout ownership, renderer thresholds, and large-graph performance budgets.
-- Theme, color semantics, filtering/search grammar, and detailed visual treatment of relation types.
-- Source delivery policy for paths outside the repository, symlinks, unreadable files, and optional embedded source.
-- Accessibility acceptance criteria and browser support matrix.
-- Reanalysis behavior when module IDs or hierarchy paths change.
+The current Explore exact-spec set is complete. Remaining work is
+implementation and verification of the specified viewer contract, browser
+packaging, layout/rendering thresholds, source-safety cases, accessibility,
+and the future per-scope analyzer consumer without moving analyzer semantics
+into the viewer.
 
 ## Issue 007 implementation note
 

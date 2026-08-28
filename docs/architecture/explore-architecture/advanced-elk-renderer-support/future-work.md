@@ -1,10 +1,13 @@
 # Advanced ELK renderer support future-work register
 
-Status: `foggy` — ideas are recorded, but no delivery issue is ready.
+Status: `specified` — the renderer-extension boundary, staged priority, exact
+contract, acceptance scenarios, and readiness review are complete; no delivery
+issue has been created yet.
 
 This register is the durable place to find renderer features that are not part
-of the implemented Explore v1 scope. Each workstream must become a bounded,
-exactly specified slice before it is assigned implementation issues.
+of the implemented Explore v1 scope. The exact-spec set defines the initial
+five-feature slice; each workstream must remain within that contract when it is
+assigned implementation issues.
 
 ## Candidate workstreams
 
@@ -19,8 +22,8 @@ exactly specified slice before it is assigned implementation issues.
 
 ## Entry criteria for issue slicing
 
-Before any `ELK-FW-*` item becomes an implementation issue, fog clearing must
-answer:
+Before any `ELK-FW-*` item becomes an implementation issue, implementation
+planning must confirm:
 
 1. Which ELK options/geometry are supported by the pinned runtime?
 2. What changes, if any, are required in the renderer-neutral scene or route
@@ -30,5 +33,15 @@ answer:
 5. What deterministic fallback, accessibility behavior, and visual acceptance
    evidence are required?
 
-The resulting PRD, contract/scenario updates, readiness review, and vertical
-implementation slice will be linked here when the child moves out of `foggy`.
+The resulting PRD, contract/scenario updates, and readiness review are linked
+from the specified child capability; the vertical implementation slice will be
+linked here when delivery begins.
+
+## Bounded priority
+
+The recommended order is route/output extensions first (edge labels, junction
+points, and spline refinement), structural scene extensions second
+(ports/port labels and compound geometry), and broader target-specific options
+last. Every selected feature must remain within the pinned ELK runtime,
+renderer-neutral scene/route contract, and explicit browser/HTML/SVG fallback
+and accessibility behavior.

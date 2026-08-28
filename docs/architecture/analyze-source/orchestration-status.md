@@ -5,26 +5,35 @@
 - Planning state: `specified`.
 - State transition: `bounded -> specified` on 2026-08-25.
 - Topology: confirmed as the source-analysis capability with a plugin runtime and language-specific child territories for Go, Python, TypeScript, Rust, and Clojure.
-- Next route: the Python child is implemented after issues 017–019 and its visual-review gate. TypeScript issues 020–022, Rust issues 023–025, and Clojure issues 026–029 are complete after repository verification and explicit visual approval; external plugin implementation issues 030–033 are now complete and the plugin-runtime child remains specified for a later explicitly selected frontier. Analyzer work remains independent of the completed viewer configuration and spline slices.
+- Next route: the Python child is implemented after issues 017–019 and its visual-review gate. TypeScript issues 020–022, Rust issues 023–025, and Clojure issues 026–029 are complete after repository verification and explicit visual approval; external plugin implementation issues 030–033 are now complete. The compiled-distribution child is now in ordered delivery through issues 034–038 after application synthesis. The plugin-runtime child remains specified with the multi-analyzer and project assignment/view children as readiness-reviewed future frontiers ready for later delivery issue slicing. Analyzer work remains independent of the completed viewer configuration and spline slices.
 
 ## Confirmed boundary
 
-The capability receives a repository or project root plus analysis options, selects an analyzer, and returns validated modules, relationships, source evidence, and diagnostics. It does not assign layers, render diagrams, or export files.
+The current v1 capability receives a repository or project root plus analysis
+options, selects one analyzer, and returns validated modules, relationships,
+source evidence, and diagnostics. The future target adds a set of analyzer jobs
+for mixed or nested projects and assignment-driven scope selection. It does not
+assign layers, render diagrams, or export files.
 
 ## Confirmed decisions
 
-- One language and project per analysis run.
+- One language and project per current v1 analysis run; multiple analyzer jobs
+  are a confirmed future frontier.
 - Package or module nodes are the default graph granularity; files remain attached evidence.
 - Static dependency relationships are the first supported relationship type.
 - Project-local modules appear by default. External, standard-library, and unresolved dependencies become metadata or diagnostics.
 - Tests, generated code, vendor directories, caches, build outputs, and directories named `external` are excluded by default.
 - Partial results are returned when dependencies cannot be resolved.
 - Relationships carry source file and parser-provided line and column evidence when available.
-- Analyzer selection supports auto-detection and an explicit language override.
+- Analyzer selection supports auto-detection and an explicit language override
+  for the current v1 run; future project assignments may select several
+  analyzer/project-root pairs.
 - Each analyzer owns project-boundary rules.
 - Analyzer manifests declare identity, version, language, detection markers, capabilities, and options.
 - Built-in Go interfaces remain the in-process path. Explicit external
-  analyzers use the versioned NDJSON and JSON Schema process boundary.
+  analyzers use the versioned NDJSON and JSON Schema process boundary. The
+  future distribution target is compiled external executables using the same
+  analyzer implementations.
 - The host validates, normalizes, sorts, and deduplicates analyzer results.
 - Target applications and arbitrary project code are never executed during analysis.
 
@@ -36,25 +45,31 @@ The capability receives a repository or project root plus analysis options, sele
 - [TypeScript analysis](typescript-analysis/readiness-review.md): `implemented`.
 - [Rust analysis](rust-analysis/readiness-review.md): `implemented`, with completed delivery slices 023–025.
 - [Clojure compatibility](clojure-compatibility/readiness-review.md): `implemented`, with completed delivery issues 026–029.
+- [Compiled external analyzer distribution](plugin-runtime/compiled-external-analyzer-distribution/readiness-review.md): `specified` future frontier.
+- [Multi-analyzer project orchestration](plugin-runtime/multi-analyzer-orchestration/readiness-review.md): `specified` future frontier.
+- [Project analyzer assignments and view selection](plugin-runtime/project-analyzer-assignments/readiness-review.md): `specified` future frontier.
 
 ## Artifact plan
 
-The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.md), [canonical domain model](canonical-domain-model.md), [canonical use cases](canonical-use-cases.md), [analyzer contract](canonical-api-cli-contract.md), [acceptance scenarios](acceptance-scenarios.md), and [readiness review](readiness-review.md), alongside the discovery and gap artifacts. The plugin-runtime child adds the published external schemas and [implementation slice](plugin-runtime/implementation-slice.md).
+The current v1 capability set is complete: [PRD](prd.md), [glossary](domain-glossary.md), [canonical domain model](canonical-domain-model.md), [canonical use cases](canonical-use-cases.md), [analyzer contract](canonical-api-cli-contract.md), [acceptance scenarios](acceptance-scenarios.md), and [readiness review](readiness-review.md), alongside the discovery and gap artifacts. The plugin-runtime child adds the published external schemas and [implementation slice](plugin-runtime/implementation-slice.md). The compiled-distribution child has approved implementation issues 034–038; the multi-analyzer and project assignment/view children retain complete exact-spec sets and readiness reviews but have no delivery issues yet.
 
 ## Current and target truth
 
 - Observed in reference: the Clojure tool scans Clojure-family files, reads namespace forms, extracts project dependencies, records source files, and marks selected Clojure abstractions.
-- User-confirmed target: the repository will become a Go implementation with gradual support for multiple languages through plugins.
-- Required follow-up: implement the specified contract, starting with the
-  in-process Go runtime and Go adapter; the external process slice preserves
-  this meaning through the published protocol and verified external Python
-  parity pilot. Issues 030–033 implement the protocol/descriptor schema,
-  conformance fixture, host lifecycle, Python parity, and public integration.
+- User-confirmed target: the repository will become a Go implementation with
+  gradual support for multiple languages through plugins, ultimately using
+  compiled external analyzer executables and multiple analyzer jobs per
+  repository where applicable.
+- Required follow-up: the completed in-process and external Python slices
+  preserve the common meaning through the published protocol. The specified
+  plugin-runtime children own compiled distribution, multi-analyzer execution,
+  and project assignments/view selection; issues 030–033 remain the completed
+  v1 pilot delivery record.
 
 ## Current delivery slice
 
-- Completed frontiers: [Go repository to visible architecture view](go-analysis/implementation-slice.md), [Python repository to visible architecture view](python-analysis/implementation-slice.md), [TypeScript repository to language-neutral architecture model](typescript-analysis/implementation-slice.md), [Rust repository to language-neutral architecture model](rust-analysis/implementation-slice.md), [Clojure repository to the shared public path](clojure-compatibility/implementation-slice.md), and the [external analyzer process to Python parity slice](plugin-runtime/implementation-slice.md). The next external plugin-runtime frontier remains intentionally unselected.
-- Delivery progress: issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout-configuration, analyzer-pipeline, and bounded presentation-extension work. Issues 017–019 complete the Python project-boundary/module-discovery, static import/uncertainty, and shared visible-journey path after automated verification and visual approval. Issues 020–022 complete the TypeScript project-boundary/module-discovery, static dependency/uncertainty, evidence, public CLI, and shared visible-journey slices after automated verification and explicit visual approval. Issues 023–025 complete the Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path. Clojure issues 026–029 complete project/namespace discovery, static dependencies, platform conditionals, polymorphic metadata, safety handling, and the shared public path. Issues 030–033 complete the external protocol/descriptor schema, conformance fixture, process host, external Python parity, explicit CLI, shared viewer/source path, and deterministic exports. The plugin-runtime and parent capabilities remain specified for future scoped work.
+- Completed frontiers: [Go repository to visible architecture view](go-analysis/implementation-slice.md), [Python repository to visible architecture view](python-analysis/implementation-slice.md), [TypeScript repository to language-neutral architecture model](typescript-analysis/implementation-slice.md), [Rust repository to language-neutral architecture model](rust-analysis/implementation-slice.md), [Clojure repository to the shared public path](clojure-compatibility/implementation-slice.md), and the [external analyzer process to Python parity slice](plugin-runtime/implementation-slice.md). The next plugin-runtime frontiers are the three specified child capabilities for compiled distribution, multi-analyzer orchestration, and project analyzer assignments/view selection.
+- Delivery progress: issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout-configuration, analyzer-pipeline, and bounded presentation-extension work. Issues 017–019 complete the Python project-boundary/module-discovery, static import/uncertainty, and shared visible-journey path after automated verification and visual approval. Issues 020–022 complete the TypeScript project-boundary/module-discovery, static dependency/uncertainty, evidence, public CLI, and shared visible-journey slices after automated verification and explicit visual approval. Issues 023–025 complete the Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path. Clojure issues 026–029 complete project/namespace discovery, static dependencies, platform conditionals, polymorphic metadata, safety handling, and the shared public path. Issues 030–033 complete the external protocol/descriptor schema, conformance fixture, process host, external Python parity, explicit CLI, shared viewer/source path, and deterministic exports. Issues 034–038 now define the approved compiled-distribution delivery sequence. The plugin-runtime and parent capabilities remain specified while that child is implemented.
 - The slice crosses the plugin runtime, Go analyzer, canonical model, local viewer, evidence, and export contracts.
 
 ## Artifact sync
@@ -64,4 +79,4 @@ The exact capability set is complete: [PRD](prd.md), [glossary](domain-glossary.
 - Exact specification: complete in the linked PRD, glossary, domain model, use cases, contract, scenarios, and readiness review; the plugin-runtime child also links the published external protocol/descriptor schemas and implementation slice.
 - Product truth: reflected in [the application PRD](../../prd.md).
 - Architecture truth: reflected in [the application architecture summary](../application-architecture-summary.md).
-- Delivery truth: updated with completed issues 001 through 009, 013, 016–033. Issues 016, 019, and 022 are archived after automated implementation verification and explicit visual approval; issues 020 and 021 are archived after their backend and repository gates; issues 023–025 and 026–029 are archived after Rust and Clojure implementation verification; issues 030–033 are archived after protocol, process-host, external Python parity, public CLI/shared-consumer, repository, and strict OKF verification. The TypeScript, Rust, Clojure, and Python nodes are implemented while the plugin-runtime and parent remain specified for future scoped work.
+- Delivery truth: updated with completed issues 001 through 009, 013, 016–033 and the approved pending issues 034–038. Issues 016, 019, and 022 are archived after automated implementation verification and explicit visual approval; issues 020 and 021 are archived after their backend and repository gates; issues 023–025 and 026–029 are archived after Rust and Clojure implementation verification; issues 030–033 are archived after protocol, process-host, external Python parity, public CLI/shared-consumer, repository, and strict OKF verification. The TypeScript, Rust, Clojure, and Python nodes are implemented while the plugin-runtime and parent remain specified and the compiled-distribution child is in delivery.

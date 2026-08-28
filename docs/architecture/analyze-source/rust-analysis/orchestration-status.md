@@ -28,3 +28,10 @@
 ## Next step and artifact impact
 
 The approved slices were implemented in dependency order and archived after acceptance verification. Issue 025 completed the required application PRD and architecture-summary refresh. Rust has no remaining delivery blocker; the TypeScript slice (020–022) and Clojure slice (026–029) are also complete under the still-specified parent capability, with the external plugin protocol remaining as future work.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+completed the compiled Rust entrypoint and shared runner integration. The
+existing Cargo analyzer remains the semantic implementation and passes the
+compiled process-adapter parity fixture.

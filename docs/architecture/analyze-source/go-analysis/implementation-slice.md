@@ -4,7 +4,7 @@
 
 The first implementation frontier is the specified [Go analysis capability](../../../../.okf/capabilities/analyze-source/go-analysis.md), supported by the specified [analyzer plugin runtime](../../../../.okf/capabilities/analyze-source/plugin-runtime.md).
 
-The planning map has no foggy or bounded nodes. Go is the first supported language in the product baseline and is the smallest analyzer path that can reach the intended visible result. The slice therefore crosses the existing contracts instead of stopping at an isolated parser.
+The planning map has no unresolved nodes remaining for this path. Go is the first supported language in the product baseline and is the smallest analyzer path that can reach the intended visible result. The slice therefore crosses the existing contracts instead of stopping at an isolated parser.
 
 ## Vertical outcome
 
@@ -81,3 +81,11 @@ The analyzer-to-model path and the revised local viewer implementation are avail
 ## Artifact impact
 
 This slice updates delivery truth and the synchronized capability records for hierarchy/evidence inspection, source safety, session layout, project layout configuration, target-aware layout option mapping, the staged architecture refactor, and the spline-routing extension. The application PRD and application architecture summary remain behaviorally unchanged in product scope; implementation notes record the new routing, module, scene, analyzer, layout-registry, canonicalization, target-mapping, and cubic-route boundaries. Issue 009's target-aware work remains inside the layout adapter and is not part of the canonical model or export contract. Issue 016 activates the reserved cubic route representation without changing analyzer/plugin contracts or canonical model semantics; self-contained HTML embeds the profile/catalog and pinned ELK runtime, the browser Download SVG captures the current canvas, and static Go SVG remains on its explicit deterministic orthogonal contract.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+adds the compiled Go entrypoint at `cmd/analyzers/go/main.go`. It constructs
+the existing Go analyzer with `New()` and reaches the published process
+protocol through the shared runner; the five-language parity test verifies the
+same manifest, options, and canonical result as the in-process path.

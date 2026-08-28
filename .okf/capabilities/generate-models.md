@@ -3,9 +3,9 @@ type: capability
 title: Generate architecture models
 description: Convert analyzer results into a language-neutral, hierarchical, layered architecture model.
 tags: [domain-model, graph, layout]
-timestamp: 2026-08-26T20:56:17Z
-state: specified
-state_changed: 2026-08-25T17:10:00Z
+timestamp: 2026-08-28T00:43:49Z
+state: implemented
+state_changed: 2026-08-28T00:43:49Z
 project: /project.md
 parent: /project.md
 artifact_root: docs/architecture/generate-models
@@ -45,7 +45,10 @@ The model must support dot-separated Clojure namespaces, slash-separated Go impo
 
 # Planning state
 
-This capability is specified. Its canonical model schema, normalization rules, projection semantics, CLI/HTTP contract, and acceptance behavior are linked from the exact-spec artifacts.
+This capability is implemented. Issues 002 and 015 deliver its canonical model
+schema, normalization and validation boundary, hierarchy projection, cycle and
+layer derivation, deterministic ordering, and CLI consumers. All eight linked
+acceptance scenarios have automated coverage.
 
 ## Delivery progress
 

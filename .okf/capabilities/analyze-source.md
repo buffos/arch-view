@@ -3,7 +3,7 @@ type: capability
 title: Analyze source code
 description: Discover supported project structures, modules, and dependency evidence through language analyzers.
 tags: [analysis, plugins, languages]
-timestamp: 2026-08-27T20:48:23Z
+timestamp: 2026-08-28T06:08:59Z
 state: specified
 state_changed: 2026-08-25T17:10:00Z
 project: /project.md
@@ -41,6 +41,7 @@ issues:
   - docs/agents/issues/done/20260827-031-process-backed-analyzer-host-runtime.md
   - docs/agents/issues/done/20260827-032-external-python-analyzer-parity.md
   - docs/agents/issues/done/20260827-033-external-plugin-cli-and-visible-journey.md
+  - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -76,8 +77,14 @@ The reference tool reads Clojure forms and currently recognizes Clojure-family s
 
 The capability is specified. Its observation schema, analyzer lifecycle,
 safety rules, language adapter contracts, and external process pilot are
-linked from the exact-spec artifacts.
+linked from the exact-spec artifacts. The future plugin-runtime target now
+includes compiled analyzer distributions, multi-analyzer execution, and
+project-relative analyzer assignments; those additions are represented as
+specified child capabilities with readiness-reviewed exact specifications. The
+compiled-distribution child is now in active delivery through issues 034–038
+after application synthesis; the multi-analyzer and project assignment/view
+children remain ready for later delivery issue slicing.
 
 ## Delivery progress
 
-Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 020–022 complete the registered TypeScript project/module boundary, deterministic discovery, static dependency resolution, uncertainty, evidence, public CLI, and shared visible-journey path after automated verification and explicit visual approval in [the TypeScript slice](../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace, static dependency, platform/polymorphic metadata, safety, and shared public-path slice in [the Clojure implementation slice](../../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md). Issues 030–033 complete the protocol foundation, process host, external Python parity, and public shared path in [the plugin-runtime implementation slice](../../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md). The parent capability remains `specified` because the Go and plugin-runtime child territories retain future scoped work.
+Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 020–022 complete the registered TypeScript project/module boundary, deterministic discovery, static dependency resolution, uncertainty, evidence, public CLI, and shared visible-journey path after automated verification and explicit visual approval in [the TypeScript slice](../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace, static dependency, platform/polymorphic metadata, safety, and shared public-path slice in [the Clojure implementation slice](../../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md). Issues 030–033 complete the protocol foundation, process host, external Python parity, and public shared path in [the plugin-runtime implementation slice](../../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md). Issue 034 completes the shared compiled-plugin runner and five compiled analyzer entrypoints for the approved distribution slice. Issues 035–038 remain for package assembly, trust, packaged runtime selection, and release verification; the parent capability remains `specified` until that child is implemented. The multi-analyzer and assignment/view children remain readiness-reviewed specified future work without delivery issues yet.

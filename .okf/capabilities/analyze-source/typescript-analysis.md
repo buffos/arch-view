@@ -3,7 +3,7 @@ type: capability
 title: TypeScript analysis
 description: Build architecture input from TypeScript projects, module imports, aliases, and project boundaries.
 tags: [typescript, javascript, analysis, roadmap]
-timestamp: 2026-08-27T14:18:29Z
+timestamp: 2026-08-28T06:08:59Z
 state: implemented
 state_changed: 2026-08-27T14:18:29Z
 project: /project.md
@@ -16,6 +16,7 @@ issues:
   - docs/agents/issues/done/20260827-020-typescript-project-boundary-and-module-discovery.md
   - docs/agents/issues/done/20260827-021-typescript-static-dependencies-and-uncertainty.md
   - docs/agents/issues/done/20260827-022-typescript-public-and-visible-analysis-path.md
+  - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
 prd: docs/architecture/analyze-source/typescript-analysis/prd.md
 glossary: docs/architecture/analyze-source/typescript-analysis/domain-glossary.md
 domain_model: docs/architecture/analyze-source/typescript-analysis/canonical-domain-model.md
@@ -44,4 +45,4 @@ This child capability is implemented. Its config selection/inheritance, module r
 
 ## Delivery progress
 
-The [TypeScript repository to visible architecture view](../../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md) slice is complete through issues 020–022. The registered analyzer, safe project/config boundary, deterministic module discovery, static dependency resolution, uncertainty reporting, evidence, public CLI path, shared model/viewer/export journey, and explicit visual review are complete; the node is `implemented`.
+The [TypeScript repository to visible architecture view](../../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md) slice is complete through issues 020–022. The registered analyzer, safe project/config boundary, deterministic module discovery, static dependency resolution, uncertainty reporting, evidence, public CLI path, shared model/viewer/export journey, and explicit visual review are complete; the node is `implemented`. Issue 034 adds the compiled `org.archview.typescript` entrypoint through the shared process runner and verifies manifest and result parity without moving TypeScript semantics into the host.

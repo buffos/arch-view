@@ -4,7 +4,7 @@
 
 ## Capabilities
 
-- [Analyze source code](capabilities/analyze-source.md) - Discover project structure and dependencies through language analyzers and explicit external plugins.
+- [Analyze source code](capabilities/analyze-source.md) - Discover project structure and dependencies through language analyzers, compiled external plugins, and multi-analyzer project orchestration.
 - [Generate architecture models](capabilities/generate-models.md) - Normalize analyzer output into hierarchical, layered architecture models.
 - [Explore and inspect architecture](capabilities/explore-architecture.md) - Navigate diagrams, dependency evidence, cycles, and source files.
 - [Export and automate](capabilities/export-and-automate.md) - Produce headless artifacts and support repeatable analysis workflows.
@@ -12,8 +12,18 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 1 `foggy`, 0 `bounded`, 5 `specified`, 5 `implemented`.
-- Current delivery frontier: the current Explore and inspect architecture scope, the [Python analysis implementation slice](../docs/architecture/analyze-source/python-analysis/implementation-slice.md), issues 017–019, the [TypeScript analysis implementation slice](../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md), issues 020–022, the [Rust analysis implementation slice](../docs/architecture/analyze-source/rust-analysis/implementation-slice.md), issues 023–025, the [Clojure analysis implementation slice](../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md), issues 026–029, and the [external analyzer implementation slice](../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md), issues 030–033, are implemented after their repository verification and declared review gates. The plugin-runtime child remains specified until a later external frontier is chosen, while the separate foggy [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md) child remains a later frontier.
+- State totals: 0 `foggy`, 0 `bounded`, 6 `specified`, 8 `implemented`.
+- Current delivery frontier: Go analysis, canonical model generation, export
+  and automation, the current Explore scope, Python, TypeScript, Rust,
+  Clojure, and the first external process slice are implemented after their
+  repository verification and declared review gates. Issue 034 completes the
+  compiled entrypoint migration; the compiled external analyzer distribution
+  remains in active delivery through issues 035–038. Three
+  leaf capabilities remain ready for delivery issue slicing: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md),
+  [Multi-analyzer project orchestration](capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md),
+  and [Project analyzer assignments and view selection](capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).
+  The plugin-runtime and Analyze source nodes remain specified as rollups over
+  that unfinished child work.
 
 ## Application synthesis
 

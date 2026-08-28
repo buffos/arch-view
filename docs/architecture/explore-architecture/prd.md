@@ -90,5 +90,5 @@ Download SVG captures the current canvas, and Go static SVG remains
 deterministic orthogonal. Automated verification and visual review are
 complete, and the issue is archived. The 17 current Explore acceptance
 scenarios are now covered by issues 003–016. Additional renderer features that
-are not promised by this PRD are tracked in the separate foggy [Advanced ELK
-renderer support](advanced-elk-renderer-support/future-work.md) workstream.
+are not promised by this PRD are tracked in the separate specified [Advanced
+ELK renderer support](advanced-elk-renderer-support/future-work.md) workstream.

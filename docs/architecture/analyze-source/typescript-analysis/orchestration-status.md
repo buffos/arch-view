@@ -25,3 +25,10 @@
 ## Next step and artifact impact
 
 The approved vertical slice is complete: issues 020 and 021 established the selected `tsconfig` boundary, module discovery, static dependency resolution, uncertainty reporting, and evidence; issue 022 connected the analyzer through the public CLI and visible analysis path and received explicit visual approval. Product and architecture truth are synchronized; the TypeScript node is `implemented`.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+completed the compiled TypeScript entrypoint and shared runner integration.
+The existing analyzer constructor remains the only source of TypeScript
+semantics.

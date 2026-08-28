@@ -3,7 +3,7 @@ type: project
 title: Arch View
 description: Analyze supported codebases and generate navigable architecture views.
 tags: [architecture, code-analysis, multi-language, golang]
-timestamp: 2026-08-25T15:15:46Z
+timestamp: 2026-08-28T06:08:59Z
 prd: docs/prd.md
 architecture_summary: docs/architecture/application-architecture-summary.md
 verification:
@@ -21,7 +21,13 @@ Arch View helps developers understand a codebase by turning source structure and
 
 # Scope
 
-The product starts with a Go implementation and is designed to add Python, TypeScript, Rust, and Clojure analyzers through a common plugin contract. It includes source analysis, a language-neutral architecture model, interactive exploration, and headless export.
+The product starts with a Go implementation and adds Python, TypeScript, Rust,
+and Clojure analyzers through a common plugin contract. The confirmed future
+direction is to distribute supported analyzers as compiled external executables,
+run multiple analyzers for one repository, and let project configuration map
+folders to analyzer IDs for selectable application views. It includes source
+analysis, a language-neutral architecture model, interactive exploration, and
+headless export.
 
 The upstream [reference implementation](https://github.com/unclebob/arch-view)
 is read-only input to the design. It is not product source.
@@ -41,4 +47,14 @@ The confirmed product boundary is static architecture discovery and visualizatio
 
 # Current delivery frontier
 
-The approved [TypeScript analysis implementation slice](../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md) is complete through issues 020–022, as are the Rust issues 023–025 and Clojure issues 026–029. The project boundary, module discovery, static dependency, uncertainty, evidence, public journey, and visual review are complete for all four in-process language adapters. Issues 030–033 now complete the approved [external analyzer implementation slice](../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md), including the process host, external Python parity deployment, and explicit CLI/shared consumer path. The plugin-runtime child remains specified for a later explicitly chosen frontier.
+The Go, Python, TypeScript, Rust, and Clojure analysis children are implemented.
+The canonical model, export and automation, and current Explore scopes are
+implemented as well. Issues 030–033 complete the approved [external analyzer
+implementation slice](../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md),
+including the process host, external Python parity deployment, and explicit
+CLI/shared consumer path. Issue 034 now completes the compiled entrypoint
+migration; issues 035–038 remain in active delivery for distribution assembly,
+trust, packaged runtime selection, and release verification. The
+multi-analyzer orchestration, project
+analyzer assignments/view selection, and advanced ELK renderer support leaves
+remain ready for delivery issue slicing without delivery issues.

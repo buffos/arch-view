@@ -33,3 +33,10 @@ issues 032–033 now reuse the completed Python capability as the external
 process parity and public shared-path pilot, while the TypeScript slice is
 implemented through issues 020–022, the Rust slice through issues 023–025,
 and the Clojure slice through issues 026–029.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+completed the compiled Python entrypoint and shared runner integration. It
+reuses the existing Python analyzer and is verified alongside the unchanged
+external Python pilot.

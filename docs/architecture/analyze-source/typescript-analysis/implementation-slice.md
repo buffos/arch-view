@@ -76,3 +76,11 @@ This is an implementation slice inside the confirmed TypeScript capability, not 
 Issues 020–022 are complete and archived after analyzer-boundary, repository,
 race, vet, build, static-analysis, strict OKF, and explicit visual-review
 verification. The TypeScript capability is `implemented`.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+adds the compiled `org.archview.typescript` entrypoint at
+`cmd/analyzers/typescript/main.go`. It constructs the existing
+`tsanalyzer.New()` implementation behind the shared process runner and passes
+manifest and result parity verification.

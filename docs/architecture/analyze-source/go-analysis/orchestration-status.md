@@ -2,8 +2,9 @@
 
 ## State
 
-- Planning state: `specified`.
-- State transition: `bounded -> specified` on 2026-08-25.
+- Planning state: `implemented`.
+- State transition: `specified -> implemented` on 2026-08-28 after code,
+  issue, scenario, and test verification.
 - Exact-spec set is complete and readiness-reviewed.
 
 ## Artifact inventory
@@ -24,6 +25,18 @@
 - Implementation slice: [Go repository to visible architecture view](implementation-slice.md).
 - Delivery progress: issues 001 through 009 and 013 are complete for the first Go analyzer/model, viewer, export, layout-configuration, target-aware layout, and analyzer-pipeline slice. Issue 016 is archived after automated verification and the user's visual approval of the bounded viewer spline extension. Issue 013 splits the Go analyzer implementation into scanner, import-classification, and observation-assembly capabilities while preserving the analyzer contract.
 
-## Next step and artifact impact
+## Verification and artifact impact
 
 Issues 001 through 009 are complete: Go analysis feeds a validated canonical model, the local viewer provides the approved interactive investigation workflow, the shared JSON/HTML/SVG exporter is visually approved, and the viewer-owned ELK settings/configuration boundary is complete. Issue 008's parent-level ELK option implementation and visual review are complete; issue 009's bounded target-aware node/edge option implementation and visual review are complete. Issue 013's pipeline decomposition is implemented and repository-reviewed. Issue 016's spline-route implementation is complete after automated verification and explicit visual approval. Product and architecture truth remain synchronized.
+
+The 2026-08-28 brownfield audit matched all five Go acceptance scenarios to
+repository tests and confirmed that `go test ./...` passes. This transition
+changes planning and capability status only. It adds no product behavior,
+architecture boundary, or delivery issue.
+
+## Compiled entrypoint evidence
+
+Issue [034](../../../agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md)
+completed the compiled Go entrypoint and shared runner integration. The
+compiled command reuses the in-process analyzer constructor and passes the
+five-language process-adapter parity test.

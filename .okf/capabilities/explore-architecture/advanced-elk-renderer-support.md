@@ -4,13 +4,21 @@ title: Advanced ELK renderer support
 description: Extend the viewer renderer to honor additional ELK presentation features beyond the implemented v1 route and option set.
 tags: [viewer, elk, renderer, layout, future]
 timestamp: 2026-08-27T00:00:00Z
-state: foggy
-state_changed: 2026-08-27T00:00:00Z
+state: specified
+state_changed: 2026-08-28T00:00:00Z
 project: /project.md
 parent: /capabilities/explore-architecture.md
 artifact_root: docs/architecture/explore-architecture/advanced-elk-renderer-support
 discovery_notes: docs/architecture/explore-architecture/advanced-elk-renderer-support/discovery-notes.md
+gap_analysis: docs/architecture/explore-architecture/advanced-elk-renderer-support/requirements-gap-analysis.md
 orchestration_status: docs/architecture/explore-architecture/advanced-elk-renderer-support/orchestration-status.md
+prd: docs/architecture/explore-architecture/advanced-elk-renderer-support/prd.md
+glossary: docs/architecture/explore-architecture/advanced-elk-renderer-support/domain-glossary.md
+domain_model: docs/architecture/explore-architecture/advanced-elk-renderer-support/canonical-domain-model.md
+use_cases: docs/architecture/explore-architecture/advanced-elk-renderer-support/canonical-use-cases.md
+contract: docs/architecture/explore-architecture/advanced-elk-renderer-support/canonical-api-cli-contract.md
+scenarios: docs/architecture/explore-architecture/advanced-elk-renderer-support/acceptance-scenarios.md
+readiness_review: docs/architecture/explore-architecture/advanced-elk-renderer-support/readiness-review.md
 ---
 
 # Intent
@@ -21,12 +29,12 @@ honor them.
 
 # Scope
 
-This child owns future renderer/layout work that extends the implemented
-Explore capability: ELK target-specific options and geometry that currently
-remain catalog-only, richer port and label presentation, junction handling,
-compound-graph geometry, and any related route or hit-testing changes. It does
-not change canonical model semantics, analyzer behavior, or project
-configuration ownership.
+This child owns staged renderer/layout work that extends the implemented Explore
+capability: first route/output features such as edge labels, junctions, and
+spline refinement; then richer port/port-label and compound-graph geometry; and
+finally additional target-specific ELK options that have a demonstrable
+renderer contract. It does not change canonical model semantics, analyzer
+behavior, or project configuration ownership.
 
 # Relationships
 
@@ -36,8 +44,11 @@ configuration ownership.
 
 # Planning state
 
-This child is foggy. The candidate work is recorded for discovery, but the
-priority, supported subset, scene-contract changes, renderer capability matrix,
-and acceptance scenarios have not yet been agreed. No implementation issues
-have been created intentionally; fog clearing and exact specification come
-first.
+This child is specified and readiness-reviewed. Its exact renderer-only
+extension program admits five opt-in features: edge labels, junctions,
+presentation ports, compound geometry, and spline refinement. Browser,
+self-contained HTML, and browser SVG share `arch-view.geometry/v1`; Go static
+SVG remains deterministic orthogonal and reports when advanced geometry is not
+applied. The linked contract defines geometry identity, option gating,
+accessibility, validation, fallback, and visual scenarios. No implementation
+issues have been created.

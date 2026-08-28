@@ -3,9 +3,9 @@ type: capability
 title: Export and automate
 description: Make architecture analysis usable from scripts, reports, and repeatable repository workflows.
 tags: [cli, export, automation]
-timestamp: 2026-08-26T20:56:17Z
-state: specified
-state_changed: 2026-08-25T17:10:00Z
+timestamp: 2026-08-28T00:43:49Z
+state: implemented
+state_changed: 2026-08-28T00:43:49Z
 project: /project.md
 parent: /project.md
 artifact_root: docs/architecture/export-and-automate
@@ -41,8 +41,19 @@ This capability includes CLI options, machine-readable architecture output, visu
 
 # Planning state
 
-This capability is specified. Its versioned JSON, deterministic HTML/SVG artifacts, status/exit behavior, source-privacy defaults, shared reference-visibility policy, and CI contract are linked from the exact-spec artifacts.
+This capability is implemented. Issues 005, 011, and 016 deliver versioned
+JSON, self-contained HTML, deterministic static SVG, browser canvas SVG,
+status and exit behavior, overwrite safety, source-privacy defaults, and the
+shared reference-visibility policy. All nine linked acceptance scenarios have
+automated coverage, and the visual export paths have explicit user approval.
 
 ## Delivery progress
 
-Issue 005 implemented the shared JSON, self-contained HTML, and static SVG export path, including deterministic layouts, reference visibility, evidence metadata, atomic writes, and CLI analyze-to-export wiring. Issue 011 completed the browser module/bundling boundary. Issue 016 extends HTML with an embedded profile/catalog and pinned ELK runtime, and adds current-canvas SVG download in the browser; the Go static SVG contract remains deterministic orthogonal. The capability remains `specified` because broader reanalysis and future CI expansion remain specified but are outside the closed issue.
+Issue 005 implemented the shared JSON, self-contained HTML, and static SVG
+export path, including deterministic layouts, reference visibility, evidence
+metadata, atomic writes, and CLI analyze-to-export wiring. Issue 011 completed
+the browser module and bundling boundary. Issue 016 extends HTML with an
+embedded profile and catalog plus a pinned ELK runtime, and adds current-canvas
+SVG download in the browser. The Go static SVG contract remains deterministic
+and orthogonal. Broader reanalysis and CI policy work are outside this node's
+current promised scope and need a future feature addition before delivery.
