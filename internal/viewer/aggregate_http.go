@@ -287,7 +287,10 @@ func aggregateRunHTTPStatus(run orchestration.AnalysisRun) int {
 
 func aggregateHTTPStatus(err error) int {
 	switch analysis.ErrorCodeOf(err) {
-	case analysis.ErrInvalidRequest, analysis.ErrInvalidOptions, analysis.ErrAnalysisScopeFilterInvalid:
+	case analysis.ErrInvalidRequest, analysis.ErrInvalidOptions, analysis.ErrAnalysisConfigInvalid,
+		analysis.ErrAnalysisAssignmentInvalid, analysis.ErrAssignmentDuplicatePath,
+		analysis.ErrAssignmentOptionInvalid, analysis.ErrAnalysisScopeFilterInvalid,
+		analysis.ErrAnalysisSelectionConflict, analysis.ErrAnalysisScopeStale:
 		return http.StatusBadRequest
 	case analysis.ErrAnalysisScopeNotFound:
 		return http.StatusNotFound
@@ -295,7 +298,8 @@ func aggregateHTTPStatus(err error) int {
 		return http.StatusConflict
 	case analysis.ErrNoAnalyzer, analysis.ErrUnsupportedProject, analysis.ErrUnreadableProject,
 		analysis.ErrAnalyzerPackageNotFound, analysis.ErrAnalyzerPlatformUnsupported,
-		analysis.ErrAnalyzerRuntimeOverrideRequired, analysis.ErrCancelled:
+		analysis.ErrAnalyzerRuntimeOverrideRequired, analysis.ErrAssignmentAnalyzerUnavailable,
+		analysis.ErrCancelled:
 		return http.StatusUnprocessableEntity
 	default:
 		return http.StatusInternalServerError

@@ -77,6 +77,9 @@ type Manifest struct {
 	DetectionMarkers []DetectionMarker  `json:"detection_markers"`
 	Capabilities     []string           `json:"capabilities"`
 	Options          []OptionDescriptor `json:"options"`
+	// RuntimeIdentity is host-owned package identity used for session-cache
+	// invalidation. It is not part of the analyzer protocol manifest.
+	RuntimeIdentity string `json:"-"`
 }
 
 type DetectionMarker struct {

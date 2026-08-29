@@ -77,6 +77,7 @@ export function renderScopeSelector(context) {
     return '<div class="scope-picker-option" role="option" tabindex="-1" data-scope-value="' + escapeHTML(descriptor.value) + '" aria-selected="' + String(selectedOption) + '" aria-label="' + escapeHTML(descriptor.accessibleLabel) + '">' +
       '<div class="scope-option-main"><span class="scope-option-title">' + escapeHTML(descriptor.root) + '</span>' + languageBadgeMarkup(descriptor.languageValue, descriptor.language) + '</div>' +
       '<div class="scope-option-meta">' + scopeStatusMarkup(descriptor.status, descriptor.statusClass) + '<span>' + escapeHTML(descriptor.countText) + '</span></div>' +
+      (descriptor.metadataText ? '<div class="scope-option-detail">' + escapeHTML(descriptor.metadataText) + '</div>' : '') +
       "</div>";
   }).join("");
   closeScopePicker(context);
@@ -97,6 +98,7 @@ function aggregateScopeDescriptor(context, scopes) {
     status: status,
     statusClass: scopeStatusClass(status),
     countText: countText,
+    metadataText: "Aggregate projection · cached scopes",
     optionLabel: "All scopes · " + status + " · " + countText,
     accessibleLabel: "All scopes, " + status + ", " + countText
   };
@@ -110,6 +112,11 @@ function scopeDescriptor(scope) {
   const status = String(scope && scope.status || "unknown").toLowerCase();
   const summary = scope && scope.summary ? scope.summary : {};
   const moduleCount = summary.module_count == null ? "module count unavailable" : summary.module_count + " module(s)";
+  const source = selectionSourceLabel(scope);
+  const cache = scopeCacheLabel(scope);
+  const analyzerIdentity = analyzerIdentityLabel(scope);
+  const identity = sourceIdentityLabel(scope);
+  const diagnosticCount = Array.isArray(scope && scope.diagnostics) ? scope.diagnostics.length : 0;
   return {
     value: String(scope && scope.scope_id || ""),
     root: root,
@@ -117,10 +124,42 @@ function scopeDescriptor(scope) {
     languageValue: languageValue,
     status: status,
     statusClass: scopeStatusClass(status),
-    countText: moduleCount,
-    optionLabel: root + " · " + language + " · " + status + " · " + moduleCount,
-    accessibleLabel: root + ", " + language + ", " + status + ", " + moduleCount
+    countText: moduleCount + (diagnosticCount ? " · " + diagnosticCount + " diagnostic(s)" : ""),
+    metadataText: source + " · " + analyzerIdentity + " · " + cache + " · " + identity,
+    optionLabel: root + " · " + language + " · " + analyzerIdentity + " · " + status + " · " + source + " · " + cache,
+    accessibleLabel: root + ", " + language + ", " + analyzerIdentity + ", " + status + ", " + source + ", " + cache + ", " + identity + ", " + moduleCount
   };
+}
+
+function analyzerIdentityLabel(scope) {
+  const analyzer = scope && scope.analyzer ? scope.analyzer : {};
+  const id = String(analyzer.id || "").trim();
+  if (!id) return "Analyzer identity unavailable";
+  const version = String(analyzer.version || "").trim();
+  return version ? id + "@" + version : id;
+}
+
+function selectionSourceLabel(scope) {
+  const source = String(scope && scope.selection_source || "").toLowerCase();
+  if (source === "assignment") {
+    return scope.assignment_path ? "Configured · " + displayProjectRoot(scope.assignment_path) : "Configured";
+  }
+  if (source === "cli") return "CLI selection";
+  if (source === "automatic") return "Automatic";
+  return source || "Selection unavailable";
+}
+
+function scopeCacheLabel(scope) {
+  if (scope && scope.cache_hit) return "Cache hit";
+  const reason = String(scope && scope.invalidation_reason || "").trim();
+  return reason ? "Fresh · " + reason.replaceAll("_", " ") : "Fresh analysis";
+}
+
+function sourceIdentityLabel(scope) {
+  const source = scope && scope.source_scope ? scope.source_scope : {};
+  const value = String(source.matched_source_set_fingerprint || "").trim();
+  if (!value) return "Source identity unavailable";
+  return "Source " + (value.length > 18 ? value.slice(0, 18) + "…" : value);
 }
 
 function activeScopeDescriptor(context) {

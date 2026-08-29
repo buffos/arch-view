@@ -254,9 +254,15 @@ func scopeSummary(job AnalyzerJob) ScopeSummary {
 			PolicyFingerprint:           job.EffectiveSourceScope.PolicyFingerprint,
 			MatchedSourceSetFingerprint: job.MatchedSourceSetFingerprint,
 		},
-		Status:      job.Status,
-		Summary:     resultSummary(job.Result),
-		Diagnostics: append([]analysis.Diagnostic(nil), job.Diagnostics...),
+		Status:                      job.Status,
+		SelectionSource:             job.SelectionSource,
+		AssignmentPath:              job.AssignmentPath,
+		EffectiveOptionsFingerprint: job.EffectiveOptionsFingerprint,
+		CacheKey:                    job.CacheKey,
+		CacheHit:                    job.CacheHit,
+		InvalidationReason:          job.InvalidationReason,
+		Summary:                     resultSummary(job.Result),
+		Diagnostics:                 append([]analysis.Diagnostic(nil), job.Diagnostics...),
 	}
 }
 
@@ -487,9 +493,32 @@ func containsDiagnostic(values []analysis.Diagnostic, target analysis.Diagnostic
 func cloneAnyMap(values map[string]any) map[string]any {
 	result := make(map[string]any, len(values)+1)
 	for key, value := range values {
-		result[key] = value
+		result[key] = cloneAnyValue(value)
 	}
 	return result
+}
+
+func cloneAnyValue(value any) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		return cloneAnyMap(typed)
+	case map[string]string:
+		result := make(map[string]string, len(typed))
+		for key, item := range typed {
+			result[key] = item
+		}
+		return result
+	case []any:
+		result := make([]any, len(typed))
+		for index, item := range typed {
+			result[index] = cloneAnyValue(item)
+		}
+		return result
+	case []string:
+		return append([]string(nil), typed...)
+	default:
+		return value
+	}
 }
 
 func cloneAnalysisResult(value analysis.AnalysisResult) analysis.AnalysisResult {

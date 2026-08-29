@@ -56,10 +56,13 @@ func (s *AnalyzerJobScheduler) ExecuteAnalyzerPlan(ctx context.Context, plan Job
 	runID := newRunID()
 	jobs := cloneJobs(plan.Jobs)
 	for index := range jobs {
-		jobs[index].Status = JobPlanned
+		cached := jobs[index].CacheHit && isTerminal(jobs[index].Status)
+		if !cached {
+			jobs[index].Status = JobPlanned
+			jobs[index].Result = nil
+		}
 		jobs[index].StartedAt = nil
 		jobs[index].FinishedAt = nil
-		jobs[index].Result = nil
 		jobs[index].Diagnostics = append([]analysis.Diagnostic(nil), jobs[index].Diagnostics...)
 	}
 	planCopy := cloneJobPlan(plan)
@@ -81,6 +84,13 @@ func (s *AnalyzerJobScheduler) ExecuteAnalyzerPlan(ctx context.Context, plan Job
 	emit(JobLifecycleEvent{Type: "run.started"})
 	for _, job := range jobs {
 		emit(JobLifecycleEvent{Type: "job.planned", JobID: job.JobID, ScopeID: job.ScopeID, Status: JobPlanned})
+	}
+	for index := range jobs {
+		if !jobs[index].CacheHit || !isTerminal(jobs[index].Status) {
+			continue
+		}
+		completed++
+		emit(JobLifecycleEvent{Type: "job.cache_hit", JobID: jobs[index].JobID, ScopeID: jobs[index].ScopeID, Status: jobs[index].Status})
 	}
 
 	workerCount := DefaultWorkerCount
@@ -105,7 +115,9 @@ func (s *AnalyzerJobScheduler) ExecuteAnalyzerPlan(ctx context.Context, plan Job
 	defer cancel()
 
 	for index := range jobs {
-		jobs[index].Status = JobQueued
+		if !isTerminal(jobs[index].Status) {
+			jobs[index].Status = JobQueued
+		}
 	}
 	work := make(chan int)
 	var workers sync.WaitGroup
@@ -475,12 +487,7 @@ func cloneJob(value AnalyzerJob) AnalyzerJob {
 	}
 	value.Manifest = cloneManifest(value.Manifest)
 	if value.Result != nil {
-		result := *value.Result
-		result.Modules = append([]analysis.ModuleObservation(nil), result.Modules...)
-		result.Relationships = append([]analysis.RelationshipObservation(nil), result.Relationships...)
-		result.References = append([]analysis.Reference(nil), result.References...)
-		result.SourceReferences = append([]analysis.SourceReference(nil), result.SourceReferences...)
-		result.Diagnostics = append([]analysis.Diagnostic(nil), result.Diagnostics...)
+		result := cloneAnalysisResult(*value.Result)
 		value.Result = &result
 	}
 	return value

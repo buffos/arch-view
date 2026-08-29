@@ -217,8 +217,39 @@ function activeScopeDetails(context) {
     language: formatLanguage(languageValue),
     languageValue: languageValue,
     status: scope && scope.status ? scope.status : scene.scope_status || scene.status,
-    meta: "Scope root · " + displayProjectRoot(scope && scope.project_root ? scope.project_root : scene.project.root_label) + " · " + moduleCount
+    meta: selectionSourceLabel(scope) + " · " + analyzerIdentityLabel(scope) + " · " + scopeCacheLabel(scope) + " · " + sourceIdentityLabel(scope) + " · " + moduleCount
   };
+}
+
+function analyzerIdentityLabel(scope) {
+  const analyzer = scope && scope.analyzer ? scope.analyzer : {};
+  const id = String(analyzer.id || "").trim();
+  if (!id) return "Analyzer identity unavailable";
+  const version = String(analyzer.version || "").trim();
+  return version ? id + "@" + version : id;
+}
+
+function selectionSourceLabel(scope) {
+  const source = String(scope && scope.selection_source || "").toLowerCase();
+  if (source === "assignment") {
+    return scope.assignment_path ? "Configured · " + displayProjectRoot(scope.assignment_path) : "Configured";
+  }
+  if (source === "cli") return "CLI selection";
+  if (source === "automatic") return "Automatic";
+  return source || "Selection unavailable";
+}
+
+function scopeCacheLabel(scope) {
+  if (scope && scope.cache_hit) return "Cache hit";
+  const reason = String(scope && scope.invalidation_reason || "").trim();
+  return reason ? "Fresh · " + reason.replaceAll("_", " ") : "Fresh analysis";
+}
+
+function sourceIdentityLabel(scope) {
+  const source = scope && scope.source_scope ? scope.source_scope : {};
+  const value = String(source.matched_source_set_fingerprint || "").trim();
+  if (!value) return "Source identity unavailable";
+  return "Source " + (value.length > 18 ? value.slice(0, 18) + "…" : value);
 }
 
 function languageBadgeMarkup(languageValue, language) {

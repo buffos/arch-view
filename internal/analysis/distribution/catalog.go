@@ -215,10 +215,12 @@ func (c *Catalog) NewPackagedAnalyzer(logicalAnalyzerID, platform string, config
 	if _, err := newProcessAnalyzer(packageValue, config); err != nil {
 		return nil, packageFailure(analysis.ErrAnalyzerPackageManifestMismatch, "packaged analyzer descriptor could not be adapted", packageValue.Index, "descriptor", err)
 	}
+	manifest := cloneCatalogManifest(packageValue.Descriptor.Manifest)
+	manifest.RuntimeIdentity = packageValue.Index.ExecutableSHA256 + ":" + packageValue.Index.DescriptorSHA256
 	return &PackagedAnalyzer{
 		catalog:  c,
 		entry:    packageValue.Index,
-		manifest: cloneCatalogManifest(packageValue.Descriptor.Manifest),
+		manifest: manifest,
 		config:   config,
 	}, nil
 }

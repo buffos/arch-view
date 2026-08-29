@@ -262,8 +262,90 @@ func TestPlanSourceContentChangesInvalidateMatchedSourceIdentity(t *testing.T) {
 	if len(first.Jobs) != 1 || len(second.Jobs) != 1 {
 		t.Fatalf("content plans = %#v %#v", first.Jobs, second.Jobs)
 	}
-	if first.Jobs[0].MatchedSourceSetFingerprint == second.Jobs[0].MatchedSourceSetFingerprint || first.Jobs[0].JobID == second.Jobs[0].JobID {
+	if first.Jobs[0].MatchedSourceSetFingerprint == second.Jobs[0].MatchedSourceSetFingerprint || first.Jobs[0].CacheKey == second.Jobs[0].CacheKey || first.Jobs[0].JobID == second.Jobs[0].JobID {
 		t.Fatalf("source content did not invalidate job identity: first=%#v second=%#v", first.Jobs[0], second.Jobs[0])
+	}
+}
+
+func TestPlanIgnoresHostConfigurationContentForSourceIdentity(t *testing.T) {
+	root := t.TempDir()
+	writeFixtureFile(t, root, "go.mod", "module fixture\n")
+	writeFixtureFile(t, root, "main.go", "package main\n")
+	writeFixtureFile(t, root, ".archview.json", `{"schema_version":"arch-view.config/v2","layout":{"algorithm":"layered","options":{}},"analysis":{}}`)
+	analyzer := &fixtureAnalyzer{manifest: fixtureManifest("org.example.config-content", "go", "go.mod", 1)}
+	registry := analysis.NewRegistry()
+	if err := registry.Register(analyzer); err != nil {
+		t.Fatal(err)
+	}
+	planner := NewAnalyzerJobPlanner(registry)
+	first, err := planner.PlanAnalyzerJobs(context.Background(), PlanRequest{RepositoryRoot: root})
+	if err != nil {
+		t.Fatalf("first plan: %v", err)
+	}
+	writeFixtureFile(t, root, ".archview.json", `{"schema_version":"arch-view.config/v2","layout":{"algorithm":"layered","options":{"org.eclipse.elk.direction":"RIGHT"}},"analysis":{}}`)
+	second, err := planner.PlanAnalyzerJobs(context.Background(), PlanRequest{RepositoryRoot: root})
+	if err != nil {
+		t.Fatalf("second plan: %v", err)
+	}
+	if len(first.Jobs) != 1 || len(second.Jobs) != 1 {
+		t.Fatalf("configuration plans = %#v %#v", first.Jobs, second.Jobs)
+	}
+	if contains(first.Jobs[0].EffectiveSourceScope.MatchedPaths, ".archview.json") {
+		t.Fatalf("host configuration leaked into source scope: %#v", first.Jobs[0].EffectiveSourceScope.MatchedPaths)
+	}
+	if first.Jobs[0].MatchedSourceSetFingerprint != second.Jobs[0].MatchedSourceSetFingerprint || first.Jobs[0].CacheKey != second.Jobs[0].CacheKey {
+		t.Fatalf("layout-only configuration edit invalidated analysis identity: first=%#v second=%#v", first.Jobs[0], second.Jobs[0])
+	}
+}
+
+func TestCacheIdentityIncludesNormalizedDiscoveryPolicy(t *testing.T) {
+	root := t.TempDir()
+	writeFixtureFile(t, root, "go.mod", "module fixture\n")
+	writeFixtureFile(t, root, "main.go", "package main\n")
+	analyzer := &fixtureAnalyzer{manifest: fixtureManifest("org.example.discovery-policy", "go", "go.mod", 1)}
+	registry := analysis.NewRegistry()
+	if err := registry.Register(analyzer); err != nil {
+		t.Fatal(err)
+	}
+	planner := NewAnalyzerJobPlanner(registry)
+	first, err := planner.PlanAnalyzerJobs(context.Background(), PlanRequest{RepositoryRoot: root, DiscoveryPolicy: DiscoveryPolicy{RepositoryScope: "first"}})
+	if err != nil {
+		t.Fatalf("first plan: %v", err)
+	}
+	second, err := planner.PlanAnalyzerJobs(context.Background(), PlanRequest{RepositoryRoot: root, DiscoveryPolicy: DiscoveryPolicy{RepositoryScope: "second"}})
+	if err != nil {
+		t.Fatalf("second plan: %v", err)
+	}
+	if len(first.Jobs) != 1 || len(second.Jobs) != 1 || first.Jobs[0].CacheKey == second.Jobs[0].CacheKey {
+		t.Fatalf("discovery policy did not change cache identity: first=%#v second=%#v", first.Jobs, second.Jobs)
+	}
+}
+
+func TestCacheIdentityIncludesAnalyzerPackageIdentity(t *testing.T) {
+	root := t.TempDir()
+	writeFixtureFile(t, root, "go.mod", "module fixture\n")
+	writeFixtureFile(t, root, "main.go", "package main\n")
+	manifest := fixtureManifest("org.example.package-identity", "go", "go.mod", 1)
+	manifest.RuntimeIdentity = "sha256:package-a"
+	firstRegistry := analysis.NewRegistry()
+	if err := firstRegistry.Register(&fixtureAnalyzer{manifest: manifest}); err != nil {
+		t.Fatal(err)
+	}
+	first, err := PlanAnalyzerJobs(context.Background(), firstRegistry, PlanRequest{RepositoryRoot: root})
+	if err != nil {
+		t.Fatalf("first plan: %v", err)
+	}
+	manifest.RuntimeIdentity = "sha256:package-b"
+	secondRegistry := analysis.NewRegistry()
+	if err := secondRegistry.Register(&fixtureAnalyzer{manifest: manifest}); err != nil {
+		t.Fatal(err)
+	}
+	second, err := PlanAnalyzerJobs(context.Background(), secondRegistry, PlanRequest{RepositoryRoot: root})
+	if err != nil {
+		t.Fatalf("second plan: %v", err)
+	}
+	if len(first.Jobs) != 1 || len(second.Jobs) != 1 || first.Jobs[0].CacheKey == second.Jobs[0].CacheKey {
+		t.Fatalf("package identity did not invalidate cache key: first=%#v second=%#v", first.Jobs, second.Jobs)
 	}
 }
 
@@ -530,6 +612,185 @@ func TestSchedulerCancelsQueuedAndActiveJobs(t *testing.T) {
 	}
 	if snapshot.Events[len(snapshot.Events)-1].Status != JobCancelled {
 		t.Fatalf("run completion status = %q, want cancelled", snapshot.Events[len(snapshot.Events)-1].Status)
+	}
+}
+
+func TestSessionCacheReusesTerminalScopeWithoutExecutingAnalyzer(t *testing.T) {
+	manifest := fixtureManifest("org.example.fixture", "fixture", "fixture.marker", 1)
+	job := plannedFixtureJob(t, manifest, "job-cache", "scope-cache")
+	job.CacheKey = "sha256:cache-key"
+	var calls atomic.Int32
+	executor := func(context.Context, AnalyzerJob) (analysis.AnalysisResult, error) {
+		calls.Add(1)
+		return fixtureResult(manifest), nil
+	}
+	scheduler := NewAnalyzerJobScheduler(executor, SchedulerOptions{WorkerCount: 1})
+	cache := NewSessionCache()
+	first := ExecuteAnalyzerPlanWithCache(context.Background(), scheduler, JobPlan{PlanVersion: JobPlanSchemaVersion, RepositoryRoot: job.ProjectRoot, Jobs: []AnalyzerJob{job}}, cache)
+	if calls.Load() != 1 || first.Jobs[0].Status != JobComplete {
+		t.Fatalf("first execution calls/status = %d/%s", calls.Load(), first.Jobs[0].Status)
+	}
+	first.Jobs[0].Result.Modules[0].Hierarchy[0] = "caller-mutated"
+	second := ExecuteAnalyzerPlanWithCache(context.Background(), scheduler, JobPlan{PlanVersion: JobPlanSchemaVersion, RepositoryRoot: job.ProjectRoot, Jobs: []AnalyzerJob{job}}, cache)
+	if calls.Load() != 1 || !second.Jobs[0].CacheHit || second.Jobs[0].Status != JobComplete {
+		t.Fatalf("cached execution calls/job = %d/%#v", calls.Load(), second.Jobs[0])
+	}
+	if second.Jobs[0].Result == nil || second.Jobs[0].Result.Modules[0].Hierarchy[0] != "module" {
+		t.Fatalf("cache entry was mutated through the first snapshot: %#v", second.Jobs[0].Result)
+	}
+	run, err := AggregateScopeResults(second)
+	if err != nil {
+		t.Fatalf("aggregate cached execution: %v", err)
+	}
+	if len(run.Scopes) != 1 || !run.Scopes[0].CacheHit || run.Scopes[0].CacheKey != job.CacheKey {
+		t.Fatalf("cached scope metadata = %#v", run.Scopes)
+	}
+}
+
+func TestSessionCacheRerunsOnlyScopeWithChangedInputs(t *testing.T) {
+	manifest := fixtureManifest("org.example.fixture", "fixture", "fixture.marker", 1)
+	firstJob := plannedFixtureJob(t, manifest, "job-cache-a", "scope-cache-a")
+	firstJob.CacheKey = "sha256:cache-a"
+	secondJob := plannedFixtureJob(t, manifest, "job-cache-b", "scope-cache-b")
+	secondJob.CacheKey = "sha256:cache-b"
+	var calls atomic.Int32
+	executor := func(context.Context, AnalyzerJob) (analysis.AnalysisResult, error) {
+		calls.Add(1)
+		return fixtureResult(manifest), nil
+	}
+	scheduler := NewAnalyzerJobScheduler(executor, SchedulerOptions{WorkerCount: 2})
+	cache := NewSessionCache()
+	initialPlan := JobPlan{PlanVersion: JobPlanSchemaVersion, RepositoryRoot: firstJob.ProjectRoot, Jobs: []AnalyzerJob{firstJob, secondJob}}
+	initial := ExecuteAnalyzerPlanWithCache(context.Background(), scheduler, initialPlan, cache)
+	if calls.Load() != 2 {
+		t.Fatalf("initial execution calls = %d, want 2", calls.Load())
+	}
+	if initialPlan.Jobs[0].Status != JobPlanned || initialPlan.Jobs[0].CacheHit || initialPlan.Jobs[0].Result != nil {
+		t.Fatalf("cache execution mutated caller plan: %#v", initialPlan.Jobs[0])
+	}
+
+	changed := secondJob
+	changed.CacheKey = "sha256:cache-b-options-changed"
+	changed.EffectiveOptionsFingerprint = "changed-options"
+	changed.Options.Fingerprint = "changed-options"
+	changed.JobID = jobID(changed)
+	second := ExecuteAnalyzerPlanWithCache(context.Background(), scheduler, JobPlan{
+		PlanVersion:    JobPlanSchemaVersion,
+		RepositoryRoot: firstJob.ProjectRoot,
+		Jobs:           []AnalyzerJob{firstJob, changed},
+	}, cache)
+	if calls.Load() != 3 {
+		t.Fatalf("selective reanalysis calls = %d, want 3", calls.Load())
+	}
+	var cached, rerun AnalyzerJob
+	for _, job := range second.Jobs {
+		switch job.ScopeID {
+		case firstJob.ScopeID:
+			cached = job
+		case changed.ScopeID:
+			rerun = job
+		}
+	}
+	if !cached.CacheHit || cached.Status != JobComplete || rerun.CacheHit || rerun.InvalidationReason != "options_changed" || rerun.Status != JobComplete {
+		t.Fatalf("selective cache state = cached=%#v rerun=%#v", cached, rerun)
+	}
+	if initial.Jobs[0].Result == nil || initial.Jobs[1].Result == nil {
+		t.Fatal("initial cache snapshot did not retain both results")
+	}
+}
+
+func TestSessionCacheReportsAssignmentChangeWhenAnalyzerChanges(t *testing.T) {
+	firstManifest := fixtureManifest("org.example.first", "fixture", "fixture.marker", 1)
+	first := plannedFixtureJob(t, firstManifest, "job-first", "scope-first")
+	first.SelectionSource = SelectionAssignment
+	first.AssignmentPath = "."
+	first.CacheKey = "sha256:first"
+	secondManifest := fixtureManifest("org.example.second", "fixture", "fixture.marker", 1)
+	second := plannedFixtureJob(t, secondManifest, "job-second", "scope-second")
+	second.SelectionSource = SelectionAssignment
+	second.AssignmentPath = "."
+	second.CacheKey = "sha256:second"
+	var calls atomic.Int32
+	scheduler := NewAnalyzerJobScheduler(func(_ context.Context, job AnalyzerJob) (analysis.AnalysisResult, error) {
+		calls.Add(1)
+		return fixtureResult(job.Manifest), nil
+	}, SchedulerOptions{WorkerCount: 1})
+	cache := NewSessionCache()
+	_ = ExecuteAnalyzerPlanWithCache(context.Background(), scheduler, JobPlan{PlanVersion: JobPlanSchemaVersion, RepositoryRoot: first.ProjectRoot, Jobs: []AnalyzerJob{first}}, cache)
+	next := ExecuteAnalyzerPlanWithCache(context.Background(), scheduler, JobPlan{PlanVersion: JobPlanSchemaVersion, RepositoryRoot: second.ProjectRoot, Jobs: []AnalyzerJob{second}}, cache)
+	if calls.Load() != 2 || len(next.Jobs) != 1 || next.Jobs[0].CacheHit || next.Jobs[0].InvalidationReason != "assignment_changed" {
+		t.Fatalf("assignment analyzer change = calls:%d jobs:%#v", calls.Load(), next.Jobs)
+	}
+}
+
+func TestDeepestAssignmentWinsAndCLIBypassesAssignments(t *testing.T) {
+	root := t.TempDir()
+	writeFixtureFile(t, root, "go.mod", "module fixture\n")
+	writeFixtureFile(t, root, "frontend/go.mod", "module frontend\n")
+	rootAnalyzer := &fixtureAnalyzer{manifest: fixtureManifest("org.example.root", "go", "go.mod", 1)}
+	frontendAnalyzer := &fixtureAnalyzer{manifest: fixtureManifest("org.example.frontend", "go", "go.mod", 1)}
+	registry := analysis.NewRegistry()
+	for _, analyzer := range []*fixtureAnalyzer{rootAnalyzer, frontendAnalyzer} {
+		if err := registry.Register(analyzer); err != nil {
+			t.Fatal(err)
+		}
+	}
+	plan, err := PlanAnalyzerJobs(context.Background(), registry, PlanRequest{
+		RepositoryRoot: root,
+		Assignments: []AnalyzerAssignment{
+			{ProjectRoot: ".", AnalyzerID: rootAnalyzer.manifest.ID},
+			{ProjectRoot: "frontend", AnalyzerID: frontendAnalyzer.manifest.ID},
+		},
+	})
+	if err != nil {
+		t.Fatalf("deepest assignment plan: %v", err)
+	}
+	for _, job := range plan.Jobs {
+		if job.RelativeProjectRoot == "frontend" && (job.LogicalAnalyzerID != frontendAnalyzer.manifest.ID || job.AssignmentPath != "frontend") {
+			t.Fatalf("frontend assignment did not win: %#v", job)
+		}
+	}
+	cliPlan, err := PlanAnalyzerJobs(context.Background(), registry, PlanRequest{
+		RepositoryRoot: root,
+		Assignments:    []AnalyzerAssignment{{ProjectRoot: ".", AnalyzerID: rootAnalyzer.manifest.ID}},
+		CLISelection:   &ExplicitSelection{ProjectRoot: "frontend", AnalyzerID: rootAnalyzer.manifest.ID},
+	})
+	if err != nil {
+		t.Fatalf("CLI override plan: %v", err)
+	}
+	for _, job := range cliPlan.Jobs {
+		if job.RelativeProjectRoot == "frontend" && (job.SelectionSource != SelectionCLI || job.LogicalAnalyzerID != rootAnalyzer.manifest.ID) {
+			t.Fatalf("CLI did not override assignment: %#v", job)
+		}
+	}
+}
+
+func TestUnavailableOrNonMatchingAssignmentDoesNotFallBackToAutomaticDetection(t *testing.T) {
+	root := t.TempDir()
+	writeFixtureFile(t, root, "go.mod", "module fixture\n")
+	goAnalyzer := &fixtureAnalyzer{manifest: fixtureManifest("org.example.go", "go", "go.mod", 1)}
+	registry := analysis.NewRegistry()
+	if err := registry.Register(goAnalyzer); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, assignment := range []AnalyzerAssignment{
+		{ProjectRoot: ".", AnalyzerID: "org.example.missing"},
+		{ProjectRoot: ".", AnalyzerID: "org.example.go", Language: "python"},
+	} {
+		plan, err := PlanAnalyzerJobs(context.Background(), registry, PlanRequest{
+			RepositoryRoot: root,
+			Assignments:    []AnalyzerAssignment{assignment},
+		})
+		if err != nil {
+			t.Fatalf("assignment %#v: %v", assignment, err)
+		}
+		if len(plan.Jobs) != 1 || plan.Jobs[0].SelectionSource != SelectionAssignment {
+			t.Fatalf("assignment %#v fell back to automatic detection: %#v", assignment, plan.Jobs)
+		}
+		if plan.Jobs[0].Result != nil || len(plan.Jobs[0].Diagnostics) == 0 {
+			t.Fatalf("assignment %#v did not retain a diagnostic-ready scope: %#v", assignment, plan.Jobs[0])
+		}
 	}
 }
 

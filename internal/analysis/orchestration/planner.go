@@ -113,6 +113,21 @@ func (p *AnalyzerJobPlanner) PlanAnalyzerJobs(ctx context.Context, request PlanR
 	if err != nil {
 		return JobPlan{}, err
 	}
+	if err := validateCLISelection(p.Registry, request.CLISelection); err != nil {
+		return JobPlan{}, err
+	}
+	if request.CLISelectionOnly {
+		if request.CLISelection == nil {
+			return JobPlan{}, analysis.NewHostError(analysis.ErrInvalidRequest, "CLI-selection-only planning requires an explicit selection", nil)
+		}
+		selectedRoots := make([]ProjectRootCandidate, 0, 1)
+		for _, root := range discovery.Roots {
+			if selectionAppliesToRoot(*request.CLISelection, root) {
+				selectedRoots = append(selectedRoots, root)
+			}
+		}
+		discovery.Roots = selectedRoots
+	}
 
 	plan := JobPlan{
 		PlanVersion:            JobPlanSchemaVersion,
@@ -133,6 +148,8 @@ func (p *AnalyzerJobPlanner) PlanAnalyzerJobs(ctx context.Context, request PlanR
 		if jobErr != nil {
 			return JobPlan{}, jobErr
 		}
+		job.CacheKey = cacheKey(job, repositoryRoot, invocationRelative, discovery.Policy)
+		job.JobID = jobID(job)
 		plan.Jobs = append(plan.Jobs, job)
 	}
 	sort.SliceStable(plan.Jobs, func(i, j int) bool {
@@ -195,32 +212,114 @@ func (p *AnalyzerJobPlanner) evaluateCandidates(ctx context.Context, roots []Pro
 	diagnostics := []analysis.Diagnostic{}
 	for _, root := range roots {
 		selected := make(map[string]CandidateEvaluation)
-		for _, assignment := range assignments {
-			assignmentRoot := normalizeRelativePath(assignment.ProjectRoot)
-			if assignmentRoot == "" {
-				assignmentRoot = root.RelativePath
-			}
-			if assignmentRoot != root.RelativePath || !assignmentAllowedByCLI(assignment, root, request.CLISelection) {
-				continue
-			}
-			evaluation, evaluationErr := p.evaluateExplicit(ctx, root, assignment.AnalyzerID, assignment.Language, SelectionAssignment, assignment.Options, request)
+		cliSelectionApplies := request.CLISelection != nil && selectionAppliesToRoot(*request.CLISelection, root)
+		cliSelectionProvided := cliSelectionApplies && (request.CLISelection.AnalyzerID != "" || request.CLISelection.Language != "")
+		if cliSelectionProvided {
+			selection := *request.CLISelection
+			evaluation, evaluationErr := p.evaluateExplicit(ctx, root, selection.AnalyzerID, selection.Language, SelectionCLI, selection.Options, request)
 			if evaluationErr != nil {
 				return nil, nil, evaluationErr
 			}
-			if request.CLISelection != nil && selectionAppliesToRoot(*request.CLISelection, root) && !evaluationMatchesCLI(evaluation, *request.CLISelection) {
-				continue
-			}
 			addCandidateEvaluation(selected, evaluation)
-		}
-
-		if request.CLISelection != nil && selectionAppliesToRoot(*request.CLISelection, root) {
-			selection := *request.CLISelection
-			if selection.AnalyzerID != "" || selection.Language != "" {
-				evaluation, evaluationErr := p.evaluateExplicit(ctx, root, selection.AnalyzerID, selection.Language, SelectionCLI, selection.Options, request)
+		} else {
+			// The deepest assignment is the only assignment eligible for a
+			// project root. A CLI analyzer/language selection bypasses this
+			// branch entirely, so it cannot accidentally be shadowed by a
+			// matching ancestor assignment.
+			assignment, hasAssignment := deepestAssignmentForRoot(assignments, root.RelativePath)
+			if hasAssignment {
+				evaluation, evaluationErr := p.evaluateExplicit(ctx, root, assignment.AnalyzerID, assignment.Language, SelectionAssignment, assignment.Options, request)
 				if evaluationErr != nil {
 					return nil, nil, evaluationErr
 				}
+				evaluation.AssignmentPath = normalizeRelativePath(assignment.ProjectRoot)
 				addCandidateEvaluation(selected, evaluation)
+			}
+
+			// An assignment is an explicit choice even when its analyzer cannot
+			// detect the root. Keep that failed scope visible instead of silently
+			// replacing the configured choice with automatic detection.
+			if !hasAssignment {
+				explicitLanguages := make(map[string]struct{})
+				for _, evaluation := range selected {
+					if evaluation.Source == SelectionAssignment || evaluation.Source == SelectionCLI {
+						if language := evaluationLanguage(evaluation); language != "" {
+							explicitLanguages[language] = struct{}{}
+						}
+					}
+				}
+				automaticByLanguage := make(map[string][]CandidateEvaluation)
+				for _, analyzer := range p.Registry.List() {
+					manifest := analyzer.Manifest()
+					if _, alreadySelected := selected[manifest.ID]; alreadySelected {
+						continue
+					}
+					candidate, detectErr := analyzer.Detect(ctx, analysis.DetectRequest{ProjectRoot: root.AbsolutePath})
+					if detectErr != nil {
+						if ctx.Err() != nil {
+							return nil, nil, analysis.NewHostError(analysis.ErrCancelled, "analyzer discovery was cancelled", nil)
+						}
+						diagnostics = append(diagnostics, analysis.Diagnostic{
+							Code:        "analyzer_detection_failed",
+							Severity:    "warning",
+							Message:     fmt.Sprintf("analyzer %s could not inspect candidate root: %v", manifest.ID, detectErr),
+							Subject:     manifest.ID,
+							Path:        root.RelativePath,
+							Recoverable: true,
+						})
+						continue
+					}
+					if candidate.AnalyzerID != manifest.ID || candidate.Confidence <= 0 {
+						continue
+					}
+					if candidate.Confidence > 1 {
+						return nil, nil, analysis.NewHostError(analysis.ErrResultInvalid, "analyzer detection confidence is invalid", map[string]any{"analyzer_id": manifest.ID, "confidence": candidate.Confidence})
+					}
+					language := strings.ToLower(strings.TrimSpace(manifest.Language))
+					if language == "" {
+						continue
+					}
+					if _, explicitlySelected := explicitLanguages[language]; explicitlySelected {
+						continue
+					}
+					effective, optionsErr := resolveAnalyzerOptions(manifest, request, manifest.ID, nil)
+					if optionsErr != nil {
+						return nil, nil, optionsErr
+					}
+					automaticByLanguage[language] = append(automaticByLanguage[language], CandidateEvaluation{
+						Root: root, Analyzer: analyzer, Manifest: manifest, Language: language, Candidate: candidate,
+						Source: SelectionAutomatic, Options: effective,
+					})
+				}
+				languages := make([]string, 0, len(automaticByLanguage))
+				for language := range automaticByLanguage {
+					languages = append(languages, language)
+				}
+				sort.Strings(languages)
+				for _, language := range languages {
+					candidates := automaticByLanguage[language]
+					sort.SliceStable(candidates, func(i, j int) bool {
+						if candidates[i].Candidate.Confidence != candidates[j].Candidate.Confidence {
+							return candidates[i].Candidate.Confidence > candidates[j].Candidate.Confidence
+						}
+						return candidates[i].Manifest.ID < candidates[j].Manifest.ID
+					})
+					if len(candidates) > 1 && candidates[0].Candidate.Confidence == candidates[1].Candidate.Confidence {
+						ids := make([]string, 0, len(candidates))
+						for _, candidate := range candidates {
+							if candidate.Candidate.Confidence != candidates[0].Candidate.Confidence {
+								break
+							}
+							ids = append(ids, candidate.Manifest.ID)
+						}
+						return nil, nil, analysis.NewHostError(analysis.ErrAmbiguousAnalyzer, "multiple analyzers have the same highest detection confidence", map[string]any{
+							"project_root": root.RelativePath,
+							"language":     language,
+							"analyzer_ids": ids,
+						})
+					}
+					addCandidateEvaluation(selected, candidates[0])
+				}
 			}
 		}
 
@@ -228,92 +327,6 @@ func (p *AnalyzerJobPlanner) evaluateCandidates(ctx context.Context, roots []Pro
 		selected, consolidationErr = consolidateExplicitSelections(selected, root)
 		if consolidationErr != nil {
 			return nil, nil, consolidationErr
-		}
-
-		constrainAutomatic := request.CLISelection != nil &&
-			selectionAppliesToRoot(*request.CLISelection, root) &&
-			(request.CLISelection.AnalyzerID != "" || request.CLISelection.Language != "")
-		if !constrainAutomatic {
-			explicitLanguages := make(map[string]struct{})
-			for _, evaluation := range selected {
-				if evaluation.Source == SelectionAssignment || evaluation.Source == SelectionCLI {
-					if language := evaluationLanguage(evaluation); language != "" {
-						explicitLanguages[language] = struct{}{}
-					}
-				}
-			}
-			automaticByLanguage := make(map[string][]CandidateEvaluation)
-			for _, analyzer := range p.Registry.List() {
-				manifest := analyzer.Manifest()
-				if _, alreadySelected := selected[manifest.ID]; alreadySelected {
-					continue
-				}
-				candidate, detectErr := analyzer.Detect(ctx, analysis.DetectRequest{ProjectRoot: root.AbsolutePath})
-				if detectErr != nil {
-					if ctx.Err() != nil {
-						return nil, nil, analysis.NewHostError(analysis.ErrCancelled, "analyzer discovery was cancelled", nil)
-					}
-					diagnostics = append(diagnostics, analysis.Diagnostic{
-						Code:        "analyzer_detection_failed",
-						Severity:    "warning",
-						Message:     fmt.Sprintf("analyzer %s could not inspect candidate root: %v", manifest.ID, detectErr),
-						Subject:     manifest.ID,
-						Path:        root.RelativePath,
-						Recoverable: true,
-					})
-					continue
-				}
-				if candidate.AnalyzerID != manifest.ID || candidate.Confidence <= 0 {
-					continue
-				}
-				if candidate.Confidence > 1 {
-					return nil, nil, analysis.NewHostError(analysis.ErrResultInvalid, "analyzer detection confidence is invalid", map[string]any{"analyzer_id": manifest.ID, "confidence": candidate.Confidence})
-				}
-				language := strings.ToLower(strings.TrimSpace(manifest.Language))
-				if language == "" {
-					continue
-				}
-				if _, explicitlySelected := explicitLanguages[language]; explicitlySelected {
-					continue
-				}
-				effective, optionsErr := resolveAnalyzerOptions(manifest, request, manifest.ID, nil)
-				if optionsErr != nil {
-					return nil, nil, optionsErr
-				}
-				automaticByLanguage[language] = append(automaticByLanguage[language], CandidateEvaluation{
-					Root: root, Analyzer: analyzer, Manifest: manifest, Language: language, Candidate: candidate,
-					Source: SelectionAutomatic, Options: effective,
-				})
-			}
-			languages := make([]string, 0, len(automaticByLanguage))
-			for language := range automaticByLanguage {
-				languages = append(languages, language)
-			}
-			sort.Strings(languages)
-			for _, language := range languages {
-				candidates := automaticByLanguage[language]
-				sort.SliceStable(candidates, func(i, j int) bool {
-					if candidates[i].Candidate.Confidence != candidates[j].Candidate.Confidence {
-						return candidates[i].Candidate.Confidence > candidates[j].Candidate.Confidence
-					}
-					return candidates[i].Manifest.ID < candidates[j].Manifest.ID
-				})
-				if len(candidates) > 1 && candidates[0].Candidate.Confidence == candidates[1].Candidate.Confidence {
-					ids := make([]string, 0, len(candidates))
-					for _, candidate := range candidates {
-						if candidate.Candidate.Confidence != candidates[0].Candidate.Confidence {
-							break
-						}
-						ids = append(ids, candidate.Manifest.ID)
-					}
-					return nil, nil, analysis.NewHostError(analysis.ErrAmbiguousAnalyzer, "multiple analyzers have the same highest detection confidence", map[string]any{
-						"project_root": root.RelativePath,
-						"language":     language,
-						"analyzer_ids": ids,
-					})
-				}
-				addCandidateEvaluation(selected, candidates[0])
-			}
 		}
 
 		keys := make([]string, 0, len(selected))
@@ -359,7 +372,7 @@ func (p *AnalyzerJobPlanner) evaluateExplicit(ctx context.Context, root ProjectR
 	analyzer, exists := p.Registry.Get(analyzerID)
 	if !exists {
 		evaluation.InitialDiagnostics = []analysis.Diagnostic{{
-			Code:        "assignment_analyzer_unavailable",
+			Code:        string(analysis.ErrAssignmentAnalyzerUnavailable),
 			Severity:    "error",
 			Message:     fmt.Sprintf("analyzer %q is not registered for this planned scope", analyzerID),
 			Subject:     analyzerID,
@@ -367,13 +380,20 @@ func (p *AnalyzerJobPlanner) evaluateExplicit(ctx context.Context, root ProjectR
 			Recoverable: true,
 		}}
 		if source == SelectionCLI {
-			evaluation.InitialDiagnostics[0].Code = "selection_analyzer_unavailable"
+			evaluation.InitialDiagnostics[0].Code = string(analysis.ErrAssignmentAnalyzerUnavailable)
 		}
 		return evaluation, nil
 	}
 	evaluation.Analyzer = analyzer
 	evaluation.Manifest = analyzer.Manifest()
 	if language != "" && evaluation.Manifest.Language != language {
+		if source == SelectionCLI {
+			return CandidateEvaluation{}, analysis.NewHostError(analysis.ErrAnalysisSelectionConflict, "CLI analyzer and language selections are incompatible", map[string]any{
+				"analyzer_id":       analyzerID,
+				"language":          language,
+				"analyzer_language": evaluation.Manifest.Language,
+			})
+		}
 		evaluation.InitialDiagnostics = append(evaluation.InitialDiagnostics, analysis.Diagnostic{
 			Code:        "selection_language_mismatch",
 			Severity:    "error",
@@ -579,6 +599,7 @@ func (p *AnalyzerJobPlanner) buildJob(policy SourceScopePolicy, evaluation Candi
 		RuntimeSource:               runtime.Source,
 		RuntimePlatform:             runtime.Platform,
 		SelectionSource:             evaluation.Source,
+		AssignmentPath:              evaluation.AssignmentPath,
 		Selection:                   selection,
 		NestedRootExclusions:        append([]string(nil), evaluation.Root.NestedRootExclusions...),
 		EffectiveSourceScope:        sourceScope,
@@ -686,6 +707,57 @@ func selectionAppliesToRoot(selection ExplicitSelection, root ProjectRootCandida
 		return true
 	}
 	return normalizeRelativePath(selection.ProjectRoot) == root.RelativePath || filepath.Clean(selection.ProjectRoot) == filepath.Clean(root.AbsolutePath)
+}
+
+func deepestAssignmentForRoot(assignments []AnalyzerAssignment, relativeRoot string) (AnalyzerAssignment, bool) {
+	relativeRoot = normalizeRelativePath(relativeRoot)
+	var winner AnalyzerAssignment
+	winnerPath := ""
+	found := false
+	for _, assignment := range assignments {
+		assignmentPath := normalizeRelativePath(assignment.ProjectRoot)
+		if assignmentPath == "" {
+			assignmentPath = "."
+		}
+		if relativeRoot != assignmentPath && assignmentPath != "." && !strings.HasPrefix(relativeRoot, assignmentPath+"/") {
+			continue
+		}
+		if !found || assignmentDepth(assignmentPath) > assignmentDepth(winnerPath) || (assignmentDepth(assignmentPath) == assignmentDepth(winnerPath) && assignmentPath < winnerPath) {
+			winner = assignment
+			winner.ProjectRoot = assignmentPath
+			winnerPath = assignmentPath
+			found = true
+		}
+	}
+	return winner, found
+}
+
+func assignmentDepth(value string) int {
+	value = normalizeRelativePath(value)
+	if value == "" || value == "." {
+		return 0
+	}
+	return strings.Count(value, "/") + 1
+}
+
+func validateCLISelection(registry *analysis.Registry, selection *ExplicitSelection) error {
+	if selection == nil || strings.TrimSpace(selection.AnalyzerID) == "" || strings.TrimSpace(selection.Language) == "" || registry == nil {
+		return nil
+	}
+	analyzerID := strings.TrimSpace(selection.AnalyzerID)
+	language := strings.ToLower(strings.TrimSpace(selection.Language))
+	analyzer, exists := registry.Get(analyzerID)
+	if !exists {
+		return nil
+	}
+	if strings.ToLower(strings.TrimSpace(analyzer.Manifest().Language)) != language {
+		return analysis.NewHostError(analysis.ErrAnalysisSelectionConflict, "CLI analyzer and language selections are incompatible", map[string]any{
+			"analyzer_id":       analyzerID,
+			"language":          language,
+			"analyzer_language": strings.ToLower(strings.TrimSpace(analyzer.Manifest().Language)),
+		})
+	}
+	return nil
 }
 
 func assignmentAllowedByCLI(assignment AnalyzerAssignment, root ProjectRootCandidate, selection *ExplicitSelection) bool {

@@ -125,15 +125,16 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			runtime:          runtime,
 		})
 		if *analyzerID == "" && *language == "" {
-			run, combinedErr := runCombinedAnalysis(ctx, host, *project, cliOptions)
+			cache := orchestration.NewSessionCache()
+			run, combinedErr := runCombinedAnalysisWithPolicyAndCache(ctx, host, *project, cliOptions, orchestration.SourceScopePolicy{}, cache)
 			if combinedErr != nil {
 				writeError(stderr, combinedErr)
 				return analysis.ExitCodeForError(combinedErr)
 			}
 			aggregateRun = &run
-			viewerOptions = projectCombinedViewerOptions(host, *project, cliOptions)
+			viewerOptions = projectCombinedViewerOptionsWithCache(host, *project, cliOptions, cache)
 		} else {
-			result, runErr := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
+			result, runErr := runConfiguredSingleAnalysis(ctx, host, *project, *analyzerID, *language, cliOptions)
 			if runErr != nil {
 				writeError(stderr, runErr)
 				return analysis.ExitCodeForError(runErr)
@@ -200,7 +201,11 @@ func projectViewerOptions(host *analysis.Host, project, language, analyzerID str
 			if languageValue == "" {
 				languageValue = language
 			}
-			result, err := host.Run(reanalysisContext, analysis.RunRequest{ProjectRoot: request.ProjectRoot, Language: languageValue, AnalyzerID: analyzerID, CLIOptions: options, ProjectOptions: map[string]any{}})
+			root := request.ProjectRoot
+			if root == "" {
+				root = project
+			}
+			result, err := runConfiguredSingleAnalysis(reanalysisContext, host, root, analyzerID, languageValue, options)
 			if err != nil {
 				return model.Model{}, err
 			}
@@ -210,6 +215,10 @@ func projectViewerOptions(host *analysis.Host, project, language, analyzerID str
 }
 
 func projectCombinedViewerOptions(host *analysis.Host, project string, cliOptions map[string]any) viewer.ServerOptions {
+	return projectCombinedViewerOptionsWithCache(host, project, cliOptions, nil)
+}
+
+func projectCombinedViewerOptionsWithCache(host *analysis.Host, project string, cliOptions map[string]any, cache *orchestration.SessionCache) viewer.ServerOptions {
 	baseOptions := make(map[string]any, len(cliOptions))
 	for key, option := range cliOptions {
 		baseOptions[key] = option
@@ -226,7 +235,7 @@ func projectCombinedViewerOptions(host *analysis.Host, project string, cliOption
 		if root == "" {
 			root = project
 		}
-		return runCombinedAnalysisWithPolicy(ctx, host, root, options, request.SourceScopePolicy)
+		return runCombinedAnalysisWithPolicyAndCache(ctx, host, root, options, request.SourceScopePolicy, cache)
 	}
 	return viewer.ServerOptions{
 		SourceRoot:        project,

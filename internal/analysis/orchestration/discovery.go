@@ -18,6 +18,8 @@ var defaultFixedExclusions = []string{
 	"node_modules", "out", "target", "tmp", "vendor", "venv",
 }
 
+const hostConfigurationFileName = ".archview.json"
+
 func defaultDiscoveryPolicy() DiscoveryPolicy {
 	return DiscoveryPolicy{
 		Version:         DiscoveryPolicyVersion,
@@ -173,7 +175,6 @@ func (s *ProjectDiscoveryService) DiscoverProjectRoots(ctx context.Context, repo
 		if !resolvedPathWithin(root, filePath) {
 			return nil
 		}
-		result.AllSourcePaths = append(result.AllSourcePaths, relative)
 		parent := normalizeRelativePath(filepath.Dir(relative))
 		for key, analyzers := range strongMarkers {
 			kind, value, ok := splitMarkerKey(key)
@@ -186,6 +187,12 @@ func (s *ProjectDiscoveryService) DiscoverProjectRoots(ctx context.Context, repo
 			for analyzerID := range analyzers {
 				markerRoots[parent][analyzerID+"\x00"+value] = struct{}{}
 			}
+		}
+		// The host configuration controls planning and presentation. It is not
+		// analyzer source input, so layout-only edits must not invalidate every
+		// job cache entry. Marker discovery still runs above for completeness.
+		if entry.Name() != hostConfigurationFileName {
+			result.AllSourcePaths = append(result.AllSourcePaths, relative)
 		}
 		return nil
 	})

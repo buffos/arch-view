@@ -284,6 +284,15 @@ p {
   font-weight: 650;
 }
 
+.scope-option-detail {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .scope-picker-chevron {
   flex: 0 0 auto;
   color: var(--cyan);

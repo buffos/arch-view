@@ -56,8 +56,9 @@ type DiscoveryPolicy struct {
 	RepositoryScope string   `json:"repository_scope,omitempty"`
 }
 
-// AnalyzerIncludeRule is an analyzer-ID-scoped allowlist. Duplicate rules
-// are merged during policy normalization.
+// AnalyzerIncludeRule is an analyzer-ID-scoped allowlist. Configuration
+// validation rejects duplicate analyzer rules before they reach planning;
+// normalization still canonicalizes the glob order.
 type AnalyzerIncludeRule struct {
 	AnalyzerID string   `json:"analyzer_id"`
 	Globs      []string `json:"globs"`
@@ -103,6 +104,7 @@ type PlanRequest struct {
 	DiscoveryPolicy    DiscoveryPolicy
 	Assignments        []AnalyzerAssignment
 	CLISelection       *ExplicitSelection
+	CLISelectionOnly   bool
 	ProjectOptions     map[string]any
 	CLIOptions         map[string]any
 	ProjectOptionsByID map[string]map[string]any
@@ -139,6 +141,7 @@ type CandidateEvaluation struct {
 	Language           string
 	Candidate          analysis.DetectionCandidate
 	Source             SelectionSource
+	AssignmentPath     string
 	Options            analysis.EffectiveOptions
 	InitialDiagnostics []analysis.Diagnostic
 }
@@ -160,12 +163,16 @@ type AnalyzerJob struct {
 	RuntimeSource               string                     `json:"runtime_source"`
 	RuntimePlatform             string                     `json:"runtime_platform,omitempty"`
 	SelectionSource             SelectionSource            `json:"selection_source"`
+	AssignmentPath              string                     `json:"assignment_path,omitempty"`
 	Selection                   analysis.AnalyzerSelection `json:"selection"`
 	NestedRootExclusions        []string                   `json:"nested_root_exclusions"`
 	EffectiveSourceScope        analysis.SourceScope       `json:"effective_source_scope"`
 	SourceScopeFingerprint      string                     `json:"source_scope_fingerprint"`
 	MatchedSourceSetFingerprint string                     `json:"matched_source_set_fingerprint"`
 	EffectiveOptionsFingerprint string                     `json:"effective_options_fingerprint"`
+	CacheKey                    string                     `json:"cache_key"`
+	CacheHit                    bool                       `json:"cache_hit"`
+	InvalidationReason          string                     `json:"invalidation_reason,omitempty"`
 	Options                     analysis.EffectiveOptions  `json:"options"`
 	Status                      JobStatus                  `json:"status"`
 	StartedAt                   *time.Time                 `json:"-"`
@@ -228,14 +235,20 @@ type ScopeSourceSummary struct {
 }
 
 type ScopeSummary struct {
-	ScopeID       string                   `json:"scope_id"`
-	ProjectRoot   string                   `json:"project_root"`
-	Analyzer      analysis.AnalyzerInfo    `json:"analyzer"`
-	RuntimeSource string                   `json:"runtime_source,omitempty"`
-	SourceScope   ScopeSourceSummary       `json:"source_scope"`
-	Status        JobStatus                `json:"status"`
-	Summary       analysis.AnalysisSummary `json:"summary"`
-	Diagnostics   []analysis.Diagnostic    `json:"diagnostics"`
+	ScopeID                     string                   `json:"scope_id"`
+	ProjectRoot                 string                   `json:"project_root"`
+	Analyzer                    analysis.AnalyzerInfo    `json:"analyzer"`
+	RuntimeSource               string                   `json:"runtime_source,omitempty"`
+	SourceScope                 ScopeSourceSummary       `json:"source_scope"`
+	Status                      JobStatus                `json:"status"`
+	SelectionSource             SelectionSource          `json:"selection_source"`
+	AssignmentPath              string                   `json:"assignment_path,omitempty"`
+	EffectiveOptionsFingerprint string                   `json:"effective_options_fingerprint,omitempty"`
+	CacheKey                    string                   `json:"cache_key,omitempty"`
+	CacheHit                    bool                     `json:"cache_hit"`
+	InvalidationReason          string                   `json:"invalidation_reason,omitempty"`
+	Summary                     analysis.AnalysisSummary `json:"summary"`
+	Diagnostics                 []analysis.Diagnostic    `json:"diagnostics"`
 }
 
 type ScopedDiagnostic struct {

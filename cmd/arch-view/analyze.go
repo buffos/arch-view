@@ -146,7 +146,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		}
 		return writeCombinedAnalysisOutput(run, *format, *output, *project, *scope, *referenceVisibility, []string(viewPath), []string(referenceScopes), *overwrite, *embedSource, ctx, stdout, stderr)
 	}
-	result, err := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
+	result, err := runConfiguredSingleAnalysis(ctx, host, *project, *analyzerID, *language, cliOptions)
 	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)

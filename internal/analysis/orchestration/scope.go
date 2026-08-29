@@ -44,11 +44,16 @@ func NormalizeSourceScopePolicy(policy SourceScopePolicy, invocationRoot string)
 	policy.Exclude = exclude
 
 	rules := make(map[string]map[string]struct{}, len(policy.Include))
+	seenRule := make(map[string]struct{}, len(policy.Include))
 	for _, rule := range policy.Include {
 		analyzerID := strings.TrimSpace(rule.AnalyzerID)
 		if analyzerID == "" || strings.ContainsAny(analyzerID, "\x00\r\n") {
 			return SourceScopePolicy{}, scopeFilterError("source-scope include rule requires a safe analyzer id", map[string]any{"analyzer_id": rule.AnalyzerID})
 		}
+		if _, exists := seenRule[analyzerID]; exists {
+			return SourceScopePolicy{}, scopeFilterError("source-scope include rules must contain one rule per analyzer id", map[string]any{"analyzer_id": analyzerID})
+		}
+		seenRule[analyzerID] = struct{}{}
 		values, err := normalizeGlobList(rule.Globs)
 		if err != nil {
 			return SourceScopePolicy{}, err
@@ -101,16 +106,23 @@ func normalizeGlob(value string) (string, error) {
 	if filepath.IsAbs(value) || strings.HasPrefix(value, "/") || windowsAbsolute(value) {
 		return "", scopeFilterError("source-scope glob must be relative to the invocation root", map[string]any{"glob": value})
 	}
-	value = strings.TrimPrefix(value, "./")
+	for strings.HasPrefix(value, "./") {
+		value = strings.TrimPrefix(value, "./")
+	}
 	if value == "" {
 		return "", scopeFilterError("source-scope glob cannot resolve to an empty path", map[string]any{"glob": value})
 	}
 	segments := strings.Split(value, "/")
+	canonicalSegments := make([]string, 0, len(segments))
 	for _, segment := range segments {
 		if segment == ".." || segment == "" {
 			return "", scopeFilterError("source-scope glob cannot contain empty or parent-traversal segments", map[string]any{"glob": value})
 		}
+		if segment == "." {
+			continue
+		}
 		if segment == "**" {
+			canonicalSegments = append(canonicalSegments, segment)
 			continue
 		}
 		if strings.Contains(segment, "**") {
@@ -119,8 +131,12 @@ func normalizeGlob(value string) (string, error) {
 		if _, err := path.Match(segment, "arch-view-glob-probe"); err != nil {
 			return "", scopeFilterError("source-scope glob is malformed", map[string]any{"glob": value, "error": err.Error()})
 		}
+		canonicalSegments = append(canonicalSegments, segment)
 	}
-	return value, nil
+	if len(canonicalSegments) == 0 {
+		return ".", nil
+	}
+	return strings.Join(canonicalSegments, "/"), nil
 }
 
 func scopeFilterError(message string, details map[string]any) error {
@@ -180,9 +196,67 @@ func scopeID(relativeRoot, analyzerID string) string {
 }
 
 func jobID(job AnalyzerJob) string {
-	payload := job.ScopeID + "\x00" + job.AnalyzerVersion + "\x00" + job.EffectiveOptionsFingerprint + "\x00" + job.SourceScopeFingerprint + "\x00" + job.MatchedSourceSetFingerprint
-	sum := sha256.Sum256([]byte(payload))
+	identity := job.CacheKey
+	if identity == "" {
+		identity = job.ScopeID + "\x00" + job.AnalyzerVersion + "\x00" + job.EffectiveOptionsFingerprint + "\x00" + job.SourceScopeFingerprint + "\x00" + job.MatchedSourceSetFingerprint
+	}
+	sum := sha256.Sum256([]byte(identity))
 	return "job-" + hex.EncodeToString(sum[:12])
+}
+
+// cacheKey is the canonical identity for one executable analyzer scope. It
+// includes every input that can change observations while keeping ScopeID
+// stable for projection and selection across reanalysis.
+func cacheKey(job AnalyzerJob, repositoryRoot, invocationRoot string, discoveryPolicy DiscoveryPolicy) string {
+	manifestAPIVersion := job.Manifest.APIVersion
+	if manifestAPIVersion == "" && job.LogicalAnalyzerID != "" {
+		manifestAPIVersion = analysis.AnalyzerAPIVersion
+	}
+	identity := struct {
+		SchemaVersion           string                     `json:"schema_version"`
+		DiscoveryPolicy         DiscoveryPolicy            `json:"discovery_policy"`
+		RepositoryRoot          string                     `json:"repository_root"`
+		InvocationRoot          string                     `json:"invocation_root"`
+		ProjectRoot             string                     `json:"project_root"`
+		LogicalAnalyzerID       string                     `json:"logical_analyzer_id"`
+		AnalyzerVersion         string                     `json:"analyzer_version"`
+		AnalyzerAPIVersion      string                     `json:"analyzer_api_version"`
+		AnalyzerRuntimeIdentity string                     `json:"analyzer_runtime_identity,omitempty"`
+		RuntimeMode             string                     `json:"runtime_mode"`
+		RuntimeSource           string                     `json:"runtime_source"`
+		RuntimePlatform         string                     `json:"runtime_platform"`
+		SelectionSource         SelectionSource            `json:"selection_source"`
+		AssignmentPath          string                     `json:"assignment_path,omitempty"`
+		Selection               analysis.AnalyzerSelection `json:"selection"`
+		NestedRootExclusions    []string                   `json:"nested_root_exclusions"`
+		Options                 map[string]any             `json:"options"`
+		SourceScopeFingerprint  string                     `json:"source_scope_fingerprint"`
+		MatchedSourceSet        string                     `json:"matched_source_set_fingerprint"`
+		MatchedPaths            []string                   `json:"matched_paths"`
+	}{
+		SchemaVersion:           JobPlanSchemaVersion,
+		DiscoveryPolicy:         normalizeDiscoveryPolicy(discoveryPolicy),
+		RepositoryRoot:          filepath.Clean(repositoryRoot),
+		InvocationRoot:          normalizeRelativePath(invocationRoot),
+		ProjectRoot:             normalizeRelativePath(job.RelativeProjectRoot),
+		LogicalAnalyzerID:       job.LogicalAnalyzerID,
+		AnalyzerVersion:         job.AnalyzerVersion,
+		AnalyzerAPIVersion:      manifestAPIVersion,
+		AnalyzerRuntimeIdentity: job.Manifest.RuntimeIdentity,
+		RuntimeMode:             job.RuntimeMode,
+		RuntimeSource:           job.RuntimeSource,
+		RuntimePlatform:         job.RuntimePlatform,
+		SelectionSource:         job.SelectionSource,
+		AssignmentPath:          normalizeRelativePath(job.AssignmentPath),
+		Selection:               job.Selection,
+		NestedRootExclusions:    uniqueStrings(append([]string(nil), job.NestedRootExclusions...)),
+		Options:                 job.Options.Values,
+		SourceScopeFingerprint:  job.SourceScopeFingerprint,
+		MatchedSourceSet:        job.MatchedSourceSetFingerprint,
+		MatchedPaths:            uniqueStrings(append([]string(nil), job.EffectiveSourceScope.MatchedPaths...)),
+	}
+	data, _ := json.Marshal(identity)
+	return sha256Fingerprint(data)
 }
 
 func namespacedID(scope, local string) string {
@@ -336,13 +410,27 @@ func buildEffectiveSourceScope(policy SourceScopePolicy, root ProjectRootCandida
 		PolicyFingerprint:           policyHash,
 		MatchedSourceSetFingerprint: matchedHash,
 	}
+	relevantExcludes := []string{}
+	for _, candidate := range append(append([]string(nil), policy.Exclude...), analyzerExcludes...) {
+		for _, repositoryPath := range root.OwnedSourcePaths {
+			invocationPath := relativeToInvocation(policy.InvocationRoot, repositoryPath)
+			localPath := relativeToProject(root.RelativePath, repositoryPath)
+			if matchesAnyGlob([]string{candidate}, invocationPath) || matchesAnyGlob([]string{candidate}, localPath) {
+				relevantExcludes = append(relevantExcludes, candidate)
+				break
+			}
+		}
+	}
 	identityData, _ := json.Marshal(struct {
-		PolicyFingerprint string   `json:"policy_fingerprint"`
-		AnalyzerID        string   `json:"analyzer_id"`
-		Root              string   `json:"root"`
-		Matched           []string `json:"matched"`
-		Excludes          []string `json:"excludes"`
-	}{policyHash, analyzerID, root.RelativePath, matched, allExcludes})
+		PolicyVersion    string   `json:"policy_version"`
+		AnalyzerID       string   `json:"analyzer_id"`
+		Root             string   `json:"root"`
+		InvocationRoot   string   `json:"invocation_root"`
+		Include          []string `json:"include"`
+		Matched          []string `json:"matched"`
+		Excluded         []string `json:"excluded"`
+		RelevantExcludes []string `json:"relevant_excludes"`
+	}{policy.PolicyVersion, analyzerID, root.RelativePath, policy.InvocationRoot, include, matched, excluded, uniqueStrings(relevantExcludes)})
 	return scope, sha256Fingerprint(identityData), nil
 }
 
