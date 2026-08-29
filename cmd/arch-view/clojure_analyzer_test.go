@@ -34,6 +34,13 @@ func TestClojureCLIExplicitAndAutomaticAnalysisJSON(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if len(selection) == 0 {
+			run := decodeAggregateRun(t, data)
+			if run.Status != analysis.StatusComplete || run.Model == nil || !hasAggregateAnalyzer(run, "org.archview.clojure") || len(run.Model.Modules) == 0 {
+				t.Fatalf("selection %v aggregate = %#v", selection, run)
+			}
+			continue
+		}
 		var result analysis.AnalysisResult
 		if err := json.Unmarshal(data, &result); err != nil {
 			t.Fatalf("selection %v result: %v", selection, err)

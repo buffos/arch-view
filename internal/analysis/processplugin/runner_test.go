@@ -69,12 +69,14 @@ func TestRunAnalyzeForwardsOptionsAndStreamsDiagnostics(t *testing.T) {
 		MatchedMarkers: []string{"fixture.marker"},
 		Reason:         "fixture",
 	}
+	sourceScope := analysis.SourceScope{PolicyVersion: "arch-view.source-scope/v1", ProjectRoot: ".", MatchedLocalPaths: []string{"main.fixture"}}
 	request := processprotocol.Frame{
 		Type:        processprotocol.FrameAnalyze,
 		RequestID:   "analyze-1",
 		ProjectRoot: "/fixture",
 		Selection:   &selection,
 		Options:     &options,
+		SourceScope: &sourceScope,
 	}
 	input := encodedFrame(t, request)
 	var output bytes.Buffer
@@ -93,6 +95,9 @@ func TestRunAnalyzeForwardsOptionsAndStreamsDiagnostics(t *testing.T) {
 	}
 	if !reflect.DeepEqual(analyzer.seenOptions, wantOptions) {
 		t.Fatalf("options = %#v, want %#v", analyzer.seenOptions, wantOptions)
+	}
+	if !reflect.DeepEqual(analyzer.seenSourceScope, &sourceScope) {
+		t.Fatalf("source scope = %#v, want %#v", analyzer.seenSourceScope, &sourceScope)
 	}
 	frames := decodeFrames(t, output.Bytes())
 	if got := frameTypes(frames); !reflect.DeepEqual(got, []processprotocol.FrameType{
@@ -199,6 +204,7 @@ func TestRunAnalyzerErrorEmitsFatal(t *testing.T) {
 type runnerTestAnalyzer struct {
 	seenSelection        analysis.AnalyzerSelection
 	seenOptions          analysis.EffectiveOptions
+	seenSourceScope      *analysis.SourceScope
 	waitForCancellation  bool
 	analysisStarted      chan struct{}
 	cancellationObserved chan struct{}
@@ -243,6 +249,7 @@ func (a *runnerTestAnalyzer) Detect(context.Context, analysis.DetectRequest) (an
 func (a *runnerTestAnalyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) (analysis.AnalysisResult, error) {
 	a.seenSelection = request.Selection
 	a.seenOptions = request.Options
+	a.seenSourceScope = request.SourceScope
 	if a.waitForCancellation {
 		close(a.analysisStarted)
 		<-ctx.Done()

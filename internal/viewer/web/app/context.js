@@ -19,12 +19,17 @@ function embeddedLayoutProfile(exportData) {
 
 export function createContext() {
   const modelID = document.querySelector('meta[name="model-id"]').content;
+  const analysisRunID = document.querySelector('meta[name="analysis-run-id"]').content;
+  const aggregateEnabled = document.querySelector('meta[name="aggregate-enabled"]').content === "true";
   const embeddedExport = window.__ARCH_VIEW_EXPORT__ || null;
   const sourceEnabled = document.querySelector('meta[name="source-enabled"]').content === "true";
   const reanalysisEnabled = document.querySelector('meta[name="reanalysis-enabled"]').content === "true";
   const workerURL = document.querySelector('meta[name="worker-url"]').content;
   const state = {
     model: null,
+    scopes: [],
+    activeScope: aggregateEnabled ? "all" : "",
+    scopeRequest: 0,
     scene: null,
     selected: null,
     query: "",
@@ -53,7 +58,9 @@ export function createContext() {
     sourceRequest: 0,
     suppressClickUntil: 0,
     lastNodeClick: null,
-    nativeFullscreen: false
+    nativeFullscreen: false,
+    aggregateError: "",
+    scopePickerBound: false
   };
   const elements = {
     projectLabel: document.getElementById("project-label"),
@@ -67,6 +74,7 @@ export function createContext() {
     graph: document.getElementById("graph-wrap"),
     detailsTitle: document.getElementById("details-title"),
     detailsKind: document.getElementById("details-kind"),
+    detailsContext: document.getElementById("details-context"),
     detailsContent: document.getElementById("details-content"),
     accessibleList: document.getElementById("accessible-list"),
     listCount: document.getElementById("list-count"),
@@ -78,6 +86,10 @@ export function createContext() {
     footerModelID: document.getElementById("footer-model-id"),
     search: document.getElementById("search"),
     referenceVisibility: document.getElementById("reference-visibility"),
+    scopeSelectorControl: document.getElementById("scope-selector-control"),
+    scopeSelector: document.getElementById("scope-selector"),
+    scopeSelectorButton: document.getElementById("scope-selector-button"),
+    scopeSelectorMenu: document.getElementById("scope-selector-menu"),
     reanalysisButton: document.getElementById("reanalysis-button"),
     backButton: document.getElementById("back-button"),
     breadcrumbs: document.getElementById("breadcrumbs"),
@@ -106,5 +118,5 @@ export function createContext() {
     layoutSettingsSave: document.getElementById("layout-settings-save"),
     layoutSettingsSaveAs: document.getElementById("layout-settings-save-as")
   };
-  return { modelID, embeddedExport, sourceEnabled, reanalysisEnabled, workerURL, state, elements, constants };
+  return { modelID, analysisRunID, aggregateEnabled, embeddedExport, sourceEnabled, reanalysisEnabled, workerURL, state, elements, constants };
 }

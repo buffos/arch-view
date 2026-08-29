@@ -19,24 +19,27 @@ var referenceScopeOrder = []string{"standard_library", "external", "unresolved",
 // viewer. It deliberately carries semantic IDs and contributor IDs so a
 // renderer never has to infer architecture facts from presentation geometry.
 type SceneSnapshot struct {
-	SchemaVersion        string                `json:"schema_version"`
-	ModelID              string                `json:"model_id"`
-	ModelRevision        string                `json:"model_revision"`
-	Status               model.Status          `json:"status"`
-	Project              SceneProject          `json:"project"`
-	HierarchyPath        []string              `json:"hierarchy_path"`
-	DisplayMode          string                `json:"display_mode"`
-	ReferenceVisibility  string                `json:"reference_visibility"`
-	VisibleNodes         []VisibleNode         `json:"visible_nodes"`
-	VisibleRelationships []VisibleRelationship `json:"visible_relationships"`
-	CycleIndicators      []CycleIndicator      `json:"cycle_indicators"`
-	DiagnosticIndicators []DiagnosticIndicator `json:"diagnostic_indicators"`
-	LayerLabels          []LayerLabel          `json:"layer_labels"`
-	ReferenceSummary     ReferenceSummary      `json:"reference_summary"`
-	ReferenceDetails     []ReferenceDetail     `json:"reference_details"`
-	EvidenceLinks        []EvidenceLink        `json:"evidence_links"`
-	Accessibility        Accessibility         `json:"accessibility"`
-	Summary              SceneSummary          `json:"summary"`
+	SchemaVersion        string                  `json:"schema_version"`
+	ModelID              string                  `json:"model_id"`
+	ModelRevision        string                  `json:"model_revision"`
+	Status               model.Status            `json:"status"`
+	ScopeID              string                  `json:"scope_id,omitempty"`
+	AggregateStatus      analysis.AnalysisStatus `json:"aggregate_status,omitempty"`
+	ScopeStatus          string                  `json:"scope_status,omitempty"`
+	Project              SceneProject            `json:"project"`
+	HierarchyPath        []string                `json:"hierarchy_path"`
+	DisplayMode          string                  `json:"display_mode"`
+	ReferenceVisibility  string                  `json:"reference_visibility"`
+	VisibleNodes         []VisibleNode           `json:"visible_nodes"`
+	VisibleRelationships []VisibleRelationship   `json:"visible_relationships"`
+	CycleIndicators      []CycleIndicator        `json:"cycle_indicators"`
+	DiagnosticIndicators []DiagnosticIndicator   `json:"diagnostic_indicators"`
+	LayerLabels          []LayerLabel            `json:"layer_labels"`
+	ReferenceSummary     ReferenceSummary        `json:"reference_summary"`
+	ReferenceDetails     []ReferenceDetail       `json:"reference_details"`
+	EvidenceLinks        []EvidenceLink          `json:"evidence_links"`
+	Accessibility        Accessibility           `json:"accessibility"`
+	Summary              SceneSummary            `json:"summary"`
 }
 
 type SceneOptions struct {

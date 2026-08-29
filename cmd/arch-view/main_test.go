@@ -125,8 +125,8 @@ func TestAnalyzeCommandSelectsPythonAndNormalizesModuleOnlyResult(t *testing.T) 
 
 func TestAnalyzeCommandAutoDetectsPythonProject(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "setup.cfg"), []byte("[options.packages.find]\nwhere = src\n"), 0o644); err != nil {
-		t.Fatalf("write setup.cfg: %v", err)
+	if err := os.WriteFile(filepath.Join(root, "pyproject.toml"), []byte("[project]\nname = 'auto-python'\n"), 0o644); err != nil {
+		t.Fatalf("write pyproject.toml: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(root, "src", "auto"), 0o755); err != nil {
 		t.Fatalf("create Python package: %v", err)
@@ -143,12 +143,9 @@ func TestAnalyzeCommandAutoDetectsPythonProject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read auto-detected analysis: %v", err)
 	}
-	var result analysis.AnalysisResult
-	if err := json.Unmarshal(data, &result); err != nil {
-		t.Fatalf("decode auto-detected analysis: %v", err)
-	}
-	if result.Analyzer.ID != "org.archview.python" || result.Project.Boundary != "setup.cfg" {
-		t.Fatalf("auto-detected result = %#v", result)
+	result := decodeAggregateRun(t, data)
+	if result.Status != analysis.StatusComplete || result.Model == nil || !hasAggregateAnalyzer(result, "org.archview.python") {
+		t.Fatalf("auto-detected aggregate = %#v", result)
 	}
 }
 
@@ -219,12 +216,9 @@ func TestAnalyzeCommandAutoDetectsRustProject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read auto-detected Rust analysis: %v", err)
 	}
-	var result analysis.AnalysisResult
-	if err := json.Unmarshal(data, &result); err != nil {
-		t.Fatalf("decode auto-detected Rust analysis: %v", err)
-	}
-	if result.Analyzer.ID != "org.archview.rust" || result.Project.Boundary != "Cargo.toml" || len(result.Modules) != 1 {
-		t.Fatalf("auto-detected Rust result = %#v", result)
+	result := decodeAggregateRun(t, data)
+	if result.Status != analysis.StatusComplete || result.Model == nil || !hasAggregateAnalyzer(result, "org.archview.rust") || len(result.Model.Modules) != 1 {
+		t.Fatalf("auto-detected Rust aggregate = %#v", result)
 	}
 }
 

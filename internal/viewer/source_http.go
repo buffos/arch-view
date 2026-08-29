@@ -3,10 +3,12 @@ package viewer
 import (
 	"net/http"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/orchestration"
 	"github.com/buffo/arch-view/internal/model"
 )
 
@@ -15,10 +17,24 @@ func (s *Server) handleSource(writer http.ResponseWriter, request *http.Request)
 		writeMethodNotAllowed(writer, http.MethodGet)
 		return
 	}
-	value := s.snapshot()
 	query := request.URL.Query()
 	requestedModelID := query.Get("model_id")
-	if requestedModelID == "" || requestedModelID != value.ModelID {
+	aggregate := s.aggregateSnapshot()
+	value := s.snapshot()
+	responseModelID := value.ModelID
+	if aggregate != nil {
+		responseModelID = s.modelID()
+		if requestedModelID == "" || requestedModelID != responseModelID {
+			writeHTTPError(writer, http.StatusNotFound, analysis.NewHostError(analysis.ErrInvalidModel, "source evidence belongs to a different aggregate revision", map[string]any{"model_id": requestedModelID}))
+			return
+		}
+		var err error
+		value, err = aggregateSourceModel(*aggregate, query)
+		if err != nil {
+			writeHTTPError(writer, sourceErrorStatus(err), err)
+			return
+		}
+	} else if requestedModelID == "" || requestedModelID != value.ModelID {
 		writeHTTPError(writer, http.StatusNotFound, analysis.NewHostError(analysis.ErrInvalidModel, "source evidence belongs to a different model revision", map[string]any{"model_id": requestedModelID}))
 		return
 	}
@@ -34,7 +50,21 @@ func (s *Server) handleSource(writer http.ResponseWriter, request *http.Request)
 		}
 	}
 
-	source, err := sourceForQuery(value, query)
+	sourceQuery := query
+	if aggregate != nil && query.Get("scope") != "" && !scopeEqualAll(query.Get("scope")) {
+		sourceQuery = cloneURLValues(query)
+		if query.Get("evidence_id") != "" {
+			// Individual scene evidence keeps its local analyzer ID and path;
+			// source lookup uses the cached scope model, whose path is promoted
+			// to the repository root below.
+			sourceQuery.Del("path")
+		} else if requestedPath := query.Get("path"); requestedPath != "" {
+			if summary, ok := aggregateScopeSummary(*aggregate, query.Get("scope")); ok {
+				sourceQuery.Set("path", repositorySourcePath(summary.ProjectRoot, requestedPath))
+			}
+		}
+	}
+	source, err := sourceForQuery(value, sourceQuery)
 	if err != nil {
 		writeHTTPError(writer, sourceErrorStatus(err), err)
 		return
@@ -81,8 +111,8 @@ func (s *Server) handleSource(writer http.ResponseWriter, request *http.Request)
 	}
 	writeJSON(writer, http.StatusOK, SourceExcerpt{
 		SchemaVersion:     sourceSchemaVersion,
-		ModelID:           value.ModelID,
-		ModelRevision:     value.ModelID,
+		ModelID:           responseModelID,
+		ModelRevision:     responseModelID,
 		SourceReferenceID: source.ID,
 		Path:              relativePath,
 		Start:             start,
@@ -90,6 +120,94 @@ func (s *Server) handleSource(writer http.ResponseWriter, request *http.Request)
 		Lines:             excerptLines,
 		ReadOnly:          true,
 	})
+}
+
+func aggregateSourceModel(run orchestration.AnalysisRun, query url.Values) (model.Model, error) {
+	if scope := strings.TrimSpace(query.Get("scope")); scope != "" && !scopeEqualAll(scope) {
+		selected, err := run.SelectAnalysisScope(scope)
+		if err != nil {
+			return model.Model{}, err
+		}
+		if selected.Model.ModelID == "" {
+			return model.Model{}, analysis.NewHostError(analysis.ErrInvalidModel, "source evidence is unavailable for the selected analysis scope", map[string]any{"scope_id": scope})
+		}
+		value := selected.Model
+		value.SourceReferences = append([]analysis.SourceReference(nil), value.SourceReferences...)
+		for index := range value.SourceReferences {
+			value.SourceReferences[index].Path = repositorySourcePath(selected.Summary.ProjectRoot, value.SourceReferences[index].Path)
+		}
+		return value, nil
+	}
+	combined, combinedOK := run.CombinedCanonicalModel()
+	evidenceID := query.Get("evidence_id")
+	requestedPath := query.Get("path")
+	if combinedOK && sourceModelContains(combined, evidenceID, requestedPath) {
+		return combined, nil
+	}
+	for _, summary := range run.Scopes {
+		value, err := run.ScopeResult(summary.ScopeID)
+		if err != nil {
+			continue
+		}
+		if sourceModelContains(valueToModel(value), evidenceID, requestedPath) {
+			return valueToModel(value), nil
+		}
+	}
+	if combinedOK {
+		return combined, nil
+	}
+	return model.Model{}, analysis.NewHostError(analysis.ErrInvalidModel, "source evidence was not found in the aggregate run", map[string]any{"evidence_id": evidenceID, "path": requestedPath})
+}
+
+func aggregateScopeSummary(run orchestration.AnalysisRun, scope string) (orchestration.ScopeSummary, bool) {
+	for _, summary := range run.Scopes {
+		if summary.ScopeID == scope {
+			return summary, true
+		}
+	}
+	return orchestration.ScopeSummary{}, false
+}
+
+func repositorySourcePath(root, local string) string {
+	root = strings.TrimPrefix(strings.ReplaceAll(root, "\\", "/"), "./")
+	local = strings.TrimPrefix(strings.ReplaceAll(local, "\\", "/"), "./")
+	if root == "" || root == "." {
+		return path.Clean(local)
+	}
+	if local == "" || local == "." {
+		return path.Clean(root)
+	}
+	if local == root || strings.HasPrefix(local, root+"/") {
+		return path.Clean(local)
+	}
+	return path.Clean(root + "/" + local)
+}
+
+func cloneURLValues(values url.Values) url.Values {
+	result := make(url.Values, len(values))
+	for key, items := range values {
+		result[key] = append([]string(nil), items...)
+	}
+	return result
+}
+
+func valueToModel(value analysis.AnalysisResult) model.Model {
+	// Aggregate source lookup only needs the source-reference collection. This
+	// lightweight model avoids exposing analyzer results as a public viewer
+	// response while keeping the existing sourceForQuery matching semantics.
+	return model.Model{SourceReferences: value.SourceReferences}
+}
+
+func sourceModelContains(value model.Model, evidenceID, requestedPath string) bool {
+	for _, source := range value.SourceReferences {
+		if evidenceID != "" && source.ID == evidenceID {
+			return true
+		}
+		if evidenceID == "" && requestedPath != "" && source.Path == requestedPath {
+			return true
+		}
+	}
+	return false
 }
 
 type SourceLine struct {

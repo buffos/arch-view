@@ -22,6 +22,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	allowUntrustedPlugin := fs.Bool("allow-untrusted-plugin", false, "allow an explicitly supplied local descriptor")
 	language := fs.String("language", "", "explicit analyzer language")
 	analyzerID := fs.String("analyzer", "", "explicit analyzer id")
+	scope := fs.String("scope", "", "cached aggregate scope id; omit for All")
 	module := fs.String("module", "", "explicit Go module path or workspace-relative directory")
 	crate := fs.String("crate", "", "explicit Rust package name or workspace-relative crate directory")
 	target := fs.String("target", "", "explicit Rust target triple or target selector")
@@ -91,6 +92,11 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
+	if *scope != "" && (*analyzerID != "" || *language != "") {
+		err := analysis.NewHostError(analysis.ErrInvalidRequest, "--scope cannot be combined with an explicit analyzer or language selection", nil)
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	}
 	configuredHost, _, err := configureCommandHost(host, commandRuntimeOptions{
 		Mode:                 *analyzerRuntime,
 		ModeProvided:         runtimeModeWasProvided(fs),
@@ -126,6 +132,20 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	})
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+	if *analyzerID == "" && *language == "" {
+		run, err := runCombinedAnalysis(ctx, host, *project, cliOptions)
+		if err != nil {
+			writeError(stderr, err)
+			return analysis.ExitCodeForError(err)
+		}
+		if *scope != "" {
+			if _, err := run.SelectAnalysisScope(*scope); err != nil {
+				writeError(stderr, err)
+				return analysis.ExitCodeForError(err)
+			}
+		}
+		return writeCombinedAnalysisOutput(run, *format, *output, *project, *scope, *referenceVisibility, []string(viewPath), []string(referenceScopes), *overwrite, *embedSource, ctx, stdout, stderr)
+	}
 	result, err := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
 	if err != nil {
 		writeError(stderr, err)

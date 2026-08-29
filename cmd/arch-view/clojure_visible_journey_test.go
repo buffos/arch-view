@@ -73,10 +73,9 @@ func TestClojureCLIOptionsAndSharedVisibleJourney(t *testing.T) {
 	if code, _, stderr := runClojureCommand("analyze", "--project", root, "--output", autoOutput, "--format", "analysis-json"); code != 0 {
 		t.Fatalf("auto-detected Clojure analyze exit code = %d, stderr=%s", code, stderr)
 	}
-	var autoResult analysis.AnalysisResult
-	decodeTestJSON(t, readTestFile(t, autoOutput), &autoResult)
-	if autoResult.Analyzer.ID != "org.archview.clojure" || autoResult.Project.Boundary != "deps.edn" {
-		t.Fatalf("auto-detected Clojure metadata = %#v", autoResult)
+	autoResult := decodeAggregateRun(t, readTestFile(t, autoOutput))
+	if autoResult.Status != analysis.StatusPartial || autoResult.Model == nil || !hasAggregateAnalyzer(autoResult, "org.archview.clojure") {
+		t.Fatalf("auto-detected Clojure aggregate = %#v", autoResult)
 	}
 	idOutput := filepath.Join(t.TempDir(), "id-analysis.json")
 	if code, _, stderr := runClojureCommand("analyze", "--project", root, "--analyzer", "org.archview.clojure", "--output", idOutput, "--format", "analysis-json"); code != 0 {
@@ -231,11 +230,12 @@ func TestClojureCLIRejectsMixedMarkerAutoDetection(t *testing.T) {
 	writeTestFile(t, filepath.Join(root, "go.mod"), "module mixed.example\n")
 	output := filepath.Join(t.TempDir(), "mixed-analysis.json")
 	code, _, stderr := runClojureCommand("analyze", "--project", root, "--output", output, "--format", "analysis-json")
-	if code != 2 || !strings.Contains(stderr, "multiple analyzers have the same highest detection confidence") {
-		t.Fatalf("mixed-marker auto-detection = code %d, stderr=%s", code, stderr)
+	if code != 0 || stderr != "" {
+		t.Fatalf("mixed-marker combined analysis = code %d, stderr=%s", code, stderr)
 	}
-	if _, err := os.Stat(output); !os.IsNotExist(err) {
-		t.Fatalf("ambiguous selection left an output artifact: %v", err)
+	run := decodeAggregateRun(t, readTestFile(t, output))
+	if run.Model == nil || !hasAggregateLanguage(run, "clojure") || !hasAggregateLanguage(run, "go") {
+		t.Fatalf("mixed-marker aggregate = %#v", run)
 	}
 }
 

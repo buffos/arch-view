@@ -21,6 +21,67 @@ export function formatList(values, empty) {
   return values.join(", ");
 }
 
+export function formatLanguage(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return "Unknown";
+  if (text === "typescript") return "TypeScript";
+  if (text === "multi") return "Multi";
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+export function displayProjectRoot(value) {
+  const text = String(value || "").trim();
+  return !text || text === "." ? "Repository root" : text;
+}
+
+function moduleForNode(context, moduleID) {
+  const modules = context && context.state && context.state.model && context.state.model.modules
+    ? context.state.model.modules
+    : [];
+  const exact = modules.find(function (module) { return module.id === moduleID; });
+  if (exact) return exact;
+  const activeScope = context && context.state ? context.state.activeScope : "";
+  if (!activeScope || activeScope === "all" || !moduleID) return null;
+  const prefix = activeScope + "::";
+  return modules.find(function (module) {
+    if (!module.id || !module.id.startsWith(prefix)) return false;
+    try {
+      return decodeURIComponent(module.id.slice(prefix.length)) === moduleID;
+    } catch (_) {
+      return false;
+    }
+  }) || null;
+}
+
+export function nodeLanguages(context, node) {
+  const languages = [];
+  (node && node.module_ids || []).forEach(function (moduleID) {
+    const module = moduleForNode(context, moduleID);
+    if (!module || !module.language) return;
+    const language = String(module.language).trim().toLowerCase();
+    if (language && !languages.includes(language)) languages.push(language);
+  });
+  if (languages.length) return languages.sort();
+  if (node && node.kind === "reference") return ["reference"];
+  const sceneLanguage = context && context.state && context.state.scene && context.state.scene.project
+    ? String(context.state.scene.project.language || "").trim().toLowerCase()
+    : "";
+  return sceneLanguage ? [sceneLanguage] : [];
+}
+
+export function nodeLanguageBadge(context, node) {
+  const languages = nodeLanguages(context, node);
+  return languages.length > 1 ? "multi" : (languages[0] || "unknown");
+}
+
+export function nodeLanguageText(context, node) {
+  const languages = nodeLanguages(context, node);
+  if (!languages.length) return "Unknown";
+  return languages.length > 1
+    ? languages.map(formatLanguage).join(" + ")
+    : formatLanguage(languages[0]);
+}
+
 export function clampNumber(value, minimum, maximum, fallback) {
   return typeof value === "number" && Number.isFinite(value) ? Math.max(minimum, Math.min(maximum, value)) : fallback;
 }

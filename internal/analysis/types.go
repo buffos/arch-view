@@ -18,6 +18,7 @@ type AnalyzeRequest struct {
 	ProjectRoot string            `json:"project_root"`
 	Selection   AnalyzerSelection `json:"selection"`
 	Options     EffectiveOptions  `json:"options"`
+	SourceScope *SourceScope      `json:"source_scope,omitempty"`
 }
 
 type RunRequest struct {
@@ -26,6 +27,19 @@ type RunRequest struct {
 	AnalyzerID     string
 	ProjectOptions map[string]any
 	CLIOptions     map[string]any
+	SourceScope    *SourceScope
+}
+
+// PlannedRunRequest is the host boundary used by the multi-analyzer
+// scheduler. Selection and options are resolved by the planner once and are
+// passed through unchanged; the host still owns analyzer lookup, runtime
+// provenance, result validation, and process cleanup.
+type PlannedRunRequest struct {
+	ProjectRoot string
+	AnalyzerID  string
+	Selection   AnalyzerSelection
+	Options     EffectiveOptions
+	SourceScope *SourceScope
 }
 
 // RuntimeSelection describes how the host obtained the analyzer used for a
@@ -92,6 +106,25 @@ type EffectiveOptions struct {
 	Values      map[string]any    `json:"values"`
 	Sources     map[string]string `json:"sources,omitempty"`
 	Fingerprint string            `json:"fingerprint"`
+}
+
+// SourceScope is the normalized source input handed to one analyzer job. All
+// paths are repository-relative to the invocation root unless explicitly
+// documented otherwise by the containing field. The planner computes the
+// fingerprints before execution so source filtering participates in cache and
+// job identity.
+type SourceScope struct {
+	PolicyVersion               string   `json:"policy_version"`
+	InvocationRoot              string   `json:"invocation_root"`
+	ProjectRoot                 string   `json:"project_root"`
+	NestedRootExclusions        []string `json:"nested_root_exclusions,omitempty"`
+	IncludeGlobs                []string `json:"include_globs,omitempty"`
+	ExcludeGlobs                []string `json:"exclude_globs,omitempty"`
+	MatchedPaths                []string `json:"matched_paths"`
+	MatchedLocalPaths           []string `json:"matched_local_paths,omitempty"`
+	ExcludedPaths               []string `json:"excluded_paths,omitempty"`
+	PolicyFingerprint           string   `json:"policy_fingerprint"`
+	MatchedSourceSetFingerprint string   `json:"matched_source_set_fingerprint"`
 }
 
 type AnalysisStatus string

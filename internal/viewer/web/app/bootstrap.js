@@ -6,7 +6,7 @@ import { applyLayoutProfile, closeLayoutSettings, loadLayoutConfig, openLayoutSe
 import { createNavigation } from "./navigation.js";
 import { changeZoom, fitViewport, persistViewport, renderViewportControls, resetLayout, resetZoom, syncFocusButton, toggleFocusMode } from "./viewport.js";
 import { renderAccessibleList, renderDetails, renderSupportLists, openSource, selectEntity } from "./details.js";
-import { hideError, renderAll, renderBreadcrumbs, renderSceneState, sceneLayoutKey, showError } from "./view.js";
+import { hideError, renderAll, renderBreadcrumbs, renderSceneState, renderScopeSelector, sceneLayoutKey, showError } from "./view.js";
 
 export function bootstrap() {
   const context = createContext();
@@ -24,6 +24,7 @@ export function bootstrap() {
     renderGraph: function () { renderGraph(context, services); },
     renderLayoutSettings: function () { renderLayoutSettings(context); },
     renderSceneState: function () { renderSceneState(context); },
+    renderScopeSelector: function () { renderScopeSelector(context); },
     renderSupportLists: function () { renderSupportLists(context, services); },
     renderViewportControls: function () { renderViewportControls(context); },
     sceneLayoutKey: sceneLayoutKey,
@@ -48,6 +49,12 @@ export function bootstrap() {
     context.state.referenceVisibility = event.target.value;
     context.state.selected = null;
     navigation.loadScene(context.state.scene ? context.state.scene.hierarchy_path : []);
+  });
+  context.elements.scopeSelector.addEventListener("change", function (event) {
+    context.state.activeScope = event.target.value || "all";
+    context.state.history = [];
+    context.state.selected = null;
+    void navigation.loadScene([]);
   });
   context.elements.backButton.addEventListener("click", navigation.goBack);
   context.elements.zoomOut.addEventListener("click", function () { services.changeZoom(-0.12); });
@@ -75,7 +82,8 @@ export function bootstrap() {
   document.addEventListener("fullscreenchange", function () { syncFocusButton(context); });
   context.elements.reanalysisButton.addEventListener("click", navigation.reanalyze);
   if (context.embeddedExport && context.embeddedExport.initial_reference_visibility) context.state.referenceVisibility = context.embeddedExport.initial_reference_visibility;
-  void navigation.loadModel();
+  void navigation.loadModel().then(function () { return navigation.loadScopes(); }).then(function () {
+    return navigation.loadScene(context.embeddedExport && Array.isArray(context.embeddedExport.initial_path) ? context.embeddedExport.initial_path : []);
+  });
   void loadLayoutConfig(context, api, services);
-  void navigation.loadScene(context.embeddedExport && Array.isArray(context.embeddedExport.initial_path) ? context.embeddedExport.initial_path : []);
 }

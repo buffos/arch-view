@@ -198,6 +198,7 @@ func invoke(ctx context.Context, analyzer analysis.Analyzer, manifest analysis.M
 			ProjectRoot: request.ProjectRoot,
 			Selection:   selection,
 			Options:     options,
+			SourceScope: request.SourceScope,
 		})
 		return operationOutput{result: result, err: err}
 	default:

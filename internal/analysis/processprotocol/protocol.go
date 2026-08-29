@@ -50,6 +50,7 @@ type Frame struct {
 	ProjectRoot string                       `json:"project_root,omitempty"`
 	Selection   *analysis.AnalyzerSelection  `json:"selection,omitempty"`
 	Options     *analysis.EffectiveOptions   `json:"options,omitempty"`
+	SourceScope *analysis.SourceScope        `json:"source_scope,omitempty"`
 	Candidate   *analysis.DetectionCandidate `json:"candidate,omitempty"`
 	Result      *analysis.AnalysisResult     `json:"result,omitempty"`
 	Diagnostic  *analysis.Diagnostic         `json:"diagnostic,omitempty"`

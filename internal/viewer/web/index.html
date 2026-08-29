@@ -7,6 +7,8 @@
     <meta name="source-enabled" content="__ARCH_VIEW_SOURCE_ENABLED__">
     <meta name="reanalysis-enabled" content="__ARCH_VIEW_REANALYSIS_ENABLED__">
     <meta name="worker-url" content="__ARCH_VIEW_WORKER_URL__">
+    <meta name="analysis-run-id" content="__ARCH_VIEW_ANALYSIS_RUN_ID__">
+    <meta name="aggregate-enabled" content="__ARCH_VIEW_AGGREGATE__">
     <title>Arch View</title>
     <link rel="stylesheet" href="/assets/styles.css">
   </head>
@@ -43,6 +45,14 @@
               <option value="aggregated">Boundary summary</option>
               <option value="expanded">Show imports</option>
             </select>
+          </label>
+          <label id="scope-selector-control" class="select-control scope-selector-control" hidden>
+            <span>Analysis scope</span>
+            <div class="scope-picker">
+              <button id="scope-selector-button" class="scope-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="scope-selector-menu">Loading analysis scopes…</button>
+              <div id="scope-selector-menu" class="scope-picker-menu" role="listbox" tabindex="-1" hidden></div>
+              <select id="scope-selector" class="scope-selector-native" tabindex="-1" aria-hidden="true"></select>
+            </div>
           </label>
           <button id="list-toggle" class="button secondary" type="button" aria-pressed="false">List/details</button>
           <button id="reanalysis-button" class="button secondary" type="button" hidden>Reanalyze</button>
@@ -97,6 +107,7 @@
             </div>
             <span id="details-kind" class="kind-pill">Overview</span>
           </div>
+          <div id="details-context" class="details-context" aria-live="polite"></div>
           <div id="details-content" class="details-content">
             <p class="muted">Use the graph or the keyboard-accessible list below to inspect the same scene facts.</p>
           </div>

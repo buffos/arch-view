@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/orchestration"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/viewer"
@@ -79,10 +80,11 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+	var err error
 	var value model.Model
 	var viewerOptions viewer.ServerOptions
+	var aggregateRun *orchestration.AnalysisRun
 	if *modelInput != "" {
-		var err error
 		value, err = readModelFile(*modelInput)
 		if err != nil {
 			writeError(stderr, err)
@@ -122,19 +124,34 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 			platform:         platform,
 			runtime:          runtime,
 		})
-		result, err := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
-		if err != nil {
-			writeError(stderr, err)
-			return analysis.ExitCodeForError(err)
+		if *analyzerID == "" && *language == "" {
+			run, combinedErr := runCombinedAnalysis(ctx, host, *project, cliOptions)
+			if combinedErr != nil {
+				writeError(stderr, combinedErr)
+				return analysis.ExitCodeForError(combinedErr)
+			}
+			aggregateRun = &run
+			viewerOptions = projectCombinedViewerOptions(host, *project, cliOptions)
+		} else {
+			result, runErr := host.Run(ctx, analysis.RunRequest{ProjectRoot: *project, Language: *language, AnalyzerID: *analyzerID, CLIOptions: cliOptions, ProjectOptions: map[string]any{}})
+			if runErr != nil {
+				writeError(stderr, runErr)
+				return analysis.ExitCodeForError(runErr)
+			}
+			value, runErr = canonical.Normalize(result)
+			if runErr != nil {
+				writeError(stderr, runErr)
+				return analysis.ExitCodeForError(runErr)
+			}
+			viewerOptions = projectViewerOptions(host, *project, *language, *analyzerID, cliOptions)
 		}
-		value, err = canonical.Normalize(result)
-		if err != nil {
-			writeError(stderr, err)
-			return analysis.ExitCodeForError(err)
-		}
-		viewerOptions = projectViewerOptions(host, *project, *language, *analyzerID, cliOptions)
 	}
-	server, err := viewer.NewServer(value, viewerOptions)
+	var server *viewer.Server
+	if aggregateRun != nil {
+		server, err = viewer.NewAggregateServer(*aggregateRun, viewerOptions)
+	} else {
+		server, err = viewer.NewServer(value, viewerOptions)
+	}
 	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
@@ -189,5 +206,31 @@ func projectViewerOptions(host *analysis.Host, project, language, analyzerID str
 			}
 			return canonical.Normalize(result)
 		},
+	}
+}
+
+func projectCombinedViewerOptions(host *analysis.Host, project string, cliOptions map[string]any) viewer.ServerOptions {
+	baseOptions := make(map[string]any, len(cliOptions))
+	for key, option := range cliOptions {
+		baseOptions[key] = option
+	}
+	analyze := func(ctx context.Context, request viewer.CombinedAnalysisRequest) (orchestration.AnalysisRun, error) {
+		options := make(map[string]any, len(baseOptions)+len(request.CLIOptions))
+		for key, option := range baseOptions {
+			options[key] = option
+		}
+		for key, option := range request.CLIOptions {
+			options[key] = option
+		}
+		root := request.ProjectRoot
+		if root == "" {
+			root = project
+		}
+		return runCombinedAnalysisWithPolicy(ctx, host, root, options, request.SourceScopePolicy)
+	}
+	return viewer.ServerOptions{
+		SourceRoot:        project,
+		AnalyzeCombined:   analyze,
+		ReanalyzeCombined: analyze,
 	}
 }

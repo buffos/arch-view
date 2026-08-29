@@ -93,10 +93,9 @@ func TestPythonCLIOptionsSelectionAndDeterminism(t *testing.T) {
 	if code, _, stderr := runPythonCommand("analyze", "--project", root, "--format", "analysis-json", "--output", autoOutput); code != 0 {
 		t.Fatalf("auto-detected Python analyze exit code = %d, stderr=%s", code, stderr)
 	}
-	var autoResult analysis.AnalysisResult
-	decodeTestJSON(t, readTestFile(t, autoOutput), &autoResult)
-	if autoResult.Analyzer.ID != "org.archview.python" || autoResult.Project.Boundary != "pyproject.toml" {
-		t.Fatalf("auto-detected Python metadata = %#v", autoResult)
+	autoResult := decodeAggregateRun(t, readTestFile(t, autoOutput))
+	if autoResult.Status != analysis.StatusComplete || autoResult.Model == nil || !hasAggregateAnalyzer(autoResult, "org.archview.python") {
+		t.Fatalf("auto-detected Python aggregate = %#v", autoResult)
 	}
 	idOutput := filepath.Join(t.TempDir(), "id-analysis.json")
 	if code, _, stderr := runPythonCommand("analyze", "--project", root, "--analyzer", "org.archview.python", "--output", idOutput, "--format", "analysis-json"); code != 0 {
@@ -274,11 +273,12 @@ func TestPythonCLIRejectsMixedMarkerAutoDetection(t *testing.T) {
 	writeTestFile(t, filepath.Join(root, "go.mod"), "module mixed.example\n")
 	output := filepath.Join(t.TempDir(), "mixed-analysis.json")
 	code, _, stderr := runPythonCommand("analyze", "--project", root, "--output", output, "--format", "analysis-json")
-	if code != 2 || !strings.Contains(stderr, "multiple analyzers have the same highest detection confidence") {
-		t.Fatalf("mixed-marker auto-detection = code %d, stderr=%s", code, stderr)
+	if code != 0 || stderr != "" {
+		t.Fatalf("mixed-marker combined analysis = code %d, stderr=%s", code, stderr)
 	}
-	if _, err := os.Stat(output); !os.IsNotExist(err) {
-		t.Fatalf("ambiguous selection left an output artifact: %v", err)
+	run := decodeAggregateRun(t, readTestFile(t, output))
+	if run.Model == nil || !hasAggregateLanguage(run, "python") || !hasAggregateLanguage(run, "go") {
+		t.Fatalf("mixed-marker aggregate = %#v", run)
 	}
 }
 

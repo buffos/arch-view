@@ -39,6 +39,20 @@ func (h *Host) ListManifests() []Manifest {
 	return h.registry.ListManifests()
 }
 
+// RegistrySnapshot returns a defensive registry copy for application services
+// such as multi-analyzer planning. The host retains ownership of its active
+// registry; callers cannot mutate it through the snapshot.
+func (h *Host) RegistrySnapshot() *Registry {
+	if h == nil || h.registry == nil {
+		return NewRegistry()
+	}
+	registry := NewRegistry()
+	for _, analyzer := range h.registry.List() {
+		_ = registry.Register(analyzer)
+	}
+	return registry
+}
+
 // Runtime returns the host's runtime provenance configuration.
 func (h *Host) Runtime() RuntimeSelection {
 	if h == nil {
@@ -117,10 +131,73 @@ func (h *Host) Run(ctx context.Context, request RunRequest) (result AnalysisResu
 	if err != nil {
 		return AnalysisResult{}, err
 	}
+	return h.runSelected(ctx, root, selected, selection, effectiveOptions, request.SourceScope)
+}
+
+// RunPlanned executes a planner-resolved analyzer selection. It deliberately
+// does not run Detect or resolve options again: doing so could change an
+// immutable plan between scheduling and execution. All normal host validation
+// and runtime provenance checks still apply.
+func (h *Host) RunPlanned(ctx context.Context, request PlannedRunRequest) (result AnalysisResult, err error) {
+	if h == nil || h.registry == nil {
+		return AnalysisResult{}, NewHostError(ErrHostFailure, "analysis host is not initialized", nil)
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := validateRuntimeSelection(h.runtime); err != nil {
+		return AnalysisResult{}, err
+	}
+	if err := validateProjectRoot(request.ProjectRoot); err != nil {
+		return AnalysisResult{}, err
+	}
+	root, err := normalizeProjectRoot(request.ProjectRoot)
+	if err != nil {
+		return AnalysisResult{}, err
+	}
+	if strings.TrimSpace(request.AnalyzerID) == "" {
+		return AnalysisResult{}, NewHostError(ErrInvalidRequest, "planned analyzer id is required", nil)
+	}
+	selected, ok := h.registry.Get(request.AnalyzerID)
+	if !ok {
+		return AnalysisResult{}, NewHostError(ErrNoAnalyzer, "planned analyzer is not registered", map[string]any{"analyzer_id": request.AnalyzerID})
+	}
+	if request.Selection.AnalyzerID != "" && request.Selection.AnalyzerID != request.AnalyzerID {
+		return AnalysisResult{}, NewHostError(ErrInvalidRequest, "planned selection does not match the analyzer id", map[string]any{"analyzer_id": request.AnalyzerID, "selection_analyzer_id": request.Selection.AnalyzerID})
+	}
+	selection := request.Selection
+	if selection.AnalyzerID == "" {
+		selection.AnalyzerID = request.AnalyzerID
+	}
+	if selection.Mode == "" {
+		selection.Mode = "planned"
+	}
+	selection = h.decorateSelection(selection)
+	if request.Options.Fingerprint == "" {
+		return AnalysisResult{}, NewHostError(ErrInvalidOptions, "planned analyzer options fingerprint is required", map[string]any{"analyzer_id": request.AnalyzerID})
+	}
+	return h.runSelected(ctx, root, selected, selection, request.Options, request.SourceScope)
+}
+
+func (h *Host) runSelected(ctx context.Context, root string, selected Analyzer, selection AnalyzerSelection, effectiveOptions EffectiveOptions, sourceScope *SourceScope) (result AnalysisResult, err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			result = AnalysisResult{}
+			err = NewHostError(ErrAnalyzerFailed, "analyzer panicked during host execution", map[string]any{"panic": fmt.Sprintf("%T: %v", recovered, recovered)})
+		}
+	}()
+	if ctx.Err() != nil {
+		return AnalysisResult{}, NewHostError(ErrCancelled, "analysis was cancelled before execution", nil)
+	}
+	manifest := selected.Manifest()
 	analyzeRequest := AnalyzeRequest{
 		ProjectRoot: root,
 		Selection:   selection,
 		Options:     effectiveOptions,
+		SourceScope: sourceScope,
 	}
 	result, err = selected.Analyze(ctx, analyzeRequest)
 	if err != nil {

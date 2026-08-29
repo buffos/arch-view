@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/orchestration"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/viewer/layout"
@@ -39,24 +40,61 @@ type ReanalysisRequest struct {
 // to the analyzer host without introducing a viewer-to-language dependency.
 type ReanalyzeFunc func(context.Context, ReanalysisRequest) (model.Model, error)
 
+// CombinedAnalysisRequest is the transport-neutral request envelope used by
+// the aggregate HTTP surface and the project-backed viewer. The CLI owns
+// conversion from flags/configuration into these validated planning inputs.
+type CombinedAnalysisRequest struct {
+	ProjectRoot       string                          `json:"project_root"`
+	SourceScopePolicy orchestration.SourceScopePolicy `json:"source_scope_policy"`
+	CLIOptions        map[string]any                  `json:"cli_options,omitempty"`
+}
+
+// CombinedAnalyzeFunc connects the viewer/HTTP transport to the orchestration
+// layer without making the viewer responsible for analyzer selection.
+type CombinedAnalyzeFunc func(context.Context, CombinedAnalysisRequest) (orchestration.AnalysisRun, error)
+
 type ServerOptions struct {
-	SourceRoot string
-	Reanalyze  ReanalyzeFunc
+	SourceRoot        string
+	Reanalyze         ReanalyzeFunc
+	AnalyzeCombined   CombinedAnalyzeFunc
+	ReanalyzeCombined CombinedAnalyzeFunc
 }
 
 type Server struct {
-	mu         sync.RWMutex
-	model      model.Model
-	sourceRoot string
-	reanalyze  ReanalyzeFunc
-	layout     layout.Session
-	handler    http.Handler
+	mu                sync.RWMutex
+	model             model.Model
+	aggregate         *orchestration.AnalysisRun
+	runs              map[string]*orchestration.AnalysisRun
+	sourceRoot        string
+	reanalyze         ReanalyzeFunc
+	analyzeCombined   CombinedAnalyzeFunc
+	reanalyzeCombined CombinedAnalyzeFunc
+	layout            layout.Session
+	handler           http.Handler
 }
 
 func NewServer(value model.Model, options ...ServerOptions) (*Server, error) {
 	if err := canonical.Validate(value); err != nil {
 		return nil, err
 	}
+	return newServer(value, nil, options...)
+}
+
+// NewAggregateServer creates a viewer over one cached combined analysis run.
+// A run with no usable scope is allowed so its diagnostics can be inspected;
+// it simply has no model-backed graph projection.
+func NewAggregateServer(run orchestration.AnalysisRun, options ...ServerOptions) (*Server, error) {
+	var value model.Model
+	if combined, ok := run.CombinedCanonicalModel(); ok {
+		value = combined
+		if err := canonical.Validate(value); err != nil {
+			return nil, err
+		}
+	}
+	return newServer(value, &run, options...)
+}
+
+func newServer(value model.Model, aggregate *orchestration.AnalysisRun, options ...ServerOptions) (*Server, error) {
 	var option ServerOptions
 	if len(options) > 0 {
 		option = options[0]
@@ -65,7 +103,19 @@ func NewServer(value model.Model, options ...ServerOptions) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	server := &Server{model: value, sourceRoot: sourceRoot, reanalyze: option.Reanalyze, layout: layout.NewSession(sourceRoot)}
+	server := &Server{
+		model:             value,
+		aggregate:         aggregate,
+		runs:              make(map[string]*orchestration.AnalysisRun),
+		sourceRoot:        sourceRoot,
+		reanalyze:         option.Reanalyze,
+		analyzeCombined:   option.AnalyzeCombined,
+		reanalyzeCombined: option.ReanalyzeCombined,
+		layout:            layout.NewSession(sourceRoot),
+	}
+	if aggregate != nil {
+		server.runs[aggregate.RunID] = aggregate
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", server.handleRoot)
 	mux.HandleFunc("/assets/", server.handleAsset)
@@ -76,6 +126,8 @@ func NewServer(value model.Model, options ...ServerOptions) (*Server, error) {
 	mux.HandleFunc("/v1/layout/reset", server.handleLayoutReset)
 	mux.HandleFunc("/v1/source", server.handleSource)
 	mux.HandleFunc("/v1/reanalysis", server.handleReanalysis)
+	mux.HandleFunc("/v1/analyses", server.handleAnalyses)
+	mux.HandleFunc("/v1/analyses/", server.handleAnalysis)
 	mux.HandleFunc("/v1/models/", server.handleModel)
 	server.handler = mux
 	return server, nil
@@ -90,6 +142,24 @@ func (s *Server) snapshot() model.Model {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.model
+}
+
+func (s *Server) aggregateSnapshot() *orchestration.AnalysisRun {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.aggregate
+}
+
+func (s *Server) modelID() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.aggregate != nil && s.aggregate.Model != nil {
+		return s.aggregate.Model.ModelID
+	}
+	if s.aggregate != nil {
+		return s.aggregate.RunID
+	}
+	return s.model.ModelID
 }
 
 func (s *Server) sourceEnabled() bool {
@@ -107,7 +177,7 @@ func (s *Server) getSourceRoot() string {
 func (s *Server) reanalysisEnabled() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.reanalyze != nil && s.sourceRoot != ""
+	return (s.reanalyze != nil || s.reanalyzeCombined != nil) && s.sourceRoot != ""
 }
 
 func (s *Server) handleRoot(writer http.ResponseWriter, request *http.Request) {
@@ -124,14 +194,31 @@ func (s *Server) handleRoot(writer http.ResponseWriter, request *http.Request) {
 		writeHTTPError(writer, http.StatusInternalServerError, analysis.NewHostError(analysis.ErrHostFailure, "viewer application could not be loaded", nil))
 		return
 	}
-	value := s.snapshot()
-	content := strings.ReplaceAll(string(data), "__ARCH_VIEW_MODEL_ID__", html.EscapeString(value.ModelID))
+	modelID := s.modelID()
+	content := strings.ReplaceAll(string(data), "__ARCH_VIEW_MODEL_ID__", html.EscapeString(modelID))
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_SOURCE_ENABLED__", strconv.FormatBool(s.sourceEnabled()))
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_REANALYSIS_ENABLED__", strconv.FormatBool(s.reanalysisEnabled()))
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_WORKER_URL__", "/assets/vendor/elk-worker.min.js")
+	content = strings.ReplaceAll(content, "__ARCH_VIEW_ANALYSIS_RUN_ID__", html.EscapeString(s.analysisRunID()))
+	content = strings.ReplaceAll(content, "__ARCH_VIEW_AGGREGATE__", strconv.FormatBool(s.isAggregate()))
 	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	writer.Header().Set("Cache-Control", "no-store")
 	_, _ = io.WriteString(writer, content)
+}
+
+func (s *Server) analysisRunID() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.aggregate == nil {
+		return ""
+	}
+	return s.aggregate.RunID
+}
+
+func (s *Server) isAggregate() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.aggregate != nil
 }
 
 func (s *Server) handleAsset(writer http.ResponseWriter, request *http.Request) {

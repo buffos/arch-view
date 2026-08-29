@@ -225,6 +225,7 @@ func (a *Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest)
 		ProjectRoot: request.ProjectRoot,
 		Selection:   &selection,
 		Options:     &options,
+		SourceScope: request.SourceScope,
 	}
 	session, err := a.execute(ctx, processprotocol.FrameAnalyze, requestID, requestFrame)
 	if err != nil {

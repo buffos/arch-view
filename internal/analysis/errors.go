@@ -19,6 +19,8 @@ const (
 	ErrUnreadableProject                ErrorCode = "unreadable_project"
 	ErrModuleSelection                  ErrorCode = "module_selection"
 	ErrInvalidOptions                   ErrorCode = "invalid_options"
+	ErrAnalysisScopeFilterInvalid       ErrorCode = "analysis_scope_filter_invalid"
+	ErrAnalysisScopeNotFound            ErrorCode = "analysis_scope_not_found"
 	ErrUnsupportedOption                ErrorCode = "unsupported_option"
 	ErrSaveAsRequired                   ErrorCode = "save_as_required"
 	ErrPersistenceUnavailable           ErrorCode = "persistence_unavailable"
@@ -99,6 +101,8 @@ func ExitCodeForError(err error) int {
 	switch ErrorCodeOf(err) {
 	case ErrInvalidRequest, ErrInvalidManifest, ErrAPIIncompatible,
 		ErrDuplicateAnalyzer, ErrAmbiguousAnalyzer, ErrModuleSelection, ErrInvalidOptions,
+		ErrAnalysisScopeFilterInvalid,
+		ErrAnalysisScopeNotFound,
 		ErrUnsupportedOption, ErrSaveAsRequired, ErrPersistenceUnavailable,
 		ErrAnalyzerPackageIndexInvalid, ErrAnalyzerRuntimeOverrideRequired:
 		return 2

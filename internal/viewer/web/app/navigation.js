@@ -46,6 +46,27 @@ export function createNavigation(context, api, services) {
     }
   }
 
+  async function loadScopes() {
+    if (!context.aggregateEnabled || !context.analysisRunID || context.embeddedExport) {
+      services.renderScopeSelector();
+      return true;
+    }
+    const request = ++context.state.scopeRequest;
+    try {
+      const response = await api.getJSON("/v1/analyses/" + encodeURIComponent(context.analysisRunID) + "/scopes");
+      if (request !== context.state.scopeRequest) return false;
+      context.state.scopes = Array.isArray(response.scopes) ? response.scopes : [];
+      services.renderScopeSelector();
+      return true;
+    } catch (error) {
+      if (request !== context.state.scopeRequest) return false;
+      context.state.scopes = [];
+      services.renderScopeSelector();
+      showError(context, error.message || "The analysis scopes could not be loaded.");
+      return false;
+    }
+  }
+
   async function loadScene(pathValue) {
     const selectedPath = (pathValue || []).slice();
     const request = ++context.state.sceneRequest;
@@ -54,10 +75,16 @@ export function createNavigation(context, api, services) {
       query.set("mode", "overview");
       query.set("reference_visibility", context.state.referenceVisibility);
       selectedPath.forEach(function (segment) { query.append("path", segment); });
-      const scene = await api.getJSON("/v1/models/" + encodeURIComponent(api.currentModelID()) + "/projection?" + query.toString());
+      let endpoint = "/v1/models/" + encodeURIComponent(api.currentModelID()) + "/projection?" + query.toString();
+      if (context.aggregateEnabled && context.analysisRunID && !context.embeddedExport) {
+        query.set("scope", context.state.activeScope || "all");
+        endpoint = "/v1/analyses/" + encodeURIComponent(context.analysisRunID) + "/projection?" + query.toString();
+      }
+      const scene = await api.getJSON(endpoint);
       if (request !== context.state.sceneRequest) return false;
       context.state.lastNodeClick = null;
       context.state.scene = scene;
+      if (context.aggregateEnabled && scene.scope_id) context.state.activeScope = scene.scope_id;
       context.state.referenceVisibility = scene.reference_visibility || context.state.referenceVisibility;
       context.state.selected = null;
       context.state.source = null;
@@ -68,6 +95,7 @@ export function createNavigation(context, api, services) {
       context.state.layoutRequest += 1;
       context.state.viewport = loadViewport(context, scene);
       context.elements.referenceVisibility.value = context.state.referenceVisibility;
+      services.renderScopeSelector();
       context.elements.footerModelID.textContent = scene.model_id;
       hideError(context);
       services.renderAll();
@@ -87,8 +115,18 @@ export function createNavigation(context, api, services) {
     context.elements.reanalysisButton.textContent = "Reanalyzing…";
     const previousPath = context.state.scene ? context.state.scene.hierarchy_path.slice() : [];
     try {
-      const response = await api.postJSON("/v1/reanalysis", { project_root: "", language: context.state.scene ? context.state.scene.project.language : null, options: {} });
-      context.state.model = response.model || context.state.model;
+      const response = await api.postJSON("/v1/reanalysis", context.aggregateEnabled
+        ? { project_root: "", source_scope_policy: {}, cli_options: {} }
+        : { project_root: "", language: context.state.scene ? context.state.scene.project.language : null, options: {} });
+      if (context.aggregateEnabled) {
+        context.analysisRunID = response.run_id || context.analysisRunID;
+        context.state.model = response.model || context.state.model;
+        context.state.scopes = Array.isArray(response.scopes) ? response.scopes : context.state.scopes;
+        context.state.activeScope = "all";
+        services.renderScopeSelector();
+      } else {
+        context.state.model = response.model || context.state.model;
+      }
       context.state.selected = null;
       context.state.source = null;
       context.state.history = [];
@@ -102,5 +140,5 @@ export function createNavigation(context, api, services) {
     }
   }
 
-  return { goBack, loadModel, loadScene, navigationTo, reanalyze, rememberSceneContext };
+  return { goBack, loadModel, loadScene, loadScopes, navigationTo, reanalyze, rememberSceneContext };
 }

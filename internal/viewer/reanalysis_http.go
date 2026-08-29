@@ -17,9 +17,50 @@ func (s *Server) handleReanalysis(writer http.ResponseWriter, request *http.Requ
 	}
 	s.mu.RLock()
 	reanalyze := s.reanalyze
+	reanalyzeCombined := s.reanalyzeCombined
 	sourceRoot := s.sourceRoot
 	current := s.model
 	s.mu.RUnlock()
+	if aggregate := s.aggregateSnapshot(); aggregate != nil {
+		if reanalyzeCombined == nil || sourceRoot == "" {
+			writeHTTPError(writer, http.StatusForbidden, analysis.NewHostError(analysis.ErrInvalidRequest, "combined reanalysis is unavailable for this viewer session", nil))
+			return
+		}
+		var input CombinedAnalysisRequest
+		decoder := json.NewDecoder(io.LimitReader(request.Body, 1<<20))
+		if err := decoder.Decode(&input); err != nil {
+			writeHTTPError(writer, http.StatusBadRequest, analysis.WrapHostError(analysis.ErrInvalidRequest, "reanalysis request is invalid JSON", err, nil))
+			return
+		}
+		if input.ProjectRoot == "" {
+			input.ProjectRoot = sourceRoot
+		}
+		requestedRoot, err := normalizeSourceRoot(input.ProjectRoot)
+		if err != nil {
+			writeHTTPError(writer, http.StatusForbidden, err)
+			return
+		}
+		if !samePath(requestedRoot, sourceRoot) {
+			writeHTTPError(writer, http.StatusForbidden, analysis.NewHostError(analysis.ErrInvalidRequest, "reanalysis project root must remain within the opened project", map[string]any{"project_root": input.ProjectRoot}))
+			return
+		}
+		if input.CLIOptions == nil {
+			input.CLIOptions = map[string]any{}
+		}
+		next, err := reanalyzeCombined(request.Context(), input)
+		if err != nil {
+			writeHTTPError(writer, aggregateHTTPStatus(err), err)
+			return
+		}
+		status := aggregateRunHTTPStatus(next)
+		if status != http.StatusOK {
+			writeJSON(writer, status, next)
+			return
+		}
+		s.storeAggregateRun(&next)
+		writeJSON(writer, status, next)
+		return
+	}
 	if reanalyze == nil || sourceRoot == "" {
 		writeHTTPError(writer, http.StatusForbidden, analysis.NewHostError(analysis.ErrInvalidRequest, "reanalysis is unavailable for this viewer session", nil))
 		return

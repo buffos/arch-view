@@ -2,7 +2,7 @@ import { edgeGeometry } from "../graph_route.js";
 import { fallbackLayout } from "./layout.js";
 import { sceneLayoutKey } from "./view.js";
 import { defaultViewport, persistViewport, renderViewportControls } from "./viewport.js";
-import { classForState, escapeHTML, referenceScopeLabel, truncate } from "./utils.js";
+import { classForState, escapeHTML, formatLanguage, nodeLanguageBadge, nodeLanguageText, referenceScopeLabel, truncate } from "./utils.js";
 
 export function renderGraph(context, services) {
   const state = context.state;
@@ -45,12 +45,21 @@ export function renderGraph(context, services) {
     const className = "node-shape " + classForState(node.kind) + " " + classForState(node.cycle_state) + diagnosticClass + (selected ? " selected" : "") + (!matches ? " dimmed" : "");
     const layer = node.layer == null ? (node.layers && node.layers.length ? "L" + node.layers.join(", L") : "—") : "L" + node.layer;
     const scope = node.reference_scope ? " · " + referenceScopeLabel(node.reference_scope) : "";
-    const subtitle = node.kind + scope + " · " + layer + (node.counts.module_count > 1 ? " · " + node.counts.module_count + " modules" : "");
+    const languageValue = nodeLanguageBadge(context, node);
+    const language = nodeLanguageText(context, node);
+    const subtitle = language + " · " + node.kind + scope + " · " + layer + (node.counts.module_count > 1 ? " · " + node.counts.module_count + " modules" : "");
     const status = nodeStatusText(node);
-    return '<g data-node-id="' + escapeHTML(node.id) + '" data-node-kind="' + escapeHTML(node.kind) + '" tabindex="0" role="button" aria-label="' + escapeHTML(node.accessible_label) + '">' +
-      '<title>' + escapeHTML(node.accessible_label) + "</title>" +
+    const accessibleLabel = node.accessible_label + "; " + language + " language";
+    const badgeText = String(languageValue === "multi" ? "MULTI" : formatLanguage(languageValue)).toUpperCase();
+    const badgeWidth = Math.max(48, Math.min(position.width - 24, 18 + badgeText.length * 6.2));
+    const badgeX = position.x + position.width - badgeWidth - 12;
+    const badgeClass = "node-language-badge " + classForState(languageValue) + (!matches ? " dimmed" : "");
+    return '<g data-node-id="' + escapeHTML(node.id) + '" data-node-kind="' + escapeHTML(node.kind) + '" data-node-language="' + escapeHTML(languageValue) + '" tabindex="0" role="button" aria-label="' + escapeHTML(accessibleLabel) + '">' +
+      '<title>' + escapeHTML(accessibleLabel) + "</title>" +
       '<rect class="' + className + '" x="' + position.x + '" y="' + position.y + '" width="' + position.width + '" height="' + position.height + '" rx="12"></rect>' +
       '<rect class="node-hitzone" x="' + position.x + '" y="' + position.y + '" width="' + position.width + '" height="' + position.height + '" rx="12"></rect>' +
+      '<rect class="' + badgeClass + '" x="' + badgeX + '" y="' + (position.y + 10) + '" width="' + badgeWidth + '" height="18" rx="9"></rect>' +
+      '<text class="node-language-badge-label ' + (!matches ? "dimmed" : "") + '" x="' + (badgeX + badgeWidth / 2) + '" y="' + (position.y + 22.5) + '" text-anchor="middle">' + escapeHTML(badgeText) + "</text>" +
       '<text class="node-label ' + (!matches ? "dimmed" : "") + '" x="' + (position.x + 14) + '" y="' + (position.y + 30) + '">' + escapeHTML(truncate(node.label, 25)) + "</text>" +
       '<text class="node-subtitle" x="' + (position.x + 14) + '" y="' + (position.y + 51) + '">' + escapeHTML(truncate(subtitle, 29)) + "</text>" +
       '<text class="node-subtitle" x="' + (position.x + 14) + '" y="' + (position.y + 68) + '">' + escapeHTML(truncate(status, 29)) + "</text></g>";

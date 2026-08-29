@@ -1,4 +1,4 @@
-import { classForState, confidenceState, escapeHTML, formatList, referenceScopeLabel } from "./utils.js";
+import { classForState, confidenceState, displayProjectRoot, escapeHTML, formatLanguage, formatList, nodeLanguageBadge, nodeLanguageText, referenceScopeLabel } from "./utils.js";
 
 export function selectEntity(context, kind, id, preserveDoubleClick, services) {
   if (!preserveDoubleClick) context.state.lastNodeClick = null;
@@ -11,7 +11,7 @@ export function selectEntity(context, kind, id, preserveDoubleClick, services) {
 }
 
 function nodeListMeta(node) {
-  const parts = [node.kind, "identity " + (node.identity_state || "stable")];
+  const parts = [node.kind, "language " + (node.language || "Unknown"), "identity " + (node.identity_state || "stable")];
   if (node.confidence_state !== "not_applicable") parts.push(node.confidence_state + " confidence");
   if (node.counts.internal_relationship_count > 0) parts.push(node.counts.internal_relationship_count + " internal relationship(s)");
   return parts.join(" · ");
@@ -27,7 +27,7 @@ function relationshipListMeta(context, relationship) {
 
 function allListItems(context) {
   const scene = context.state.scene;
-  return scene.visible_nodes.map(function (node) { return { kind: "node", id: node.id, title: node.label, meta: nodeListMeta(node), value: node }; })
+  return scene.visible_nodes.map(function (node) { return { kind: "node", id: node.id, title: node.label, meta: nodeListMeta(Object.assign({}, node, { language: nodeLanguageText(context, node) })), language: nodeLanguageText(context, node), languageValue: nodeLanguageBadge(context, node), value: node }; })
     .concat(scene.visible_relationships.map(function (relationship) { return { kind: "relationship", id: relationship.id, title: relationship.type, meta: relationshipListMeta(context, relationship), value: relationship }; }))
     .concat((scene.reference_details || []).map(function (reference) { return { kind: "reference-detail", id: reference.id, title: reference.name, meta: referenceScopeLabel(reference.scope) + " · " + reference.count + " import(s) · " + reference.confidence_state + " confidence", value: reference }; }))
     .concat(scene.cycle_indicators.map(function (cycle) { return { kind: "cycle", id: cycle.id, title: cycle.label, meta: cycle.module_ids.length + " module(s) · " + cycle.relationship_ids.length + " relationship(s)", value: cycle }; }))
@@ -43,7 +43,8 @@ export function renderAccessibleList(context, services) {
   context.elements.listCount.textContent = items.length + " item(s)";
   context.elements.accessibleList.innerHTML = items.length ? items.map(function (item) {
     const selected = state.selected && state.selected.kind === item.kind && state.selected.id === item.id;
-    return '<button class="list-item ' + (selected ? "selected" : "") + '" type="button" data-list-kind="' + escapeHTML(item.kind) + '" data-list-id="' + escapeHTML(item.id) + '" aria-label="' + escapeHTML(item.title + ". " + item.meta) + '"><span class="list-item-title">' + escapeHTML(item.title) + '</span><span class="list-item-meta">' + escapeHTML(item.meta) + "</span></button>";
+    const title = '<span class="list-item-title">' + escapeHTML(item.title) + "</span>" + (item.kind === "node" ? languageBadgeMarkup(item.languageValue, item.language) : "");
+    return '<button class="list-item ' + (selected ? "selected" : "") + '" type="button" data-list-kind="' + escapeHTML(item.kind) + '" data-list-id="' + escapeHTML(item.id) + '" aria-label="' + escapeHTML(item.title + ". " + item.meta) + '"><span class="list-item-title-row">' + title + '</span><span class="list-item-meta">' + escapeHTML(item.meta) + "</span></button>";
   }).join("") : '<p class="list-empty">No items match the current search.</p>';
   context.elements.accessibleList.querySelectorAll("[data-list-id]").forEach(function (element) {
     element.addEventListener("click", function () { services.selectEntity(element.dataset.listKind, element.dataset.listId); });
@@ -60,7 +61,18 @@ function detailSection(title, content) {
 
 function modelModule(context, moduleID) {
   if (!context.state.model) return null;
-  return (context.state.model.modules || []).find(function (module) { return module.id === moduleID; }) || null;
+  const modules = context.state.model.modules || [];
+  const exact = modules.find(function (module) { return module.id === moduleID; });
+  if (exact || !context.aggregateEnabled || !context.state.activeScope || context.state.activeScope === "all") return exact || null;
+  const prefix = context.state.activeScope + "::";
+  return modules.find(function (module) {
+    if (!module.id || !module.id.startsWith(prefix)) return false;
+    try {
+      return decodeURIComponent(module.id.slice(prefix.length)) === moduleID;
+    } catch (_) {
+      return false;
+    }
+  }) || null;
 }
 
 function moduleNames(context, moduleIDs) {
@@ -112,7 +124,10 @@ function importsForNode(context, node) {
   });
   if (context.state.model && node.internal_relationship_ids) {
     node.internal_relationship_ids.forEach(function (relationshipID) {
-      const relationship = (context.state.model.relationships || []).find(function (item) { return item.id === relationshipID; });
+      const relationships = context.state.model.relationships || [];
+      const relationship = relationships.find(function (item) { return item.id === relationshipID; }) || (context.aggregateEnabled && context.state.activeScope && context.state.activeScope !== "all"
+        ? relationships.find(function (item) { return item.id && item.id.startsWith(context.state.activeScope + "::") && item.id.slice(context.state.activeScope.length + 2) === relationshipID; })
+        : null);
       if (!relationship) return;
       imports.push({ kind: "internal-relationship", id: relationship.id, title: moduleNames(context, [relationship.to_module_id])[0] || relationship.to_module_id, scope: "internal", count: 1, confidence: relationship.confidence ? confidenceState(relationship.confidence.score) : "unknown", evidenceIDs: relationship.source_reference_ids || [], meta: relationship.type + " · collapsed internal relationship", value: relationship });
     });
@@ -168,14 +183,72 @@ function sourcePanel(context) {
   return detailSection("Read-only source", '<div class="source-meta"><strong>' + escapeHTML(excerpt.path) + '</strong><span>' + escapeHTML(range) + ' · read-only</span></div><pre class="source-excerpt"><code>' + lines + "</code></pre>");
 }
 
+function activeScopeDetails(context) {
+  const scene = context.state.scene;
+  const active = context.state.activeScope || "all";
+  if (!context.aggregateEnabled) {
+    const languageValue = String(scene.project.language || "unknown").toLowerCase();
+    return {
+      name: displayProjectRoot(scene.project.root_label),
+      language: formatLanguage(languageValue),
+      languageValue: languageValue,
+      status: scene.status,
+      meta: "Model-only session · " + displayProjectRoot(scene.project.root_label)
+    };
+  }
+  if (active === "all") {
+    const scopes = context.state.scopes || [];
+    const usable = scopes.filter(function (scope) { return scope.status === "complete" || scope.status === "partial"; }).length;
+    return {
+      name: "All scopes",
+      language: "Multi",
+      languageValue: "multi",
+      status: scene.aggregate_status || scene.status,
+      meta: displayProjectRoot(scene.project.root_label) + " · " + usable + "/" + scopes.length + " scopes usable"
+    };
+  }
+  const scope = (context.state.scopes || []).find(function (item) { return item.scope_id === active; });
+  const analyzer = scope && scope.analyzer ? scope.analyzer : {};
+  const languageValue = String(analyzer.language || scene.project.language || "unknown").toLowerCase();
+  const summary = scope && scope.summary ? scope.summary : {};
+  const moduleCount = summary.module_count == null ? "module count unavailable" : summary.module_count + " module(s)";
+  return {
+    name: displayProjectRoot(scope && scope.project_root ? scope.project_root : scene.project.root_label),
+    language: formatLanguage(languageValue),
+    languageValue: languageValue,
+    status: scope && scope.status ? scope.status : scene.scope_status || scene.status,
+    meta: "Scope root · " + displayProjectRoot(scope && scope.project_root ? scope.project_root : scene.project.root_label) + " · " + moduleCount
+  };
+}
+
+function languageBadgeMarkup(languageValue, language) {
+  return '<span class="language-badge ' + classForState(languageValue) + '">' + escapeHTML(String(language || "Unknown").toUpperCase()) + "</span>";
+}
+
+function scopeStatusClass(status) {
+  const value = String(status || "unknown").toLowerCase();
+  if (value === "complete") return "ok";
+  if (value === "failed" || value === "cancelled") return "error";
+  if (value === "partial") return "warning";
+  return "";
+}
+
+function renderDetailsContext(context) {
+  if (!context.elements.detailsContext || !context.state.scene) return;
+  const value = activeScopeDetails(context);
+  const status = String(value.status || "unknown").toLowerCase();
+  context.elements.detailsContext.innerHTML = '<div class="details-context-label">Current scope</div><div class="details-context-main"><strong>' + escapeHTML(value.name) + '</strong>' + languageBadgeMarkup(value.languageValue, value.language) + '<span class="scope-status-badge ' + scopeStatusClass(status) + '">' + escapeHTML(status) + '</span></div><div class="details-context-meta">' + escapeHTML(value.meta) + "</div>";
+}
+
 export function renderDetails(context, services) {
   const state = context.state;
   const scene = state.scene;
   if (!scene) return;
+  renderDetailsContext(context);
   if (!state.selected) {
     context.elements.detailsTitle.textContent = "Select an item";
-    context.elements.detailsKind.textContent = "Overview";
-    context.elements.detailsContent.innerHTML = '<p class="muted">The graphic and list use the same renderer-neutral scene. Select a node or directed relationship to inspect stable IDs, aggregation counts, layers, uncertainty, and evidence.</p>' + '<div class="detail-table">' + detailRow("Hierarchy", scene.hierarchy_path.length ? scene.hierarchy_path.join(" / ") : "Top level") + detailRow("Model status", scene.status, scene.status === "complete" ? "high" : "warning") + detailRow("Language", scene.project.language) + detailRow("Boundary", scene.project.boundary) + detailRow("Revision", scene.model_revision) + "</div>" + sourcePanel(context);
+    context.elements.detailsKind.textContent = context.aggregateEnabled ? "All scopes" : "Overview";
+    context.elements.detailsContent.innerHTML = '<p class="muted">The graphic and list use the same renderer-neutral scene. Select a node or directed relationship to inspect stable IDs, aggregation counts, layers, uncertainty, and evidence.</p>' + '<div class="detail-table">' + detailRow("Hierarchy", scene.hierarchy_path.length ? scene.hierarchy_path.join(" / ") : "Top level") + detailRow("Model status", scene.status, scene.status === "complete" ? "high" : "warning") + detailRow("Language", formatLanguage(scene.project.language)) + detailRow("Boundary", scene.project.boundary) + detailRow("Revision", scene.model_revision) + "</div>" + sourcePanel(context);
     bindDetailActions(context, services);
     return;
   }
@@ -183,10 +256,10 @@ export function renderDetails(context, services) {
     const node = scene.visible_nodes.find(function (item) { return item.id === state.selected.id; });
     if (!node) { state.selected = null; renderDetails(context, services); return; }
     context.elements.detailsTitle.textContent = node.label;
-    context.elements.detailsKind.textContent = node.kind;
+    context.elements.detailsKind.textContent = node.kind + " · " + formatLanguage(nodeLanguageBadge(context, node));
     const drill = node.kind === "group" ? '<button class="button secondary detail-action" type="button" data-drill-path="' + escapeHTML(node.hierarchy_path.join("/")) + '">Open group</button>' : "";
     context.elements.detailsContent.innerHTML = drill + '<div class="detail-table">' +
-      detailRow("Stable ID", node.id, "emphasis") + detailRow("Hierarchy", formatList(node.hierarchy_path, "Top level")) + detailRow("Modules", node.counts.module_count) + detailRow("Visible relationships", node.counts.relationship_count) +
+      detailRow("Stable ID", node.id, "emphasis") + detailRow("Hierarchy", formatList(node.hierarchy_path, "Top level")) + detailRow("Language", nodeLanguageText(context, node), "emphasis") + detailRow("Modules", node.counts.module_count) + detailRow("Visible relationships", node.counts.relationship_count) +
       (node.counts.internal_relationship_count ? detailRow("Internal relationships", node.counts.internal_relationship_count + " (collapsed in overview)", "emphasis") : "") +
       (node.internal_relationship_ids && node.internal_relationship_ids.length ? detailRow("Internal IDs", formatList(node.internal_relationship_ids)) : "") + detailRow("Layer", node.layer == null ? formatList((node.layers || []).map(function (item) { return "Layer " + item; }), "Unassigned") : "Layer " + node.layer) +
       detailRow("Cycle state", node.cycle_state, node.cycle_state !== "none" ? "cycle" : "") + detailRow("Diagnostics", node.diagnostic_state, node.diagnostic_state !== "none" ? "warning" : "") + detailRow("Identity", node.identity_state || "stable") +
@@ -252,6 +325,7 @@ export async function openSource(context, evidenceID, api, services) {
   context.state.source = { loading: true, link: link };
   services.renderDetails();
   const query = new URLSearchParams({ model_id: api.currentModelID(), evidence_id: evidenceID, path: link.path });
+  if (context.aggregateEnabled && context.state.activeScope) query.set("scope", context.state.activeScope);
   if (link.start) query.set("start_line", String(link.start.line));
   if (link.end) query.set("end_line", String(link.end.line));
   try {

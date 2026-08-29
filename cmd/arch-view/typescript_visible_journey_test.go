@@ -115,10 +115,9 @@ func TestTypeScriptCLISelectionAndAnalysisAreDeterministic(t *testing.T) {
 	if code, _, stderr := runTypeScriptCommand("analyze", "--project", root, "--format", "analysis-json", "--output", autoPath); code != 0 {
 		t.Fatalf("auto-detected TypeScript analyze exit code = %d, stderr=%s", code, stderr)
 	}
-	var autoResult analysis.AnalysisResult
-	decodeTestJSON(t, readTestFile(t, autoPath), &autoResult)
-	if autoResult.Analyzer.ID != "org.archview.typescript" || autoResult.Project.Boundary != "tsconfig.json" {
-		t.Fatalf("auto-detected TypeScript metadata = %#v", autoResult)
+	autoResult := decodeAggregateRun(t, readTestFile(t, autoPath))
+	if autoResult.Status != analysis.StatusPartial || autoResult.Model == nil || !hasAggregateAnalyzer(autoResult, "org.archview.typescript") {
+		t.Fatalf("auto-detected TypeScript aggregate = %#v", autoResult)
 	}
 
 	idPath := filepath.Join(t.TempDir(), "id-analysis.json")
