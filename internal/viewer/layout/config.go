@@ -243,19 +243,37 @@ func jsonNumber(value any) (float64, bool) {
 }
 
 func decodeLayoutConfig(data []byte) (LayoutProfile, error) {
+	profile, _, err := decodeLayoutDocument(data)
+	return profile, err
+}
+
+func decodeLayoutDocument(data []byte) (LayoutProfile, json.RawMessage, error) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	var config layoutConfigFile
 	if err := decoder.Decode(&config); err != nil {
-		return LayoutProfile{}, analysis.WrapHostError(analysis.ErrInvalidOptions, "layout configuration is not valid JSON", err, nil)
+		return LayoutProfile{}, nil, analysis.WrapHostError(analysis.ErrInvalidOptions, "layout configuration is not valid JSON", err, nil)
 	}
 	if err := ensureJSONEOF(decoder); err != nil {
-		return LayoutProfile{}, analysis.WrapHostError(analysis.ErrInvalidOptions, "layout configuration contains trailing data", err, nil)
+		return LayoutProfile{}, nil, analysis.WrapHostError(analysis.ErrInvalidOptions, "layout configuration contains trailing data", err, nil)
 	}
-	if config.SchemaVersion != layoutConfigSchemaVersion {
-		return LayoutProfile{}, analysis.NewHostError(analysis.ErrInvalidOptions, "layout configuration schema is unsupported", map[string]any{"schema_version": config.SchemaVersion, "expected": layoutConfigSchemaVersion})
+	if config.SchemaVersion != layoutConfigSchemaVersion && config.SchemaVersion != "arch-view.config/v2" {
+		return LayoutProfile{}, nil, analysis.NewHostError(analysis.ErrInvalidOptions, "layout configuration schema is unsupported", map[string]any{"schema_version": config.SchemaVersion, "expected": []string{layoutConfigSchemaVersion, "arch-view.config/v2"}})
 	}
-	return validateLayoutProfile(config.Layout)
+	if config.SchemaVersion == layoutConfigSchemaVersion && len(config.Analysis) > 0 && !bytes.Equal(bytes.TrimSpace(config.Analysis), []byte("null")) {
+		return LayoutProfile{}, nil, analysis.NewHostError(analysis.ErrInvalidOptions, "v1 layout configuration cannot contain an analysis section", map[string]any{"field": "analysis"})
+	}
+	if config.SchemaVersion == "arch-view.config/v2" && (len(config.Analysis) == 0 || bytes.Equal(bytes.TrimSpace(config.Analysis), []byte("null"))) {
+		return LayoutProfile{}, nil, analysis.NewHostError(analysis.ErrInvalidOptions, "v2 layout configuration requires an analysis section", map[string]any{"field": "analysis"})
+	}
+	if config.SchemaVersion == "arch-view.config/v2" && !jsonObject(config.Analysis) {
+		return LayoutProfile{}, nil, analysis.NewHostError(analysis.ErrInvalidOptions, "v2 layout configuration analysis section must be an object", map[string]any{"field": "analysis"})
+	}
+	profile, err := validateLayoutProfile(config.Layout)
+	if err != nil {
+		return LayoutProfile{}, nil, err
+	}
+	return profile, append(json.RawMessage(nil), config.Analysis...), nil
 }
 
 func ensureJSONEOF(decoder *json.Decoder) error {
@@ -270,15 +288,34 @@ func ensureJSONEOF(decoder *json.Decoder) error {
 }
 
 func encodeLayoutConfig(profile LayoutProfile) ([]byte, error) {
+	return encodeLayoutConfigWithAnalysis(profile, nil)
+}
+
+func encodeLayoutConfigWithAnalysis(profile LayoutProfile, analysisRaw json.RawMessage) ([]byte, error) {
 	profile, err := validateLayoutProfile(profile)
 	if err != nil {
 		return nil, err
 	}
-	data, err := json.MarshalIndent(layoutConfigFile{SchemaVersion: layoutConfigSchemaVersion, Layout: profile}, "", "  ")
+	schemaVersion := layoutConfigSchemaVersion
+	if len(bytes.TrimSpace(analysisRaw)) > 0 {
+		if !jsonObject(analysisRaw) {
+			return nil, analysis.NewHostError(analysis.ErrInvalidOptions, "v2 analysis configuration cannot be preserved because it is invalid", map[string]any{"field": "analysis"})
+		}
+		schemaVersion = "arch-view.config/v2"
+	}
+	data, err := json.MarshalIndent(layoutConfigFile{SchemaVersion: schemaVersion, Layout: profile, Analysis: append(json.RawMessage(nil), analysisRaw...)}, "", "  ")
 	if err != nil {
 		return nil, analysis.WrapHostError(analysis.ErrHostFailure, "layout configuration could not be encoded", err, nil)
 	}
 	return append(data, '\n'), nil
+}
+
+func jsonObject(data json.RawMessage) bool {
+	if len(bytes.TrimSpace(data)) == 0 || bytes.Equal(bytes.TrimSpace(data), []byte("null")) || !json.Valid(data) {
+		return false
+	}
+	var value map[string]json.RawMessage
+	return json.Unmarshal(data, &value) == nil && value != nil
 }
 
 func discoverLayoutSession(sourceRoot string) Session {
@@ -296,7 +333,7 @@ func discoverLayoutSession(sourceRoot string) Session {
 		candidate := filepath.Join(directory, layoutConfigFileName)
 		data, err := os.ReadFile(candidate)
 		if err == nil {
-			profile, decodeErr := decodeLayoutConfig(data)
+			profile, analysisRaw, decodeErr := decodeLayoutDocument(data)
 			origin := layoutOriginForPath(sourceRoot, candidate)
 			if decodeErr != nil {
 				return Session{
@@ -309,7 +346,7 @@ func discoverLayoutSession(sourceRoot string) Session {
 					diagnostics:  []LayoutDiagnostic{{Code: "invalid_config", Severity: "error", Message: decodeErr.Error(), Path: candidate, Source: "nearest configuration"}},
 				}
 			}
-			return Session{profile: profile, activePath: candidate, activeOrigin: origin, origin: origin, status: "valid", canSave: true, canSaveAs: true}
+			return Session{profile: profile, activePath: candidate, activeOrigin: origin, origin: origin, status: "valid", canSave: true, canSaveAs: true, analysisRaw: analysisRaw}
 		}
 		if !os.IsNotExist(err) {
 			return Session{profile: profile, activePath: candidate, activeOrigin: layoutOriginForPath(sourceRoot, candidate), origin: layoutOriginForPath(sourceRoot, candidate), status: "invalid", canSaveAs: true, diagnostics: []LayoutDiagnostic{{Code: "unreadable_config", Severity: "error", Message: "The nearest .archview.json could not be read: " + err.Error(), Path: candidate, Source: "nearest configuration"}}}

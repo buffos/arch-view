@@ -78,7 +78,7 @@ func (session *Session) SaveActive(profile LayoutProfile) error {
 	if err != nil {
 		return err
 	}
-	data, err := encodeLayoutConfig(profile)
+	data, err := encodeLayoutConfigWithAnalysis(profile, session.analysisRaw)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (session *Session) SaveAs(profile LayoutProfile, destinationDir string, con
 		return err
 	}
 	configPath := filepath.Join(directory, layoutConfigFileName)
-	data, err := encodeLayoutConfig(profile)
+	data, err := encodeLayoutConfigWithAnalysis(profile, session.analysisRaw)
 	if err != nil {
 		return err
 	}

@@ -1,5 +1,7 @@
 package layout
 
+import "encoding/json"
+
 const (
 	ConfigSchemaVersion = "arch-view.config/v1"
 	ConfigFileName      = ".archview.json"
@@ -99,9 +101,11 @@ type Session struct {
 	canSaveAs    bool
 	diagnostics  []LayoutDiagnostic
 	sourceRoot   string
+	analysisRaw  json.RawMessage
 }
 
 type layoutConfigFile struct {
-	SchemaVersion string        `json:"schema_version"`
-	Layout        LayoutProfile `json:"layout"`
+	SchemaVersion string          `json:"schema_version"`
+	Layout        LayoutProfile   `json:"layout"`
+	Analysis      json.RawMessage `json:"analysis,omitempty"`
 }

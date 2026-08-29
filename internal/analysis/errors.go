@@ -9,18 +9,30 @@ import (
 type ErrorCode string
 
 const (
-	ErrInvalidRequest                   ErrorCode = "invalid_request"
-	ErrInvalidManifest                  ErrorCode = "invalid_manifest"
-	ErrAPIIncompatible                  ErrorCode = "api_incompatible"
-	ErrDuplicateAnalyzer                ErrorCode = "duplicate_analyzer"
-	ErrNoAnalyzer                       ErrorCode = "no_analyzer"
-	ErrAmbiguousAnalyzer                ErrorCode = "ambiguous_analyzer"
-	ErrUnsupportedProject               ErrorCode = "unsupported_project"
-	ErrUnreadableProject                ErrorCode = "unreadable_project"
-	ErrModuleSelection                  ErrorCode = "module_selection"
-	ErrInvalidOptions                   ErrorCode = "invalid_options"
+	ErrInvalidRequest            ErrorCode = "invalid_request"
+	ErrInvalidManifest           ErrorCode = "invalid_manifest"
+	ErrAPIIncompatible           ErrorCode = "api_incompatible"
+	ErrDuplicateAnalyzer         ErrorCode = "duplicate_analyzer"
+	ErrNoAnalyzer                ErrorCode = "no_analyzer"
+	ErrAmbiguousAnalyzer         ErrorCode = "ambiguous_analyzer"
+	ErrUnsupportedProject        ErrorCode = "unsupported_project"
+	ErrUnreadableProject         ErrorCode = "unreadable_project"
+	ErrModuleSelection           ErrorCode = "module_selection"
+	ErrInvalidOptions            ErrorCode = "invalid_options"
+	ErrAnalysisConfigInvalid     ErrorCode = "analysis_config_invalid"
+	ErrAnalysisAssignmentInvalid ErrorCode = "analysis_assignment_invalid"
+	// ErrAssignmentPathInvalid is kept as a semantic alias for callers that
+	// classify the invalid assignment by its failing field.
+	ErrAssignmentPathInvalid            ErrorCode = ErrAnalysisAssignmentInvalid
+	ErrAssignmentDuplicatePath          ErrorCode = "analysis_assignment_duplicate_path"
+	ErrAssignmentOptionInvalid          ErrorCode = "analysis_assignment_option_invalid"
+	ErrAssignmentAnalyzerUnavailable    ErrorCode = "analysis_analyzer_unavailable"
 	ErrAnalysisScopeFilterInvalid       ErrorCode = "analysis_scope_filter_invalid"
 	ErrAnalysisScopeNotFound            ErrorCode = "analysis_scope_not_found"
+	ErrAnalysisScopeStale               ErrorCode = "analysis_scope_stale"
+	ErrAnalysisSelectionConflict        ErrorCode = "analysis_selection_conflict"
+	ErrCLISelectionConflict             ErrorCode = ErrAnalysisSelectionConflict
+	ErrAnalysisCacheUnavailable         ErrorCode = "analysis_cache_unavailable"
 	ErrUnsupportedOption                ErrorCode = "unsupported_option"
 	ErrSaveAsRequired                   ErrorCode = "save_as_required"
 	ErrPersistenceUnavailable           ErrorCode = "persistence_unavailable"
@@ -101,6 +113,8 @@ func ExitCodeForError(err error) int {
 	switch ErrorCodeOf(err) {
 	case ErrInvalidRequest, ErrInvalidManifest, ErrAPIIncompatible,
 		ErrDuplicateAnalyzer, ErrAmbiguousAnalyzer, ErrModuleSelection, ErrInvalidOptions,
+		ErrAnalysisConfigInvalid, ErrAnalysisAssignmentInvalid, ErrAssignmentDuplicatePath,
+		ErrAssignmentOptionInvalid, ErrAnalysisSelectionConflict, ErrAnalysisScopeStale,
 		ErrAnalysisScopeFilterInvalid,
 		ErrAnalysisScopeNotFound,
 		ErrUnsupportedOption, ErrSaveAsRequired, ErrPersistenceUnavailable,
