@@ -4,8 +4,8 @@ title: Multi-analyzer project orchestration
 description: Detect, run, and combine multiple language analyzers across mixed and nested project roots.
 tags: [plugins, orchestration, multi-language, concurrency]
 timestamp: 2026-08-29T00:00:00Z
-state: specified
-state_changed: 2026-08-28T00:00:00Z
+state: implemented
+state_changed: 2026-08-29T00:00:00Z
 project: /project.md
 parent: /capabilities/analyze-source/plugin-runtime.md
 artifact_root: docs/architecture/analyze-source/plugin-runtime/multi-analyzer-orchestration
@@ -24,7 +24,7 @@ issues:
   - docs/agents/issues/done/20260828-040-bounded-multi-analyzer-execution.md
   - docs/agents/issues/done/20260828-041-namespaced-aggregate-model-and-status.md
   - docs/agents/issues/done/20260828-042-combined-analysis-cli-and-http-exposure.md
-  - docs/agents/issues/pending/20260828-043-cached-scope-projections-and-viewer-selection.md
+  - docs/agents/issues/done/20260828-043-cached-scope-projections-and-viewer-selection.md
 ---
 
 # Intent
@@ -68,12 +68,13 @@ after discovery; fixed, nested-root, and configured exclusions win.
 The approved implementation batch is issues 039–043: deterministic root
 discovery and job planning, bounded execution and lifecycle control,
 namespaced aggregation, CLI/HTTP exposure, and cached `All`/individual scope
-selection in the local viewer. Issues 039–042 are implemented and verified;
-issue 043 is implemented and awaiting its required visual review. Persisted
+selection in the local viewer. All five issues are implemented, verified, and
+archived, including the approved mixed-language visual review. Persisted
 `.archview.json` analyzer assignments remain owned by the separate
 project-analyzer-assignments capability, which also owns the persisted
 source-scope policy.
 
-This node remains `specified` until issue 043's visual review is approved and
-all five slices have complete artifact synchronization. Issue 043 carries the
-required post-implementation visual-review gate.
+This node is `implemented`: its scoped multi-analyzer delivery and required
+artifact synchronization are complete. The separate
+project-analyzer-assignments capability remains specified for persisted
+assignment and source-scope configuration.

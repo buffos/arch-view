@@ -3,7 +3,7 @@ type: project
 title: Arch View
 description: Analyze supported codebases and generate navigable architecture views.
 tags: [architecture, code-analysis, multi-language, golang]
-timestamp: 2026-08-28T06:08:59Z
+timestamp: 2026-08-29T00:00:00Z
 prd: docs/prd.md
 architecture_summary: docs/architecture/application-architecture-summary.md
 verification:
@@ -57,7 +57,10 @@ migration, deterministic distribution assembly, trusted package verification,
 packaged runtime selection, parity, and release verification. The compiled
 distribution child is implemented; its Linux amd64 and Darwin arm64 execution
 checks remain documented under the root `when-supported` policy. The
-multi-analyzer orchestration leaf has verified implementation issues 039–042,
-with issue 043 awaiting its declared viewer visual review. The project
-analyzer assignments/view selection and advanced ELK renderer support leaves
-remain specified and ready for later delivery issue slicing.
+multi-analyzer orchestration leaf is implemented through the verified and
+user-approved issues 039–043, including its mixed-language viewer review. The
+project analyzer assignments/view selection leaf remains specified while
+issues 044–046 are implemented and verified and issue 047 awaits its declared
+visual-review gate. The advanced
+ELK renderer support leaf remains specified and ready for later delivery issue
+slicing.

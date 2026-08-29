@@ -31,14 +31,15 @@ The capability consumes the canonical model and graph/view preparation outputs a
 12. Saving distinguishes `Save` from `Save As`. If discovery loaded `.archview.json` from folder X, ordinary `Save` atomically overwrites that exact active file and never creates or copies a project-root file. If discovery found no file, ordinary `Save` is unavailable and the user must choose `Save As`. `Save As` is the only operation that accepts a custom destination folder; it writes the fixed `.archview.json` filename atomically after explicit confirmation and makes that file active for the current session. A model-only session can apply settings for the current session but has no project persistence boundary.
 13. The configuration file stores presentation layout preferences only. Analyzer options, canonical model data, viewport state, and manual node positions remain separate concerns. The same resolver may later be reused by headless/export commands, but issue 007 applies it to the interactive viewer.
 
-## Future analyzer-scope consumer
+## Analyzer-scope consumer
 
-The confirmed future plugin-runtime direction may provide a combined model plus
-individual analyzer/project scopes. The viewer can expose those scopes through
-a dropdown and preserve the current local-first/evidence workflow, but it must
-not own analyzer detection, assignment precedence, process lifecycle, or
-language semantics. The assignment contract is a specified child of the
-plugin-runtime capability and remains outside the implemented Explore v1 scope.
+The implemented multi-analyzer plugin-runtime direction provides a combined
+model plus individual analyzer/project scopes. The viewer exposes those cached
+scopes through a dropdown and preserves the current local-first/evidence
+workflow, but it does not own analyzer detection, assignment precedence,
+process lifecycle, or language semantics. The persisted assignment/source-scope
+contract is a specified child of the plugin-runtime capability and remains
+outside the implemented Explore v1 scope.
 
 ## Actors and inputs
 
@@ -52,8 +53,8 @@ plugin-runtime capability and remains outside the implemented Explore v1 scope.
 The current Explore exact-spec set is complete. Remaining work is
 implementation and verification of the specified viewer contract, browser
 packaging, layout/rendering thresholds, source-safety cases, accessibility,
-and the future per-scope analyzer consumer without moving analyzer semantics
-into the viewer.
+and the future assignment-driven configuration consumer without moving analyzer
+semantics into the viewer.
 
 ## Issue 007 implementation note
 

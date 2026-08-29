@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–042 are verified and issue 043 is awaiting its declared viewer visual review; the next specified plugin-runtime frontier is project analyzer assignments with invocation-root source-scope filtering and application scope selection.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043 are verified, archived, and visually approved; project analyzer assignments are the next specified plugin-runtime frontier and are now tracked by approved ready-for-agent issues 044–047, with issue 047 carrying the visual-review gate.
 
 ## Boundary summary
 
@@ -152,13 +152,13 @@ not decide analyzer semantics.
 
 ## Specified future capability decisions
 
-The multi-analyzer, assignment, and advanced-renderer capabilities are specified
-with exact schemas, contracts, scenarios, and readiness reviews. The
-compiled-distribution capability is implemented through issues 034–038.
-Multi-analyzer issues 039–042 are verified and issue 043 is awaiting visual
-review; those issues consume the resolved source-scope policy. The remaining assignment and
-advanced-renderer frontiers require later issue slicing,
-implementation, and verification:
+The multi-analyzer, assignment, and advanced-renderer capabilities have exact
+schemas, contracts, scenarios, and readiness reviews. The compiled-distribution
+capability is implemented through issues 034–038. Multi-analyzer issues
+039–043 are verified, archived, and visually approved; those issues consume the
+resolved source-scope policy. The assignment frontier is now sliced into
+approved issues 044–047; the advanced-renderer frontier still requires later
+issue slicing, implementation, and verification:
 
 - Opening a repository discovers marker-driven nested project roots within
   bounded exclusions. A strong manifest owns its subtree unless a nested
@@ -264,7 +264,7 @@ protocol fields to the canonical model.
 
 The compiled external analyzer distribution is implemented through issues
 034–038 after application synthesis. The remaining specified frontiers are
-[multi-analyzer project orchestration](../../.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md), [project analyzer assignments and view selection](../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md), and [advanced ELK renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md). Their exact architecture specifications are complete; multi-analyzer issues 039–042 are verified and issue 043 awaits visual review, while the assignment/view and advanced-renderer children remain ready for later delivery issue slicing.
+[project analyzer assignments and view selection](../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md) and [advanced ELK renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md). The multi-analyzer child is implemented through issues 039–043, while the assignment/view child is sliced into approved issues 044–047 and the advanced-renderer child remains ready for later delivery issue slicing.
 The 2026-08-28 brownfield audit also confirmed that the existing Go analyzer,
 canonical model generation, and export/automation boundaries exhaust their
 current exact specifications. Their planning nodes are implemented. This is a
@@ -282,8 +282,8 @@ work register](explore-architecture/advanced-elk-renderer-support/future-work.md
 
 - Benchmarking and tuning frontend/rendering thresholds.
 - Reference-boundary aggregation, import-list density, and session-scoped layout behavior remain verification/tuning concerns. Broader target-specific ELK option support is tracked in the [Advanced ELK renderer support future-work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
-- Final approval of the implemented multi-project/multi-analyzer viewer path
-  remains open at issue 043's declared visual-review gate.
+- The implemented multi-project/multi-analyzer viewer path has passed issue
+  043's declared visual-review gate.
 - Implementation of the specified folder-to-analyzer assignment and
   invocation-root source-scope schema, validation, cache keys, and application
   dropdown/API behavior.

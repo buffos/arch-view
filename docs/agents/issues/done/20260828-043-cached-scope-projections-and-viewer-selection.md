@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md`
 - Related consumer node: `/.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md`
 - Artifact root: `docs/architecture/analyze-source/plugin-runtime/multi-analyzer-orchestration/`
-- Issue file: `docs/agents/issues/pending/20260828-043-cached-scope-projections-and-viewer-selection.md`
+- Issue file: `docs/agents/issues/done/20260828-043-cached-scope-projections-and-viewer-selection.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `awaiting-human-review`
+- Suggested state: `done`
 
 ## Parent Artifacts
 
@@ -70,7 +70,7 @@ broaden a filtered scope during projection.
 - [x] Server tests cover scope-list/projection routing and no-reanalysis
   selection; browser tests cover keyboard-accessible selection, status/error
   rendering, deterministic ordering, and projection replacement.
-- [ ] The implementation is ready for visual review using a mixed-language
+- [x] The implementation is ready for visual review using a mixed-language
   fixture, including `All`, at least two individual scopes, and one failed
   scope with visible diagnostics.
 
@@ -89,12 +89,12 @@ broaden a filtered scope during projection.
 
 ## Human review gate
 
-After automated acceptance checks pass, the user must visually inspect the
-project-backed viewer on a mixed-language fixture: the selector's labels and
-ordering, `All` versus individual graph contents, partial/failed status and
-diagnostics, keyboard accessibility, and preservation of existing navigation
-and details behavior. This issue must move to `awaiting-human-review` before
-closure; visual inspection is not approval until the user confirms it.
+The user approved the mixed-language visual review on 2026-08-29. The review
+covered the selector labels and ordering, `All` versus individual graph
+contents, partial/failed status and diagnostics, keyboard accessibility, and
+preservation of existing navigation and details behavior. The follow-up
+review also confirmed that the scope picker starts collapsed and expands only
+on interaction.
 
 ## Blocked by
 
@@ -153,12 +153,12 @@ assignment persistence remains out of scope. Verified with focused viewer and
 orchestration tests, `go test ./... -count=1`,
 `go test -race ./... -count=1`, `go vet ./...`, `go build ./...`,
 `staticcheck ./...`, JavaScript syntax checks, strict OKF validation, and the
-available Node viewer-module tests. Browser harness coverage
-is deferred under `when-supported`; the required mixed-language visual review
-is the only open delivery gate.
+available Node viewer-module tests. Browser harness coverage is deferred under
+`when-supported`; the required mixed-language visual review was completed and
+approved by the user.
 
 ## Handoff
 
-After automated checks pass, pause for the declared visual review. The
-multi-analyzer capability remains `specified` until the visual gate for issue
-043 is approved and its final artifact synchronization is complete.
+The multi-analyzer capability is now implemented and all five issues in the
+approved 039–043 sequence are archived. Persisted project assignments and
+source-scope configuration remain owned by the separate assignment capability.

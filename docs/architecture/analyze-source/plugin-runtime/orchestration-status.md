@@ -38,32 +38,33 @@
 - Issues 036–038 completed trusted package verification, packaged-by-default
   runtime selection, explicit fallback/override handling, runtime provenance,
   five-analyzer parity, deterministic assembly checks, and release behavior.
-- Issues 039–042 complete the approved multi-analyzer project-orchestration
+- Issues 039–043 complete the approved multi-analyzer project-orchestration
   batch's deterministic root discovery/job planning, bounded execution/
-  lifecycle, namespaced aggregation/status, and CLI/HTTP exposure. Issue 043 is
-  implemented and awaiting the local viewer's visual-review gate for cached
-  scope selection.
+  lifecycle, namespaced aggregation/status, CLI/HTTP exposure, and cached
+  viewer scope selection. The required visual-review gate is approved.
 
 ## Next step and artifact impact
 
-Issues 030–038 are complete. Issues 039–042 are verified multi-analyzer
-delivery records, and issue 043 is implemented pending visual review. The
+Issues 030–038 are complete. Issues 039–043 are verified and archived
+multi-analyzer delivery records, including the approved visual review. The
 current v1 pilot remains an explicitly supplied, script-based external Python
 process with one analyzer selected per run, while the compiled-distribution
 child is now the verified packaged runtime path for release execution. The
 parent capability remains `specified`; the separate project assignment/view
 child owns the readiness-reviewed invocation-root source-scope and assignment
-frontier, while the multi-analyzer batch consumes its resolved policy.
+frontier, while the multi-analyzer batch consumes its resolved policy. Issues
+044–046 are verified and archived delivery records for that child; issue 047
+remains active as `awaiting-human-review` for its required visual gate.
 
 - [Compiled external analyzer distribution](compiled-external-analyzer-distribution/discovery-notes.md)
 - [Multi-analyzer project orchestration](multi-analyzer-orchestration/discovery-notes.md)
 - [Project analyzer assignments and view selection](project-analyzer-assignments/discovery-notes.md)
 
 Product and architecture synthesis now record the target compiled-binary,
-multi-job, assignment/view, and source-scope boundaries. Delivery truth includes completed
-issues 034–038 for the compiled-distribution child, completed issues 039–042,
-and pending issue 043 for multi-analyzer orchestration; no delivery issues have
-yet been created for the project assignment/view child. The child state remains
-`specified` while the visual gate is open; approved issue dependencies,
-platform deferrals, and user-confirmed packaged-artifact trust policy are
-recorded in the planning map and log.
+multi-job, assignment/view, and source-scope boundaries. Delivery truth includes
+completed issues 034–038 for the compiled-distribution child, completed issues
+039–043 for multi-analyzer orchestration, completed issues 044–046 for the
+project assignment/configuration child, and active issue 047 for its viewer
+review gate. That child remains `specified`; approved
+issue dependencies, platform deferrals, and user-confirmed packaged-artifact
+trust policy are recorded in the planning map and log.

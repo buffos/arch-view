@@ -5,7 +5,7 @@
 - Planning state: `implemented`.
 - State transition: `bounded -> specified` on 2026-08-25; `specified -> implemented` on 2026-08-27 after the complete issue/scenario audit and repository verification gate.
 - Topology: confirmed as the interactive investigation capability.
-- Next route: the current 17-scenario Explore scope and the consuming Python analysis slice in issues 017–019 are complete. Future ELK renderer extensions are tracked by the specified [Advanced ELK renderer support child](../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md); the TypeScript slice (020–022), Rust slice (023–025), and Clojure slice (026–029) are also complete. The external plugin protocol/pilot is complete, and the specified future analyzer assignment/view-selection consumer is tracked under [the plugin-runtime child](../../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).
+- Next route: the current 17-scenario Explore scope and the consuming Python analysis slice in issues 017–019 are complete. Future ELK renderer extensions are tracked by the specified [Advanced ELK renderer support child](../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md); the TypeScript slice (020–022), Rust slice (023–025), and Clojure slice (026–029) are also complete. The external plugin protocol/pilot and cached multi-analyzer scope viewer are complete; persisted analyzer assignment and source-scope semantics remain the specified future consumer under [the plugin-runtime child](../../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).
 
 ## Confirmed boundary
 
@@ -28,9 +28,10 @@ The capability consumes the canonical model and graph/view preparation outputs a
 - The viewer exposes a searchable catalog of the pinned ELK algorithms/options with typed validation, explicit apply/reset behavior, and visible applicability/support information.
 - Project layout preferences use versioned `.archview.json` configuration. Discovery walks from the selected target directory toward the filesystem root and selects the nearest file without merging; no file means built-in defaults.
 - Ordinary `Save` atomically overwrites exactly the active discovered `.archview.json` and never creates a project-root copy; when no file is active it requires `Save As`. `Save As` is the only operation that accepts a custom destination folder, writes the fixed `.archview.json` filename, and makes it active for the current session. Model-only sessions remain session-only, and layout configuration never stores analyzer options, canonical model facts, viewport state, or manual positions.
-- A future analyzer-assignment capability may expose combined and per-analyzer
-  scopes through the viewer. The current Explore surface only consumes the
-  resulting model/scopes and does not select or interpret language analyzers.
+- The viewer exposes cached combined and per-analyzer scopes supplied by the
+  implemented multi-analyzer capability. The future analyzer-assignment
+  capability owns persisted assignment and source-scope semantics; Explore
+  does not select or interpret language analyzers.
 - Implementation boundaries are explicit: `internal/viewer/scene` owns renderer-neutral scene projection, `internal/routing` owns route primitives/strategies, `internal/viewer/layout` owns catalog/profile/persistence, and browser modules receive explicit application context/state rather than a shared monolithic closure.
 
 ## Artifact plan

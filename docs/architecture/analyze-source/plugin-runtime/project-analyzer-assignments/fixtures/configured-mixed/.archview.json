@@ -1,0 +1,39 @@
+{
+  "schema_version": "arch-view.config/v2",
+  "layout": {
+    "algorithm": "layered",
+    "options": {}
+  },
+  "analysis": {
+    "exclude": ["generated/**", "**/vendor/**"],
+    "include": [
+      {
+        "analyzer_id": "org.archview.go",
+        "globs": ["main.go", "**/*.go"]
+      },
+      {
+        "analyzer_id": "org.archview.typescript",
+        "globs": ["frontend/src/**"]
+      }
+    ],
+    "assignments": [
+      {
+        "path": ".",
+        "analyzer_id": "org.archview.go",
+        "options": {
+          "include_tests": false
+        }
+      },
+      {
+        "path": "frontend",
+        "analyzer_id": "org.archview.typescript",
+        "options": {}
+      },
+      {
+        "path": "missing",
+        "analyzer_id": "org.archview.missing",
+        "options": {}
+      }
+    ]
+  }
+}

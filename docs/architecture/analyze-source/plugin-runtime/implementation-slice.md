@@ -81,10 +81,10 @@ packaged execution the default, and close release/parity verification.
 ## Approved multi-analyzer delivery sequence
 
 Issues 039–043 are the approved vertical sequence for multi-analyzer project
-orchestration. Issues 039–042 are verified and archived; issue 043 is
-implemented and awaiting the required post-implementation `visual-review`
-gate for cached viewer scope selection. Persisted `.archview.json` analyzer
-assignments remain owned by the separate project-analyzer-assignments child.
+orchestration. All five issues are verified and archived, including the
+approved post-implementation `visual-review` gate for cached viewer scope
+selection. Persisted `.archview.json` analyzer assignments remain owned by the
+separate project-analyzer-assignments child.
 
 | Issue | Outcome | Owner | Blocked by | Review gate |
 |---|---|---|---|---|
@@ -92,7 +92,23 @@ assignments remain owned by the separate project-analyzer-assignments child.
 | [040](../../../agents/issues/done/20260828-040-bounded-multi-analyzer-execution.md) | Completed: execute planned jobs with bounded workers, cancellation, timeouts, and isolated diagnostics | Orchestration runtime | 039 | none |
 | [041](../../../agents/issues/done/20260828-041-namespaced-aggregate-model-and-status.md) | Completed: merge successful and partial scope results into namespaced aggregate models and statuses | Aggregate model | 040 | none |
 | [042](../../../agents/issues/done/20260828-042-combined-analysis-cli-and-http-exposure.md) | Completed: expose combined analysis, status, scope, and cached projection contracts through CLI and HTTP | CLI and HTTP | 041 | none |
-| [043](../../../agents/issues/pending/20260828-043-cached-scope-projections-and-viewer-selection.md) | Awaiting visual review: expose cached All/individual scope projections and failed-scope diagnostics in the local viewer | Viewer integration | 042 | visual-review |
+| [043](../../../agents/issues/done/20260828-043-cached-scope-projections-and-viewer-selection.md) | Completed: expose cached All/individual scope projections and failed-scope diagnostics in the local viewer, with approved visual review | Viewer integration | 042 | visual-review |
+
+## Approved project-assignment delivery sequence
+
+Issues 044–047 are the approved vertical sequence for the specified project
+analyzer assignments and view-selection child. Issues 044–046 are verified and
+archived; issue 047 has completed automated verification and remains
+`awaiting-human-review` for its declared visual gate. They reuse the completed
+multi-analyzer planner, aggregate, transport, and viewer projection seams;
+they do not add a new capability node or duplicate issue 043's selector.
+
+| Issue | Outcome | Owner | Blocked by | Review gate |
+|---|---|---|---|---|
+| [044](../../../agents/issues/done/20260829-044-load-and-validate-analysis-configuration.md) | Completed: load v1/v2 `.archview.json` profiles and validate assignments, filters, analyzer options, and layout preservation | Configuration boundary | none | none |
+| [045](../../../agents/issues/done/20260829-045-resolve-configured-assignments-and-source-scopes.md) | Completed: resolve configured assignments/source scopes through CLI, HTTP, `open`, and reanalysis planning | Assignment and planning integration | 044 | none |
+| [046](../../../agents/issues/done/20260829-046-session-cache-and-selective-invalidation.md) | Completed: reuse immutable session scope results and invalidate only affected jobs | Cache and reanalysis | 045 | none |
+| [047](../../../agents/issues/pending/20260829-047-configured-scope-viewer-journey.md) | Automated implementation complete: expose configured scopes, diagnostics, and cache/reanalysis states through the existing viewer journey | Viewer integration | 046 | visual-review |
 
 ## Slice acceptance
 
@@ -130,9 +146,10 @@ behavior are complete. Linux amd64 and Darwin arm64 execution remain
 documented `when-supported` deferrals. The slice refines an already confirmed
 plugin-runtime boundary; it does not change product topology or canonical model
 semantics. Issues 030–033 remain the completed delivery record for the v1
-external Python pilot. Issues 039–042 now represent verified delivery for the
-multi-analyzer planning, execution, aggregation, and transport path; issue 043
-is awaiting visual review. The assignment/view frontier awaits later delivery
-issue slicing. The application PRD and application architecture summary were
-refreshed for current delivery status; their product actors, workflows, and
-architectural boundaries remain unchanged.
+external Python pilot. Issues 039–043 now represent verified delivery for the
+multi-analyzer planning, execution, aggregation, transport, and cached viewer
+scope-selection path. Issues 044–046 are verified delivery records for the
+assignment/configuration frontier; issue 047 remains active for its required
+visual review. The application PRD and application architecture summary
+require no semantic change for this delivery slicing; their product
+actors, workflows, and architectural boundaries remain unchanged.

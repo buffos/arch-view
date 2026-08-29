@@ -6,7 +6,7 @@ This is the application-level planning baseline. It records confirmed product sc
 
 ## Product
 
-Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, Clojure, TypeScript, and Rust support, with configurable presentation layout for repository-specific viewing needs. Go, Python, TypeScript, Rust, and Clojure run as in-process adapters behind the same language-neutral contract, and the current deployment also includes an explicitly supplied external Python process plus trusted packaged compiled analyzer executables behind that contract. In-process adapters remain available for development and explicit migration fallback. The multi-analyzer analysis path is implemented through the verified 039–042 delivery slices, with its viewer visual-review gate remaining open in issue 043; project-relative analyzer assignments with selectable scopes and persisted source-scope configuration remain future work.
+Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, Clojure, TypeScript, and Rust support, with configurable presentation layout for repository-specific viewing needs. Go, Python, TypeScript, Rust, and Clojure run as in-process adapters behind the same language-neutral contract, and the current deployment also includes an explicitly supplied external Python process plus trusted packaged compiled analyzer executables behind that contract. In-process adapters remain available for development and explicit migration fallback. The multi-analyzer analysis path is implemented through the verified and user-approved 039–043 delivery slices, including the viewer's mixed-language visual review; project-relative analyzer assignments with selectable scopes and persisted source-scope configuration remain future work and are now tracked by approved issues 044–047.
 
 The reference implementation is available in the upstream
 [unclebob/arch-view repository](https://github.com/unclebob/arch-view) for
@@ -51,9 +51,9 @@ broader:
   analyzer-ID-scoped include globs relative to the invocation root, with
   deterministic matching and exclusions taking precedence.
 
-The multi-analyzer behavior is now implemented through the specified child
-delivery path and is completing its declared viewer review. Persisted
-assignment configuration remains a future capability under [Analyzer plugin
+The multi-analyzer behavior is now implemented through the multi-analyzer child
+delivery path, including its approved viewer review. Persisted assignment
+configuration remains a future capability under [Analyzer plugin
 runtime](/.okf/capabilities/analyze-source/plugin-runtime.md); the compiled
 distribution child is implemented.
 
@@ -110,9 +110,10 @@ the next specified child capability.
 - [Analyze source code](/.okf/capabilities/analyze-source.md): `specified`,
   with the Go, Python, TypeScript, Rust, and Clojure children implemented, the
   first external Python process slice verified, the compiled-distribution child
-  implemented, with the multi-analyzer orchestration path verified through
-  issue 042 and issue 043 awaiting visual review; the project analyzer
-  assignments/view selection child remains specified future work.
+  implemented, with the multi-analyzer orchestration path verified and
+  visually approved through issues 039–043; the project analyzer
+  assignments/view selection child remains specified future work, with approved
+  implementation issues 044–047.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `implemented`, including the v1 canonical model and graph-projection contract.
 - [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) is `specified` for future extensions.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `implemented`, including JSON v1 and deterministic HTML/SVG/CI behavior.
@@ -136,9 +137,10 @@ Source analyzers produce evidence for the language-neutral model. The model owns
    034–038.**
 9. Add multi-project/multi-analyzer job planning, bounded concurrency, result
    merging, and partial-failure behavior. **Implemented through issues
-   039–042; issue 043 remains at visual review.**
+   039–043, including the approved viewer visual review.**
 10. Add project-relative analyzer assignments, invocation-root source-scope
-    filtering, and application scope selection.
+    filtering, and application scope selection. **Sliced into approved issues
+    044–047, with the final viewer integration carrying visual review.**
 
 The specification set is complete and readiness-reviewed. A 2026-08-28
 brownfield audit confirmed that the Go analyzer, canonical model, and export
@@ -148,10 +150,11 @@ capabilities exhaust their promised scopes, so their planning states are now
 retain their recorded visual approvals. The current Explore scope and the
 Python, TypeScript, Rust, and Clojure adapters are also implemented. Issues
 030–033 complete the first external plugin-runtime slice. Issues 034–038
-complete the compiled distribution capability. The multi-analyzer
-orchestration, project assignment/view selection, and advanced ELK renderer
-children remain specified; multi-analyzer issues 039–042 are verified and issue
-043 is awaiting its declared viewer visual review.
+complete the compiled distribution capability. The project assignment/view
+selection and advanced ELK renderer children remain specified; the
+multi-analyzer child is implemented through issues 039–043, including its
+approved viewer visual review, and the assignment/view child is sliced into
+approved issues 044–047.
 
 ## Future planning state
 
@@ -159,9 +162,10 @@ The explicitly supplied external Python deployment remains a compatibility
 pilot and does not change model/viewer/export semantics. Release builds use the
 implemented trusted compiled external distribution, while in-process adapters
 remain explicit development or migration paths. Multi-analyzer orchestration
-remains specified pending issue 043's visual review; project assignment/view
-selection and its source-scope policy remain specified future frontiers. Advanced ELK
-renderer support is likewise specified as a renderer-only extension of the
+is implemented, including the approved issue 043 visual review; project
+assignment/view selection and its source-scope policy remain specified future
+frontiers, with approved issues 044–047 queued for implementation. Advanced ELK renderer support is likewise specified as a
+renderer-only extension of the
 implemented viewer.
 
 ## Verification strategy
@@ -183,9 +187,10 @@ No high or medium blocker prevents the specified planning baseline. The followin
 - Pinned-ELK option compatibility, nearest-ancestor configuration fixtures, active-file `Save` versus custom-folder `Save As`, and safe project-settings writes.
 - Multi-analyzer job discovery, source-scope application, merging, transport,
   and cached viewer projection are implemented and covered by verified issues
-  039–042; issue 043 remains open only for its declared visual review.
+  039–043, including the approved visual review.
   Folder-assignment configuration/dropdown schemas remain a separate specified
-  future workstream that owns the persisted filter policy.
+  future workstream that owns the persisted filter policy; its approved delivery
+  issues are 044–047.
 - Linux amd64 and Darwin arm64 packaged-analyzer execution remain deferred
   verification surfaces under the root `when-supported` policy until matching
   runners or toolchains are available.

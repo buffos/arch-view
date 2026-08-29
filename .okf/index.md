@@ -12,7 +12,7 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 0 `foggy`, 0 `bounded`, 5 `specified`, 9 `implemented`.
+- State totals: 0 `foggy`, 0 `bounded`, 4 `specified`, 10 `implemented`.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their
@@ -20,11 +20,11 @@
   the compiled entrypoint migration, deterministic distribution assembly,
   trusted package verification, packaged runtime selection, parity, and
   release verification. [Multi-analyzer project orchestration](capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
-  has verified implementation issues 039–042, with issue 043 awaiting its
-  declared visual review, and is the active delivery frontier. Two leaf
-  capabilities remain ready for delivery issue slicing:
-  [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
-  and [Project analyzer assignments and view selection](capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).
+  has completed implementation issues 039–043, including its declared visual
+  review. [Project analyzer assignments and view selection](capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
+  has verified issues 044–046 and one awaiting-human-review issue 047 for its
+  declared visual gate. [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
+  remains ready for later delivery issue slicing.
   The plugin-runtime and Analyze source nodes remain specified as rollups over
   that unfinished child work.
 

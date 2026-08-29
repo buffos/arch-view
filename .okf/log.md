@@ -2,6 +2,46 @@
 
 ## 2026-08-29
 
+### Project analyzer assignments implementation
+
+* **Implementation:** Archived issues 044–046 after delivering strict v1/v2
+  configuration loading, deterministic assignment/source-scope planning, and
+  immutable session caching with selective invalidation. Issue 047's
+  configured mixed-language viewer integration is automated-test complete and
+  remains `awaiting-human-review` for its declared visual gate.
+* **Artifact sync:** Updated the owning capability, plugin-runtime roll-ups,
+  implementation slice, issue registry, issue records, and delivery status.
+  The child capability remains `specified` until issue 047 receives visual
+  approval; no product or architecture boundary changed.
+* **Verification:** Full Go tests, race tests, vet, build, JavaScript syntax
+  checks, available viewer-module tests, and `git diff --check` pass. A
+  reproducible mixed-language fixture is checked in under the owning artifact
+  root. No commit was created.
+
+## 2026-08-29
+
+### Project analyzer assignments delivery slicing
+
+* **Approval:** The user approved the four dependency-ordered implementation
+  slices for Project analyzer assignments and view selection.
+* **Delivery:** Created ready-for-agent issues 044–047 for versioned analysis
+  configuration loading/validation, configured assignment and source-scope
+  planning, session cache reuse with selective invalidation, and the configured
+  mixed-repository viewer journey. Issue 047 carries the required
+  `visual-review` gate; issue 044 is the unblocked starting point.
+* **Graph/frontier:** Added all four pending issue references to the owning
+  project-assignment capability. The node remains `specified`; no topology or
+  state transition occurred. Current totals remain 0 `foggy`, 0 `bounded`, 4
+  `specified`, and 10 `implemented`.
+* **Artifact impact:** Delivery truth changed. The exact capability
+  specification, product scope, architecture boundaries, and existing
+  multi-analyzer ownership remain unchanged; their orchestration records now
+  point to the approved delivery batch. Advanced ELK remains a separate
+  specified frontier.
+* **Verification:** Issue references, registry numbering, the application
+  synthesis gate, and strict OKF validation were synchronized and pass. No
+  commit was created.
+
 ### Multi-analyzer delivery verification and visual-review handoff
 
 * **Implementation:** Verified and archived issues 039–042. The repository now
@@ -23,6 +63,39 @@
   `go build ./...`, JavaScript syntax checks, available Node viewer-module
   tests, strict OKF validation, and `git diff --check` pass on Windows amd64.
   No commit was created.
+
+### Multi-analyzer viewer visual review and closeout
+
+* **Human review:** The user approved issue 043's mixed-language viewer review,
+  including `All` and individual scopes, failed-scope diagnostics, status and
+  language presentation, keyboard accessibility, existing navigation/details
+  behavior, and the collapsed scope-picker interaction.
+* **Closeout:** Archived issue 043 at
+  `docs/agents/issues/done/20260828-043-cached-scope-projections-and-viewer-selection.md`
+  and removed its active registry row. The multi-analyzer capability is now
+  `implemented`; its 039–043 delivery references and parent roll-ups point to
+  completed records. The separate project-assignment/view capability remains
+  `specified`.
+* **Planning:** State totals are now 0 `foggy`, 0 `bounded`, 4 `specified`,
+  and 10 `implemented`.
+* **Verification:** Focused viewer tests, JavaScript syntax checks, `go test
+  ./... -count=1`, strict OKF validation, and `git diff --check` pass. No
+  commit was created.
+
+### Planning map reconciliation after multi-analyzer closeout
+
+* **State audit:** Reconciled the Analyze source, Analyzer plugin runtime,
+  Explore, project-assignment, and multi-analyzer planning records with the
+  completed 039–043 delivery and the current viewer behavior. The cached
+  combined/individual scope viewer is implemented; persisted assignment and
+  source-scope configuration remains specified.
+* **Frontier:** The only non-implemented capability nodes are the two specified
+  leaves—Project analyzer assignments and view selection, and Advanced ELK
+  renderer support—plus their specified roll-up parents. No new topology or
+  delivery issue was created.
+* **Artifact impact:** Updated current node notes, linked orchestration records,
+  and application synthesis wording. No product boundary or ownership change
+  was introduced.
 
 ## 2026-08-28
 

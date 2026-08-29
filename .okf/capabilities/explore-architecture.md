@@ -3,7 +3,7 @@ type: capability
 title: Explore and inspect architecture
 description: Let users navigate generated architecture views and inspect the code and dependency evidence behind them.
 tags: [viewer, navigation, evidence, layout]
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 state: implemented
 state_changed: 2026-08-27T00:00:00Z
 project: /project.md
@@ -56,10 +56,11 @@ This capability includes interactive diagram rendering, hierarchy drill-down, zo
 
 This capability is implemented for its current specified scope. Its local web surface, renderer-neutral scene contract, local-first reference visibility, navigation/import evidence behavior, progressive disclosure, source safety, session layout, ELK layout settings, project configuration discovery, and accessibility requirements are linked from the exact-spec artifacts. Additional renderer features are tracked separately in the specified [Advanced ELK renderer support](explore-architecture/advanced-elk-renderer-support.md) child.
 
-The future [Project analyzer assignments and view selection](/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
-child will add a viewer consumer for combined and per-analyzer scopes. That
-specified cross-capability target does not change the current implemented Explore
-state or make analyzer semantics a viewer responsibility.
+The implemented [Multi-analyzer project orchestration](/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
+child now provides the cached combined and per-analyzer scope projections. The
+future [Project analyzer assignments and view selection](/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
+child will add persisted assignment and source-scope semantics; it does not
+make analyzer semantics a viewer responsibility.
 
 ## Delivery progress
 

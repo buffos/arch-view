@@ -2,9 +2,10 @@
 
 ## State
 
-- Planning state: `specified`.
-- The exact-spec pipeline is complete. Issues 039–042 are implemented and
-  verified; issue 043 is implemented and awaiting its required visual review.
+- Planning state: `implemented`.
+- The exact-spec pipeline and approved implementation sequence are complete.
+  Issues 039–043 are implemented, verified, archived, and include the approved
+  mixed-language viewer review.
 
 ## Evidence
 
@@ -14,8 +15,9 @@
   isolated jobs, and aggregates namespaced results with stable provenance and
   status/error mappings.
 - The project-backed CLI and local viewer expose the cached aggregate and
-  individual scopes; assignment persistence remains owned by the separate
-  project-analyzer-assignments capability.
+  individual scopes; the project-analyzer-assignments capability now supplies
+  the validated configured policy, assignment precedence, and session-cache
+  metadata at that existing seam.
 
 ## Artifact sync
 
@@ -27,11 +29,10 @@
 - **Product and architecture:** The application synthesis records the
   implemented multi-job orchestration boundary and the separate assignment
   ownership.
-- **Delivery:** Issues 039–042 are archived as verified delivery records. Issue
-  043 remains the active `awaiting-human-review` record for the local viewer's
-  mixed-language visual gate. The active registry, owning capability node, and
-  plugin-runtime roll-ups reference the completed paths plus the pending 043
-  path.
+- **Delivery:** Issues 039–043 are archived as verified delivery records. The
+  assignment/view consumer issues 044–046 are also archived as verified
+  records, while issue 047 remains awaiting visual review. The owning
+  capability node and plugin-runtime roll-ups reference the completed paths.
 
 ## Exact-spec inventory
 
@@ -51,11 +52,12 @@ no-inferred-relationship behavior.
 
 ## Readiness decision
 
-IMPLEMENTATION VERIFIED PENDING VISUAL REVIEW. The application synthesis gate
-is current, issues 039–042 passed their acceptance and repository checks, and
-issue 043 passed its automated checks. The user must complete issue 043's
-declared mixed-language `visual-review` gate before the capability can move to
-`implemented`.
+IMPLEMENTATION VERIFIED FOR THE ORCHESTRATION BOUNDARY. The application
+synthesis gate is current, issues 039–043 passed their acceptance and
+repository checks, and the user approved issue 043's declared mixed-language
+`visual-review` gate. Configured assignment and source-scope integration is
+implemented through issues 044–046; issue 047 remains a separate
+`awaiting-human-review` viewer gate owned by the assignment/view capability.
 
 ## Artifact impact
 
@@ -65,10 +67,11 @@ declared mixed-language `visual-review` gate before the capability can move to
   filtering behavior is synchronized.
 - Architecture truth: source-scope policy, aggregate model, cache identity,
   and canonical-normalization dependency are current.
-- Delivery truth: issue files, the active registry (max ID 043), the owning
-  capability reference, and the parent roll-ups record verified issues 039–042
-  plus pending issue 043. The capability remains `specified` until the visual
-  gate and final issue synchronization are approved.
+- Delivery truth: issue files, the registry, the owning capability reference,
+  and the parent roll-ups record completed issues 039–046. Issue 047 remains
+  active until its required visual review is approved. This orchestration
+  capability remains implemented; the assignment/view child remains specified
+  until that gate closes.
 
 ## Implementation evidence
 
@@ -87,8 +90,9 @@ declared mixed-language `visual-review` gate before the capability can move to
   short-circuiting, aggregate/scope parity, opened-root HTTP containment, and
   transactional failed reanalysis.
 - Viewer assets pass JavaScript syntax checks. No browser-test harness is
-  present in the repository, so browser obligations are deferred under the
-  root `when-supported` policy; issue 043's visual inspection remains open.
+  present in the repository, so browser obligations remain deferred under the
+  root `when-supported` policy; the required issue 043 visual inspection was
+  completed and approved by the user.
 - `go test ./... -count=1`, `go test -race ./... -count=1`, `go vet ./...`,
   `go build ./...`, `go mod verify`, `staticcheck ./...`, JavaScript syntax and
   viewer-module tests, Python syntax parsing, strict OKF validation, and
