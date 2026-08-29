@@ -3,7 +3,7 @@ type: capability
 title: Multi-analyzer project orchestration
 description: Detect, run, and combine multiple language analyzers across mixed and nested project roots.
 tags: [plugins, orchestration, multi-language, concurrency]
-timestamp: 2026-08-28T00:00:00Z
+timestamp: 2026-08-29T00:00:00Z
 state: specified
 state_changed: 2026-08-28T00:00:00Z
 project: /project.md
@@ -19,6 +19,12 @@ use_cases: docs/architecture/analyze-source/plugin-runtime/multi-analyzer-orches
 contract: docs/architecture/analyze-source/plugin-runtime/multi-analyzer-orchestration/canonical-api-cli-contract.md
 scenarios: docs/architecture/analyze-source/plugin-runtime/multi-analyzer-orchestration/acceptance-scenarios.md
 readiness_review: docs/architecture/analyze-source/plugin-runtime/multi-analyzer-orchestration/readiness-review.md
+issues:
+  - docs/agents/issues/done/20260828-039-multi-project-root-discovery-and-job-planning.md
+  - docs/agents/issues/done/20260828-040-bounded-multi-analyzer-execution.md
+  - docs/agents/issues/done/20260828-041-namespaced-aggregate-model-and-status.md
+  - docs/agents/issues/done/20260828-042-combined-analysis-cli-and-http-exposure.md
+  - docs/agents/issues/pending/20260828-043-cached-scope-projections-and-viewer-selection.md
 ---
 
 # Intent
@@ -31,7 +37,8 @@ projects.
 
 This capability owns marker-driven project-root discovery within the opened
 repository, analyzer-job planning, bounded concurrency, result aggregation,
-globally stable identities, provenance, and partial-failure behavior. A strong
+globally stable identities, invocation-root source-scope application, cache
+identity, provenance, and partial-failure behavior. A strong
 project manifest owns its subtree unless a nested manifest or explicit
 assignment creates a nested project. It does not own language parsing,
 analyzer-specific dependency semantics, or canonical model meaning.
@@ -53,3 +60,20 @@ identities include relative project root, logical analyzer ID, and local
 observation ID. The exact discovery, scheduling, aggregate, progress,
 resource, cancellation, and acceptance contracts are linked above. The
 combined model does not infer cross-language or cross-root relationships.
+Source filters are resolved from the project-assignment boundary and applied
+after discovery; fixed, nested-root, and configured exclusions win.
+
+## Delivery progress
+
+The approved implementation batch is issues 039–043: deterministic root
+discovery and job planning, bounded execution and lifecycle control,
+namespaced aggregation, CLI/HTTP exposure, and cached `All`/individual scope
+selection in the local viewer. Issues 039–042 are implemented and verified;
+issue 043 is implemented and awaiting its required visual review. Persisted
+`.archview.json` analyzer assignments remain owned by the separate
+project-analyzer-assignments capability, which also owns the persisted
+source-scope policy.
+
+This node remains `specified` until issue 043's visual review is approved and
+all five slices have complete artifact synchronization. Issue 043 carries the
+required post-implementation visual-review gate.

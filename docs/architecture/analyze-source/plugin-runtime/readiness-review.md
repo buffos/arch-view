@@ -23,8 +23,9 @@ READY FOR ARCHITECTURE IMPLEMENTATION
 
 The process runtime was implemented and verified through issues 030–033 under
 the existing plugin-runtime capability without changing the canonical model,
-viewer, or export contracts. The capability remains `specified` for a future
-frontier such as broader plugin distribution or discovery.
+viewer, or export contracts. The capability remains `specified` for future
+frontiers including broader plugin distribution/discovery and the child-owned
+assignment/source-scope policy consumed by multi-analyzer orchestration.
 
 ## Artifact impact
 
@@ -32,8 +33,8 @@ frontier such as broader plugin distribution or discovery.
   schemas are now linked.
 - Product truth: the application remains a static, local-first architecture
   tool; external Python is an opt-in deployment of existing semantics.
-- Architecture truth: descriptor, process, NDJSON, lifecycle, and consumer
-  boundaries are explicit and synchronized.
+- Architecture truth: descriptor, process, NDJSON, lifecycle, consumer, and
+  child-owned assignment/source-scope boundaries are explicit and synchronized.
 - Delivery truth: issues 030–033 are archived after protocol, process-host,
   external Python parity, public CLI, shared viewer/source, export, repository,
   and strict OKF verification.

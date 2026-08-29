@@ -6,7 +6,7 @@ This pass covers the bounded [project analyzer assignments and view selection](.
 
 ## Confirmed strong areas
 
-- **Observed in code:** the local host walks ancestors for the nearest `.archview.json`, treats that file as one complete layout profile, rejects invalid nearest configuration, and keeps layout settings separate from analyzer options.
+- **Observed in code:** the local host walks ancestors for the nearest `.archview.json`, treats that file as one complete layout profile, rejects invalid nearest configuration, and keeps layout settings separate from analyzer options. Individual analyzers accept additional exclusion globs, but the host has no persisted cross-analyzer source-scope policy.
 - **Observed in code:** CLI language/analyzer selection already exists and takes precedence over automatic selection for one run.
 - **User-confirmed target behavior:** a separate analysis configuration maps repository-relative folders to stable analyzer IDs, supports automatic fallback, and exposes cached `All` and individual scopes without re-running analysis.
 
@@ -20,6 +20,7 @@ This pass covers the bounded [project analyzer assignments and view selection](.
 | Invalid configuration and unavailable analyzers were conflated | Medium: one missing analyzer could erase valid scopes | Syntactic/schema/path errors invalidate the nearest file; unavailable analyzer IDs become assignment-scoped diagnostics and do not bypass the nearest file or erase unrelated jobs. |
 | Cache identity and invalidation were unspecified | High: a dropdown could show stale architecture facts | Cache by scope, analyzer package/version, effective options, discovery policy, and authoritative source fingerprint; assignment changes invalidate only impacted scopes. |
 | Scope switching had no external contract | Medium: the feature could exist only as a UI mock | Add sorted scope summaries and a projection `scope` selector; the viewer exposes `All` and individual scopes from the same aggregate run. |
+| Include/exclude source scope was unspecified | High: users could not restrict mixed-language analysis deterministically, and implementations could disagree about which files a job receives | Add strict v2 `analysis.exclude` global globs and analyzer-scoped `analysis.include[]` rules, anchored to the invocation root; apply them after root discovery, with exclusions winning and the effective source set included in cache identity. |
 
 ## Deferrable implementation details
 
@@ -31,16 +32,28 @@ This pass covers the bounded [project analyzer assignments and view selection](.
 - Configuration parsing is strict: unknown fields are errors in v2.
 - Existing v1 layout-only files remain valid and behave as empty analysis configuration.
 - Analyzer options stored in assignments are non-sensitive JSON values validated against the selected analyzer manifest.
+- Source-scope `exclude` is a global additive policy; `include` is an
+  analyzer-ID keyed allowlist. Empty include rules mean no additional
+  allowlist, and duplicate analyzer include rules are invalid.
+- Patterns are normalized POSIX globs relative to the canonical invocation
+  root, with `*`, `?`, character classes, and recursive `**`; parent traversal,
+  absolute paths, negation, and comments are invalid in v2.
+- Root discovery and nested ownership use the fixed discovery policy before
+  source filters are applied. Configured filters cannot hide project markers or
+  re-include fixed, nested, or explicitly excluded paths.
 
 ## Readiness conclusion
 
-No High or Medium specification gaps remain. The schema, precedence, validation,
-cache, API, and visible scope behavior are ready to be captured in the exact
-artifact set.
+No High or Medium specification gaps remain. The schema, precedence, source
+filter semantics, validation, cache, API, and visible scope behavior are ready
+to be captured in the exact artifact set.
 
 ## Artifact impact
 
-- **Capability:** updated with exact configuration, selection, cache, and viewer contracts.
+- **Capability:** updated with exact configuration, source-scope, selection,
+  cache, and viewer contracts.
 - **Product:** application PRD and viewer journey are affected and must remain synchronized.
-- **Architecture:** configuration ownership, analyzer-host precedence, aggregate cache, and viewer projection boundaries are affected.
-- **Delivery:** no issues are created in this specification pass.
+- **Architecture:** configuration ownership, analyzer-host precedence, source
+  filtering, aggregate cache, and viewer projection boundaries are affected.
+- **Delivery:** existing approved issues 039–043 require synchronization with
+  the new source-scope contract; no new capability node is created.

@@ -17,7 +17,9 @@ This slice does not add a language or a capability node. It ports the existing P
 
 The remaining user-confirmed target beyond this completed slice is represented
 by two specified child capabilities rather than being folded into the
-implemented runtime/distribution work:
+implemented runtime/distribution work. The multi-analyzer child now has an
+approved implementation sequence; the assignment/view child remains a later
+frontier:
 
 - [Multi-analyzer project orchestration](../../../../.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
   plans and merges concurrent analyzer jobs for mixed or nested projects.
@@ -76,6 +78,22 @@ packaged execution the default, and close release/parity verification.
 | [037](../../../agents/issues/done/20260828-037-packaged-runtime-selection.md) | Completed: make verified packaged execution the default and retain explicit local/in-process migration overrides | Runtime selection | 036 | none |
 | [038](../../../agents/issues/done/20260828-038-compiled-analyzer-parity-and-release-verification.md) | Completed: verify cross-platform parity, deterministic release behavior, and the full acceptance matrix, with documented non-host deferrals | Release verification | 037 | none |
 
+## Approved multi-analyzer delivery sequence
+
+Issues 039–043 are the approved vertical sequence for multi-analyzer project
+orchestration. Issues 039–042 are verified and archived; issue 043 is
+implemented and awaiting the required post-implementation `visual-review`
+gate for cached viewer scope selection. Persisted `.archview.json` analyzer
+assignments remain owned by the separate project-analyzer-assignments child.
+
+| Issue | Outcome | Owner | Blocked by | Review gate |
+|---|---|---|---|---|
+| [039](../../../agents/issues/done/20260828-039-multi-project-root-discovery-and-job-planning.md) | Completed: discover project roots and produce a deterministic bounded analyzer job plan | Discovery and planning | none | none |
+| [040](../../../agents/issues/done/20260828-040-bounded-multi-analyzer-execution.md) | Completed: execute planned jobs with bounded workers, cancellation, timeouts, and isolated diagnostics | Orchestration runtime | 039 | none |
+| [041](../../../agents/issues/done/20260828-041-namespaced-aggregate-model-and-status.md) | Completed: merge successful and partial scope results into namespaced aggregate models and statuses | Aggregate model | 040 | none |
+| [042](../../../agents/issues/done/20260828-042-combined-analysis-cli-and-http-exposure.md) | Completed: expose combined analysis, status, scope, and cached projection contracts through CLI and HTTP | CLI and HTTP | 041 | none |
+| [043](../../../agents/issues/pending/20260828-043-cached-scope-projections-and-viewer-selection.md) | Awaiting visual review: expose cached All/individual scope projections and failed-scope diagnostics in the local viewer | Viewer integration | 042 | visual-review |
+
 ## Slice acceptance
 
 - A valid descriptor and hello manifest use the same API version and manifest fields; invalid descriptors or mismatches fail before an analyzer can run.
@@ -112,7 +130,9 @@ behavior are complete. Linux amd64 and Darwin arm64 execution remain
 documented `when-supported` deferrals. The slice refines an already confirmed
 plugin-runtime boundary; it does not change product topology or canonical model
 semantics. Issues 030–033 remain the completed delivery record for the v1
-external Python pilot, while the multi-analyzer and assignment/view frontiers
-await later delivery issue slicing. The application PRD and application
-architecture summary remain unchanged because no product actor/workflow or
-architectural boundary changed.
+external Python pilot. Issues 039–042 now represent verified delivery for the
+multi-analyzer planning, execution, aggregation, and transport path; issue 043
+is awaiting visual review. The assignment/view frontier awaits later delivery
+issue slicing. The application PRD and application architecture summary were
+refreshed for current delivery status; their product actors, workflows, and
+architectural boundaries remain unchanged.

@@ -19,9 +19,11 @@
   repository verification and declared review gates. Issues 034–038 complete
   the compiled entrypoint migration, deterministic distribution assembly,
   trusted package verification, packaged runtime selection, parity, and
-  release verification. Three
-  leaf capabilities remain ready for delivery issue slicing: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md),
-  [Multi-analyzer project orchestration](capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md),
+  release verification. [Multi-analyzer project orchestration](capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
+  has verified implementation issues 039–042, with issue 043 awaiting its
+  declared visual review, and is the active delivery frontier. Two leaf
+  capabilities remain ready for delivery issue slicing:
+  [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
   and [Project analyzer assignments and view selection](capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).
   The plugin-runtime and Analyze source nodes remain specified as rollups over
   that unfinished child work.

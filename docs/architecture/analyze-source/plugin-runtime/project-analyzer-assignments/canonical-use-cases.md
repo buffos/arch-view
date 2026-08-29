@@ -6,7 +6,9 @@
 
 - `LoadAnalysisConfiguration`
 - `ValidateAssignments`
+- `ValidateSourceScopePolicy`
 - `ResolveAssignmentForProjectRoot`
+- `ResolveSourceScopeForAnalyzer`
 - `CalculateEffectiveAnalyzerOptions`
 
 ### AnalysisCacheService
@@ -29,7 +31,8 @@
 **Input:** selected repository root and ancestor filesystem chain.
 
 **Output:** nearest complete profile, origin/path, v1/v2 schema, assignments,
-and diagnostics. It never merges or bypasses a nearer invalid file.
+source-scope policy, and diagnostics. It never merges or bypasses a nearer
+invalid file.
 
 ### `ValidateAssignments` — command
 
@@ -39,13 +42,33 @@ and diagnostics. It never merges or bypasses a nearer invalid file.
 IDs, and non-sensitive option values. Structural errors reject the profile;
 unavailable analyzers remain scoped diagnostics.
 
+### `ValidateSourceScopePolicy` — command
+
+**Input:** v2 `analysis.include`/`analysis.exclude` fields, invocation root,
+and analyzer registry.
+
+**Responsibilities:** validate normalized relative glob syntax, reject unsafe
+patterns and duplicate analyzer include rules, canonicalize ordering, and
+resolve include targets to stable logical analyzer IDs. Invalid filter shape or
+patterns reject the configuration; filters never grant permission to traverse
+outside the invocation root.
+
 ### `ResolveAssignmentForProjectRoot` — query
 
 **Input:** project root, CLI selection, validated configuration, registry.
 
 **Outcome:** CLI selection, deepest assignment, or automatic detection in that
 order. A resolution never silently falls through from an unavailable explicit
-assignment.
+assignment. The result carries the resolved analyzer and source-scope policy.
+
+### `ResolveSourceScopeForAnalyzer` — query
+
+**Input:** invocation root, discovered project root, analyzer ID, nested-root
+exclusions, validated source-scope policy, and analyzer defaults/options.
+
+**Outcome:** deterministic effective include/exclude rules and the normalized
+source set for one job. Root discovery markers are not removed by source
+filters; fixed safety, nested-root, and configured exclusions win.
 
 ### `BuildAnalysisCacheKey` — command
 
@@ -69,6 +92,8 @@ stable not-found outcome; no analyzer invocation occurs.
 - `AssignmentDuplicatePath`
 - `AssignmentAnalyzerUnavailable`
 - `AssignmentOptionInvalid`
+- `AnalysisScopeFilterInvalid`
+- `AnalysisScopeFilterUnsafe`
 - `CLISelectionConflict`
 - `AnalysisScopeNotFound`
 - `AnalysisScopeStale`

@@ -28,7 +28,9 @@ Fields:
 
 - `plan_version`: `arch-view.job-plan/v1`
 - `repository_root`
+- `invocation_root`
 - `discovery_policy_version`
+- `source_scope_policy`
 - `jobs[]`
 - `discovery_diagnostics[]`
 
@@ -47,6 +49,9 @@ Fields:
 - `runtime_source`
 - `selection_source`: `assignment | cli | automatic`
 - `nested_root_exclusions[]`
+- `effective_source_scope`
+- `source_scope_fingerprint`
+- `matched_source_set_fingerprint`
 - `effective_options_fingerprint`
 - `status`
 - `started_at?`, `finished_at?`
@@ -55,6 +60,25 @@ Fields:
 
 `job_id` is unique within a run. `scope_id` is stable across runs for the same
 relative root and logical analyzer ID.
+
+## SourceScopePolicy
+
+The job plan carries the canonical source-scope policy resolved from the
+nearest analysis configuration:
+
+- `invocation_root`
+- `exclude[]`
+- `include[]` of `{ analyzer_id, globs[] }`
+- `policy_version`
+
+The global exclusion set is additive to fixed discovery safety exclusions,
+nested-root exclusions, and analyzer-specific exclusion options. A present
+analyzer include rule is an allowlist formed by the union of its globs; no rule
+means no additional allowlist. Patterns use normalized POSIX paths relative to
+the invocation root and support `*`, `?`, character classes, and recursive
+`**`. Absolute paths, parent traversal, negation, comments, and malformed
+patterns are invalid. Source filtering occurs after discovery and ownership
+resolution, and exclusions always win over includes.
 
 ## ScopeIdentity
 
@@ -73,7 +97,8 @@ the same scope unless a future contract explicitly adds cross-scope links.
 The aggregate model uses `arch-view.aggregate/v1` and contains:
 
 - repository-level project metadata with `language: mixed`
-- `scopes[]` with scope ID, root, analyzer, runtime source, status, and counts
+- `scopes[]` with scope ID, root, analyzer, runtime source, status, counts, and
+  effective source-scope fingerprints
 - namespaced `modules[]`, `references[]`, `source_references[]`, and `relationships[]`
 - aggregate diagnostics with `scope_id` when scope-specific
 - derived cycles/layers calculated only over the namespaced reported graph
@@ -84,6 +109,8 @@ meaning of a single-scope `arch-view.model/v1` result.
 ## Policies and invariants
 
 - Strong nested roots are carved out of parent input; weak markers do not create automatic roots.
+- Fixed discovery filtering runs before configured source filtering; configured
+  includes cannot hide root markers and cannot re-include excluded content.
 - One logical analyzer per root/language is the default; duplicate IDs are not scheduled twice.
 - Canonical collections are normalized after namespacing and sorted by stable IDs.
 - A scope failure cannot remove a successful scope.

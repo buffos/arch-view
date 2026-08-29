@@ -23,6 +23,14 @@ issues:
   - docs/agents/issues/done/20260827-033-external-plugin-cli-and-visible-journey.md
   - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
   - docs/agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md
+  - docs/agents/issues/done/20260828-036-trusted-analyzer-package-verification.md
+  - docs/agents/issues/done/20260828-037-packaged-runtime-selection.md
+  - docs/agents/issues/done/20260828-038-compiled-analyzer-parity-and-release-verification.md
+  - docs/agents/issues/done/20260828-039-multi-project-root-discovery-and-job-planning.md
+  - docs/agents/issues/done/20260828-040-bounded-multi-analyzer-execution.md
+  - docs/agents/issues/done/20260828-041-namespaced-aggregate-model-and-status.md
+  - docs/agents/issues/done/20260828-042-combined-analysis-cli-and-http-exposure.md
+  - docs/agents/issues/pending/20260828-043-cached-scope-projections-and-viewer-selection.md
 prd: docs/architecture/analyze-source/plugin-runtime/prd.md
 glossary: docs/architecture/analyze-source/plugin-runtime/domain-glossary.md
 domain_model: docs/architecture/analyze-source/plugin-runtime/canonical-domain-model.md
@@ -44,7 +52,7 @@ explicit language selection, configuration, result validation, diagnostics, and
 an opt-in process boundary for analyzers written outside Go. Its future
 frontier now includes compiled external analyzer distribution, concurrent
 multi-analyzer project orchestration, and durable project analyzer assignments
-with application-level scope selection.
+with invocation-root source-scope policy and application-level scope selection.
 
 # Relationships
 
@@ -63,8 +71,8 @@ Supported analyzers are now also distributed as compiled external executables
 through the implemented child capability, with trusted application-managed
 selection and explicit in-process/descriptor overrides. Running multiple
 applicable analyzers together and persisting project-relative analyzer
-assignments for application scope selection remain specified child frontiers
-and are not claimed as implemented.
+assignments plus invocation-root source-scope policies for application scope
+selection remain specified child frontiers and are not claimed as implemented.
 
 ## Delivery progress
 
@@ -74,10 +82,11 @@ lifecycle, external Python parity, and explicit public integration. Issues
 034–038 completed the shared compiled-plugin runner, five compiled analyzer
 entrypoints, deterministic distribution assembly, trusted package verification,
 packaged runtime selection, explicit fallback, parity, and release
-verification. The parent remains `specified`; the multi-analyzer and project
-assignment/view children remain specified frontiers.
-The multi-analyzer and project assignment/view children remain `specified`
-future frontiers, ready for later delivery issue slicing.
+verification. The parent remains `specified`; the project assignment/view and
+source-scope frontier remains specified. Issues 039–042 completed the
+multi-analyzer discovery, bounded execution, aggregation, and CLI/HTTP
+delivery. Issue 043 is implemented and awaiting visual review; persisted
+assignment/configuration work remains a separate specified child.
 
 # Planning state
 
@@ -85,6 +94,7 @@ This child capability remains specified after its first external process slice
 and the compiled-distribution child were implemented and verified. Its
 host/plugin API, manifest fields, selection rules, lifecycle, safety policy,
 published external schemas, external Python implementation, and packaged
-distribution boundary are linked from the exact-spec artifacts. Multi-analyzer
-execution and project assignment/view selection remain specified future
+distribution boundary are linked from the exact-spec artifacts. The approved
+multi-analyzer execution batch is linked from its child node; project
+assignment/view selection and its source-scope policy remain specified future
 frontiers under the child nodes above.

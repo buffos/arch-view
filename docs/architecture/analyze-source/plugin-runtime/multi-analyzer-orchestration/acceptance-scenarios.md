@@ -29,6 +29,38 @@ external paths are not traversed or scheduled.
 Verification: backend-boundary `when-supported`; frontend-integration
 `not-applicable`; end-to-end `when-supported`.
 
+## SC-MAO-011 — Filter source input after root discovery
+
+**Given** an opened mixed-language repository and a valid invocation-root source
+policy, **when** the host builds a plan, **then** fixed and nested project roots
+are discovered before configured filters are applied, global exclusions remove
+matching paths from every job, and configured includes cannot hide markers or
+re-include excluded content.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`not-applicable`; end-to-end `when-supported`.
+
+## SC-MAO-012 — Apply analyzer-scoped include globs deterministically
+
+**Given** Go and TypeScript include rules with overlapping repository paths,
+**when** the host plans their jobs, **then** each job receives only the union of
+its analyzer-ID rule's matching source paths, an analyzer without a rule has no
+additional allowlist, all paths are normalized relative to the invocation root,
+and the same inputs produce the same source set and plan bytes.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`not-applicable`; end-to-end `when-supported`.
+
+## SC-MAO-013 — Include source scope in cache identity
+
+**Given** cached jobs with the same project root and analyzer but different
+effective include/exclude matches, **when** the source policy changes, **then**
+the affected job receives a new input/cache identity while an unrelated job
+whose normalized source set is unchanged remains reusable.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`not-applicable`; end-to-end `when-supported`.
+
 ## SC-MAO-004 — Run jobs with bounded concurrency
 
 **Given** more than four independent jobs, **when** the plan executes, **then**

@@ -43,6 +43,14 @@ issues:
   - docs/agents/issues/done/20260827-033-external-plugin-cli-and-visible-journey.md
   - docs/agents/issues/done/20260828-034-compiled-analyzer-plugin-entrypoints.md
   - docs/agents/issues/done/20260828-035-compiled-analyzer-distribution-assembly.md
+  - docs/agents/issues/done/20260828-036-trusted-analyzer-package-verification.md
+  - docs/agents/issues/done/20260828-037-packaged-runtime-selection.md
+  - docs/agents/issues/done/20260828-038-compiled-analyzer-parity-and-release-verification.md
+  - docs/agents/issues/done/20260828-039-multi-project-root-discovery-and-job-planning.md
+  - docs/agents/issues/done/20260828-040-bounded-multi-analyzer-execution.md
+  - docs/agents/issues/done/20260828-041-namespaced-aggregate-model-and-status.md
+  - docs/agents/issues/done/20260828-042-combined-analysis-cli-and-http-exposure.md
+  - docs/agents/issues/pending/20260828-043-cached-scope-projections-and-viewer-selection.md
 prd: docs/architecture/analyze-source/prd.md
 glossary: docs/architecture/analyze-source/domain-glossary.md
 domain_model: docs/architecture/analyze-source/canonical-domain-model.md
@@ -80,12 +88,15 @@ The capability is specified. Its observation schema, analyzer lifecycle,
 safety rules, language adapter contracts, and external process pilot are
 linked from the exact-spec artifacts. The future plugin-runtime target includes
 compiled analyzer distributions, multi-analyzer execution, and project-relative
-analyzer assignments. The compiled-distribution child is implemented after
+analyzer assignments with invocation-root source-scope policy. The compiled-
+distribution child is implemented after
 issues 034–038 completed entrypoint migration, distribution assembly, trusted
 verification, packaged runtime selection, parity, and release verification;
-the multi-analyzer and project assignment/view children remain ready for later
-delivery issue slicing.
+issues 039–042 complete the multi-analyzer discovery, execution, aggregation,
+and CLI/HTTP path, while issue 043 awaits its declared viewer visual review.
+The project assignment/view child remains ready for later delivery issue
+slicing.
 
 ## Delivery progress
 
-Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 020–022 complete the registered TypeScript project/module boundary, deterministic discovery, static dependency resolution, uncertainty, evidence, public CLI, and shared visible-journey path after automated verification and explicit visual approval in [the TypeScript slice](../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace, static dependency, platform/polymorphic metadata, safety, and shared public-path slice in [the Clojure implementation slice](../../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md). Issues 030–033 complete the protocol foundation, process host, external Python parity, and public shared path in [the plugin-runtime implementation slice](../../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md). Issues 034–038 complete the compiled-plugin runner, five compiled analyzer entrypoints, package assembly, trusted verification, packaged runtime selection, explicit fallback, parity, and release verification. The parent capability remains `specified` because the multi-analyzer and assignment/view children are not implemented; those remain readiness-reviewed specified future work without delivery issues yet.
+Issues 001 through 008, 013, and 016 are complete for the first Go analyzer/model, viewer, export, layout, analyzer-pipeline, and bounded spline extension slice. Issues 017 through 019 complete the registered Python project/module-discovery, static import/uncertainty, and shared visible-journey slice after automated verification and explicit visual approval in [017–019](../../docs/architecture/analyze-source/python-analysis/implementation-slice.md). Issues 020–022 complete the registered TypeScript project/module boundary, deterministic discovery, static dependency resolution, uncertainty, evidence, public CLI, and shared visible-journey path after automated verification and explicit visual approval in [the TypeScript slice](../../docs/architecture/analyze-source/typescript-analysis/implementation-slice.md). Issues 023–025 complete the registered Rust Cargo boundary, module/evidence discovery, static relationships, uncertainty, and shared canonical output path in [the Rust implementation slice](../../docs/architecture/analyze-source/rust-analysis/implementation-slice.md). Issues 026–029 complete the registered Clojure project/namespace, static dependency, platform/polymorphic metadata, safety, and shared public-path slice in [the Clojure implementation slice](../../docs/architecture/analyze-source/clojure-compatibility/implementation-slice.md). Issues 030–033 complete the protocol foundation, process host, external Python parity, and public shared path in [the plugin-runtime implementation slice](../../docs/architecture/analyze-source/plugin-runtime/implementation-slice.md). Issues 034–038 complete the compiled-plugin runner, five compiled analyzer entrypoints, package assembly, trusted verification, packaged runtime selection, explicit fallback, parity, and release verification. Issues 039–042 complete the multi-analyzer project-orchestration path; issue 043 is implemented and awaiting its declared viewer visual review. The parent capability remains `specified`; the project assignment/view child remains specified future work without delivery issues yet.

@@ -21,7 +21,9 @@ losing useful results when an independent job fails.
 4. Preserve collision-safe identities and per-job provenance in the combined result.
 5. Keep successful and partial scopes usable when another job fails, times out, or is cancelled.
 6. Make job status and progress observable without requiring analyzer-specific progress protocols.
-7. Preserve the canonical model and viewer semantics for every individual scope.
+7. Let project configuration constrain each analyzer job's source input with
+   deterministic include/exclude globs.
+8. Preserve the canonical model and viewer semantics for every individual scope.
 
 ## Non-goals
 
@@ -39,22 +41,25 @@ Starting at the opened repository, the host traverses directories in lexical
 order while applying fixed exclusions. Strong analyzer manifest markers create
 root candidates. A nested strong manifest becomes a nested project scope and is
 carved out of its parent's effective input. Weak markers do not create roots on
-their own.
+their own. Configured source filters are not applied during this discovery
+pass, so include rules cannot hide project markers.
 
 ### Plan jobs
 
 Assignments from the assignment capability are applied first. Otherwise the
-host evaluates applicable analyzers for each candidate root. One logical
-analyzer is selected for a root/language pair; different languages at the same
-root become independent jobs. Jobs are sorted by relative root, language, and
-logical analyzer ID before scheduling.
+host evaluates applicable analyzers for each candidate root. The host then
+resolves the invocation-root-relative source-scope policy for each analyzer.
+One logical analyzer is selected for a root/language pair; different languages
+at the same root become independent jobs. Jobs are sorted by relative root,
+language, and logical analyzer ID before scheduling.
 
 ### Execute jobs
 
 The scheduler runs at most four jobs by default and never more than sixteen.
-Each job receives its project root, nested-root exclusions, selection, effective
-options, and a stable job ID. Cancellation stops queued jobs and terminates
-active external processes through the parent process boundary.
+Each job receives its project root, nested-root exclusions, resolved source
+scope, selection, effective options, and a stable job ID. Cancellation stops
+queued jobs and terminates active external processes through the parent process
+boundary.
 
 ### Aggregate and expose
 
@@ -77,17 +82,22 @@ same cached run; selecting a scope does not re-run analysis.
 | MAO-FR-008 | Return complete, partial, failed, or cancelled aggregate status using the defined usable-result rules. |
 | MAO-FR-009 | Emit deterministic job-plan and lifecycle information suitable for UI and CI consumers. |
 | MAO-FR-010 | Keep per-scope results available for combined/per-scope projection without re-analysis. |
+| MAO-FR-011 | Resolve global exclusion globs and analyzer-scoped include globs relative to the invocation root. |
+| MAO-FR-012 | Apply source filters after root discovery, with fixed, nested-root, and configured exclusions taking precedence over includes. |
+| MAO-FR-013 | Include the effective source-scope policy and matched source set in deterministic job and cache identity. |
 
 ## Non-functional requirements
 
 - Discovery and job ordering are deterministic for the same repository/configuration.
 - The host never creates an unbounded number of processes or workers.
 - A failed scope cannot delete or mutate another scope's observations.
+- The same invocation root, configuration, analyzer registry, and source tree
+  produce the same filtered source set for every job.
 - Aggregate normalization remains compatible with the language-neutral model boundary.
 - A combined model must clearly report partial status and its contributing scopes.
 
 ## Success criteria
 
 The scenarios in [acceptance-scenarios.md](acceptance-scenarios.md) pass for
-mixed-language fixtures, nested roots, failure/cancellation cases, collision
-fixtures, and repeated runs.
+mixed-language fixtures, nested roots, source-filter precedence, failure/
+cancellation cases, collision fixtures, cache invalidation, and repeated runs.

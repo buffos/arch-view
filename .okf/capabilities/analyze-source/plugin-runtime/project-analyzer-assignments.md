@@ -28,13 +28,13 @@ and which analyzer result is visible in the architecture application.
 
 # Scope
 
-This capability owns project-relative folder or project-root assignments in a
-separate `analysis` section of `.archview.json`, configuration precedence and
-validation, logical analyzer selection, and the application control that
-switches between individual analyzer/project scopes or the combined view. The
-viewer remains responsible for the presentation surface; [Explore and inspect
-architecture](/capabilities/explore-architecture.md) consumes the selected
-scope without owning analyzer semantics.
+This capability owns project-relative folder or project-root assignments and
+invocation-root source-scope filters in a separate `analysis` section of
+`.archview.json`, configuration precedence and validation, logical analyzer
+selection, and the application control that switches between individual
+analyzer/project scopes or the combined view. The viewer remains responsible
+for the presentation surface; [Explore and inspect architecture](/capabilities/explore-architecture.md)
+consumes the selected scope without owning analyzer semantics.
 
 # Relationships
 
@@ -50,7 +50,9 @@ analyzer IDs, with automatic detection as a fallback and a dropdown that
 switches among the resulting analyzer/project scopes. The nearest discovered
 configuration remains the one complete file; within it, the deepest matching
 assignment wins, explicit CLI selection overrides assignments, and invalid
-nearest configuration is surfaced instead of bypassed. The exact v1/v2 schema,
-precedence, validation, cache keys, invalidation, API, UI states, and acceptance
-scenarios are linked above. The combined model is backed by cached per-job
-results so scope switching does not re-run analysis.
+nearest configuration is surfaced instead of bypassed. The v2 schema also
+defines global exclusion globs and analyzer-ID-scoped include globs relative to
+the invocation root; filtering follows root discovery and exclusions win. The
+exact v1/v2 schema, precedence, validation, cache keys, invalidation, API, UI
+states, and acceptance scenarios are linked above. The combined model is backed
+by cached per-job results so scope switching does not re-run analysis.

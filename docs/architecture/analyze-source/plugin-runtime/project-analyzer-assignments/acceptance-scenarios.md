@@ -92,3 +92,46 @@ other's semantics.
 
 Verification: backend-boundary `when-supported`; frontend-integration
 `when-supported`; end-to-end `when-supported`.
+
+## SC-PAA-011 — Apply invocation-root source filters
+
+**Given** a v2 configuration with global `exclude` globs and a selected
+invocation root, **when** a combined plan is built, **then** matching source
+paths are excluded from every analyzer job, paths are normalized relative to
+the invocation root, directory matches apply recursively, and fixed safety or
+nested-root exclusions remain effective.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`not-applicable`; end-to-end `when-supported`.
+
+## SC-PAA-012 — Apply analyzer-scoped includes
+
+**Given** analyzer include rules for Go and TypeScript, **when** a mixed
+repository is analyzed, **then** each analyzer receives only the union of its
+own matching include globs, an analyzer without a rule receives no additional
+allowlist, and a configured exclude wins over an include. Root markers remain
+visible to discovery even when they do not match a source include.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`not-applicable`; end-to-end `when-supported`.
+
+## SC-PAA-013 — Reject unsafe or ambiguous source filters
+
+**Given** an absolute, parent-traversing, empty, backslash-separated, negated,
+malformed, or duplicate-analyzer include rule, **when** v2 configuration is
+loaded, **then** the nearest configuration is rejected with field/pattern
+details and no unsafe source path is analyzed.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`not-applicable`; end-to-end `when-supported`.
+
+## SC-PAA-014 — Invalidate scopes when filters change
+
+**Given** cached results for unrelated analyzer scopes, **when** a global
+exclude or analyzer include rule changes the effective source set, **then** the
+affected scope cache key is invalidated, unaffected scope entries remain
+reusable where their matched source set is unchanged, and the run reports the
+filter invalidation reason.
+
+Verification: backend-boundary `when-supported`; frontend-integration
+`when-supported`; end-to-end `when-supported`.

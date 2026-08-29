@@ -1,6 +1,75 @@
 # Update Log
 
+## 2026-08-29
+
+### Multi-analyzer delivery verification and visual-review handoff
+
+* **Implementation:** Verified and archived issues 039–042. The repository now
+  plans deterministic nested roots and source scopes, executes bounded
+  analyzer jobs with lifecycle/cancellation control, aggregates collision-safe
+  namespaced results, and exposes the combined CLI/HTTP contracts.
+* **Viewer handoff:** Issue 043 is implemented and remains active as
+  `awaiting-human-review` for the required mixed-language visual inspection of
+  `All`, individual scopes, failed-scope diagnostics, accessibility, and
+  existing navigation/details behavior. The multi-analyzer capability remains
+  `specified` until that gate is approved.
+* **Graph/frontier:** Updated the owning capability, Analyze source and
+  plugin-runtime roll-ups, application PRD, application architecture summary,
+  implementation slice, orchestration records, registry, and issue references.
+  The assignment/configuration capability remains a separate specified future
+  frontier. Totals remain 0 `foggy`, 0 `bounded`, 5 `specified`, and 9
+  `implemented`.
+* **Verification:** `go test ./... -count=1`, targeted race tests, `go vet ./...`,
+  `go build ./...`, JavaScript syntax checks, available Node viewer-module
+  tests, strict OKF validation, and `git diff --check` pass on Windows amd64.
+  No commit was created.
+
 ## 2026-08-28
+
+### Analysis source-scope specification refresh
+
+* **Ownership and frontier:** Extended the existing specified project-analyzer
+  assignments/view-selection child in place; no new OKF capability node was
+  created. Multi-analyzer orchestration consumes the resolved policy, while
+  project configuration owns its persistence and validation.
+* **Canonical contract:** `arch-view.config/v2` now defines optional global
+  `analysis.exclude` globs and analyzer-ID keyed `analysis.include` rules with
+  `globs` arrays. Patterns are normalized relative to the invocation root,
+  use an explicit deterministic glob subset, apply after root discovery, and
+  let exclusions win. Effective source-set identity participates in planning
+  and cache identity.
+* **Artifact impact:** Capability, exact-spec, application PRD, application
+  architecture, and pending delivery references were synchronized. Existing
+  issues 039–043 consume the policy; no new assignment issue was created.
+* **State:** No node state transition occurred. Totals remain 0 `foggy`, 0
+  `bounded`, 5 `specified`, and 9 `implemented`.
+
+### Multi-analyzer orchestration issue slicing
+
+* **Application synthesis gate:** Revalidated `docs/prd.md` and
+  `docs/architecture/application-architecture-summary.md` before issue
+  creation. Both reflect the implemented compiled distribution and the
+  readiness-reviewed multi-analyzer boundary; no High or Medium readiness
+  blockers were found.
+* **Approved delivery batch:** Created issues 039–043 for deterministic root
+  discovery/job planning, bounded execution/lifecycle, namespaced aggregation,
+  CLI/HTTP exposure, and cached viewer scope selection. Issue 039 is unblocked;
+  issues 040–043 are dependency-ordered, and issue 043 carries `visual-review`.
+* **Graph/frontier:** Linked pending issue references from the multi-analyzer
+  child and the plugin-runtime/analyze-source roll-ups. The multi-analyzer node
+  remains `specified`; project assignment/view selection and advanced ELK remain
+  specified future frontiers. Current totals are 0 `foggy`, 0 `bounded`, 5
+  `specified`, and 9 `implemented`.
+* **Artifact impact:** Delivery truth changed. Product and architecture
+  documents were refreshed for compiled-distribution status before slicing, but
+  semantic boundaries are unchanged; persisted analyzer assignments remain
+  owned by the separate assignment capability.
+
+### Planning-map reconciliation
+
+* **Graph state:** Reconciled the completed [compiled external analyzer distribution](capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md) node as `implemented`; its 036–038 delivery references now roll up through the `plugin-runtime` and `analyze-source` ancestor concepts. Current totals remain 0 `foggy`, 0 `bounded`, 5 `specified`, and 9 `implemented`.
+* **Frontier:** Preserved the three remaining specified leaf frontiers—advanced ELK renderer support, multi-analyzer project orchestration, and project analyzer assignments/view selection. No new topology or next-node selection was made.
+* **Artifact impact:** Capability and topology references were synchronized. Product and application-architecture artifacts have no impact because the completed node’s product boundary and cross-capability contracts are unchanged. The active issue registry and max issue ID remain correct at 038.
 
 ### Compiled distribution closeout
 

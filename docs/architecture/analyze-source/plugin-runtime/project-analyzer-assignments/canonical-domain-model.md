@@ -25,9 +25,41 @@ schema versions.
 Fields:
 
 - `assignments[]`
+- `exclude[]?`: global source-scope globs
+- `include[]?`: analyzer-scoped include rules
 
-Assignments are sorted by normalized path for canonical serialization. No
-ancestor configuration is merged.
+Assignments are sorted by normalized path for canonical serialization. Include
+rules are sorted by `analyzer_id` and their glob arrays are sorted and
+deduplicated for canonical serialization. No ancestor configuration is merged.
+
+## SourceScopePolicy
+
+Fields:
+
+- `invocation_root`
+- `exclude[]`
+- `include[]`
+- `policy_version`
+
+`exclude[]` is a global additive exclusion set. Each include rule contains:
+
+- `analyzer_id`
+- `globs[]`
+
+An analyzer with no include rule has no additional allowlist. When a rule is
+present, matching paths are the union of its globs. Patterns are normalized
+POSIX paths relative to `invocation_root`, which is the canonical `--project`
+directory or equivalent API root. They are not relative to the configuration
+file or process working directory.
+
+The v2 glob subset supports `*`, `?`, character classes, and recursive `**`.
+Patterns cannot be absolute, contain parent traversal, or use `.gitignore`
+negation/comments. Directory matches apply recursively. Fixed safety
+exclusions, nested-root exclusions, and configured exclusions take precedence
+over includes. Root discovery and nested ownership are evaluated before this
+policy filters analyzer source input. A job's effective source set is its owned
+discovered candidates intersected with its analyzer include union, when
+present, and then reduced by all applicable exclusions.
 
 ## AnalyzerAssignment
 
@@ -45,7 +77,7 @@ analyzer manifest.
 ## AssignmentResolution
 
 Fields: `project_root`, `source`, `assignment_path?`, `analyzer_id?`,
-`effective_options`, `diagnostics[]`.
+`effective_options`, `source_scope`, `diagnostics[]`.
 
 Resolution order:
 
@@ -60,7 +92,7 @@ scoped diagnostic and does not silently fall through to a different analyzer.
 ## AnalysisScope
 
 Fields: `scope_id`, `relative_project_root`, `analyzer`, `runtime_source`,
-`status`, `summary`, `diagnostics[]`, `cache_key`.
+`source_scope`, `status`, `summary`, `diagnostics[]`, `cache_key`.
 
 The scope ID is the multi-analyzer `ScopeIdentity`; labels are derived from
 relative root and analyzer language/ID and are not identity keys.
@@ -74,6 +106,7 @@ The cache is session-scoped and keyed by the SHA-256 of canonical JSON over:
 - logical analyzer ID, version, API version, and package digest/runtime source
 - resolved selection source
 - canonical effective option values
+- canonical effective source-scope policy and the normalized matched source set
 - authoritative source-input fingerprint
 
 The source fingerprint is based on sorted included relative paths and content
@@ -84,6 +117,10 @@ scope entries remain valid.
 ## Policies and invariants
 
 - The nearest configuration file is one complete file and invalid nearest configuration is surfaced.
+- The source-scope policy is resolved relative to the invocation root and is
+  applied only after project-root discovery and nested ownership resolution.
+- Global/configured exclusions and fixed/nested exclusions always win over
+  includes; an include cannot re-include excluded content.
 - Scope selection is read-only and cannot trigger analysis.
 - `All` is a projection over the current aggregate run, not a cached duplicate job.
 - Sensitive analyzer values cannot be persisted in project configuration.

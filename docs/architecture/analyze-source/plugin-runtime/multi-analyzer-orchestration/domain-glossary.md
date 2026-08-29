@@ -10,6 +10,10 @@
 | Scope ID | value object | Stable identifier derived from repository-relative project root and logical analyzer ID. | It namespaces observations; it is not a UI label. |
 | Combined analysis | business object | One aggregate result assembled from independent job results. | It retains per-scope provenance and never invents cross-scope relationships. |
 | Scope result | business object | One job's normalized result, status, counts, and diagnostics within a combined analysis. | A failed scope can remain visible as diagnostics without contributing graph nodes. |
+| Source-scope policy | policy object | The resolved global exclusions and analyzer-scoped include rules applied to a job after root discovery. | It filters source input; it does not create roots or select analyzer language semantics. |
+| Invocation root | value object | The normalized repository directory supplied to the analysis invocation. | Persisted source globs are anchored here, not at the config file or process working directory. |
+| Analyzer include rule | policy/rule | A stable logical analyzer ID paired with a union of relative source globs. | It is an input allowlist, not a project assignment. |
+| Exclusion glob | value object | A relative source path glob that removes matching files/directories from every job. | It is additive to fixed and nested-root exclusions and cannot be negated. |
 | Usable result | policy term | A complete or partial job result whose model observations pass normalization sufficiently to contribute. | A job with only a failure diagnostic is not usable. |
 | Partial analysis | state/status | Aggregate status with at least one usable job and at least one non-usable or partial job. | It is different from a fully failed run. |
 | Provenance | reporting term | Scope, analyzer, version, runtime source, and local observation origin retained with aggregate data. | It explains where data came from; it does not change relationship semantics. |

@@ -57,6 +57,7 @@ migration, deterministic distribution assembly, trusted package verification,
 packaged runtime selection, parity, and release verification. The compiled
 distribution child is implemented; its Linux amd64 and Darwin arm64 execution
 checks remain documented under the root `when-supported` policy. The
-multi-analyzer orchestration, project analyzer assignments/view selection, and
-advanced ELK renderer support leaves remain ready for delivery issue slicing
-without delivery issues.
+multi-analyzer orchestration leaf has verified implementation issues 039–042,
+with issue 043 awaiting its declared viewer visual review. The project
+analyzer assignments/view selection and advanced ELK renderer support leaves
+remain specified and ready for later delivery issue slicing.

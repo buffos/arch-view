@@ -6,7 +6,7 @@ Provide one host-controlled lifecycle and contract for language analyzers so new
 
 ## Target boundary
 
-The runtime owns analyzer registration, manifest validation, project detection, explicit language selection, option precedence, lifecycle/cancellation, result validation, normalization handoff, and diagnostics. It does not parse language syntax, calculate layout, render graphics, or export artifacts.
+The runtime owns analyzer registration, manifest validation, project detection, explicit language selection, assignment and source-scope policy resolution, option precedence, lifecycle/cancellation, result validation, normalization handoff, and diagnostics. It does not parse language syntax, calculate layout, render graphics, or export artifacts.
 
 ## Confirmed decisions
 
@@ -38,6 +38,10 @@ The runtime owns analyzer registration, manifest validation, project detection, 
 - **User-confirmed target behavior:** Project configuration should map
   repository-relative folders or project roots to analyzer IDs, with a viewer
   control for switching between individual scopes and the combined view.
+- **User-confirmed target behavior:** The same project configuration should
+  define global exclusion globs and analyzer-ID-scoped include globs relative
+  to the invocation root. Source filtering is applied after root discovery;
+  exclusions win and the configuration is not a full `.gitignore` dialect.
 - **User-confirmed target behavior:** Compiled external artifacts are the
   production implementation for stable logical analyzer IDs; in-process
   adapters remain only for development, tests, or explicit migration fallback.
@@ -66,6 +70,6 @@ The runtime owns analyzer registration, manifest validation, project detection, 
 - Whether built-in analyzers run in separate goroutines or processes when optional tool-assisted resolution is enabled.
 - Protocol migration beyond v1 remains outside the pilot. The specified child
   capabilities own executable distribution/package management, multi-analyzer
-  scheduling/merging, and analysis assignment configuration. Their exact
+  scheduling/merging, and analysis assignment/source-scope configuration. Their exact
   schemas, algorithms, and acceptance scenarios are complete and readiness-
   reviewed; implementation and verification remain future work.

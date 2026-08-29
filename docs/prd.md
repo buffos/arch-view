@@ -6,7 +6,7 @@ This is the application-level planning baseline. It records confirmed product sc
 
 ## Product
 
-Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, Clojure, TypeScript, and Rust support, with configurable presentation layout for repository-specific viewing needs. Go, Python, TypeScript, Rust, and Clojure currently run as in-process adapters behind the same language-neutral contract, and the current deployment also includes an explicitly supplied external Python process behind that contract. The confirmed future direction is compiled external analyzer executables, concurrent multi-analyzer analysis, and project-relative analyzer assignments with selectable scopes.
+Arch View analyzes supported source repositories and presents their architecture as a navigable graph of modules, relationships, hierarchy, cycles, and layers. The first implementation targets Go and establishes a plugin boundary for Python, Clojure, TypeScript, and Rust support, with configurable presentation layout for repository-specific viewing needs. Go, Python, TypeScript, Rust, and Clojure run as in-process adapters behind the same language-neutral contract, and the current deployment also includes an explicitly supplied external Python process plus trusted packaged compiled analyzer executables behind that contract. In-process adapters remain available for development and explicit migration fallback. The multi-analyzer analysis path is implemented through the verified 039–042 delivery slices, with its viewer visual-review gate remaining open in issue 043; project-relative analyzer assignments with selectable scopes and persisted source-scope configuration remain future work.
 
 The reference implementation is available in the upstream
 [unclebob/arch-view repository](https://github.com/unclebob/arch-view) for
@@ -39,30 +39,31 @@ reading only. It is not part of the product source tree.
 
 ## Confirmed future direction
 
-The current v1 product path remains valid, but the next analyzer/runtime
-frontier is explicitly broader:
+The current v1 product path remains valid. The compiled external analyzer
+distribution is implemented and is the production release path for stable
+logical analyzer IDs. The remaining analyzer/runtime frontier is explicitly
+broader:
 
-- Ship supported language analyzers as compiled external executables that reuse
-  the existing analyzer implementations and do not require language runtimes
-  on the user's machine.
-- Detect and run multiple applicable analyzers concurrently across mixed or
-  nested project roots, then merge their results into one architecture model.
 - Persist repository-relative folder or project-root to analyzer assignments
   and let the application switch between individual analyzer scopes and the
   combined view.
+- Define source scope in project configuration with global exclusion globs and
+  analyzer-ID-scoped include globs relative to the invocation root, with
+  deterministic matching and exclusions taking precedence.
 
-These are future capabilities, not additions to the current MVP acceptance
-scope. They are represented by specified child nodes under [Analyzer plugin
-runtime](/.okf/capabilities/analyze-source/plugin-runtime.md).
+The multi-analyzer behavior is now implemented through the specified child
+delivery path and is completing its declared viewer review. Persisted
+assignment configuration remains a future capability under [Analyzer plugin
+runtime](/.okf/capabilities/analyze-source/plugin-runtime.md); the compiled
+distribution child is implemented.
 
-The specified direction is intentionally specific: compiled binaries are the
-production implementation for stable logical analyzer IDs and are assembled by
-a reproducible build target under an application-managed `analyzers` tree;
-repository opening discovers marker-driven nested project roots and schedules
-different language jobs through bounded concurrency; merged identities include
-relative root, analyzer ID, and local ID; failures yield partial results; and a
-separate `analysis` section in `.archview.json` controls assignments while the
-viewer exposes cached `All` and per-scope views.
+The implemented multi-analyzer direction is intentionally specific: repository
+opening discovers marker-driven nested project roots and schedules different
+language jobs through bounded concurrency; merged identities include relative
+root, analyzer ID, and local ID; failures yield partial results; and the viewer
+exposes cached `All` and per-scope views. A separate `analysis` section in
+`.archview.json` for persisted assignments and source scope remains owned by
+the next specified child capability.
 
 ## Primary user journeys
 
@@ -80,8 +81,11 @@ viewer exposes cached `All` and per-scope views.
    executables run concurrently and the resulting scopes appear in one
    architecture session.
 10. A developer assigns a repository-relative folder to a specific analyzer
-   in project configuration and switches between that scope and the combined
-   view from the application.
+    in project configuration and switches between that scope and the combined
+    view from the application.
+11. A developer restricts analysis to selected source globs, excludes generated
+    or vendor content globally, and confirms that changing those filters
+    invalidates the affected cached scopes.
 
 ## Non-goals
 
@@ -90,8 +94,8 @@ viewer exposes cached `All` and per-scope views.
 - Automatic architectural approval or refactoring.
 - Perfect resolution of dynamic imports, generated code, or runtime dispatch.
 - Treating `.archview.json` as a container for canonical model data, viewport
-  state, or manual diagram positions. A future version may add a separately
-  owned analysis-assignment section without mixing it with layout semantics.
+  state, or manual diagram positions. Its separately owned `analysis` section
+  remains distinct from layout semantics.
 - Changes to the upstream reference implementation.
 
 ## Capability map
@@ -105,16 +109,17 @@ viewer exposes cached `All` and per-scope views.
 
 - [Analyze source code](/.okf/capabilities/analyze-source.md): `specified`,
   with the Go, Python, TypeScript, Rust, and Clojure children implemented, the
-  first external Python process slice verified, and three specified future
-  plugin-runtime children for compiled distribution, multi-analyzer
-  orchestration, and project analyzer assignments/view selection.
+  first external Python process slice verified, the compiled-distribution child
+  implemented, with the multi-analyzer orchestration path verified through
+  issue 042 and issue 043 awaiting visual review; the project analyzer
+  assignments/view selection child remains specified future work.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `implemented`, including the v1 canonical model and graph-projection contract.
 - [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) is `specified` for future extensions.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `implemented`, including JSON v1 and deterministic HTML/SVG/CI behavior.
 
 ## Cross-capability dependencies
 
-Source analyzers produce evidence for the language-neutral model. The model owns stable identity, structured hierarchy, typed relationships, provenance, cycles, and derived layers. Structural containment remains separate from semantic dependency edges. The viewer consumes the model through a renderer-neutral view contract and a presentation-only layout profile. The local host resolves nearest-ancestor `.archview.json` settings and safely persists explicit project preferences, while exporters produce versioned JSON, HTML, and SVG without knowing source syntax. The future analyzer runtime will plan a set of project/analyzer jobs, while configuration will keep analyzer assignments distinct from viewer layout settings and the plugin runtime remains the only boundary that knows how a language is detected or parsed.
+Source analyzers produce evidence for the language-neutral model. The model owns stable identity, structured hierarchy, typed relationships, provenance, cycles, and derived layers. Structural containment remains separate from semantic dependency edges. The viewer consumes the model through a renderer-neutral view contract and a presentation-only layout profile. The local host resolves nearest-ancestor `.archview.json` settings and safely persists explicit project preferences, while exporters produce versioned JSON, HTML, and SVG without knowing source syntax. The implemented analyzer runtime plans a set of project/analyzer jobs and applies the validated invocation-root source-scope policy, while configuration keeps persisted analyzer assignments and source filters distinct from viewer layout settings and the plugin runtime remains the only boundary that knows how a language is detected or parsed.
 
 ## Implementation sequence
 
@@ -127,10 +132,13 @@ Source analyzers produce evidence for the language-neutral model. The model owns
 7. Add the opt-in external, versioned plugin protocol and validate it with
    the external Python parity pilot.
 8. Replace the script-based pilot with compiled external analyzer executables
-   that reuse the in-process implementations.
+   that reuse the in-process implementations. **Completed through issues
+   034–038.**
 9. Add multi-project/multi-analyzer job planning, bounded concurrency, result
-   merging, and partial-failure behavior.
-10. Add project-relative analyzer assignments and application scope selection.
+   merging, and partial-failure behavior. **Implemented through issues
+   039–042; issue 043 remains at visual review.**
+10. Add project-relative analyzer assignments, invocation-root source-scope
+    filtering, and application scope selection.
 
 The specification set is complete and readiness-reviewed. A 2026-08-28
 brownfield audit confirmed that the Go analyzer, canonical model, and export
@@ -139,21 +147,22 @@ capabilities exhaust their promised scopes, so their planning states are now
 `go test ./...` passes, the browser module tests pass, and the export paths
 retain their recorded visual approvals. The current Explore scope and the
 Python, TypeScript, Rust, and Clojure adapters are also implemented. Issues
-030–033 complete the first external plugin-runtime slice. The compiled
-distribution capability is now in approved delivery through issues 034–038.
-The multi-analyzer orchestration, project assignment/view selection, and
-advanced ELK renderer children remain specified and have no delivery issues
-yet.
+030–033 complete the first external plugin-runtime slice. Issues 034–038
+complete the compiled distribution capability. The multi-analyzer
+orchestration, project assignment/view selection, and advanced ELK renderer
+children remain specified; multi-analyzer issues 039–042 are verified and issue
+043 is awaiting its declared viewer visual review.
 
 ## Future planning state
 
-The current external deployment remains the explicitly supplied Python pilot
-and does not change model/viewer/export semantics. The compiled external
-distribution is a specified frontier with approved delivery issues 034–038 and
-is not claimed as implemented by issues 030–033. Multi-analyzer orchestration
-and project assignment/view selection remain specified future frontiers
-without delivery issues. Advanced ELK renderer support is likewise specified
-as a renderer-only extension of the implemented viewer.
+The explicitly supplied external Python deployment remains a compatibility
+pilot and does not change model/viewer/export semantics. Release builds use the
+implemented trusted compiled external distribution, while in-process adapters
+remain explicit development or migration paths. Multi-analyzer orchestration
+remains specified pending issue 043's visual review; project assignment/view
+selection and its source-scope policy remain specified future frontiers. Advanced ELK
+renderer support is likewise specified as a renderer-only extension of the
+implemented viewer.
 
 ## Verification strategy
 
@@ -172,10 +181,14 @@ No high or medium blocker prevents the specified planning baseline. The followin
 - Parser fixture breadth and dynamic-language precision.
 - Cross-environment HTML/SVG determinism and source-serving security tests.
 - Pinned-ELK option compatibility, nearest-ancestor configuration fixtures, active-file `Save` versus custom-folder `Save As`, and safe project-settings writes.
-- Exact compiled analyzer artifact packaging, platform selection,
-  trust/version policy, multi-analyzer job discovery and merging, and
-  folder-assignment configuration/dropdown schemas are specified in the linked
-  child artifacts; implementation and verification remain future work.
+- Multi-analyzer job discovery, source-scope application, merging, transport,
+  and cached viewer projection are implemented and covered by verified issues
+  039–042; issue 043 remains open only for its declared visual review.
+  Folder-assignment configuration/dropdown schemas remain a separate specified
+  future workstream that owns the persisted filter policy.
+- Linux amd64 and Darwin arm64 packaged-analyzer execution remain deferred
+  verification surfaces under the root `when-supported` policy until matching
+  runners or toolchains are available.
 
 ## Specification sources
 
