@@ -127,6 +127,7 @@ type thresholdRule struct {
 	namespace      string
 	description    string
 	unit           string
+	defaultLimit   int64
 }
 
 func (rule thresholdRule) ID() string                     { return rule.id }
@@ -136,24 +137,35 @@ func (rule thresholdRule) RequiredCapabilities() []string { return []string{rule
 func (rule thresholdRule) ParameterSchema() ParameterSchema {
 	return thresholdParameterSchema(rule.namespace, rule.unit)
 }
+func (rule thresholdRule) DefaultParameters() TypedConfigBlock {
+	return TypedConfigBlock{
+		Namespace:     rule.namespace,
+		SchemaVersion: qualityFormulaVersion,
+		Payload: map[string]any{
+			"operator": "greater_than",
+			"limit":    rule.defaultLimit,
+			"unit":     rule.unit,
+		},
+	}
+}
 func (rule thresholdRule) Descriptor() RuleDescriptor {
 	return RuleDescriptor{ID: rule.id, Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityWarning, Description: rule.description}
 }
 
 func newFileSizeRule() QualityRule {
-	return thresholdRule{id: "source:file.max-lines", capability: fileLineMetricID, metricID: fileLineMetricID, formulaID: "formula:source-file.line-count", formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-file-size", description: "Flag files whose intrinsic physical line count exceeds the configured limit.", unit: "unit:line"}
+	return thresholdRule{id: "source:file.max-lines", capability: fileLineMetricID, metricID: fileLineMetricID, formulaID: "formula:source-file.line-count", formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-file-size", description: "Flag files whose intrinsic physical line count exceeds the configured limit.", unit: "unit:line", defaultLimit: 500}
 }
 
 func newCallableSizeRule() QualityRule {
-	return thresholdRule{id: "source:callable.max-lines", capability: callableBodyMetricID, metricID: callableBodyMetricID, formulaID: "formula:source-callable.body-line-count", formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-callable-size", description: "Flag callables whose extractor-declared body span exceeds the configured limit.", unit: "unit:line"}
+	return thresholdRule{id: "source:callable.max-lines", capability: callableBodyMetricID, metricID: callableBodyMetricID, formulaID: "formula:source-callable.body-line-count", formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-callable-size", description: "Flag callables whose extractor-declared body span exceeds the configured limit.", unit: "unit:line", defaultLimit: 50}
 }
 
 func newComplexityRule() QualityRule {
-	return thresholdRule{id: "source:callable.max-cyclomatic-complexity", capability: complexityMetricID, metricID: complexityMetricID, formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-callable-complexity", description: "Flag callables using a provider-declared cyclomatic-complexity formula.", unit: "unit:complexity"}
+	return thresholdRule{id: "source:callable.max-cyclomatic-complexity", capability: complexityMetricID, metricID: complexityMetricID, formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-callable-complexity", description: "Flag callables using a provider-declared cyclomatic-complexity formula.", unit: "unit:complexity", defaultLimit: 10}
 }
 
 func newNestingRule() QualityRule {
-	return thresholdRule{id: "source:callable.max-nesting-depth", capability: nestingMetricID, metricID: nestingMetricID, formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-callable-nesting", description: "Flag callables using a provider-declared maximum-nesting formula.", unit: "unit:depth"}
+	return thresholdRule{id: "source:callable.max-nesting-depth", capability: nestingMetricID, metricID: nestingMetricID, formulaVersion: qualityFormulaVersion, namespace: "rule-config:source-callable-nesting", description: "Flag callables using a provider-declared maximum-nesting formula.", unit: "unit:depth", defaultLimit: 4}
 }
 
 func (rule thresholdRule) Evaluate(context EvaluationContext, batch MetricBatch) (RuleResult, error) {
@@ -352,6 +364,10 @@ func exactThresholdFinding(rule thresholdRule, metric MetricFact, subject Entity
 	if severity == "" {
 		severity = SeverityWarning
 	}
+	messageCode := "quality:threshold-exceeded"
+	if rule.ID() == "source:file.max-lines" {
+		messageCode = "quality:file-lines-exceeded"
+	}
 	return QualityFinding{
 		RuleID:            rule.ID(),
 		RuleVersion:       rule.Version(),
@@ -359,13 +375,44 @@ func exactThresholdFinding(rule thresholdRule, metric MetricFact, subject Entity
 		Status:            StatusActive,
 		Severity:          severity,
 		SubjectRef:        subject,
-		MessageCode:       "quality:threshold-exceeded",
-		Message:           fmt.Sprintf("%s observed %d %s; configured limit is %s %d", rule.ID(), observed, threshold.unit, threshold.operator, threshold.limit),
+		MessageCode:       messageCode,
+		Message:           thresholdFindingMessage(rule, observed, threshold),
 		ObservedMetricIDs: []string{metric.ID},
 		Comparison:        &Comparison{Operator: threshold.operator, ObservedMetricID: metric.ID, Limit: MetricValue{Kind: ValueInteger, Value: threshold.limit}, Unit: threshold.unit},
 		Evidence:          FindingEvidence{SourceSpans: spans, EntityRefs: []EntityRef{subject}, RelationRefs: []EntityRef{}, MetricRefs: []string{metric.ID}, DiagnosticRefs: []string{}},
 		Provenance:        metric.Provenance,
 		Extensions:        []ExtensionBlock{},
+	}
+}
+
+func thresholdFindingMessage(rule thresholdRule, observed int64, threshold threshold) string {
+	subject := "Subject"
+	metric := strings.TrimPrefix(threshold.unit, "unit:")
+	switch rule.ID() {
+	case "source:file.max-lines":
+		subject, metric = "File", "lines"
+	case "source:callable.max-lines":
+		subject, metric = "Callable", "lines"
+	case "source:callable.max-cyclomatic-complexity":
+		subject, metric = "Callable", "complexity"
+	case "source:callable.max-nesting-depth":
+		subject, metric = "Callable", "nesting depth"
+	}
+	switch threshold.operator {
+	case OperatorGreaterThan:
+		return fmt.Sprintf("%s has %d %s; configured maximum is %d", subject, observed, metric, threshold.limit)
+	case OperatorGreaterThanOrEqual:
+		return fmt.Sprintf("%s has %d %s; configured minimum is %d", subject, observed, metric, threshold.limit)
+	case OperatorLessThan:
+		return fmt.Sprintf("%s has %d %s; configured condition is less than %d", subject, observed, metric, threshold.limit)
+	case OperatorLessThanOrEqual:
+		return fmt.Sprintf("%s has %d %s; configured maximum is %d or less", subject, observed, metric, threshold.limit)
+	case OperatorEqual:
+		return fmt.Sprintf("%s has %d %s; configured value is %d", subject, observed, metric, threshold.limit)
+	case OperatorNotEqual:
+		return fmt.Sprintf("%s has %d %s; configured value must not be %d", subject, observed, metric, threshold.limit)
+	default:
+		return fmt.Sprintf("%s has %d %s; configured limit is %d", subject, observed, metric, threshold.limit)
 	}
 }
 
@@ -383,6 +430,9 @@ func (documentationRule) ParameterSchema() ParameterSchema {
 }
 func (rule documentationRule) Descriptor() RuleDescriptor {
 	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityWarning, Description: "Report public symbols whose documentation presence is observed as absent."}
+}
+func (documentationRule) DefaultParameters() TypedConfigBlock {
+	return TypedConfigBlock{Namespace: "rule-config:documentation-coverage", SchemaVersion: qualityFormulaVersion, Payload: map[string]any{}}
 }
 
 func (rule documentationRule) Evaluate(context EvaluationContext, batch MetricBatch) (RuleResult, error) {

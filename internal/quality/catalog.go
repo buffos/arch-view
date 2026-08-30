@@ -38,6 +38,14 @@ type RuleDescriptorProvider interface {
 	Descriptor() RuleDescriptor
 }
 
+// DefaultParameterProvider lets a rule expose a safe, human-facing starting
+// configuration for temporary catalog evaluations. Persisted profiles remain
+// authoritative; defaults are only used when a viewer user enables a rule for
+// the current session.
+type DefaultParameterProvider interface {
+	DefaultParameters() TypedConfigBlock
+}
+
 type ParameterSchema struct {
 	Namespace       string                    `json:"namespace"`
 	SchemaVersion   string                    `json:"schema_version"`
@@ -84,7 +92,7 @@ func NewCatalog() *Catalog {
 // the evaluator or a language switch.
 func NewDefaultCatalog() *Catalog {
 	catalog := NewCatalog()
-	for _, provider := range []MetricProvider{newSourceMetricProvider(), newArchitectureMetricProvider()} {
+	for _, provider := range []MetricProvider{newSourceMetricProvider(), newArchitectureMetricProvider(), newSolidMetricProvider()} {
 		if err := catalog.RegisterMetricProvider(provider); err != nil {
 			panic(err)
 		}
@@ -101,6 +109,11 @@ func NewDefaultCatalog() *Catalog {
 		newForbiddenDependencyRule(),
 		newLayerDirectionRule(),
 	} {
+		if err := catalog.RegisterQualityRule(rule); err != nil {
+			panic(err)
+		}
+	}
+	for _, rule := range newSolidSignalRules() {
 		if err := catalog.RegisterQualityRule(rule); err != nil {
 			panic(err)
 		}
@@ -253,6 +266,32 @@ func (catalog *Catalog) ListQualityRules() []RuleDescriptor {
 		return result[i].ID < result[j].ID
 	})
 	return result
+}
+
+// DefaultRuleBinding returns a disabled binding with the rule's default
+// parameters and severity. It is deliberately a catalog operation so callers
+// do not need to switch on rule IDs when presenting or evaluating all rules.
+func (catalog *Catalog) DefaultRuleBinding(id, version string) (RuleBinding, bool) {
+	rule, ok := catalog.ResolveQualityRule(id, version)
+	if !ok {
+		return RuleBinding{}, false
+	}
+	descriptor := descriptorForRule(rule)
+	parameters := TypedConfigBlock{
+		Namespace:     descriptor.ParameterSchema.Namespace,
+		SchemaVersion: descriptor.ParameterSchema.SchemaVersion,
+		Payload:       map[string]any{},
+	}
+	if provider, hasDefaults := rule.(DefaultParameterProvider); hasDefaults {
+		parameters = provider.DefaultParameters()
+	}
+	return RuleBinding{
+		RuleID:      descriptor.ID,
+		RuleVersion: descriptor.Version,
+		Enabled:     false,
+		Parameters:  parameters,
+		Severity:    descriptor.DefaultSeverity,
+	}, true
 }
 
 func (catalog *Catalog) ListQualityCapabilities() []CapabilityDescriptor {

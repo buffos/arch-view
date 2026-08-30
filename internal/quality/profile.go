@@ -13,16 +13,21 @@ import (
 type ErrorCode string
 
 const (
-	ErrorCatalogInvalid    ErrorCode = "QualityCatalogInvalid"
-	ErrorCatalogConflict   ErrorCode = "QualityCatalogConflict"
-	ErrorProfileInvalid    ErrorCode = "QualityProfileInvalid"
-	ErrorRuleUnknown       ErrorCode = "QualityRuleUnknown"
-	ErrorRuleUnsupported   ErrorCode = "QualityRuleUnsupported"
-	ErrorParameterInvalid  ErrorCode = "QualityParameterInvalid"
-	ErrorConstraintInvalid ErrorCode = "QualityConstraintInvalid"
-	ErrorMetricUnavailable ErrorCode = "MetricInputUnavailable"
-	ErrorEvaluationFailed  ErrorCode = "QualityRuleEvaluationFailed"
-	ErrorReportInvalid     ErrorCode = "QualityReportInvalid"
+	ErrorCatalogInvalid     ErrorCode = "QualityCatalogInvalid"
+	ErrorCatalogConflict    ErrorCode = "QualityCatalogConflict"
+	ErrorProfileInvalid     ErrorCode = "QualityProfileInvalid"
+	ErrorRuleUnknown        ErrorCode = "QualityRuleUnknown"
+	ErrorRuleUnsupported    ErrorCode = "QualityRuleUnsupported"
+	ErrorParameterInvalid   ErrorCode = "QualityParameterInvalid"
+	ErrorConstraintInvalid  ErrorCode = "QualityConstraintInvalid"
+	ErrorMetricUnavailable  ErrorCode = "MetricInputUnavailable"
+	ErrorEvaluationFailed   ErrorCode = "QualityRuleEvaluationFailed"
+	ErrorReportInvalid      ErrorCode = "QualityReportInvalid"
+	ErrorBaselineInvalid    ErrorCode = "QualityBaselineInvalid"
+	ErrorReportIncompatible ErrorCode = "QualityReportIncompatible"
+	ErrorQueryInvalid       ErrorCode = "QualityQueryInvalid"
+	ErrorQueryNotFound      ErrorCode = "QualityQueryNotFound"
+	ErrorEvidenceBudget     ErrorCode = "QualityEvidenceBudgetExceeded"
 )
 
 type QualityError struct {

@@ -85,6 +85,7 @@ type BaselineRef struct {
 type Baseline struct {
 	SchemaVersion string           `json:"schema_version"`
 	BaselineID    string           `json:"baseline_id"`
+	Revision      string           `json:"revision,omitempty"`
 	Entries       []BaselineEntry  `json:"entries"`
 	Extensions    []ExtensionBlock `json:"extensions"`
 }
@@ -94,6 +95,7 @@ type BaselineEntry struct {
 	RuleID          string           `json:"rule_id"`
 	RuleVersion     string           `json:"rule_version"`
 	ProfileID       string           `json:"profile_id"`
+	ProfileVersion  string           `json:"profile_version"`
 	FormulaVersions []FormulaVersion `json:"formula_versions"`
 	Reason          string           `json:"reason"`
 	Owner           string           `json:"owner,omitempty"`
@@ -122,6 +124,10 @@ type QualityEvaluation struct {
 	ModelRevision         string              `json:"model_revision,omitempty"`
 	ProfileID             string              `json:"profile_id"`
 	ProfileVersion        string              `json:"profile_version"`
+	ProfileDigest         *ContentDigest      `json:"profile_digest,omitempty"`
+	OptionsDigest         *ContentDigest      `json:"options_digest,omitempty"`
+	Baseline              *BaselineRef        `json:"baseline,omitempty"`
+	BaselineDigest        ContentDigest       `json:"baseline_digest,omitempty"`
 	ProviderIdentities    []ProviderIdentity  `json:"provider_identities"`
 	Coverage              []QualityCoverage   `json:"coverage"`
 	Metrics               []MetricFact        `json:"metrics"`
@@ -306,7 +312,20 @@ type SourceSymbol struct {
 	Locations        []SourceLocation `json:"locations"`
 	BodySpan         *SourceSpan      `json:"body_span,omitempty"`
 	DocumentationIDs []string         `json:"documentation_ids,omitempty"`
-	Provenance       FactProvenance   `json:"provenance"`
+	// Structural facts are optional extractor observations. They are kept
+	// explicit so SOLID signals can cite reported counts without pretending to
+	// infer design intent from names or paths.
+	MemberCount             *int           `json:"member_count,omitempty"`
+	MethodCount             *int           `json:"method_count,omitempty"`
+	DependencyCount         *int           `json:"dependency_count,omitempty"`
+	ConcreteDependencyCount *int           `json:"concrete_dependency_count,omitempty"`
+	InterfaceMethodCount    *int           `json:"interface_method_count,omitempty"`
+	TypeSwitchCount         *int           `json:"type_switch_count,omitempty"`
+	HierarchyDepth          *int           `json:"hierarchy_depth,omitempty"`
+	DerivedTypeCount        *int           `json:"derived_type_count,omitempty"`
+	AbstractionCount        *int           `json:"abstraction_count,omitempty"`
+	StructuralFacts         map[string]int `json:"structural_facts,omitempty"`
+	Provenance              FactProvenance `json:"provenance"`
 }
 
 type SourceLocation struct {
@@ -376,6 +395,7 @@ type ArchitectureLayer struct {
 type EvaluationInput struct {
 	SourceSnapshots []SourceSnapshot   `json:"source_snapshots"`
 	Architecture    *ArchitectureModel `json:"architecture,omitempty"`
+	Baseline        *Baseline          `json:"baseline,omitempty"`
 	Options         map[string]any     `json:"options,omitempty"`
 }
 

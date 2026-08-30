@@ -8,6 +8,9 @@ import (
 	"testing"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/sourceindex"
+	"github.com/buffo/arch-view/internal/quality"
+	"github.com/buffo/arch-view/internal/quality/adapter"
 )
 
 func TestAnalyzeDiscoversPackagesImportsAndEvidence(t *testing.T) {
@@ -86,6 +89,100 @@ const Name = "service"
 			t.Fatalf("import source lacks location: %#v", source)
 		}
 	}
+}
+
+func TestAnalyzePublishesStructuralFactsForQualitySignals(t *testing.T) {
+	root := t.TempDir()
+	writeFixture(t, filepath.Join(root, "go.mod"), "module example.com/solid\ngo 1.22\n")
+	writeFixture(t, filepath.Join(root, "service.go"), `package solid
+
+type Dependency interface {
+	Read() error
+	Write() error
+}
+
+type Base struct{}
+type Client struct{}
+
+type Service struct {
+	Base
+	dep    Dependency
+	client *Client
+}
+
+func (s *Service) Decode(value any) error {
+	switch value.(type) {
+	case string:
+		return nil
+	default:
+		return nil
+	}
+}
+`)
+
+	result, err := New().Analyze(context.Background(), analysis.AnalyzeRequest{ProjectRoot: root, Options: goOptions(t, nil)})
+	if err != nil {
+		t.Fatalf("analyze: %v", err)
+	}
+	if result.SourceIndex == nil || len(result.SourceIndex.Snapshots) != 1 {
+		t.Fatalf("source index = %#v, want one Go snapshot", result.SourceIndex)
+	}
+	snapshot := result.SourceIndex.Snapshots[0]
+	if !sourceCapabilityObserved(snapshot, sourceindex.CapabilitySolidStructure) {
+		t.Fatalf("SOLID source capability = %#v, want observed", snapshot)
+	}
+
+	input, err := adapter.EvaluationInputFromSourceIndex(*result.SourceIndex)
+	if err != nil {
+		t.Fatalf("adapt source index: %v", err)
+	}
+	profile := quality.QualityProfile{
+		SchemaVersion:  quality.SchemaVersion,
+		ProfileID:      "profile:solid-end-to-end",
+		ProfileVersion: "1.0.0",
+		EnabledRules: []quality.RuleBinding{
+			{RuleID: "signal:solid.srp", RuleVersion: "1.0.0", Enabled: true, Parameters: solidRuleParameters()},
+			{RuleID: "signal:solid.ocp", RuleVersion: "1.0.0", Enabled: true, Parameters: solidRuleParameters()},
+			{RuleID: "signal:solid.lsp", RuleVersion: "1.0.0", Enabled: true, Parameters: solidRuleParameters()},
+			{RuleID: "signal:solid.isp", RuleVersion: "1.0.0", Enabled: true, Parameters: solidRuleParameters()},
+			{RuleID: "signal:solid.dip", RuleVersion: "1.0.0", Enabled: true, Parameters: solidRuleParameters()},
+		},
+		SeverityPolicy: quality.TypedConfigBlock{Namespace: "severity:default", SchemaVersion: "1.0.0", Payload: map[string]any{}},
+		Constraints:    []quality.ArchitectureConstraint{},
+		Extensions:     []quality.ExtensionBlock{},
+	}
+	report, err := quality.EvaluateQualityProfile(profile, input, quality.NewDefaultCatalog())
+	if err != nil {
+		t.Fatalf("evaluate SOLID profile: %v", err)
+	}
+	for _, ruleID := range []string{"signal:solid.srp", "signal:solid.ocp", "signal:solid.lsp", "signal:solid.isp", "signal:solid.dip"} {
+		coverage := qualityCoverageForRule(report.Coverage, ruleID)
+		if coverage.Status == quality.CoverageUnsupported || coverage.Status == quality.CoverageNotEvaluable {
+			t.Fatalf("%s coverage = %#v, want evaluated structural facts", ruleID, coverage)
+		}
+	}
+}
+
+func sourceCapabilityObserved(snapshot analysis.SourceIndexSnapshot, capability string) bool {
+	for _, value := range snapshot.Coverage {
+		if value.Capability == capability {
+			return value.Status == analysis.FactStatusObserved
+		}
+	}
+	return false
+}
+
+func solidRuleParameters() quality.TypedConfigBlock {
+	return quality.TypedConfigBlock{Namespace: "rule-config:solid-signal", SchemaVersion: "1.0.0", Payload: map[string]any{}}
+}
+
+func qualityCoverageForRule(values []quality.QualityCoverage, ruleID string) quality.QualityCoverage {
+	for _, value := range values {
+		if value.RuleID == ruleID {
+			return value
+		}
+	}
+	return quality.QualityCoverage{RuleID: ruleID, Status: "missing"}
 }
 
 func TestAnalyzeReportsUnresolvedAndCgoImportsAsPartial(t *testing.T) {

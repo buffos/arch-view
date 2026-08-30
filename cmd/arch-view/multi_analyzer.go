@@ -9,6 +9,7 @@ import (
 	analysisconfig "github.com/buffo/arch-view/internal/analysis/config"
 	"github.com/buffo/arch-view/internal/analysis/orchestration"
 	"github.com/buffo/arch-view/internal/export"
+	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/viewer/layout"
 )
 
@@ -234,10 +235,11 @@ func splitOptionsByAnalyzer(registry *analysis.Registry, values map[string]any) 
 	return result
 }
 
-func writeCombinedAnalysisOutput(run orchestration.AnalysisRun, format, output, project, scope, referenceVisibility string, viewPath, referenceScopes []string, overwrite, embedSource bool, ctx context.Context, stdout, stderr io.Writer) int {
+func writeCombinedAnalysisOutput(run orchestration.AnalysisRun, format, output, project, scope, referenceVisibility string, viewPath, referenceScopes []string, overwrite, embedSource bool, policy quality.ExitPolicy, ctx context.Context, stdout, stderr io.Writer) int {
 	format = strings.ToLower(strings.TrimSpace(format))
 	if format == "analysis-json" {
 		var value any = run
+		var report *quality.QualityEvaluation
 		if scope != "" && !strings.EqualFold(scope, "all") {
 			selected, err := run.ScopeResult(scope)
 			if err != nil {
@@ -245,14 +247,21 @@ func writeCombinedAnalysisOutput(run orchestration.AnalysisRun, format, output, 
 				return analysis.ExitCodeForError(err)
 			}
 			value = selected
+			report = selected.QualityReport
+		} else if run.Model != nil {
+			report = run.Model.QualityReport
 		}
 		if output == "-" {
-			if code := writeJSON(stdout, value); code != 0 {
-				return code
-			}
+			return writeQualityJSON(stdout, value, report, policy)
 		} else if err := writeFileJSON(output, value); err != nil {
 			writeError(stderr, err)
 			return analysis.ExitCodeForError(err)
+		}
+		if code, err := qualityExitCode(report, policy); err != nil {
+			writeError(stderr, err)
+			return analysis.ExitCodeForError(err)
+		} else if code != 0 {
+			return code
 		}
 		return analysis.ExitCodeForStatus(run.Status)
 	}
@@ -277,5 +286,5 @@ func writeCombinedAnalysisOutput(run orchestration.AnalysisRun, format, output, 
 		profile := layout.NewSession(project).Response().Layout
 		layoutProfile = &profile
 	}
-	return writeExport(selected.Model, export.Request{Format: format, OutputPath: output, ViewPath: viewPath, ReferenceVisibility: referenceVisibility, ReferenceScopes: referenceScopes, LayoutProfile: layoutProfile, Overwrite: overwrite, EmbedSource: embedSource, Context: ctx}, stdout, stderr)
+	return writeExportWithQualityPolicy(selected.Model, export.Request{Format: format, OutputPath: output, ViewPath: viewPath, ReferenceVisibility: referenceVisibility, ReferenceScopes: referenceScopes, LayoutProfile: layoutProfile, Overwrite: overwrite, EmbedSource: embedSource, Context: ctx}, policy, stdout, stderr)
 }

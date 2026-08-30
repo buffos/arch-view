@@ -39,6 +39,11 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	runtime := fs.String("runtime", "auto", "TypeScript runtime context: auto, esm, or cjs")
 	format := fs.String("format", "analysis-json", "output format")
 	output := fs.String("output", "", "output file, or - for stdout")
+	qualityProfilePath := fs.String("quality-profile", "", "versioned quality profile JSON file")
+	qualityBaselinePath := fs.String("quality-baseline", "", "exact-version quality baseline JSON file")
+	qualityExitOn := fs.String("quality-exit-on", "", "exit 1 when a quality finding at or above this severity matches")
+	var qualityExitStatuses stringList
+	fs.Var(&qualityExitStatuses, "quality-exit-status", "quality finding status included by the exit policy; repeatable or comma-separated")
 	referenceVisibility := fs.String("reference-visibility", "hidden", "visual reference visibility: hidden, aggregated, or expanded")
 	deterministic := fs.Bool("deterministic", true, "produce deterministic output")
 	overwrite := fs.Bool("overwrite", false, "replace an existing export output")
@@ -89,6 +94,11 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	}
 	if formatValue == "analysis-json" && (*referenceVisibility != "hidden" || len(viewPath) > 0 || len(referenceScopes) > 0 || *overwrite || !*deterministic || *embedSource) {
 		err := analysis.NewHostError(analysis.ErrInvalidRequest, "export options require json, html, or svg format", nil)
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	}
+	qualityConfig, err := loadQualityCLIConfig(*qualityProfilePath, *qualityBaselinePath, *qualityExitOn, []string(qualityExitStatuses))
+	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
@@ -144,9 +154,18 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 				return analysis.ExitCodeForError(err)
 			}
 		}
-		return writeCombinedAnalysisOutput(run, *format, *output, *project, *scope, *referenceVisibility, []string(viewPath), []string(referenceScopes), *overwrite, *embedSource, ctx, stdout, stderr)
+		if _, err := attachQualityToRun(&run, qualityConfig, *scope); err != nil {
+			writeError(stderr, err)
+			return analysis.ExitCodeForError(err)
+		}
+		return writeCombinedAnalysisOutput(run, *format, *output, *project, *scope, *referenceVisibility, []string(viewPath), []string(referenceScopes), *overwrite, *embedSource, qualityConfig.Policy, ctx, stdout, stderr)
 	}
 	result, err := runConfiguredSingleAnalysis(ctx, host, *project, *analyzerID, *language, cliOptions)
+	if err != nil {
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	}
+	result, err = evaluateAnalysisResultQuality(result, qualityConfig)
 	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
@@ -162,14 +181,20 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 			profile := layout.NewSession(*project).Response().Layout
 			layoutProfile = &profile
 		}
-		return writeExport(value, exporter.Request{Format: formatValue, OutputPath: *output, ViewPath: []string(viewPath), ReferenceVisibility: *referenceVisibility, ReferenceScopes: []string(referenceScopes), LayoutProfile: layoutProfile, Overwrite: *overwrite, EmbedSource: *embedSource, Context: ctx}, stdout, stderr)
+		return writeExportWithQualityPolicy(value, exporter.Request{Format: formatValue, OutputPath: *output, ViewPath: []string(viewPath), ReferenceVisibility: *referenceVisibility, ReferenceScopes: []string(referenceScopes), LayoutProfile: layoutProfile, Overwrite: *overwrite, EmbedSource: *embedSource, Context: ctx}, qualityConfig.Policy, stdout, stderr)
 	}
 	if *output == "-" {
-		return writeJSON(stdout, result)
+		return writeQualityJSON(stdout, result, result.QualityReport, qualityConfig.Policy)
 	}
 	if err := writeFileJSON(*output, result); err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
+	}
+	if code, err := qualityExitCode(result.QualityReport, qualityConfig.Policy); err != nil {
+		writeError(stderr, err)
+		return analysis.ExitCodeForError(err)
+	} else if code != 0 {
+		return code
 	}
 	return analysis.ExitCodeForStatus(result.Status)
 }

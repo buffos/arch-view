@@ -14,6 +14,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis/sourceindex"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/quality"
 )
 
 type AnalysisAggregationService struct{}
@@ -207,6 +208,49 @@ func (r *AnalysisRun) CombinedCanonicalModel() (model.Model, bool) {
 		return model.Model{}, false
 	}
 	return r.combinedCanonical, true
+}
+
+// AttachQualityReport adds the optional quality sibling to the cached
+// combined model and refreshes the aggregate model identity. It deliberately
+// leaves scope results and architecture semantics untouched.
+func (r *AnalysisRun) AttachQualityReport(report quality.QualityEvaluation) error {
+	if r == nil || r.combinedCanonical.ModelID == "" || r.Model == nil {
+		return analysis.NewHostError(analysis.ErrInvalidModel, "combined model is unavailable", nil)
+	}
+	value, err := canonical.WithQualityReport(r.combinedCanonical, &report)
+	if err != nil {
+		return err
+	}
+	r.combinedCanonical = value
+	r.Model = aggregateModelFromCanonical(value, r.Scopes)
+	return nil
+}
+
+// AttachScopeQualityReport attaches a report to one cached concrete scope.
+// The aggregate run remains unchanged; callers can use this when --scope
+// selects a single analysis result for JSON or visual export.
+func (r *AnalysisRun) AttachScopeQualityReport(scope string, report quality.QualityEvaluation) error {
+	if r == nil {
+		return analysis.NewHostError(analysis.ErrInvalidModel, "analysis run is not initialized", nil)
+	}
+	scope = strings.TrimSpace(scope)
+	if scope == "" || strings.EqualFold(scope, "all") {
+		return analysis.NewHostError(analysis.ErrInvalidRequest, "a concrete scope id is required", nil)
+	}
+	value, ok := r.scopeModels[scope]
+	if !ok {
+		return analysis.NewHostError(analysis.ErrAnalysisScopeNotFound, "analysis scope was not found", map[string]any{"scope_id": scope})
+	}
+	withReport, err := canonical.WithQualityReport(value, &report)
+	if err != nil {
+		return err
+	}
+	r.scopeModels[scope] = withReport
+	if result, exists := r.scopeResults[scope]; exists {
+		result.QualityReport = &report
+		r.scopeResults[scope] = result
+	}
+	return nil
 }
 
 // ScopeResult returns the cached analyzer result for a scope. It exists for
@@ -445,6 +489,7 @@ func aggregateModelFromCanonical(value model.Model, scopes []ScopeSummary) *Aggr
 		Diagnostics:      value.Diagnostics,
 		Derived:          value.Derived,
 		SourceIndex:      value.SourceIndex,
+		QualityReport:    value.QualityReport,
 	}
 	result.ModelID = aggregateModelID(*result)
 	return result

@@ -21,6 +21,7 @@ const (
 	CapabilityDocumentation   = "source:documentation"
 	CapabilityVisibility      = "source:visibility"
 	CapabilityCallableMetrics = "source:callable.metrics"
+	CapabilitySolidStructure  = "source:solid.structure"
 )
 
 // BuildSourceIndex builds one authoritative scope snapshot. File facts are

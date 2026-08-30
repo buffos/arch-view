@@ -32,6 +32,14 @@ func TestFileSizeBoundaryAndDeterministicReport(t *testing.T) {
 	if first.EvaluationFingerprint.Value == "" || first.ReportDigest.Value == "" {
 		t.Fatal("deterministic report did not include fingerprints")
 	}
+	normalized, err := quality.NormalizeQualityReport(first)
+	if err != nil {
+		t.Fatalf("normalize evaluated report: %v", err)
+	}
+	normalizedJSON, _ := json.Marshal(normalized)
+	if string(firstJSON) != string(normalizedJSON) {
+		t.Fatalf("normalizing an evaluated report changed its semantic representation\nfirst=%s\nnormalized=%s", firstJSON, normalizedJSON)
+	}
 	var decoded quality.QualityEvaluation
 	if err := json.Unmarshal(firstJSON, &decoded); err != nil {
 		t.Fatalf("decode quality report: %v", err)

@@ -44,6 +44,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runAnalyzersCommand(host, args[1:], stdout, stderr)
 	case "analyze":
 		return runAnalyze(host, args[1:], stdout, stderr)
+	case "quality":
+		return runQualityCommand(host, args[1:], stdout, stderr)
 	case "open":
 		return runOpen(host, args[1:], stdout, stderr)
 	case "model":
@@ -78,8 +80,9 @@ func newBuiltInHost() (*analysis.Host, error) {
 
 func printUsage(writer io.Writer) {
 	_, _ = fmt.Fprintln(writer, "arch-view analyzers [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin]")
-	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] --format analysis-json|json|html|svg --output <file>")
-	_, _ = fmt.Fprintln(writer, "arch-view export --input <model.json> --format json|html|svg --output <file>")
+	_, _ = fmt.Fprintln(writer, "arch-view analyze --project <path> [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] [--quality-profile <profile.json>] [--quality-baseline <baseline.json>] [--quality-exit-on info|warning|error|blocker] --format analysis-json|json|html|svg --output <file>")
+	_, _ = fmt.Fprintln(writer, "arch-view quality baseline --input <analysis|model|quality-report.json> --output <baseline.json|-> --baseline-id baseline:<name> (--finding <finding-id-or-key> ... | --all-active) --reason <text> [--owner <name>] [--revision <version>] [--overwrite]")
+	_, _ = fmt.Fprintln(writer, "arch-view export --input <model.json> --format json|html|svg --output <file> [--quality-exit-on info|warning|error|blocker]")
 	_, _ = fmt.Fprintln(writer, "arch-view open --model <model.json> [--port <n>]")
 	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] [--port <n>]")
 	_, _ = fmt.Fprintln(writer, "arch-view model normalize --input <analysis-json> --output <model-json>")

@@ -5,6 +5,7 @@ package adapter
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/quality"
@@ -13,6 +14,9 @@ import (
 func EvaluationInputFromSourceIndex(index analysis.SourceIndex) (quality.EvaluationInput, error) {
 	if err := analysis.ValidateSourceIndex(index); err != nil {
 		return quality.EvaluationInput{}, fmt.Errorf("source-index cannot be adapted for quality evaluation: %w", err)
+	}
+	if index.Projection != nil {
+		return quality.EvaluationInput{SourceSnapshots: []quality.SourceSnapshot{SourceSnapshotFromAnalysis(*index.Projection)}, Options: map[string]any{}}, nil
 	}
 	result := quality.EvaluationInput{SourceSnapshots: make([]quality.SourceSnapshot, 0, len(index.Snapshots)), Options: map[string]any{}}
 	for _, snapshot := range index.Snapshots {
@@ -56,7 +60,7 @@ func SourceSnapshotFromAnalysis(snapshot analysis.SourceIndexSnapshot) quality.S
 		if value.Visibility.Classification == "unknown" {
 			visibilityStatus = "unknown"
 		}
-		result.Symbols = append(result.Symbols, quality.SourceSymbol{ID: value.ID, StableKey: value.StableKey, Name: value.Name, QualifiedName: value.QualifiedName, Category: value.Category, LanguageKind: value.LanguageKind, Visibility: value.Visibility.Classification, VisibilityStatus: visibilityStatus, Locations: locations, BodySpan: bodySpan, DocumentationIDs: append([]string(nil), value.DocumentationIDs...), Provenance: provenanceFromAnalysis(value.Provenance)})
+		result.Symbols = append(result.Symbols, quality.SourceSymbol{ID: value.ID, StableKey: value.StableKey, Name: value.Name, QualifiedName: value.QualifiedName, Category: value.Category, LanguageKind: value.LanguageKind, Visibility: value.Visibility.Classification, VisibilityStatus: visibilityStatus, Locations: locations, BodySpan: bodySpan, DocumentationIDs: append([]string(nil), value.DocumentationIDs...), MemberCount: cloneInt(value.MemberCount), MethodCount: cloneInt(value.MethodCount), DependencyCount: cloneInt(value.DependencyCount), ConcreteDependencyCount: cloneInt(value.ConcreteDependencyCount), InterfaceMethodCount: cloneInt(value.InterfaceMethodCount), TypeSwitchCount: cloneInt(value.TypeSwitchCount), HierarchyDepth: cloneInt(value.HierarchyDepth), DerivedTypeCount: cloneInt(value.DerivedTypeCount), AbstractionCount: cloneInt(value.AbstractionCount), StructuralFacts: cloneIntMap(value.StructuralFacts), Provenance: provenanceFromAnalysis(value.Provenance)})
 	}
 	for _, value := range snapshot.Documentation {
 		spans := make([]quality.SourceSpan, 0, len(value.Spans))
@@ -128,7 +132,14 @@ func digestFromAnalysis(value analysis.ContentDigest) quality.ContentDigest {
 	return quality.ContentDigest{Algorithm: value.Algorithm, Value: value.Value}
 }
 func provenanceFromAnalysis(value analysis.FactProvenance) quality.FactProvenance {
-	return quality.FactProvenance{Status: value.Status, Basis: value.Basis, EvidenceIDs: append([]string(nil), value.EvidenceIDs...), Provider: value.Provider, ProviderVersion: value.ProviderVersion}
+	provider := strings.TrimSpace(value.Provider)
+	if provider != "" && !strings.Contains(provider, ":") {
+		// Analyzer manifests historically use IDs such as org.archview.go.
+		// Quality provenance is a namespaced contract, so retain that identity
+		// under an explicit analyzer namespace at the adapter boundary.
+		provider = "analyzer:" + provider
+	}
+	return quality.FactProvenance{Status: value.Status, Basis: value.Basis, EvidenceIDs: append([]string(nil), value.EvidenceIDs...), Provider: provider, ProviderVersion: value.ProviderVersion}
 }
 func extensionsFromAnalysis(values []analysis.ExtensionBlock) []quality.ExtensionBlock {
 	result := make([]quality.ExtensionBlock, 0, len(values))
@@ -143,4 +154,15 @@ func cloneInt(value *int) *int {
 	}
 	copy := *value
 	return &copy
+}
+
+func cloneIntMap(value map[string]int) map[string]int {
+	if value == nil {
+		return nil
+	}
+	result := make(map[string]int, len(value))
+	for key, item := range value {
+		result[key] = item
+	}
+	return result
 }

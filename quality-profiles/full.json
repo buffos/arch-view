@@ -1,0 +1,205 @@
+{
+  "schema_version": "arch-view.quality/v1",
+  "profile_id": "profile:full",
+  "profile_version": "1.0.0",
+  "enabled_rules": [
+    {
+      "rule_id": "architecture:forbidden-dependency",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:architecture-constraint",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "error"
+    },
+    {
+      "rule_id": "architecture:layer-direction",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:architecture-constraint",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "error"
+    },
+    {
+      "rule_id": "architecture:module.max-afferent-coupling",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:module-coupling",
+        "schema_version": "1.0.0",
+        "payload": {
+          "external_policy": "exclude",
+          "limit": 10,
+          "operator": "greater_than",
+          "unit": "unit:module"
+        }
+      },
+      "severity": "warning"
+    },
+    {
+      "rule_id": "architecture:module.max-efferent-coupling",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:module-coupling",
+        "schema_version": "1.0.0",
+        "payload": {
+          "external_policy": "exclude",
+          "limit": 10,
+          "operator": "greater_than",
+          "unit": "unit:module"
+        }
+      },
+      "severity": "warning"
+    },
+    {
+      "rule_id": "architecture:no-cycles",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:no-cycles",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "error"
+    },
+    {
+      "rule_id": "signal:solid.dip",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:solid-signal",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "info"
+    },
+    {
+      "rule_id": "signal:solid.isp",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:solid-signal",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "info"
+    },
+    {
+      "rule_id": "signal:solid.lsp",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:solid-signal",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "info"
+    },
+    {
+      "rule_id": "signal:solid.ocp",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:solid-signal",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "info"
+    },
+    {
+      "rule_id": "signal:solid.srp",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:solid-signal",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "info"
+    },
+    {
+      "rule_id": "source:callable.max-cyclomatic-complexity",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:source-callable-complexity",
+        "schema_version": "1.0.0",
+        "payload": {
+          "limit": 10,
+          "operator": "greater_than",
+          "unit": "unit:complexity"
+        }
+      },
+      "severity": "warning"
+    },
+    {
+      "rule_id": "source:callable.max-lines",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:source-callable-size",
+        "schema_version": "1.0.0",
+        "payload": {
+          "limit": 50,
+          "operator": "greater_than",
+          "unit": "unit:line"
+        }
+      },
+      "severity": "warning"
+    },
+    {
+      "rule_id": "source:callable.max-nesting-depth",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:source-callable-nesting",
+        "schema_version": "1.0.0",
+        "payload": {
+          "limit": 4,
+          "operator": "greater_than",
+          "unit": "unit:depth"
+        }
+      },
+      "severity": "warning"
+    },
+    {
+      "rule_id": "source:file.max-lines",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:source-file-size",
+        "schema_version": "1.0.0",
+        "payload": {
+          "limit": 500,
+          "operator": "greater_than",
+          "unit": "unit:line"
+        }
+      },
+      "severity": "warning"
+    },
+    {
+      "rule_id": "source:public-symbol.documentation",
+      "rule_version": "1.0.0",
+      "enabled": true,
+      "parameters": {
+        "namespace": "rule-config:documentation-coverage",
+        "schema_version": "1.0.0",
+        "payload": {}
+      },
+      "severity": "warning"
+    }
+  ],
+  "severity_policy": {
+    "namespace": "severity:default",
+    "schema_version": "1.0.0",
+    "payload": {}
+  },
+  "constraints": [],
+  "extensions": []
+}

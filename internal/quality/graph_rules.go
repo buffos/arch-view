@@ -112,11 +112,12 @@ func graphMetric(metricID, formulaID string, value int, subject EntityRef, evide
 }
 
 type graphThresholdRule struct {
-	id          string
-	metricID    string
-	formulaID   string
-	capability  string
-	description string
+	id           string
+	metricID     string
+	formulaID    string
+	capability   string
+	description  string
+	defaultLimit int64
 }
 
 func (rule graphThresholdRule) ID() string                     { return rule.id }
@@ -126,14 +127,26 @@ func (rule graphThresholdRule) RequiredCapabilities() []string { return []string
 func (rule graphThresholdRule) ParameterSchema() ParameterSchema {
 	return moduleCouplingParameterSchema()
 }
+func (rule graphThresholdRule) DefaultParameters() TypedConfigBlock {
+	return TypedConfigBlock{
+		Namespace:     "rule-config:module-coupling",
+		SchemaVersion: qualityFormulaVersion,
+		Payload: map[string]any{
+			"operator":        "greater_than",
+			"limit":           rule.defaultLimit,
+			"unit":            "unit:module",
+			"external_policy": "exclude",
+		},
+	}
+}
 func (rule graphThresholdRule) Descriptor() RuleDescriptor {
 	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityWarning, Description: rule.description}
 }
 func newEfferentCouplingRule() QualityRule {
-	return graphThresholdRule{id: "architecture:module.max-efferent-coupling", metricID: "architecture:module.efferent_coupling", formulaID: "formula:architecture.efferent-coupling", capability: "architecture:relationships", description: "Flag modules with too many distinct reported dependency targets."}
+	return graphThresholdRule{id: "architecture:module.max-efferent-coupling", metricID: "architecture:module.efferent_coupling", formulaID: "formula:architecture.efferent-coupling", capability: "architecture:relationships", description: "Checks how many different modules this module depends on. A high count can make changes ripple across many parts of the system.", defaultLimit: 10}
 }
 func newAfferentCouplingRule() QualityRule {
-	return graphThresholdRule{id: "architecture:module.max-afferent-coupling", metricID: "architecture:module.afferent_coupling", formulaID: "formula:architecture.afferent-coupling", capability: "architecture:relationships", description: "Flag modules with too many distinct reported dependency sources."}
+	return graphThresholdRule{id: "architecture:module.max-afferent-coupling", metricID: "architecture:module.afferent_coupling", formulaID: "formula:architecture.afferent-coupling", capability: "architecture:relationships", description: "Checks how many different modules depend on this module. A high count means changes here may affect many consumers.", defaultLimit: 10}
 }
 func (rule graphThresholdRule) Evaluate(context EvaluationContext, batch MetricBatch) (RuleResult, error) {
 	threshold, err := readThreshold(context.RuleBinding, "rule-config:module-coupling", "unit:module")
@@ -209,7 +222,10 @@ func (cycleRule) ParameterSchema() ParameterSchema {
 	return ParameterSchema{Namespace: "rule-config:no-cycles", SchemaVersion: qualityFormulaVersion, Fields: map[string]ParameterField{}, AllowAdditional: true}
 }
 func (rule cycleRule) Descriptor() RuleDescriptor {
-	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityError, Description: "Report cycles already derived by the canonical architecture graph."}
+	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityError, Description: "Checks whether dependencies form a loop, such as A → B → A. Loops make ownership and change order harder to understand."}
+}
+func (cycleRule) DefaultParameters() TypedConfigBlock {
+	return TypedConfigBlock{Namespace: "rule-config:no-cycles", SchemaVersion: qualityFormulaVersion, Payload: map[string]any{}}
 }
 func (rule cycleRule) Evaluate(context EvaluationContext, _ MetricBatch) (RuleResult, error) {
 	result := RuleResult{Findings: []QualityFinding{}, Coverage: []QualityCoverage{}, Diagnostics: []QualityDiagnostic{}}
@@ -314,7 +330,10 @@ func (forbiddenDependencyRule) ParameterSchema() ParameterSchema {
 	return constraintBindingSchema("rule-config:architecture-constraint")
 }
 func (rule forbiddenDependencyRule) Descriptor() RuleDescriptor {
-	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityError, Description: "Report only canonical dependency edges selected by explicit forbidden-dependency policy."}
+	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityError, Description: "Checks only dependency edges that you explicitly marked as forbidden. The profile chooses which modules or patterns are forbidden; this check does not invent that policy."}
+}
+func (forbiddenDependencyRule) DefaultParameters() TypedConfigBlock {
+	return TypedConfigBlock{Namespace: "rule-config:architecture-constraint", SchemaVersion: qualityFormulaVersion, Payload: map[string]any{}}
 }
 func (rule forbiddenDependencyRule) Evaluate(context EvaluationContext, _ MetricBatch) (RuleResult, error) {
 	result := RuleResult{Findings: []QualityFinding{}, Coverage: []QualityCoverage{}, Diagnostics: []QualityDiagnostic{}}
@@ -334,7 +353,10 @@ func (layerDirectionRule) ParameterSchema() ParameterSchema {
 	return constraintBindingSchema("rule-config:architecture-constraint")
 }
 func (rule layerDirectionRule) Descriptor() RuleDescriptor {
-	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityError, Description: "Report canonical dependency edges that violate an explicit layer-direction policy."}
+	return RuleDescriptor{ID: rule.ID(), Version: rule.Version(), AssessmentKind: rule.AssessmentKind(), RequiredCapabilities: rule.RequiredCapabilities(), ParameterSchema: rule.ParameterSchema(), DefaultSeverity: SeverityError, Description: "Checks whether dependencies follow the layer direction you explicitly configured. It reports only edges that cross a configured layer boundary the wrong way."}
+}
+func (layerDirectionRule) DefaultParameters() TypedConfigBlock {
+	return TypedConfigBlock{Namespace: "rule-config:architecture-constraint", SchemaVersion: qualityFormulaVersion, Payload: map[string]any{}}
 }
 func (rule layerDirectionRule) Evaluate(context EvaluationContext, _ MetricBatch) (RuleResult, error) {
 	result := RuleResult{Findings: []QualityFinding{}, Coverage: []QualityCoverage{}, Diagnostics: []QualityDiagnostic{}}

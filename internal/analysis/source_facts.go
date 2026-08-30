@@ -166,10 +166,22 @@ type SymbolRecord struct {
 	Locations        []SymbolLocation `json:"locations"`
 	BodySpan         *SourceSpan      `json:"body_span,omitempty"`
 	DocumentationIDs []string         `json:"documentation_ids,omitempty"`
-	StableKey        string           `json:"stable_key,omitempty"`
-	IdentityBasis    string           `json:"identity_basis,omitempty"`
-	Provenance       FactProvenance   `json:"provenance"`
-	Extensions       []ExtensionBlock `json:"extensions"`
+	// StructuralFacts are optional, extractor-reported counts consumed by
+	// advisory quality signals. They are never inferred from symbol names.
+	MemberCount             *int             `json:"member_count,omitempty"`
+	MethodCount             *int             `json:"method_count,omitempty"`
+	DependencyCount         *int             `json:"dependency_count,omitempty"`
+	ConcreteDependencyCount *int             `json:"concrete_dependency_count,omitempty"`
+	InterfaceMethodCount    *int             `json:"interface_method_count,omitempty"`
+	TypeSwitchCount         *int             `json:"type_switch_count,omitempty"`
+	HierarchyDepth          *int             `json:"hierarchy_depth,omitempty"`
+	DerivedTypeCount        *int             `json:"derived_type_count,omitempty"`
+	AbstractionCount        *int             `json:"abstraction_count,omitempty"`
+	StructuralFacts         map[string]int   `json:"structural_facts,omitempty"`
+	StableKey               string           `json:"stable_key,omitempty"`
+	IdentityBasis           string           `json:"identity_basis,omitempty"`
+	Provenance              FactProvenance   `json:"provenance"`
+	Extensions              []ExtensionBlock `json:"extensions"`
 }
 
 type VisibilityFact struct {

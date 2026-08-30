@@ -12,7 +12,7 @@ func EvaluationInputFromModel(value model.Model) (quality.EvaluationInput, error
 	if err := canonical.Validate(value); err != nil {
 		return quality.EvaluationInput{}, fmt.Errorf("canonical model cannot be adapted for quality evaluation: %w", err)
 	}
-	result := quality.EvaluationInput{Architecture: ArchitectureModelFromModel(value), Options: map[string]any{"model_id": value.ModelID}}
+	result := quality.EvaluationInput{Architecture: ArchitectureModelFromModel(value), Options: map[string]any{"model_id": value.ModelID, "model_revision": value.ModelID}}
 	if value.SourceIndex != nil {
 		source, err := EvaluationInputFromSourceIndex(*value.SourceIndex)
 		if err != nil {
@@ -34,8 +34,12 @@ func ArchitectureModelFromModel(value model.Model) *quality.ArchitectureModel {
 		Layers:            make([]quality.ArchitectureLayer, 0, len(value.Derived.Layers)),
 	}
 	if value.SourceIndex != nil {
-		for _, snapshot := range value.SourceIndex.Snapshots {
-			result.SourceSnapshotIDs = append(result.SourceSnapshotIDs, snapshot.SnapshotID)
+		if value.SourceIndex.Projection != nil {
+			result.SourceSnapshotIDs = append(result.SourceSnapshotIDs, value.SourceIndex.Projection.SnapshotID)
+		} else {
+			for _, snapshot := range value.SourceIndex.Snapshots {
+				result.SourceSnapshotIDs = append(result.SourceSnapshotIDs, snapshot.SnapshotID)
+			}
 		}
 	}
 	for _, module := range value.Modules {

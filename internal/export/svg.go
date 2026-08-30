@@ -10,6 +10,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/routing"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
@@ -80,6 +81,7 @@ func writeSVGMetadata(builder *strings.Builder, value model.Model, scene scene.S
 	provenance := layoutProvenance()
 	builder.WriteString(`<metadata><arch-view schema-version="` + xmlEscape(value.SchemaVersion) + `" model-id="` + xmlEscape(value.ModelID) + `" model-revision="` + xmlEscape(value.ModelID) + `" status="` + xmlEscape(string(value.Status)) + `" reference-visibility="` + xmlEscape(scene.ReferenceVisibility) + `" layout-engine="` + xmlEscape(fmt.Sprint(provenance["engine"])) + `" layout-algorithm="` + xmlEscape(fmt.Sprint(provenance["algorithm"])) + `" layout-algorithm-version="` + xmlEscape(fmt.Sprint(provenance["algorithm_version"])) + `" layout-width="` + formatNumber(layout.Width) + `" layout-height="` + formatNumber(layout.Height) + `">`)
 	builder.WriteString(`<summary visible-nodes="` + strconv.Itoa(scene.Summary.VisibleNodeCount) + `" visible-relationships="` + strconv.Itoa(scene.Summary.VisibleRelationshipCount) + `" modules="` + strconv.Itoa(scene.Summary.ModuleCount) + `" references="` + strconv.Itoa(scene.Summary.ReferenceCount) + `" cycles="` + strconv.Itoa(scene.Summary.CycleCount) + `" diagnostics="` + strconv.Itoa(scene.Summary.DiagnosticCount) + `" evidence="` + strconv.Itoa(scene.Summary.EvidenceCount) + `"/>`)
+	writeSVGQualityMetadata(builder, value.QualityReport)
 	builder.WriteString(`<references>`)
 	referenceContributors := make(map[string][]analysis.RelationshipObservation, len(value.References))
 	for _, relationship := range value.Relationships {
@@ -141,6 +143,32 @@ func writeSVGMetadata(builder *strings.Builder, value model.Model, scene scene.S
 		builder.WriteString(`<layer number="` + strconv.Itoa(layer.Layer) + `" module-ids="` + xmlEscape(strings.Join(layer.ModuleIDs, ",")) + `"/>`)
 	}
 	builder.WriteString(`</layers></arch-view></metadata>`)
+}
+
+func writeSVGQualityMetadata(builder *strings.Builder, report *quality.QualityEvaluation) {
+	if report == nil {
+		builder.WriteString(`<quality-report status="missing"/>`)
+		return
+	}
+	active, exact, signals, affectedFiles := 0, 0, 0, 0
+	seenFiles := make(map[string]struct{})
+	for _, finding := range report.Findings {
+		if finding.Status != quality.StatusActive {
+			continue
+		}
+		active++
+		switch finding.AssessmentKind {
+		case quality.AssessmentExact:
+			exact++
+		case quality.AssessmentSignal:
+			signals++
+		}
+		if finding.RuleID == "source:file.max-lines" && finding.SubjectRef.Kind == "file" {
+			seenFiles[finding.SubjectRef.ID] = struct{}{}
+		}
+	}
+	affectedFiles = len(seenFiles)
+	builder.WriteString(`<quality-report status="available" schema-version="` + xmlEscape(report.SchemaVersion) + `" profile-id="` + xmlEscape(report.ProfileID) + `" profile-version="` + xmlEscape(report.ProfileVersion) + `" evaluation-id="` + xmlEscape(report.EvaluationID) + `" report-digest="` + xmlEscape(report.ReportDigest.Value) + `" active-findings="` + strconv.Itoa(active) + `" exact-findings="` + strconv.Itoa(exact) + `" signal-findings="` + strconv.Itoa(signals) + `" affected-files="` + strconv.Itoa(affectedFiles) + `"/>`)
 }
 
 func svgNodeMarkup(node scene.VisibleNode, position deterministicLayoutNode) string {

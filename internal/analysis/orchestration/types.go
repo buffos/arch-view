@@ -10,6 +10,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/quality"
 )
 
 const (
@@ -288,6 +289,7 @@ type AggregateModel struct {
 	Diagnostics      []model.Diagnostic                 `json:"diagnostics"`
 	Derived          model.Derived                      `json:"derived"`
 	SourceIndex      *analysis.SourceIndex              `json:"source_index,omitempty"`
+	QualityReport    *quality.QualityEvaluation         `json:"quality_report,omitempty"`
 }
 
 type AnalysisRun struct {

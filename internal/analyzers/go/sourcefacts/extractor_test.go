@@ -134,3 +134,97 @@ func TestExtractorCountsDeclaredGoDecisionVocabulary(t *testing.T) {
 	}
 	t.Fatal("callable complexity metric was not emitted")
 }
+
+func TestExtractorReportsGoStructuralFactsForSolidSignals(t *testing.T) {
+	content := []byte(`package app
+
+// Dependency is the service boundary.
+type Dependency interface {
+	Read() error
+	Write() error
+}
+
+type Base struct {
+	Value int
+}
+
+// Service coordinates its dependencies.
+type Service struct {
+	Base
+	dep    Dependency
+	client *Client
+}
+
+type Client struct{}
+
+func (s *Service) Decode(value any) error {
+	switch value.(type) {
+	case string:
+		return nil
+	default:
+		return nil
+	}
+}
+`)
+	index, _, err := sourceindex.BuildSourceIndex(context.Background(), sourceindex.BuildInput{
+		Scope:                 analysis.ScopeContext{ScopeID: "scope-solid", ProjectRoot: ".", Mode: analysis.SourceIndexScopeMode},
+		Producer:              analysis.ProducerContext{AnalyzerID: "org.archview.go", AnalyzerVersion: "1.0.0"},
+		Files:                 []sourceindex.SourceFileInput{{Path: "service.go", Content: content, Language: analysis.LanguageRef{ID: "language:go"}}},
+		RequestedCapabilities: []string{sourceindex.CapabilityDeclarations, sourceindex.CapabilityDocumentation, "source:solid.structure"},
+		SyntaxProvider:        gosyntax.NewProvider(),
+		Extractors:            sourcefacts.NewRegistry(),
+	})
+	if err != nil {
+		t.Fatalf("build source index: %v", err)
+	}
+	snapshot := index.Snapshots[0]
+	if !hasCapability(snapshot.Capabilities, "source:solid.structure") {
+		t.Fatalf("capabilities = %#v, want source:solid.structure", snapshot.Capabilities)
+	}
+	if coverage := capabilityCoverage(snapshot.Coverage, "source:solid.structure"); coverage.Status != analysis.FactStatusObserved {
+		t.Fatalf("SOLID coverage = %#v, want observed", coverage)
+	}
+	symbols := symbolsByName(snapshot.Symbols)
+	service := symbols["Service"]
+	if service.MemberCount == nil || *service.MemberCount != 4 || service.MethodCount == nil || *service.MethodCount != 1 || service.DependencyCount == nil || *service.DependencyCount != 3 || service.ConcreteDependencyCount == nil || *service.ConcreteDependencyCount != 2 || service.HierarchyDepth == nil || *service.HierarchyDepth != 1 {
+		t.Fatalf("Service structural facts = %#v", service)
+	}
+	dependency := symbols["Dependency"]
+	if dependency.InterfaceMethodCount == nil || *dependency.InterfaceMethodCount != 2 || dependency.AbstractionCount == nil || *dependency.AbstractionCount != 1 {
+		t.Fatalf("Dependency structural facts = %#v", dependency)
+	}
+	base := symbols["Base"]
+	if base.DerivedTypeCount == nil || *base.DerivedTypeCount != 1 {
+		t.Fatalf("Base structural facts = %#v, want one embedding type", base)
+	}
+	decode := symbols["Decode"]
+	if decode.TypeSwitchCount == nil || *decode.TypeSwitchCount != 1 {
+		t.Fatalf("Decode structural facts = %#v, want one type switch", decode)
+	}
+}
+
+func hasCapability(values []analysis.CapabilityDescriptor, id string) bool {
+	for _, value := range values {
+		if value.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+func capabilityCoverage(values []analysis.CoverageRecord, id string) analysis.CoverageRecord {
+	for _, value := range values {
+		if value.Capability == id {
+			return value
+		}
+	}
+	return analysis.CoverageRecord{Capability: id, Status: "missing"}
+}
+
+func symbolsByName(values []analysis.SymbolRecord) map[string]analysis.SymbolRecord {
+	result := make(map[string]analysis.SymbolRecord, len(values))
+	for _, value := range values {
+		result[value.Name] = value
+	}
+	return result
+}

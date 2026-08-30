@@ -20,6 +20,17 @@ func EvaluateQualityProfile(profile QualityProfile, input EvaluationInput, catal
 	if catalog == nil {
 		return QualityEvaluation{}, newQualityError(ErrorCatalogInvalid, "quality rule catalog is unavailable", nil)
 	}
+	if input.Baseline != nil {
+		if err := ValidateBaseline(*input.Baseline); err != nil {
+			return QualityEvaluation{}, err
+		}
+		if validated.Baseline == nil {
+			return QualityEvaluation{}, newQualityError(ErrorBaselineInvalid, "an evaluation baseline requires an explicit profile baseline reference", map[string]any{"baseline_id": input.Baseline.BaselineID})
+		}
+		if input.Baseline.BaselineID != validated.Baseline.BaselineID || validated.Baseline.Revision != "" && input.Baseline.Revision != validated.Baseline.Revision {
+			return QualityEvaluation{}, newQualityError(ErrorBaselineInvalid, "the supplied baseline does not match the profile baseline reference", map[string]any{"expected_id": validated.Baseline.BaselineID, "actual_id": input.Baseline.BaselineID, "expected_revision": validated.Baseline.Revision, "actual_revision": input.Baseline.Revision})
+		}
+	}
 	input = normalizeEvaluationInput(input)
 	context := EvaluationContext{Profile: validated, Input: input, Architecture: input.Architecture}
 	batch := MetricBatch{Metrics: []MetricFact{}, Coverage: []QualityCoverage{}, Diagnostics: []QualityDiagnostic{}}
@@ -87,8 +98,12 @@ func EvaluateQualityProfile(profile QualityProfile, input EvaluationInput, catal
 	report := QualityEvaluation{
 		SchemaVersion:      SchemaVersion,
 		SourceSnapshotIDs:  snapshotIDs(input.SourceSnapshots),
+		ModelRevision:      modelRevision(input.Options),
 		ProfileID:          validated.ProfileID,
 		ProfileVersion:     validated.ProfileVersion,
+		ProfileDigest:      contentDigestPointer(digestJSON(validated)),
+		OptionsDigest:      optionsDigest(input.Options),
+		Baseline:           cloneBaselineRef(validated.Baseline),
 		ProviderIdentities: providerIdentities,
 		Coverage:           coverage,
 		Metrics:            batch.Metrics,
@@ -96,11 +111,33 @@ func EvaluateQualityProfile(profile QualityProfile, input EvaluationInput, catal
 		Diagnostics:        diagnostics,
 		Extensions:         []ExtensionBlock{},
 	}
+	if input.Baseline != nil {
+		report.BaselineDigest = digestJSON(*input.Baseline)
+	} else if validated.Baseline != nil {
+		report.Diagnostics = append(report.Diagnostics, QualityDiagnostic{Code: string(ErrorMetricUnavailable), Message: "the profile references a baseline that was not supplied; findings remain unsuppressed", Severity: SeverityWarning, Details: map[string]any{"baseline_id": validated.Baseline.BaselineID, "revision": validated.Baseline.Revision}})
+	}
+	if input.Baseline != nil {
+		if err := applyBaseline(&report, validated, *input.Baseline); err != nil {
+			return QualityEvaluation{}, err
+		}
+	}
 	report = normalizeEvaluation(report, validated, input.Options)
 	if err := ValidateQualityEvaluation(report); err != nil {
 		return QualityEvaluation{}, err
 	}
 	return report, nil
+}
+
+func modelRevision(options map[string]any) string {
+	if options == nil {
+		return ""
+	}
+	for _, key := range []string{"model_revision", "model_id"} {
+		if value, ok := options[key].(string); ok && strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
 }
 
 // Evaluate is a concise alias for callers that already have a validated
@@ -113,12 +150,19 @@ func Evaluate(profile QualityProfile, input EvaluationInput, catalog *Catalog) (
 // reproducibility fingerprint and report digest. Operational timestamps are
 // intentionally not part of the contract.
 func NormalizeQualityEvaluation(report QualityEvaluation) (QualityEvaluation, error) {
-	profile := QualityProfile{SchemaVersion: SchemaVersion, ProfileID: report.ProfileID, ProfileVersion: report.ProfileVersion}
+	profile := QualityProfile{SchemaVersion: SchemaVersion, ProfileID: report.ProfileID, ProfileVersion: report.ProfileVersion, Baseline: cloneBaselineRef(report.Baseline)}
 	normalized := normalizeEvaluation(report, profile, nil)
 	if err := ValidateQualityEvaluation(normalized); err != nil {
 		return QualityEvaluation{}, err
 	}
 	return normalized, nil
+}
+
+// NormalizeQualityReport is the report-lifecycle name for
+// NormalizeQualityEvaluation. Both names intentionally share one canonical
+// implementation so transport consumers cannot drift from evaluator output.
+func NormalizeQualityReport(report QualityEvaluation) (QualityEvaluation, error) {
+	return NormalizeQualityEvaluation(report)
 }
 
 func ValidateQualityEvaluation(report QualityEvaluation) error {
@@ -131,8 +175,24 @@ func ValidateQualityEvaluation(report QualityEvaluation) error {
 	if !validNamespacedID(report.ProfileID) || !validVersion(report.ProfileVersion) {
 		return newQualityError(ErrorReportInvalid, "quality report profile identity is invalid", map[string]any{"profile_id": report.ProfileID, "profile_version": report.ProfileVersion})
 	}
+	if report.ProfileDigest != nil && !validContentDigest(*report.ProfileDigest) {
+		return newQualityError(ErrorReportInvalid, "quality report profile digest is invalid", nil)
+	}
+	if report.OptionsDigest != nil && !validContentDigest(*report.OptionsDigest) {
+		return newQualityError(ErrorReportInvalid, "quality report options digest is invalid", nil)
+	}
 	if !validContentDigest(report.EvaluationFingerprint) || !validContentDigest(report.ReportDigest) {
 		return newQualityError(ErrorReportInvalid, "quality report digests must be lowercase SHA-256 values", nil)
+	}
+	if report.Baseline != nil {
+		if !validNamespacedID(report.Baseline.BaselineID) || report.Baseline.Revision != "" && !validVersion(report.Baseline.Revision) {
+			return newQualityError(ErrorReportInvalid, "quality report baseline reference is invalid", map[string]any{"baseline_id": report.Baseline.BaselineID, "revision": report.Baseline.Revision})
+		}
+		if report.BaselineDigest.Algorithm != "" && !validContentDigest(report.BaselineDigest) {
+			return newQualityError(ErrorReportInvalid, "quality report baseline digest is invalid", nil)
+		}
+	} else if report.BaselineDigest.Algorithm != "" || report.BaselineDigest.Value != "" {
+		return newQualityError(ErrorReportInvalid, "quality report cannot contain a baseline digest without a baseline reference", nil)
 	}
 	if report.SourceSnapshotIDs == nil || report.ProviderIdentities == nil || report.Coverage == nil || report.Metrics == nil || report.Findings == nil || report.Diagnostics == nil || report.Extensions == nil {
 		return newQualityError(ErrorReportInvalid, "quality report collections must be serialized as arrays", map[string]any{"source_snapshot_ids_nil": report.SourceSnapshotIDs == nil, "provider_identities_nil": report.ProviderIdentities == nil, "coverage_nil": report.Coverage == nil, "metrics_nil": report.Metrics == nil, "findings_nil": report.Findings == nil, "diagnostics_nil": report.Diagnostics == nil, "extensions_nil": report.Extensions == nil})
@@ -388,6 +448,9 @@ func requiredCapabilityStatus(required []string, input EvaluationInput, batch Me
 		if capabilityAvailable(capability, input, batch) {
 			continue
 		}
+		if status, reason, found := declaredCapabilityStatus(capability, input); found {
+			return true, status, reason
+		}
 		if sourceCapabilityMentioned(capability, input) {
 			return true, CoverageNotEvaluable, "required capability did not produce a compatible metric"
 		}
@@ -399,6 +462,9 @@ func requiredCapabilityStatus(required []string, input EvaluationInput, batch Me
 func capabilityAvailable(capability string, input EvaluationInput, batch MetricBatch) bool {
 	for _, metric := range batch.Metrics {
 		if metric.MetricID == capability {
+			return true
+		}
+		if capability == solidStructureCapability && strings.HasPrefix(metric.MetricID, "source:solid.") {
 			return true
 		}
 	}
@@ -419,6 +485,21 @@ func capabilityAvailable(capability string, input EvaluationInput, batch MetricB
 	default:
 		return false
 	}
+}
+
+func declaredCapabilityStatus(capability string, input EvaluationInput) (string, string, bool) {
+	for _, snapshot := range input.SourceSnapshots {
+		for _, coverage := range snapshot.Coverage {
+			if coverage.Capability != capability {
+				continue
+			}
+			switch coverage.Status {
+			case CoverageUnsupported, CoverageUnknown, CoverageNotEvaluable, CoverageAbsent, CoveragePartial:
+				return coverage.Status, reasonOr(coverage.Reason, capability+" is not fully available"), true
+			}
+		}
+	}
+	return "", "", false
 }
 
 func sourceCapabilityMentioned(capability string, input EvaluationInput) bool {
@@ -515,6 +596,17 @@ func newCoverage(rule QualityRule, status, reason string, subjects, evaluated in
 func normalizeEvaluation(report QualityEvaluation, profile QualityProfile, options map[string]any) QualityEvaluation {
 	report.SchemaVersion = SchemaVersion
 	report.SourceSnapshotIDs = normalizeStrings(report.SourceSnapshotIDs)
+	if report.ProfileDigest == nil {
+		report.ProfileDigest = contentDigestPointer(digestJSON(profile))
+	} else {
+		report.ProfileDigest = contentDigestPointer(*report.ProfileDigest)
+	}
+	if report.OptionsDigest == nil && options != nil {
+		report.OptionsDigest = optionsDigest(options)
+	} else if report.OptionsDigest != nil {
+		report.OptionsDigest = contentDigestPointer(*report.OptionsDigest)
+	}
+	report.Baseline = cloneBaselineRef(report.Baseline)
 	report.ProviderIdentities = append([]ProviderIdentity(nil), report.ProviderIdentities...)
 	if report.ProviderIdentities == nil {
 		report.ProviderIdentities = []ProviderIdentity{}
@@ -563,11 +655,8 @@ func normalizeEvaluation(report QualityEvaluation, profile QualityProfile, optio
 		if finding.RuleVersion == "" {
 			finding.RuleVersion = "1.0.0"
 		}
-		if finding.ID == "" {
-			finding.ID = "finding:" + digestPart(finding.RuleID, finding.SubjectRef.ID, finding.MessageCode, finding.Message)
-		}
 		if finding.FindingKey == "" {
-			finding.FindingKey = stableFindingKey(profile, *finding)
+			finding.FindingKey = stableFindingKey(profile, *finding, report.Metrics)
 		}
 		finding.ObservedMetricIDs = normalizeStrings(finding.ObservedMetricIDs)
 		finding.Evidence = normalizeEvidence(finding.Evidence)
@@ -595,28 +684,33 @@ func normalizeEvaluation(report QualityEvaluation, profile QualityProfile, optio
 		right, _ := json.Marshal(report.Diagnostics[j])
 		return string(left) < string(right)
 	})
-	for index := range report.Findings {
-		report.Findings[index].ID = "finding:" + digestPart(report.Findings[index].FindingKey, report.Findings[index].RuleVersion)
+	fingerprintFindings := append([]QualityFinding(nil), report.Findings...)
+	for index := range fingerprintFindings {
+		fingerprintFindings[index].ID = ""
 	}
-	semantic := report
-	semantic.EvaluationID = ""
-	semantic.EvaluationFingerprint = ContentDigest{}
-	semantic.ReportDigest = ContentDigest{}
 	fingerprint := digestJSON(struct {
 		SourceSnapshotIDs []string            `json:"source_snapshot_ids"`
-		Profile           QualityProfile      `json:"profile"`
+		ModelRevision     string              `json:"model_revision,omitempty"`
+		ProfileDigest     *ContentDigest      `json:"profile_digest,omitempty"`
+		OptionsDigest     *ContentDigest      `json:"options_digest,omitempty"`
+		Baseline          *BaselineRef        `json:"baseline,omitempty"`
+		BaselineDigest    ContentDigest       `json:"baseline_digest,omitempty"`
 		Providers         []ProviderIdentity  `json:"providers"`
 		Metrics           []MetricFact        `json:"metrics"`
 		Coverage          []QualityCoverage   `json:"coverage"`
 		Findings          []QualityFinding    `json:"findings"`
 		Diagnostics       []QualityDiagnostic `json:"diagnostics"`
-		Options           map[string]any      `json:"options,omitempty"`
-	}{report.SourceSnapshotIDs, profile, report.ProviderIdentities, report.Metrics, report.Coverage, report.Findings, report.Diagnostics, options})
+	}{report.SourceSnapshotIDs, report.ModelRevision, report.ProfileDigest, report.OptionsDigest, report.Baseline, report.BaselineDigest, report.ProviderIdentities, report.Metrics, report.Coverage, fingerprintFindings, report.Diagnostics})
 	report.EvaluationFingerprint = fingerprint
 	report.EvaluationID = "evaluation:" + digestPart(fingerprint.Value)
-	semantic.EvaluationID = report.EvaluationID
-	semantic.EvaluationFingerprint = report.EvaluationFingerprint
-	report.ReportDigest = digestJSON(semantic)
+	for index := range report.Findings {
+		// IDs are intentionally report-local. The stable finding_key above is
+		// the identity used for comparison and baselines; including the
+		// canonical report identity and ordinal makes the opaque transport ID
+		// safe to change when a new report has different evidence positions.
+		report.Findings[index].ID = "finding:" + digestPart(report.EvaluationID, report.Findings[index].FindingKey, fmt.Sprint(index))
+	}
+	report.ReportDigest = reportDigest(report)
 	return report
 }
 
@@ -770,13 +864,24 @@ func spanKey(value SourceSpan) string {
 }
 func scopeEvidenceID(scopeID, snapshotID string) string { return "scope:" + scopeID + ":" + snapshotID }
 
-func stableFindingKey(profile QualityProfile, finding QualityFinding) string {
+func stableFindingKey(profile QualityProfile, finding QualityFinding, metrics []MetricFact) string {
 	subject := finding.SubjectRef.StableKey
 	if subject == "" {
 		subject = finding.SubjectRef.ID
 	}
-	profileFingerprint := digestJSON(profile).Value
-	return strings.Join([]string{finding.RuleID, finding.RuleVersion, finding.AssessmentKind, profile.ProfileID, profile.ProfileVersion, profileFingerprint, finding.SubjectRef.ScopeID, finding.SubjectRef.Kind, subject, finding.MessageCode, findingOccurrenceAnchor(finding)}, "|")
+	// A baseline changes the lifecycle state of a finding, not the finding's
+	// identity. Keeping the baseline reference out of the stable-key input
+	// lets a baseline created from an earlier report suppress the same finding
+	// when that report is evaluated with the baseline attached.
+	profileFingerprint := digestJSON(findingProfile(profile)).Value
+	formulaFingerprint := digestJSON(formulaVersionsForFinding(finding, metrics)).Value
+	return strings.Join([]string{finding.RuleID, finding.RuleVersion, finding.AssessmentKind, profile.ProfileID, profile.ProfileVersion, profileFingerprint, formulaFingerprint, finding.SubjectRef.ScopeID, finding.SubjectRef.Kind, subject, finding.MessageCode, findingOccurrenceAnchor(finding)}, "|")
+}
+
+func findingProfile(profile QualityProfile) QualityProfile {
+	result := cloneProfile(profile)
+	result.Baseline = nil
+	return result
 }
 
 func findingOccurrenceAnchor(finding QualityFinding) string {
@@ -796,6 +901,18 @@ func digestJSON(value any) ContentDigest {
 	if err != nil {
 		return ContentDigest{Algorithm: "hash:sha-256"}
 	}
+	// Reports cross a JSON boundary before they are consumed by the CLI,
+	// viewer, and export paths. Normalize through the same JSON value model
+	// before hashing so an in-memory integer and its decoded numeric value do
+	// not produce different identities for the same serialized report.
+	var canonical any
+	if err := json.Unmarshal(data, &canonical); err != nil {
+		return ContentDigest{Algorithm: "hash:sha-256"}
+	}
+	data, err = json.Marshal(canonical)
+	if err != nil {
+		return ContentDigest{Algorithm: "hash:sha-256"}
+	}
 	hash := sha256.Sum256(data)
 	return ContentDigest{Algorithm: "hash:sha-256", Value: hex.EncodeToString(hash[:])}
 }
@@ -803,6 +920,18 @@ func digestJSON(value any) ContentDigest {
 func digestPart(values ...string) string {
 	hash := sha256.Sum256([]byte(strings.Join(values, "\x00")))
 	return hex.EncodeToString(hash[:12])
+}
+
+func contentDigestPointer(value ContentDigest) *ContentDigest {
+	copy := value
+	return &copy
+}
+
+func optionsDigest(options map[string]any) *ContentDigest {
+	if options == nil {
+		return nil
+	}
+	return contentDigestPointer(digestJSON(options))
 }
 
 func intPointer(value int) *int { return &value }

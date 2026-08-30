@@ -42,6 +42,7 @@ func (Extractor) Capabilities() []analysis.CapabilityDescriptor {
 		{ID: sourceindex.CapabilityDocumentation, Version: "v1", SupportedLanguages: []string{"go"}, Description: "Go documentation candidates and primary selection."},
 		{ID: sourceindex.CapabilityVisibility, Version: "v1", SupportedLanguages: []string{"go"}, Description: "Go exported and unexported visibility facts."},
 		{ID: sourceindex.CapabilityCallableMetrics, Version: "v1", SupportedLanguages: []string{"go"}, Description: "Go callable body spans, cyclomatic complexity, and nesting metrics."},
+		{ID: sourceindex.CapabilitySolidStructure, Version: "1.0.0", SupportedLanguages: []string{"go"}, Description: "Go structural counts for advisory SOLID signals."},
 	}
 }
 
@@ -52,6 +53,10 @@ func (Extractor) Extract(input sourceindex.SourceFactInput) (sourceindex.FactBat
 	root := input.Tree
 	targets := declarationTargets(root)
 	comments := commentNodes(root)
+	structuralByKey := map[string]structuralFacts{}
+	if requestedCapability(input.RequestedCapabilities, sourceindex.CapabilitySolidStructure) {
+		structuralByKey = collectStructuralFacts(input.File.Path, input.Content)
+	}
 	result := sourceindex.FactBatch{
 		Symbols:       make([]analysis.SymbolRecord, 0, len(targets)),
 		Documentation: make([]analysis.DocumentationRecord, 0, len(targets)),
@@ -88,6 +93,9 @@ func (Extractor) Extract(input sourceindex.SourceFactInput) (sourceindex.FactBat
 				IdentityBasis: "identity:declaration-span-name",
 				Provenance:    provenance(analysis.FactStatusObserved, Extractor{}),
 				Extensions:    []analysis.ExtensionBlock{},
+			}
+			if facts, ok := structuralByKey[stableKey]; ok {
+				applyStructuralFacts(&symbol, facts)
 			}
 			result.Symbols = append(result.Symbols, symbol)
 			result.Documentation = append(result.Documentation, documentationForSymbol(input.File, symbol, target.DocumentationAnchor, comments, input.Content, Extractor{}))
