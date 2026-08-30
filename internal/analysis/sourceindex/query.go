@@ -379,11 +379,12 @@ func (service *QueryService) InspectModule(moduleID string, options QueryOptions
 	}
 	documentation := make([]analysis.DocumentationRecord, 0)
 	for _, value := range snapshot.Documentation {
-		if value.SubjectRef.Kind == "file" {
+		switch value.SubjectRef.Kind {
+		case "file":
 			if _, ok := fileIDs[value.SubjectRef.ID]; ok {
 				documentation = append(documentation, queryDocumentation(value, options))
 			}
-		} else if value.SubjectRef.Kind == "symbol" {
+		case "symbol":
 			if _, ok := symbolIDs[value.SubjectRef.ID]; ok {
 				documentation = append(documentation, queryDocumentation(value, options))
 			}

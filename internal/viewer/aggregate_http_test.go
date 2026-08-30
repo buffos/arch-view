@@ -329,6 +329,10 @@ func aggregateFixtureRunWithFailedScope(t *testing.T, root string) orchestration
 }
 
 func readBody(response *http.Response) ([]byte, error) {
-	defer response.Body.Close()
-	return io.ReadAll(response.Body)
+	body, readErr := io.ReadAll(response.Body)
+	closeErr := response.Body.Close()
+	if readErr != nil {
+		return nil, readErr
+	}
+	return body, closeErr
 }

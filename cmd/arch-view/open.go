@@ -214,10 +214,6 @@ func projectViewerOptions(host *analysis.Host, project, language, analyzerID str
 	}
 }
 
-func projectCombinedViewerOptions(host *analysis.Host, project string, cliOptions map[string]any) viewer.ServerOptions {
-	return projectCombinedViewerOptionsWithCache(host, project, cliOptions, nil)
-}
-
 func projectCombinedViewerOptionsWithCache(host *analysis.Host, project string, cliOptions map[string]any, cache *orchestration.SessionCache) viewer.ServerOptions {
 	baseOptions := make(map[string]any, len(cliOptions))
 	for key, option := range cliOptions {

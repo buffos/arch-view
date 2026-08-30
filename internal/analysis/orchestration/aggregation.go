@@ -80,7 +80,6 @@ func (s *AnalysisAggregationService) AggregateScopeResults(snapshot ExecutionSna
 			if usable {
 				individual, err := canonical.Normalize(value)
 				if err != nil {
-					usable = false
 					jobDiagnostic := analysis.Diagnostic{
 						Code:        "aggregate_normalization_failed",
 						Severity:    "error",

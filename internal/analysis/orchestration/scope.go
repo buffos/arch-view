@@ -177,9 +177,12 @@ func sourceContentDigest(filePath string) string {
 	if err != nil {
 		return "unreadable"
 	}
-	defer file.Close()
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
+		_ = file.Close()
+		return "unreadable"
+	}
+	if err := file.Close(); err != nil {
 		return "unreadable"
 	}
 	return hex.EncodeToString(hash.Sum(nil))

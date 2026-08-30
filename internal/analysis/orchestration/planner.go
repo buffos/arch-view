@@ -690,18 +690,6 @@ func normalizeSelectionRoot(repositoryRoot, value string) (string, string, error
 	return normalizeRelativePath(relative), absolute, nil
 }
 
-func relativePathForRoot(repositoryRoot, candidate string) (string, error) {
-	absolute, err := filepath.Abs(candidate)
-	if err != nil || !pathWithin(repositoryRoot, absolute) {
-		return "", analysis.NewHostError(analysis.ErrInvalidRequest, "invocation root must remain inside the opened repository", map[string]any{"invocation_root": candidate})
-	}
-	relative, err := filepath.Rel(repositoryRoot, filepath.Clean(absolute))
-	if err != nil {
-		return "", analysis.WrapHostError(analysis.ErrInvalidRequest, "invocation root relationship could not be calculated", err, nil)
-	}
-	return normalizeRelativePath(relative), nil
-}
-
 func selectionAppliesToRoot(selection ExplicitSelection, root ProjectRootCandidate) bool {
 	if selection.ProjectRoot == "" {
 		return true
@@ -758,32 +746,6 @@ func validateCLISelection(registry *analysis.Registry, selection *ExplicitSelect
 		})
 	}
 	return nil
-}
-
-func assignmentAllowedByCLI(assignment AnalyzerAssignment, root ProjectRootCandidate, selection *ExplicitSelection) bool {
-	if selection == nil {
-		return true
-	}
-	if !selectionAppliesToRoot(*selection, root) {
-		return false
-	}
-	if selection.AnalyzerID != "" && assignment.AnalyzerID != selection.AnalyzerID {
-		return false
-	}
-	if selection.Language != "" && strings.ToLower(assignment.Language) != strings.ToLower(selection.Language) && assignment.Language != "" {
-		return false
-	}
-	return true
-}
-
-func evaluationMatchesCLI(evaluation CandidateEvaluation, selection ExplicitSelection) bool {
-	if selection.AnalyzerID != "" && candidateAnalyzerID(evaluation) != selection.AnalyzerID {
-		return false
-	}
-	if selection.Language != "" && evaluationLanguage(evaluation) != strings.ToLower(strings.TrimSpace(selection.Language)) {
-		return false
-	}
-	return true
 }
 
 func cloneMap(values map[string]any) map[string]any {
