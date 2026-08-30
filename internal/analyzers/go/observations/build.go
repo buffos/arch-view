@@ -150,14 +150,17 @@ func BuildContext(ctx context.Context, scan scanner.ScanResult, request analysis
 		SourceReferences: scan.SourceReferences,
 		Diagnostics:      diagnostics,
 	}
-	requestedCapabilities := []string{
-		sourceindex.CapabilityDeclarations,
-		sourceindex.CapabilityDocumentation,
-		sourceindex.CapabilityFiles,
-		sourceindex.CapabilitySize,
-		sourceindex.CapabilityVisibility,
-		sourceindex.CapabilityCallableMetrics,
-		sourceindex.CapabilitySolidStructure,
+	requestedCapabilities := requestedSourceCapabilities(request)
+	if request.SourceIndexRequest != nil && !request.SourceIndexRequest.Enabled {
+		result.Diagnostics = diagnostics
+		for _, diagnostic := range diagnostics {
+			if diagnostic.Recoverable {
+				result.Status = analysis.StatusPartial
+				break
+			}
+		}
+		result.Summary = analysis.ComputeSummary(result)
+		return result
 	}
 	scope := sourceIndexScope(request.SourceScope, project)
 	producer := analysis.ProducerContext{
@@ -213,6 +216,21 @@ func BuildContext(ctx context.Context, scan scanner.ScanResult, request analysis
 	}
 	result.Summary = analysis.ComputeSummary(result)
 	return result
+}
+
+func requestedSourceCapabilities(request analysis.AnalyzeRequest) []string {
+	if request.SourceIndexRequest != nil && len(request.SourceIndexRequest.Capabilities) > 0 {
+		return append([]string(nil), request.SourceIndexRequest.Capabilities...)
+	}
+	return []string{
+		sourceindex.CapabilityDeclarations,
+		sourceindex.CapabilityDocumentation,
+		sourceindex.CapabilityFiles,
+		sourceindex.CapabilitySize,
+		sourceindex.CapabilityVisibility,
+		sourceindex.CapabilityCallableMetrics,
+		sourceindex.CapabilitySolidStructure,
+	}
 }
 
 func sourceIndexScope(sourceScope *analysis.SourceScope, project scanner.Project) analysis.ScopeContext {

@@ -19,19 +19,40 @@ type DetectRequest struct {
 }
 
 type AnalyzeRequest struct {
-	ProjectRoot string            `json:"project_root"`
-	Selection   AnalyzerSelection `json:"selection"`
-	Options     EffectiveOptions  `json:"options"`
-	SourceScope *SourceScope      `json:"source_scope,omitempty"`
+	ProjectRoot        string              `json:"project_root"`
+	Selection          AnalyzerSelection   `json:"selection"`
+	Options            EffectiveOptions    `json:"options"`
+	SourceScope        *SourceScope        `json:"source_scope,omitempty"`
+	SourceIndexRequest *SourceIndexRequest `json:"source_index_request,omitempty"`
+}
+
+// SourceIndexRequest is the optional analyzer-facing source-index policy.
+// A nil request preserves the legacy analyzer contract: an analyzer may use
+// its historical default behavior. A non-nil disabled request must avoid
+// building a source index, while an enabled request carries the exact
+// capability set requested by the live coordinator.
+type SourceIndexRequest struct {
+	Enabled      bool     `json:"enabled"`
+	Capabilities []string `json:"capabilities,omitempty"`
+}
+
+func cloneSourceIndexRequest(value *SourceIndexRequest) *SourceIndexRequest {
+	if value == nil {
+		return nil
+	}
+	clone := *value
+	clone.Capabilities = append([]string(nil), value.Capabilities...)
+	return &clone
 }
 
 type RunRequest struct {
-	ProjectRoot    string
-	Language       string
-	AnalyzerID     string
-	ProjectOptions map[string]any
-	CLIOptions     map[string]any
-	SourceScope    *SourceScope
+	ProjectRoot        string
+	Language           string
+	AnalyzerID         string
+	ProjectOptions     map[string]any
+	CLIOptions         map[string]any
+	SourceScope        *SourceScope
+	SourceIndexRequest *SourceIndexRequest
 }
 
 // PlannedRunRequest is the host boundary used by the multi-analyzer
@@ -39,11 +60,12 @@ type RunRequest struct {
 // passed through unchanged; the host still owns analyzer lookup, runtime
 // provenance, result validation, and process cleanup.
 type PlannedRunRequest struct {
-	ProjectRoot string
-	AnalyzerID  string
-	Selection   AnalyzerSelection
-	Options     EffectiveOptions
-	SourceScope *SourceScope
+	ProjectRoot        string
+	AnalyzerID         string
+	Selection          AnalyzerSelection
+	Options            EffectiveOptions
+	SourceScope        *SourceScope
+	SourceIndexRequest *SourceIndexRequest
 }
 
 // RuntimeSelection describes how the host obtained the analyzer used for a

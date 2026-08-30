@@ -43,22 +43,23 @@ const (
 // the existing analysis.AnalysisResult type rather than introducing a second
 // model schema at the process boundary.
 type Frame struct {
-	Type        FrameType                    `json:"type"`
-	RequestID   string                       `json:"request_id,omitempty"`
-	Protocol    string                       `json:"protocol,omitempty"`
-	Manifest    *analysis.Manifest           `json:"manifest,omitempty"`
-	ProjectRoot string                       `json:"project_root,omitempty"`
-	Selection   *analysis.AnalyzerSelection  `json:"selection,omitempty"`
-	Options     *analysis.EffectiveOptions   `json:"options,omitempty"`
-	SourceScope *analysis.SourceScope        `json:"source_scope,omitempty"`
-	Candidate   *analysis.DetectionCandidate `json:"candidate,omitempty"`
-	Result      *analysis.AnalysisResult     `json:"result,omitempty"`
-	Diagnostic  *analysis.Diagnostic         `json:"diagnostic,omitempty"`
-	Status      analysis.AnalysisStatus      `json:"status,omitempty"`
-	Code        string                       `json:"code,omitempty"`
-	Message     string                       `json:"message,omitempty"`
-	Details     map[string]any               `json:"details,omitempty"`
-	Reason      string                       `json:"reason,omitempty"`
+	Type               FrameType                    `json:"type"`
+	RequestID          string                       `json:"request_id,omitempty"`
+	Protocol           string                       `json:"protocol,omitempty"`
+	Manifest           *analysis.Manifest           `json:"manifest,omitempty"`
+	ProjectRoot        string                       `json:"project_root,omitempty"`
+	Selection          *analysis.AnalyzerSelection  `json:"selection,omitempty"`
+	Options            *analysis.EffectiveOptions   `json:"options,omitempty"`
+	SourceScope        *analysis.SourceScope        `json:"source_scope,omitempty"`
+	SourceIndexRequest *analysis.SourceIndexRequest `json:"source_index_request,omitempty"`
+	Candidate          *analysis.DetectionCandidate `json:"candidate,omitempty"`
+	Result             *analysis.AnalysisResult     `json:"result,omitempty"`
+	Diagnostic         *analysis.Diagnostic         `json:"diagnostic,omitempty"`
+	Status             analysis.AnalysisStatus      `json:"status,omitempty"`
+	Code               string                       `json:"code,omitempty"`
+	Message            string                       `json:"message,omitempty"`
+	Details            map[string]any               `json:"details,omitempty"`
+	Reason             string                       `json:"reason,omitempty"`
 }
 
 // Descriptor is the typed representation of an explicitly supplied local

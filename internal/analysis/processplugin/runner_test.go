@@ -70,13 +70,15 @@ func TestRunAnalyzeForwardsOptionsAndStreamsDiagnostics(t *testing.T) {
 		Reason:         "fixture",
 	}
 	sourceScope := analysis.SourceScope{PolicyVersion: "arch-view.source-scope/v1", ProjectRoot: ".", MatchedLocalPaths: []string{"main.fixture"}}
+	sourceIndexRequest := analysis.SourceIndexRequest{Enabled: true, Capabilities: []string{"source:files", "source:documentation"}}
 	request := processprotocol.Frame{
-		Type:        processprotocol.FrameAnalyze,
-		RequestID:   "analyze-1",
-		ProjectRoot: "/fixture",
-		Selection:   &selection,
-		Options:     &options,
-		SourceScope: &sourceScope,
+		Type:               processprotocol.FrameAnalyze,
+		RequestID:          "analyze-1",
+		ProjectRoot:        "/fixture",
+		Selection:          &selection,
+		Options:            &options,
+		SourceScope:        &sourceScope,
+		SourceIndexRequest: &sourceIndexRequest,
 	}
 	input := encodedFrame(t, request)
 	var output bytes.Buffer
@@ -98,6 +100,9 @@ func TestRunAnalyzeForwardsOptionsAndStreamsDiagnostics(t *testing.T) {
 	}
 	if !reflect.DeepEqual(analyzer.seenSourceScope, &sourceScope) {
 		t.Fatalf("source scope = %#v, want %#v", analyzer.seenSourceScope, &sourceScope)
+	}
+	if !reflect.DeepEqual(analyzer.seenSourceIndexRequest, &sourceIndexRequest) {
+		t.Fatalf("source index request = %#v, want %#v", analyzer.seenSourceIndexRequest, &sourceIndexRequest)
 	}
 	frames := decodeFrames(t, output.Bytes())
 	if got := frameTypes(frames); !reflect.DeepEqual(got, []processprotocol.FrameType{
@@ -202,13 +207,14 @@ func TestRunAnalyzerErrorEmitsFatal(t *testing.T) {
 }
 
 type runnerTestAnalyzer struct {
-	seenSelection        analysis.AnalyzerSelection
-	seenOptions          analysis.EffectiveOptions
-	seenSourceScope      *analysis.SourceScope
-	waitForCancellation  bool
-	analysisStarted      chan struct{}
-	cancellationObserved chan struct{}
-	analyzerError        error
+	seenSelection          analysis.AnalyzerSelection
+	seenOptions            analysis.EffectiveOptions
+	seenSourceScope        *analysis.SourceScope
+	seenSourceIndexRequest *analysis.SourceIndexRequest
+	waitForCancellation    bool
+	analysisStarted        chan struct{}
+	cancellationObserved   chan struct{}
+	analyzerError          error
 }
 
 func (a *runnerTestAnalyzer) manifest() analysis.Manifest {
@@ -250,6 +256,7 @@ func (a *runnerTestAnalyzer) Analyze(ctx context.Context, request analysis.Analy
 	a.seenSelection = request.Selection
 	a.seenOptions = request.Options
 	a.seenSourceScope = request.SourceScope
+	a.seenSourceIndexRequest = request.SourceIndexRequest
 	if a.waitForCancellation {
 		close(a.analysisStarted)
 		<-ctx.Done()

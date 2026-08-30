@@ -131,7 +131,7 @@ func (h *Host) Run(ctx context.Context, request RunRequest) (result AnalysisResu
 	if err != nil {
 		return AnalysisResult{}, err
 	}
-	return h.runSelected(ctx, root, selected, selection, effectiveOptions, request.SourceScope)
+	return h.runSelected(ctx, root, selected, selection, effectiveOptions, request.SourceScope, request.SourceIndexRequest)
 }
 
 // RunPlanned executes a planner-resolved analyzer selection. It deliberately
@@ -176,10 +176,10 @@ func (h *Host) RunPlanned(ctx context.Context, request PlannedRunRequest) (resul
 	if request.Options.Fingerprint == "" {
 		return AnalysisResult{}, NewHostError(ErrInvalidOptions, "planned analyzer options fingerprint is required", map[string]any{"analyzer_id": request.AnalyzerID})
 	}
-	return h.runSelected(ctx, root, selected, selection, request.Options, request.SourceScope)
+	return h.runSelected(ctx, root, selected, selection, request.Options, request.SourceScope, request.SourceIndexRequest)
 }
 
-func (h *Host) runSelected(ctx context.Context, root string, selected Analyzer, selection AnalyzerSelection, effectiveOptions EffectiveOptions, sourceScope *SourceScope) (result AnalysisResult, err error) {
+func (h *Host) runSelected(ctx context.Context, root string, selected Analyzer, selection AnalyzerSelection, effectiveOptions EffectiveOptions, sourceScope *SourceScope, sourceIndexRequest *SourceIndexRequest) (result AnalysisResult, err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -194,10 +194,11 @@ func (h *Host) runSelected(ctx context.Context, root string, selected Analyzer, 
 	}
 	manifest := selected.Manifest()
 	analyzeRequest := AnalyzeRequest{
-		ProjectRoot: root,
-		Selection:   selection,
-		Options:     effectiveOptions,
-		SourceScope: sourceScope,
+		ProjectRoot:        root,
+		Selection:          selection,
+		Options:            effectiveOptions,
+		SourceScope:        sourceScope,
+		SourceIndexRequest: cloneSourceIndexRequest(sourceIndexRequest),
 	}
 	result, err = selected.Analyze(ctx, analyzeRequest)
 	if err != nil {

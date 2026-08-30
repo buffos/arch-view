@@ -220,12 +220,13 @@ func (a *Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest)
 	selection := request.Selection
 	options := request.Options
 	requestFrame := processprotocol.Frame{
-		Type:        processprotocol.FrameAnalyze,
-		RequestID:   requestID,
-		ProjectRoot: request.ProjectRoot,
-		Selection:   &selection,
-		Options:     &options,
-		SourceScope: request.SourceScope,
+		Type:               processprotocol.FrameAnalyze,
+		RequestID:          requestID,
+		ProjectRoot:        request.ProjectRoot,
+		Selection:          &selection,
+		Options:            &options,
+		SourceScope:        request.SourceScope,
+		SourceIndexRequest: request.SourceIndexRequest,
 	}
 	session, err := a.execute(ctx, processprotocol.FrameAnalyze, requestID, requestFrame)
 	if err != nil {

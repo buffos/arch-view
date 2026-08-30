@@ -40,6 +40,43 @@ func TestHostHonorsExplicitSelectionAndOptionPrecedence(t *testing.T) {
 	}
 }
 
+func TestHostForwardsSourceIndexRequestAndPreservesLegacyDefault(t *testing.T) {
+	root := t.TempDir()
+	var received AnalyzeRequest
+	analyzer := &fakeAnalyzer{manifest: validManifest("org.example.source", "source")}
+	analyzer.analyze = func(ctx context.Context, request AnalyzeRequest) (AnalysisResult, error) {
+		received = request
+		return validResult(analyzer.manifest), nil
+	}
+	registry := NewRegistry()
+	if err := registry.Register(analyzer); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	requested := &SourceIndexRequest{Enabled: true, Capabilities: []string{"source:files", "source:documentation"}}
+	if _, err := NewHost(registry).Run(context.Background(), RunRequest{
+		ProjectRoot:        root,
+		AnalyzerID:         analyzer.manifest.ID,
+		SourceIndexRequest: requested,
+	}); err != nil {
+		t.Fatalf("run with source request: %v", err)
+	}
+	if received.SourceIndexRequest == nil || !received.SourceIndexRequest.Enabled || len(received.SourceIndexRequest.Capabilities) != 2 {
+		t.Fatalf("source index request = %#v", received.SourceIndexRequest)
+	}
+	requested.Capabilities[0] = "mutated-after-run"
+	if received.SourceIndexRequest.Capabilities[0] == "mutated-after-run" {
+		t.Fatal("host retained caller-owned source capability slice")
+	}
+
+	received = AnalyzeRequest{}
+	if _, err := NewHost(registry).Run(context.Background(), RunRequest{ProjectRoot: root, AnalyzerID: analyzer.manifest.ID}); err != nil {
+		t.Fatalf("legacy run: %v", err)
+	}
+	if received.SourceIndexRequest != nil {
+		t.Fatalf("legacy source index request = %#v, want nil", received.SourceIndexRequest)
+	}
+}
+
 func TestHostAutoDetectionChoosesUniqueHighestConfidence(t *testing.T) {
 	root := t.TempDir()
 	low := &fakeAnalyzer{

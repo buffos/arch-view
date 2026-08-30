@@ -22,6 +22,19 @@ func NewSessionCache() *SessionCache {
 	return &SessionCache{entries: make(map[string]AnalyzerJob)}
 }
 
+// Reset drops every reusable scope snapshot. Live coordinators use this when
+// an invalidation plan cannot prove dependency impact is selective; retaining
+// an apparently unchanged scope in that case could preserve stale
+// cross-scope relationships.
+func (cache *SessionCache) Reset() {
+	if cache == nil {
+		return
+	}
+	cache.mu.Lock()
+	cache.entries = make(map[string]AnalyzerJob)
+	cache.mu.Unlock()
+}
+
 // ExecuteAnalyzerPlanWithCache applies reusable terminal scope snapshots,
 // executes only cache misses, and records the new terminal snapshots.
 func ExecuteAnalyzerPlanWithCache(ctx context.Context, scheduler *AnalyzerJobScheduler, plan JobPlan, cache *SessionCache) ExecutionSnapshot {

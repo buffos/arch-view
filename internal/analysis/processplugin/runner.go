@@ -195,10 +195,11 @@ func invoke(ctx context.Context, analyzer analysis.Analyzer, manifest analysis.M
 		selection := *request.Selection
 		options := canonicalizeOptions(*request.Options, manifest)
 		result, err := analyzer.Analyze(ctx, analysis.AnalyzeRequest{
-			ProjectRoot: request.ProjectRoot,
-			Selection:   selection,
-			Options:     options,
-			SourceScope: request.SourceScope,
+			ProjectRoot:        request.ProjectRoot,
+			Selection:          selection,
+			Options:            options,
+			SourceScope:        request.SourceScope,
+			SourceIndexRequest: request.SourceIndexRequest,
 		})
 		return operationOutput{result: result, err: err}
 	default:

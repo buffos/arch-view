@@ -91,6 +91,46 @@ const Name = "service"
 	}
 }
 
+func TestAnalyzeHonorsSourceIndexRequest(t *testing.T) {
+	root := t.TempDir()
+	writeFixture(t, filepath.Join(root, "go.mod"), "module example.com/source-request\ngo 1.22\n")
+	writeFixture(t, filepath.Join(root, "main.go"), "package main\n\nfunc Main() {}\n")
+
+	disabled, err := New().Analyze(context.Background(), analysis.AnalyzeRequest{
+		ProjectRoot: root,
+		Options:     goOptions(t, nil),
+		SourceIndexRequest: &analysis.SourceIndexRequest{
+			Enabled:      false,
+			Capabilities: []string{sourceindex.CapabilityFiles, sourceindex.CapabilityDeclarations},
+		},
+	})
+	if err != nil {
+		t.Fatalf("disabled analyze: %v", err)
+	}
+	if disabled.SourceIndex != nil {
+		t.Fatalf("disabled source index = %#v, want nil", disabled.SourceIndex)
+	}
+
+	enabled, err := New().Analyze(context.Background(), analysis.AnalyzeRequest{
+		ProjectRoot: root,
+		Options:     goOptions(t, nil),
+		SourceIndexRequest: &analysis.SourceIndexRequest{
+			Enabled:      true,
+			Capabilities: []string{sourceindex.CapabilityFiles, sourceindex.CapabilitySize},
+		},
+	})
+	if err != nil {
+		t.Fatalf("enabled analyze: %v", err)
+	}
+	if enabled.SourceIndex == nil || len(enabled.SourceIndex.Snapshots) != 1 {
+		t.Fatalf("enabled source index = %#v, want one snapshot", enabled.SourceIndex)
+	}
+	requested := enabled.SourceIndex.Snapshots[0].Input.RequestedCapabilities
+	if len(requested) != 2 || requested[0] != sourceindex.CapabilityFiles || requested[1] != sourceindex.CapabilitySize {
+		t.Fatalf("requested capabilities = %#v", requested)
+	}
+}
+
 func TestAnalyzePublishesStructuralFactsForQualitySignals(t *testing.T) {
 	root := t.TempDir()
 	writeFixture(t, filepath.Join(root, "go.mod"), "module example.com/solid\ngo 1.22\n")
