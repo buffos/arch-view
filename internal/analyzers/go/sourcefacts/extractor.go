@@ -41,6 +41,7 @@ func (Extractor) Capabilities() []analysis.CapabilityDescriptor {
 		{ID: sourceindex.CapabilityDeclarations, Version: "v1", SupportedLanguages: []string{"go"}, Description: "Named top-level Go declarations and locations."},
 		{ID: sourceindex.CapabilityDocumentation, Version: "v1", SupportedLanguages: []string{"go"}, Description: "Go documentation candidates and primary selection."},
 		{ID: sourceindex.CapabilityVisibility, Version: "v1", SupportedLanguages: []string{"go"}, Description: "Go exported and unexported visibility facts."},
+		{ID: sourceindex.CapabilityCallableMetrics, Version: "v1", SupportedLanguages: []string{"go"}, Description: "Go callable body spans, cyclomatic complexity, and nesting metrics."},
 	}
 }
 
@@ -63,6 +64,13 @@ func (Extractor) Extract(input sourceindex.SourceFactInput) (sourceindex.FactBat
 			}
 			stableKey := fmt.Sprintf("%s:%s:%d", target.Kind, name.Value, name.Range.StartByte)
 			span := sourceSpan(input.File, target.Node.Range())
+			var bodySpan *analysis.SourceSpan
+			if target.Category == analysis.SymbolCategoryCallable {
+				if body := target.Node.ChildByFieldName("body"); body != nil {
+					span := sourceSpan(input.File, body.Range())
+					bodySpan = &span
+				}
+			}
 			symbol := analysis.SymbolRecord{
 				ID:            stableKey,
 				Name:          name.Value,
@@ -75,6 +83,7 @@ func (Extractor) Extract(input sourceindex.SourceFactInput) (sourceindex.FactBat
 					Span:               span,
 					SourceReferenceIDs: append([]string(nil), input.File.Provenance.EvidenceIDs...),
 				}},
+				BodySpan:      bodySpan,
 				StableKey:     stableKey,
 				IdentityBasis: "identity:declaration-span-name",
 				Provenance:    provenance(analysis.FactStatusObserved, Extractor{}),
@@ -106,9 +115,119 @@ func (Extractor) Extract(input sourceindex.SourceFactInput) (sourceindex.FactBat
 					Extensions:    []analysis.ExtensionBlock{},
 				},
 			)
+			if target.Category == analysis.SymbolCategoryCallable && requestedCapability(input.RequestedCapabilities, sourceindex.CapabilityCallableMetrics) && bodySpan != nil {
+				complexity, nesting := goCallableMetrics(target.Node.ChildByFieldName("body"))
+				metricSubject := analysis.EntityRef{Kind: "symbol", ID: stableKey}
+				metricProvenance := provenance(analysis.FactStatusObserved, Extractor{})
+				metricProvenance.EvidenceIDs = append([]string(nil), input.File.Provenance.EvidenceIDs...)
+				decisionVocabulary := map[string]any{
+					"nodes":             []string{"if_statement", "for_statement", "expression_case", "type_case", "communication_case"},
+					"boolean_operators": []string{"&&", "||"},
+					"default_cases":     false,
+				}
+				result.Metrics = append(result.Metrics,
+					analysis.MetricFact{
+						ID: metricID("complexity", stableKey), SubjectRef: metricSubject,
+						MetricID: "source:callable.cyclomatic_complexity", Value: analysis.MetricValue{Kind: "integer", Value: complexity}, Unit: "unit:complexity",
+						FormulaID: "formula:go.cyclomatic-complexity", FormulaVersion: ExtractorVersion,
+						Provenance: metricProvenance,
+						Extensions: []analysis.ExtensionBlock{
+							{Namespace: "metric:go", SchemaVersion: ExtractorVersion, Capability: "decision-vocabulary", Payload: decisionVocabulary},
+						},
+					},
+					analysis.MetricFact{
+						ID: metricID("nesting", stableKey), SubjectRef: metricSubject,
+						MetricID: "source:callable.max_nesting_depth", Value: analysis.MetricValue{Kind: "integer", Value: nesting}, Unit: "unit:depth",
+						FormulaID: "formula:go.max-nesting-depth", FormulaVersion: ExtractorVersion,
+						Provenance: metricProvenance,
+						Extensions: []analysis.ExtensionBlock{
+							{Namespace: "metric:go", SchemaVersion: ExtractorVersion, Capability: "control-flow-vocabulary", Payload: map[string]any{"nodes": []string{"if_statement", "for_statement", "expression_switch_statement", "type_switch_statement", "select_statement"}}},
+						},
+					},
+				)
+			}
 		}
 	}
 	return result, nil
+}
+
+func requestedCapability(values []string, wanted string) bool {
+	for _, value := range values {
+		if value == wanted {
+			return true
+		}
+	}
+	return false
+}
+
+func metricID(kind, stableKey string) string { return "go:" + kind + ":" + stableKey }
+
+func goCallableMetrics(node syntax.Node) (int, int) {
+	if node == nil {
+		return 0, 0
+	}
+	decisions := 0
+	syntax.Walk(node, func(value syntax.Node) bool {
+		switch value.Type() {
+		case "if_statement", "for_statement":
+			decisions++
+		case "expression_case", "type_case", "communication_case":
+			if !isDefaultCase(value) {
+				decisions++
+			}
+		case "binary_expression":
+			if operator := binaryOperator(value); operator == "&&" || operator == "||" {
+				decisions++
+			}
+		}
+		return true
+	})
+	return 1 + decisions, maxGoNesting(node, 0)
+}
+
+func maxGoNesting(node syntax.Node, parent int) int {
+	if node == nil {
+		return parent
+	}
+	depth := parent
+	switch node.Type() {
+	case "if_statement", "for_statement", "expression_switch_statement", "type_switch_statement", "select_statement":
+		depth++
+	}
+	maximum := depth
+	for index := 0; index < node.ChildCount(); index++ {
+		candidate := maxGoNesting(node.Child(index), depth)
+		if candidate > maximum {
+			maximum = candidate
+		}
+	}
+	return maximum
+}
+
+func isDefaultCase(node syntax.Node) bool {
+	if node == nil {
+		return false
+	}
+	for index := 0; index < node.ChildCount(); index++ {
+		child := node.Child(index)
+		if child != nil && child.Type() == "default" {
+			return true
+		}
+	}
+	return strings.HasPrefix(strings.TrimSpace(node.Text()), "default")
+}
+
+func binaryOperator(node syntax.Node) string {
+	if node == nil {
+		return ""
+	}
+	for index := 0; index < node.ChildCount(); index++ {
+		child := node.Child(index)
+		if child != nil && !child.IsNamed() {
+			return strings.TrimSpace(child.Text())
+		}
+	}
+	return ""
 }
 
 type declarationTarget struct {

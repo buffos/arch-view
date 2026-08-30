@@ -15,11 +15,12 @@ import (
 )
 
 const (
-	CapabilityFiles         = "source:files"
-	CapabilitySize          = "source:size"
-	CapabilityDeclarations  = "source:declarations"
-	CapabilityDocumentation = "source:documentation"
-	CapabilityVisibility    = "source:visibility"
+	CapabilityFiles           = "source:files"
+	CapabilitySize            = "source:size"
+	CapabilityDeclarations    = "source:declarations"
+	CapabilityDocumentation   = "source:documentation"
+	CapabilityVisibility      = "source:visibility"
+	CapabilityCallableMetrics = "source:callable.metrics"
 )
 
 // BuildSourceIndex builds one authoritative scope snapshot. File facts are
@@ -377,6 +378,10 @@ func appendBatch(symbols *[]analysis.SymbolRecord, documentation *[]analysis.Doc
 		}
 		symbol.ID = opaqueID("symbol", file.ID, extractor.ID(), symbol.StableKey)
 		symbol.Locations = normalizeLocations(symbol.Locations, file)
+		if symbol.BodySpan != nil {
+			span := normalizeSpan(*symbol.BodySpan, file)
+			symbol.BodySpan = &span
+		}
 		if len(symbol.Locations) == 0 {
 			return fmt.Errorf("source-fact extractor %q returned symbol %q without a valid location", extractor.ID(), symbol.Name)
 		}

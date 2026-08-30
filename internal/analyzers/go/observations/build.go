@@ -156,6 +156,7 @@ func BuildContext(ctx context.Context, scan scanner.ScanResult, request analysis
 		sourceindex.CapabilityFiles,
 		sourceindex.CapabilitySize,
 		sourceindex.CapabilityVisibility,
+		sourceindex.CapabilityCallableMetrics,
 	}
 	scope := sourceIndexScope(request.SourceScope, project)
 	producer := analysis.ProducerContext{

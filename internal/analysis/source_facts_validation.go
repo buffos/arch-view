@@ -477,6 +477,11 @@ func validateSymbolRecord(symbol SymbolRecord, fileIDs map[string]struct{}, file
 			return sourceFactError(ErrSourceReferenceInvalid, "source-index symbol source references must be sorted and unique", map[string]any{"symbol_id": symbol.ID})
 		}
 	}
+	if symbol.BodySpan != nil {
+		if err := validateSpan(*symbol.BodySpan, fileBoundaries); err != nil {
+			return err
+		}
+	}
 	if !sortedUniqueStrings(symbol.DocumentationIDs) {
 		return sourceFactError(ErrSourceFactInvalid, "source-index symbol documentation ids must be sorted and unique", map[string]any{"symbol_id": symbol.ID})
 	}

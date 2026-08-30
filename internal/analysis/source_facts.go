@@ -164,6 +164,7 @@ type SymbolRecord struct {
 	LanguageKind     string           `json:"language_kind,omitempty"`
 	Visibility       VisibilityFact   `json:"visibility"`
 	Locations        []SymbolLocation `json:"locations"`
+	BodySpan         *SourceSpan      `json:"body_span,omitempty"`
 	DocumentationIDs []string         `json:"documentation_ids,omitempty"`
 	StableKey        string           `json:"stable_key,omitempty"`
 	IdentityBasis    string           `json:"identity_basis,omitempty"`

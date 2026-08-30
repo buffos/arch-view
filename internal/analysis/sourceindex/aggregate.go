@@ -154,6 +154,11 @@ func BuildCombinedProjection(snapshots []analysis.SourceIndexSnapshot) (*analysi
 			value := symbol
 			value.ID = symbolIDs[symbol.ID]
 			value.Locations = append([]analysis.SymbolLocation(nil), symbol.Locations...)
+			if value.BodySpan != nil {
+				span := *value.BodySpan
+				span.FileID = fileIDs[span.FileID]
+				value.BodySpan = &span
+			}
 			value.DocumentationIDs = mapIDs(symbol.DocumentationIDs, documentationIDs)
 			value.Provenance.EvidenceIDs = namespaceExternalIDs(snapshot.ScopeContext.ScopeID, value.Provenance.EvidenceIDs)
 			for index := range value.Locations {
