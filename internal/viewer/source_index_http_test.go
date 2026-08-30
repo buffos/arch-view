@@ -17,6 +17,8 @@ import (
 	goanalyzer "github.com/buffo/arch-view/internal/analyzers/go"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/quality"
+	"github.com/buffo/arch-view/internal/quality/adapter"
 )
 
 func TestSourceIndexHTTPQueriesAndBoundedEvidence(t *testing.T) {
@@ -215,6 +217,123 @@ func TestModelHTTPCanOmitSourceIndexWithoutChangingDefault(t *testing.T) {
 	_ = response.Body.Close()
 	if response.StatusCode != http.StatusOK || compact.SourceIndex != nil {
 		t.Fatalf("compact model response = %d source-index=%v, want omitted", response.StatusCode, compact.SourceIndex != nil)
+	}
+}
+
+func TestQualityHTTPQueriesReportFindingsAndMissingLegacyReports(t *testing.T) {
+	root := t.TempDir()
+	writeViewerSourceFixture(t, root)
+	value := sourceIndexedViewerModel(t, root)
+	profile := quality.QualityProfile{
+		SchemaVersion:  quality.SchemaVersion,
+		ProfileID:      "profile:viewer",
+		ProfileVersion: "1.0.0",
+		EnabledRules: []quality.RuleBinding{{
+			RuleID:      "source:file.max-lines",
+			RuleVersion: "1.0.0",
+			Enabled:     true,
+			Parameters:  quality.TypedConfigBlock{Namespace: "rule-config:source-file-size", SchemaVersion: "1.0.0", Payload: map[string]any{"operator": quality.OperatorGreaterThan, "limit": 1, "unit": "unit:line"}},
+		}},
+		SeverityPolicy: quality.TypedConfigBlock{Namespace: "severity:default", SchemaVersion: "1.0.0", Payload: map[string]any{}},
+		Constraints:    []quality.ArchitectureConstraint{},
+		Extensions:     []quality.ExtensionBlock{},
+	}
+	input, err := adapter.EvaluationInputFromModel(value)
+	if err != nil {
+		t.Fatalf("adapt viewer model for quality: %v", err)
+	}
+	report, err := quality.EvaluateQualityProfile(profile, input, quality.NewDefaultCatalog())
+	if err != nil {
+		t.Fatalf("evaluate viewer quality: %v", err)
+	}
+	value, err = canonical.WithQualityReport(value, &report)
+	if err != nil {
+		t.Fatalf("attach viewer quality: %v", err)
+	}
+	server, err := NewServer(value, ServerOptions{SourceRoot: root})
+	if err != nil {
+		t.Fatalf("NewServer() error = %v", err)
+	}
+	httpServer := httptest.NewServer(server.Handler())
+	defer httpServer.Close()
+	base := httpServer.URL + "/v1/models/" + url.PathEscape(value.ModelID) + "/quality"
+
+	response, err := http.Get(base)
+	if err != nil {
+		t.Fatalf("GET quality report: %v", err)
+	}
+	var reportEnvelope map[string]any
+	if err := json.NewDecoder(response.Body).Decode(&reportEnvelope); err != nil {
+		_ = response.Body.Close()
+		t.Fatalf("decode quality report: %v", err)
+	}
+	_ = response.Body.Close()
+	if response.StatusCode != http.StatusOK || reportEnvelope["status"] != "available" || reportEnvelope["report"] == nil {
+		t.Fatalf("quality report response = %d %#v", response.StatusCode, reportEnvelope)
+	}
+
+	response, err = http.Get(base + "/findings?rule_id=source:file.max-lines&subject_kind=file&limit=1")
+	if err != nil {
+		t.Fatalf("GET quality findings: %v", err)
+	}
+	var findings map[string]any
+	if err := json.NewDecoder(response.Body).Decode(&findings); err != nil {
+		_ = response.Body.Close()
+		t.Fatalf("decode quality findings: %v", err)
+	}
+	_ = response.Body.Close()
+	items, ok := findings["items"].([]any)
+	if response.StatusCode != http.StatusOK || !ok || len(items) != 1 || findings["total"] != float64(1) {
+		t.Fatalf("quality findings response = %d %#v", response.StatusCode, findings)
+	}
+	finding, ok := items[0].(map[string]any)
+	if !ok || finding["id"] == nil {
+		t.Fatalf("quality finding item = %#v", items[0])
+	}
+
+	response, err = http.Get(base + "/findings/" + url.PathEscape(finding["id"].(string)) + "/evidence")
+	if err != nil {
+		t.Fatalf("GET quality evidence: %v", err)
+	}
+	var evidence map[string]any
+	if err := json.NewDecoder(response.Body).Decode(&evidence); err != nil {
+		_ = response.Body.Close()
+		t.Fatalf("decode quality evidence: %v", err)
+	}
+	_ = response.Body.Close()
+	if response.StatusCode != http.StatusOK || evidence["finding"] == nil || evidence["source_context"] != nil {
+		t.Fatalf("quality evidence response = %d %#v", response.StatusCode, evidence)
+	}
+
+	response, err = http.Get(base + "/findings?status=not-a-status")
+	if err != nil {
+		t.Fatalf("GET invalid quality finding query: %v", err)
+	}
+	body, _ := io.ReadAll(response.Body)
+	_ = response.Body.Close()
+	if response.StatusCode != http.StatusBadRequest || !strings.Contains(string(body), string(quality.ErrorQueryInvalid)) {
+		t.Fatalf("invalid quality query = %d %s", response.StatusCode, body)
+	}
+
+	legacyValue := fixtureModel(t)
+	legacy, err := NewServer(legacyValue)
+	if err != nil {
+		t.Fatalf("NewServer() legacy error = %v", err)
+	}
+	legacyHTTP := httptest.NewServer(legacy.Handler())
+	defer legacyHTTP.Close()
+	response, err = http.Get(legacyHTTP.URL + "/v1/models/" + url.PathEscape(legacyValue.ModelID) + "/quality")
+	if err != nil {
+		t.Fatalf("GET legacy quality report: %v", err)
+	}
+	var missing map[string]any
+	if err := json.NewDecoder(response.Body).Decode(&missing); err != nil {
+		_ = response.Body.Close()
+		t.Fatalf("decode legacy quality report: %v", err)
+	}
+	_ = response.Body.Close()
+	if response.StatusCode != http.StatusOK || missing["status"] != "missing" {
+		t.Fatalf("legacy quality response = %d %#v", response.StatusCode, missing)
 	}
 }
 

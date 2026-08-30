@@ -10,6 +10,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/analysis/orchestration"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -254,6 +255,7 @@ func (s *Server) storeAggregateRun(run *orchestration.AnalysisRun) {
 	defer s.mu.Unlock()
 	s.runs[run.RunID] = run
 	s.aggregate = run
+	s.qualityReports = make(map[string]quality.QualityEvaluation)
 	if combined, ok := run.CombinedCanonicalModel(); ok {
 		s.model = combined
 	} else {

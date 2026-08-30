@@ -18,6 +18,8 @@ var stylesheetModules = []string{
 	"09-modes.css",
 	"10-settings.css",
 	"11-inspection.css",
+	"12-quality.css",
+	"13-quality-profile.css",
 }
 
 // Asset returns one of the browser assets embedded in the viewer. Exporters

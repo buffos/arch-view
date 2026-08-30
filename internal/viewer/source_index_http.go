@@ -211,6 +211,10 @@ type sourceFactEvidenceResponse struct {
 }
 
 func (s *Server) sourceFactExcerpt(index *analysis.SourceIndex, evidence sourceindex.SourceFactEvidence, modelID string) (*SourceExcerpt, error) {
+	return s.sourceFactExcerptWithBudget(index, evidence, modelID, maxSourceSpan, maxSourceBytes)
+}
+
+func (s *Server) sourceFactExcerptWithBudget(index *analysis.SourceIndex, evidence sourceindex.SourceFactEvidence, modelID string, maxLines, maxBytes int) (*SourceExcerpt, error) {
 	if index == nil {
 		return nil, analysis.NewHostError(analysis.ErrSourceScopeUnavailable, "source-index is unavailable", nil)
 	}
@@ -219,6 +223,12 @@ func (s *Server) sourceFactExcerpt(index *analysis.SourceIndex, evidence sourcei
 	}
 	if len(evidence.Spans) == 0 {
 		return nil, analysis.NewHostError(analysis.ErrSourceReferenceInvalid, "source-fact evidence has no source span", map[string]any{"entity_id": evidence.EntityID})
+	}
+	if maxLines <= 0 || maxLines > maxSourceSpan {
+		return nil, analysis.NewHostError(analysis.ErrInvalidRequest, "source-fact evidence line budget exceeds the supported bound", map[string]any{"max_lines": maxSourceSpan})
+	}
+	if maxBytes <= 0 || maxBytes > maxSourceBytes {
+		return nil, analysis.NewHostError(analysis.ErrInvalidRequest, "source-fact evidence byte budget exceeds the supported bound", map[string]any{"max_bytes": maxSourceBytes})
 	}
 	span := evidence.Spans[0]
 	var file *analysis.FileRecord
@@ -264,6 +274,9 @@ func (s *Server) sourceFactExcerpt(index *analysis.SourceIndex, evidence sourcei
 	if err != nil {
 		return nil, err
 	}
+	if len(content) > maxBytes {
+		return nil, analysis.NewHostError(analysis.ErrInvalidRequest, "source-fact evidence source context exceeds the requested byte budget", map[string]any{"max_bytes": maxBytes})
+	}
 	digest := sha256.Sum256(content)
 	actualDigest := hex.EncodeToString(digest[:])
 	if file.Size.ContentHash.Algorithm != analysis.SourceHashAlgorithm || file.Size.ContentHash.Value != actualDigest || span.ContentHash.Algorithm != analysis.SourceHashAlgorithm || span.ContentHash.Value != actualDigest {
@@ -272,8 +285,8 @@ func (s *Server) sourceFactExcerpt(index *analysis.SourceIndex, evidence sourcei
 	lines := splitPhysicalSourceLines(content)
 	startLine := span.Start.Line
 	endLine := span.End.Line
-	if startLine < 1 || endLine < startLine || endLine-startLine+1 > maxSourceSpan {
-		return nil, analysis.NewHostError(analysis.ErrInvalidRequest, "source-fact evidence span exceeds the source inspection bound", map[string]any{"max_lines": maxSourceSpan})
+	if startLine < 1 || endLine < startLine || endLine-startLine+1 > maxLines {
+		return nil, analysis.NewHostError(analysis.ErrInvalidRequest, "source-fact evidence span exceeds the requested source inspection bound", map[string]any{"max_lines": maxLines})
 	}
 	if startLine > len(lines) {
 		return nil, analysis.NewHostError(analysis.ErrInvalidRequest, "source-fact evidence span is beyond the source file", map[string]any{"path": relativePath})

@@ -9,6 +9,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/analysis/orchestration"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -48,6 +49,10 @@ func (s *Server) handleModel(writer http.ResponseWriter, request *http.Request) 
 	}
 	if parts[1] == "source-index" {
 		s.handleSourceIndex(writer, request, parts, modelID, &value, nil)
+		return
+	}
+	if parts[1] == "quality" {
+		s.handleQuality(writer, request, parts, modelID, s.qualityReportForScope("all", value.QualityReport), &value, nil)
 		return
 	}
 	if len(parts) != 2 || parts[1] != "projection" {
@@ -102,6 +107,25 @@ func (s *Server) handleAggregateModel(writer http.ResponseWriter, request *http.
 	}
 	if parts[1] == "source-index" {
 		s.handleSourceIndex(writer, request, parts, modelID, nil, aggregate)
+		return
+	}
+	if parts[1] == "quality" {
+		var report *quality.QualityEvaluation
+		if aggregate.Model != nil {
+			report = aggregate.Model.QualityReport
+		}
+		if scope := normalizedQualityScope(request.URL.Query().Get("scope")); scope != "" {
+			scopeResult, scopeErr := aggregate.ScopeResult(scope)
+			if scopeErr != nil {
+				writeHTTPError(writer, http.StatusNotFound, scopeErr)
+				return
+			}
+			report = scopeResult.QualityReport
+			report = s.qualityReportForScope(scope, report)
+		} else {
+			report = s.qualityReportForScope("all", report)
+		}
+		s.handleQuality(writer, request, parts, modelID, report, nil, aggregate)
 		return
 	}
 	if len(parts) != 2 || parts[1] != "projection" {

@@ -8,6 +8,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/quality"
 )
 
 func (s *Server) handleReanalysis(writer http.ResponseWriter, request *http.Request) {
@@ -104,6 +105,7 @@ func (s *Server) handleReanalysis(writer http.ResponseWriter, request *http.Requ
 	}
 	s.mu.Lock()
 	s.model = next
+	s.qualityReports = make(map[string]quality.QualityEvaluation)
 	s.mu.Unlock()
 	writeJSON(writer, http.StatusOK, struct {
 		ModelID       string       `json:"model_id"`

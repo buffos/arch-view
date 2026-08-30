@@ -42,7 +42,7 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 		t.Fatalf("root response = %d %q", rootResponse.StatusCode, rootResponse.Header.Get("Content-Type"))
 	}
 	rootText := string(rootBody)
-	if !strings.Contains(rootText, "SEMANTIC SCENE") || !strings.Contains(rootText, value.ModelID) || !strings.Contains(rootText, "reference-visibility") || !strings.Contains(rootText, "Accessible scene list") || !strings.Contains(rootText, "HUMAN-ORIENTED INSPECTION") || !strings.Contains(rootText, "type=\"module\"") || !strings.Contains(rootText, "/assets/vendor/elk-worker.min.js") || strings.Contains(rootText, "__ARCH_VIEW_MODEL_ID__") {
+	if !strings.Contains(rootText, "SEMANTIC SCENE") || !strings.Contains(rootText, value.ModelID) || !strings.Contains(rootText, "reference-visibility") || !strings.Contains(rootText, "quality-profile-control") || !strings.Contains(rootText, "Quality profile") || !strings.Contains(rootText, "Accessible scene list") || !strings.Contains(rootText, "HUMAN-ORIENTED INSPECTION") || !strings.Contains(rootText, "type=\"module\"") || !strings.Contains(rootText, "/assets/vendor/elk-worker.min.js") || strings.Contains(rootText, "__ARCH_VIEW_MODEL_ID__") {
 		t.Fatalf("root page did not contain the model bootstrap: %s", rootText)
 	}
 

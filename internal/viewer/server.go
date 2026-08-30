@@ -15,6 +15,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis/orchestration"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/viewer/layout"
 )
 
@@ -69,6 +70,7 @@ type Server struct {
 	reanalyze         ReanalyzeFunc
 	analyzeCombined   CombinedAnalyzeFunc
 	reanalyzeCombined CombinedAnalyzeFunc
+	qualityReports    map[string]quality.QualityEvaluation
 	layout            layout.Session
 	handler           http.Handler
 }
@@ -111,6 +113,7 @@ func newServer(value model.Model, aggregate *orchestration.AnalysisRun, options 
 		reanalyze:         option.Reanalyze,
 		analyzeCombined:   option.AnalyzeCombined,
 		reanalyzeCombined: option.ReanalyzeCombined,
+		qualityReports:    make(map[string]quality.QualityEvaluation),
 		layout:            layout.NewSession(sourceRoot),
 	}
 	if aggregate != nil {
@@ -128,6 +131,12 @@ func newServer(value model.Model, aggregate *orchestration.AnalysisRun, options 
 	mux.HandleFunc("/v1/reanalysis", server.handleReanalysis)
 	mux.HandleFunc("/v1/analyses", server.handleAnalyses)
 	mux.HandleFunc("/v1/analyses/", server.handleAnalysis)
+	mux.HandleFunc("/v1/quality/profiles", server.handleQualityProfiles)
+	mux.HandleFunc("/v1/quality/profiles/save", server.handleQualityProfileSave)
+	mux.HandleFunc("/v1/quality/profiles/save-as", server.handleQualityProfileSaveAs)
+	mux.HandleFunc("/v1/quality/baselines/create", server.handleQualityBaselineCreate)
+	mux.HandleFunc("/v1/quality/rules", server.handleQualityRules)
+	mux.HandleFunc("/v1/quality/evaluate", server.handleQualityEvaluation)
 	mux.HandleFunc("/v1/models/", server.handleModel)
 	server.handler = mux
 	return server, nil
