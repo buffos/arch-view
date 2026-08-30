@@ -1,0 +1,58 @@
+name: Documentation checks
+
+on:
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'cmd/docs-inventory/**'
+      - 'cmd/docs-demo/**'
+      - 'internal/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/docs-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install documentation dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Check documentation coverage
+        working-directory: website
+        run: npm run docs:check
+
+      - name: Build documentation site
+        working-directory: website
+        run: npm run docs:build
+
+      - name: Check generated site output
+        working-directory: website
+        run: test -f .vitepress/dist/index.html && test -f public/demo/index.html
+
+      - name: Check Go repository
+        run: |
+          go test ./... -count=1
+          go vet ./...
+          go build ./...

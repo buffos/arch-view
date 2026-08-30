@@ -21,5 +21,13 @@
 /architecture.html
 /architecture.svg
 
+# Documentation build output
+/website/node_modules/
+/website/.generated/
+/website/.vitepress/cache/
+/website/.vitepress/dist/
+/website/reference/layout-options.generated.md
+/website/public/demo/index.html
+
 # Upstream reference checkout; never part of the product repository
 /external/

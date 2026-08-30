@@ -1,0 +1,43 @@
+:root {
+  --vp-c-brand-1: #1d9bf0;
+  --vp-c-brand-2: #1687d2;
+  --vp-c-brand-3: #0e6eaf;
+  --vp-c-brand-soft: rgba(29, 155, 240, 0.14);
+}
+
+.VPHomeHero .name {
+  background: linear-gradient(120deg, #1d9bf0 20%, #7dd3fc 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.vp-doc h2 {
+  margin-top: 2.8rem;
+}
+
+.vp-doc blockquote {
+  border-left-color: var(--vp-c-brand-1);
+}
+
+.vp-doc .example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.vp-doc .example-card {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  padding: 1rem;
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-doc .example-card p:last-child {
+  margin-bottom: 0;
+}
+
+.vp-doc .small-note {
+  color: var(--vp-c-text-2);
+  font-size: 0.9rem;
+}

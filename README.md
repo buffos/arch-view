@@ -8,6 +8,26 @@ The original reference implementation is available in the upstream
 [unclebob/arch-view repository](https://github.com/unclebob/arch-view). It is
 outside this repository and is not modified as part of Arch View work.
 
+## Public documentation site
+
+The human-facing documentation lives in `website/`. It is written in simple
+English and includes a quick start, viewer guide, quality-check guide, CLI and
+settings references, analyzer guides, file formats, troubleshooting, and a
+self-contained demo.
+
+Run it locally:
+
+```powershell
+Set-Location website
+npm install
+npm run docs:dev
+```
+
+Check the documentation surface and build it with `npm run docs:check` and
+`npm run docs:build`. Pull requests run the same checks automatically. Pushes
+to `master` publish the site through GitHub Pages when Pages is enabled for the
+repository.
+
 ## Build prerequisites
 
 - Go 1.23 or newer.

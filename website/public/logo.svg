@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" role="img" aria-label="Arch View">
+  <rect width="160" height="40" rx="8" fill="#0f172a"/>
+  <path d="M20 28 28 11l8 17h-5l-1.7-4h-6.6l-1.7 4H20Zm4.9-8h3.2l-1.6-4.1L24.9 20ZM43 28V12h5.8c4.4 0 7.1 2.2 7.1 5.9 0 2.3-1.2 4.1-3.3 5.1L56.5 28h-5.2l-3.1-4.4h-.8V28H43Zm4.4-8h1.2c1.8 0 2.8-.7 2.8-2.1s-1-2.1-2.8-2.1h-1.2V20Z" fill="#7dd3fc"/>
+  <text x="66" y="26" fill="#f8fafc" font-family="Arial, sans-serif" font-size="16" font-weight="700">Arch View</text>
+</svg>
