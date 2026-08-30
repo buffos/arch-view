@@ -24,15 +24,17 @@ metrics behind an architecture view directly inspectable.
 1. Expose every eligible source file by normalized repository-relative name.
 2. Expose deterministic raw byte count, physical line count, and content hash.
 3. Expose named declarations with a stable coarse category, open language kind,
-   visibility, location, and optional documentation references.
+   visibility, location, optional callable body spans, and documentation
+   references.
 4. Expose module/file/symbol containment and declarations as evidence-backed
    relations without changing architecture relationship meaning.
 5. Preserve documentation candidates and deterministic language-owned primary
    selection, including explicit absence and extraction uncertainty.
 6. Provide a scope-first, multi-analyzer-safe attachment beside existing
    `AnalysisResult` and canonical model collections.
-7. Allow future calls, implementations, type relations, and quality metrics
-   through registered capabilities and typed extensions.
+7. Allow calls, implementations, type relations, and provider-owned source
+   metrics through registered capabilities and typed extensions. Quality
+   thresholds and findings remain downstream.
 8. Make equal inputs produce equal canonical facts, IDs, ordering, and digest.
 9. Support compact structural search and LLM context selection without
    embedding full source code in every model response.
@@ -40,8 +42,10 @@ metrics behind an architecture view directly inspectable.
 ## Non-goals
 
 - Quality thresholds, severity policy, findings, baselines, or suppressions.
-- Cyclomatic-complexity calculation, SOLID claims, or subjective comment-quality
-  judgments.
+- Quality thresholds, severity policy, findings, SOLID claims, or subjective
+  comment-quality judgments. A source extractor may emit a versioned
+  provider-owned complexity metric when it advertises that capability; this
+  child does not decide whether the metric violates a quality rule.
 - A complete call graph, runtime tracing, compiler-level type resolution, or
   guaranteed dynamic-language resolution.
 - A general-purpose full-text or semantic search ranking engine.
@@ -53,9 +57,10 @@ metrics behind an architecture view directly inspectable.
 ## V1 product behavior
 
 The producer enumerates the already-resolved eligible source scope and emits a
-file record for each enumerable file. It may attach declarations and
-documentation only for advertised extractor capabilities. A parse failure does
-not erase the file record; its status and provenance explain the limitation.
+file record for each enumerable file. It may attach declarations,
+documentation, callable body spans, and provider-owned metrics only for
+advertised extractor capabilities. A parse failure does not erase the file
+record; its status and provenance explain the limitation.
 
 The index contains authoritative per-scope snapshots. A combined analysis may
 also expose a deterministic projection, but each fact retains scope and
@@ -88,6 +93,7 @@ Technical details section rather than the summary card.
 | SFI-FR-011 | A combined result must preserve authoritative per-scope snapshots and mark any aggregate as a derived projection. |
 | SFI-FR-012 | Unknown typed extension blocks must be safely ignored, while the owning capability and version remain discoverable. |
 | SFI-FR-013 | Default projections must omit full source content and support bounded selection of paths, symbols, documentation, and evidence. |
+| SFI-FR-014 | An extractor that advertises callable metrics may emit hash-linked body spans and formula-versioned metric facts; unavailable spans or metrics remain explicit unknown/unsupported/partial coverage and are not estimated by the core. |
 
 ## Non-functional requirements
 

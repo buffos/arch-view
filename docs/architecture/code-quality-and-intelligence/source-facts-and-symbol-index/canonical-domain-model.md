@@ -162,6 +162,7 @@ SymbolRecord {
   language_kind?: NamespacedId
   visibility: VisibilityFact
   locations: SymbolLocation[]
+  body_span?: SourceSpan                 // extractor-reported callable body
   documentation_ids?: OpaqueId[]       // derived lookup projection
   stable_key?: string                  // reconciliation hint, never authority
   identity_basis?: NamespacedId        // e.g. "identity:qualified-name"
@@ -182,6 +183,12 @@ SymbolLocation {
   source_reference_ids?: string[]      // compatibility/evidence links
 }
 ```
+
+`body_span` is optional and is emitted only when an extractor can identify the
+callable implementation body and hash-link it to the containing file. It is
+not inferred from braces, neighboring declarations, or a matching path. A
+downstream metric provider may use this span for a versioned callable body-line
+metric; without it, callable-size evaluation is not evaluable.
 
 The category is intentionally coarse and stable. A language extractor can add
 `go:function`, `python:class`, `typescript:interface`, `rust:trait`, or another
@@ -368,9 +375,13 @@ MetricFact {
 }
 ```
 
-Intrinsic file size remains in `FileSize` so it is always available. The
-versioned metric slot is reserved for derived facts such as future complexity,
-fan-in, or documentation coverage; thresholds and findings belong elsewhere.
+Intrinsic file size remains in `FileSize` so it is always available. Versioned
+metric facts may also describe provider-owned callable measurements such as
+`source:callable.body_line_count`,
+`source:callable.cyclomatic_complexity`, and
+`source:callable.max_nesting_depth`, each with an explicit formula/version,
+unit, source hash/span evidence where applicable, and provenance. Thresholds,
+findings, and severity policy belong to the deterministic quality child.
 
 ## Extensibility contract
 

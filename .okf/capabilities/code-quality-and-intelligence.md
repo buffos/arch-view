@@ -3,7 +3,7 @@ type: capability
 title: Code quality and code intelligence
 description: Build deterministic quality findings and compact, searchable source intelligence on top of architecture analysis.
 tags: [code-quality, code-intelligence, metrics, mcp]
-timestamp: 2026-08-29T00:00:00Z
+timestamp: 2026-08-30T08:15:05Z
 state: specified
 state_changed: 2026-08-29T00:00:00Z
 state_policy:
@@ -44,11 +44,12 @@ not replace language analysis, architecture rendering, or source editing.
 # Notes
 
 The parent is a pure structural-child roll-up. Its materialized `state` is the
-minimum of its three structural children (`specified` at present), and all three
-children are specified and readiness-reviewed. The source-facts child has
-implemented its approved batch pending final visual approval; the parent has no
-standalone PRD or issue batch, and remaining implementation work is routed to
-the other children. If parent-only behavior is later introduced, the policy
+minimum of its three structural children (`specified` at present). All three
+children are readiness-reviewed. The source-facts child is implemented through
+its approved batch; its deterministic-quality and live-analysis/MCP siblings
+remain specified. The parent has no standalone PRD or issue batch, and
+remaining implementation work is routed to the other children.
+If parent-only behavior is later introduced, the policy
 must explicitly switch to `mode: own` before adding parent-owned artifacts or
 advancing its own state.
 
@@ -56,8 +57,8 @@ advancing its own state.
 
 - **Observed in code:** analyzers return modules, relationships, source references, diagnostics, and file-linked evidence through a common contract; Tree-sitter-backed syntax providers are available for the supported languages.
 - **User-confirmed target behavior:** Arch View should expose files, documentation, declarations, deterministic metrics, quality findings, and compact code search/reporting without executing target applications.
-- **Required follow-up:** Approve the source-facts visual gate, then implement
-  the remaining readiness-reviewed child contracts in dependency order. The
+- **Required follow-up:** Implement the remaining readiness-reviewed child
+  contracts in dependency order. The
   source-facts child owns the shared file/symbol/documentation contract
   consumed by quality and live/MCP.
 

@@ -9,7 +9,7 @@
 - Artifact root: `docs/architecture/code-quality-and-intelligence/source-facts-and-symbol-index/`
 - Execution: AFK
 - Human review: `visual-review`
-- Suggested state: awaiting-human-review
+- Suggested state: done
 
 ## Parent artifacts
 
@@ -115,21 +115,21 @@ extractors, quality rules, live watching, MCP transport, or source mutation.
   after the full batch. The code-quality roll-up remains `specified` while its
   other structural children remain specified.
 - Delivery registry and capability node: retain all five issue links and record
-  the final state only after verification and closeout.
+  the final state in the completed closeout.
 
 ## Human review
 
-The `visual-review` gate is required and remains open. Review the compact
+The required `visual-review` gate was approved. The review covered the compact
 summary card, separate scene list, inspection navigation, populated/partial/
 unsupported/legacy states, bounded source action, responsive layout, keyboard
 focus order, and screen-reader labels in the existing local viewer at the
-target viewport. Browser automation may provide evidence, but it does not
-replace human approval.
+target viewport. Browser automation provided supporting evidence; the user
+approval is the final review record.
 
 ## Blocked by
 
-None — issue 051 is verified and archived; this issue remains open only for
-the required final visual inspection.
+None — issue 051 is verified and archived; issue 052's required final visual
+inspection is approved.
 
 ## Specification anchors
 
@@ -182,12 +182,11 @@ the required final visual inspection.
   bounded source actions. The Symbols kind selector now reuses the existing
   `select-control` styling.
 
-## Final visual inspection — awaiting approval
+## Final visual inspection — approved
 
-The implementation is ready for the required final inspection, but issue 052
-must remain open until the rendered viewer is approved. A new rendered smoke
-inspection was completed against the local Go session with the installed Chrome
-executable at 1440×1000 and a 390×844 responsive width. It confirmed:
+The required final inspection was completed against the local Go session with
+the installed Chrome executable at 1440×1000 and a 390×844 responsive width.
+The user approved the rendered viewer on 2026-08-30. The inspection confirmed:
 
 - selecting the `internal` group keeps the right card compact and free of
   visible raw IDs, hashes, file lists, symbols, provenance, and evidence lists;
@@ -203,13 +202,12 @@ executable at 1440×1000 and a 390×844 responsive width. It confirmed:
   section navigation can scroll horizontally.
 
 The installed Chrome executable was used because the bundled Playwright
-browser binary is not installed. Keyboard focus order, screen-reader labels,
-and the populated/partial/unsupported/legacy visual variants still require
-human inspection and approval. Record any layout, contrast, density, or
-keyboard finding here, then approve the gate or request a correction. Do not
-advance the issue or capability state before that approval.
+browser binary is not installed. The user also approved the keyboard focus
+order, screen-reader labels, and populated/partial/unsupported/legacy visual
+variants. No layout, contrast, density, or keyboard accessibility finding
+remains open.
 
-### Review corrections — awaiting approval
+### Review corrections — approved
 
 The follow-up visual review identified and corrected three presentation issues:
 
@@ -225,10 +223,9 @@ The follow-up visual review identified and corrected three presentation issues:
 
 The installed Chrome smoke check was rerun at 1440×1000 and confirmed the
 three corrections without page errors. File line-threshold semantics and the
-human count/filter projection are now specified under deterministic quality
-checks, but no delivery issue has been created for that implementation yet;
-they remain outside this correction pass. The visual-review gate remains open
-for human approval.
+human count/filter projection are specified under deterministic quality checks;
+they remain outside this correction pass. The visual-review gate was
+subsequently approved by the user.
 
 The follow-up Symbols/documentation review was then exercised against the
 local Go viewer. A no-match Symbols filter kept its value, focus, and kind
@@ -236,8 +233,8 @@ selector; the kind selector narrowed requests with `language_kind`; and
 `DecodeAt` rendered `docs present` with its readable
 `internal/analysis/config/config.go · Lines 149–187` location. The graph
 startup still made no source-index request before inspection was opened. No
-page errors were reported. The visual-review gate remains open for human
-approval.
+page errors were reported. The visual-review gate was subsequently approved
+by the user.
 
 The subsequent Evidence and control-style review was exercised at 1440×1000.
 The Symbol kind selector now has the same computed control styles as the
@@ -245,11 +242,20 @@ existing graph selects. File-only source references are grouped by path under
 `File provenance`, labeled as module/file association, and explain that they
 provide context rather than line-level proof; the internal group rendered 25
 bounded rows rather than the full 385-reference list. No page errors were
-reported. The visual-review gate remains open for human approval.
+reported. The visual-review gate was subsequently approved by the user.
+
+## Closeout
+
+The user approved issue 052 on 2026-08-30. Normal closeout is complete: its
+delivery file is archived, the active registry entry is removed, and the
+source-facts capability and application artifacts are synchronized. The
+source-facts capability advances to `implemented`; the code-quality and
+code-intelligence parent remains `specified` because its deterministic-quality
+and live-analysis/MCP children remain specified.
 
 ## Handoff
 
-After the full approved batch is verified and synchronized, the source-facts
-capability becomes eligible for implementation-state advancement. Its parent
-code-quality roll-up remains `specified` until the deterministic-quality and
-live-analysis/MCP children are also implemented.
+The approved batch is verified and synchronized. The source-facts capability
+is implemented through issues 048–052. Its parent code-quality roll-up remains
+`specified` until the deterministic-quality and live-analysis/MCP children are
+also implemented.

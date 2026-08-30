@@ -143,10 +143,15 @@ Capabilities are namespaced, for example:
 - `source:calls`
 - `source:implementations`
 - `source:metrics`
+- `source:callable.metrics`
 
-The first four are the initial source-facts target; later capabilities are
-additive. The core validates and assembles output but never dispatches on a
-closed language-kind enum.
+The initial file, size, declaration, and documentation capabilities are
+available across the source-index contract. `source:callable.metrics` is an
+additive extractor capability: the current Go provider supplies callable body
+spans plus formula-versioned body-line, cyclomatic-complexity, and maximum-
+nesting metric facts. The core validates and assembles output but never
+dispatches on a closed language-kind enum; unsupported providers retain
+explicit coverage rather than emitting estimated values.
 
 ## Request and projection policy
 

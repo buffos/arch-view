@@ -162,3 +162,15 @@ content, and requires an explicit bounded request for source context.
 **Then** it has a namespaced metric ID, typed value, formula ID/version, subject
 reference, and provenance. A later formula revision creates a new version or
 metric identity rather than silently changing the meaning of an old value.
+
+## SFI-AC-016 — Callable metrics require explicit body evidence
+
+**Given** a callable whose extractor can identify its implementation body and
+one callable without a usable body span
+
+**When** the extractor advertises `source:callable.metrics`
+
+**Then** the first symbol may carry a hash-linked `body_span` and provider-
+owned formula-versioned body-line, complexity, or nesting metrics. The second
+symbol receives explicit unknown/unsupported/partial coverage, and the core
+does not estimate a body range from braces, names, or neighboring symbols.

@@ -2,11 +2,11 @@
 
 ## Status
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043 and project analyzer assignment issues 044–047 are verified, archived, and visually approved; source-index issues 048–051 are verified and archived, while issue 052 is implemented and awaiting its final visual inspection; the advanced ELK renderer child remains the specified plugin/viewer frontier.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043, project analyzer assignment issues 044–047, and source-index issues 048–052 are verified, archived, and visually approved; the advanced ELK renderer child remains the specified plugin/viewer frontier.
 The Code quality and code intelligence capability is a pure structural-child
 roll-up with effective state `specified`, the minimum of its three children.
 Its Source facts and symbol index child is implemented through issues 048–052
-pending final visual approval; Deterministic quality checks and Live
+with final visual approval recorded; Deterministic quality checks and Live
 analysis/MCP remain specified and readiness-reviewed. The parent has no
 standalone PRD or implementation slice.
 
@@ -177,7 +177,7 @@ relationships.
 
 Registered language extractors own declaration, visibility, documentation, and
 semantic uncertainty. The core source-index service owns validation, opaque ID
-assignment, coverage, canonical ordering, and digest assembly. The implemented
+assignment, coverage, canonical ordering, and digest assembly. The deterministic
 quality child evaluates versioned metric/rule strategies and emits structured
 exact findings or explicitly labeled advisory SOLID signals with rule IDs,
 thresholds, severity, revision, coverage, and source evidence. Its quality
@@ -240,7 +240,7 @@ frontier still requires later issue slicing, implementation, and verification:
   orthogonal unless separately specified.
 - The Code quality and code intelligence roll-up remains a specified extension.
   Its Source facts and symbol index child is implemented through issues 048–052
-  pending final visual approval; Deterministic quality checks and Live analysis
+  with final visual approval recorded; Deterministic quality checks and Live analysis
   and MCP remain specified and readiness-reviewed, with exact records,
   provenance, scope isolation, versioned rules, immutable revisions, bounded
   queries, and compatibility/permission rules. The aggregate parent has no
@@ -386,7 +386,7 @@ renderer extensions are tracked in the [Advanced ELK renderer support future
 work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
 The source-facts/index contract, Go-first extractor, scope-safe projection,
 bounded query boundary, and module viewer are implemented through issues
-048–052; the final visual gate is pending. The next future sequence is the
+048–052; the final visual gate is approved. The next future sequence is the
 deterministic quality rules/findings contract followed by the live analysis
 snapshot/folder-watching/structural-search/MCP boundary.
 
@@ -403,9 +403,8 @@ snapshot/folder-watching/structural-search/MCP boundary.
 - Linux amd64 and Darwin arm64 packaged-analyzer execution remain deferred
   verification surfaces until matching runners or toolchains are available.
 - Future call-graph/type-level relation capabilities.
-- Final visual approval for the implemented source-index module-inspection
-  projection; broader language coverage and metric-producing extensions remain
-  future work.
+- Broader language coverage and metric-producing extensions for the implemented
+  source-index module-inspection projection remain future work.
 - Implementation and language coverage for the specified quality profile,
   metric-provider, rule, finding, baseline, signal, and report contracts.
 - Implementation and packaging verification for live watcher/MCP snapshot

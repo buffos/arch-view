@@ -2,6 +2,57 @@
 
 ## 2026-08-30
 
+### Deterministic quality checks issues 053–058 delivery and closeout
+
+* **Implementation:** Delivered the neutral `arch-view.quality/v1` profile,
+  additive metric/rule catalog, strict validation, optional report attachment,
+  source file/callable size rules, Go callable body/complexity/nesting metric
+  providers, documentation coverage, graph coupling/cycle rules, and explicit
+  forbidden-dependency/layer-direction constraints.
+* **Evidence:** Preserved scope-qualified provenance, explicit unknown/
+  unsupported/not-evaluable coverage, hash-linked callable body spans, exact
+  reported graph relationships, canonical cycle evidence, and legacy result
+  compatibility. Focused and full Go tests pass, including the race suite;
+  vet, build, viewer JavaScript syntax checks, `git diff --check`, and strict
+  OKF validation also pass.
+* **Closeout:** Issues 053–058 are verified and archived. Issue 059 is now
+  unblocked; issues 059–063 remain active. The deterministic-quality child
+  remains `specified` because its remaining lifecycle, signal, query, export,
+  and viewer slices are not yet delivered.
+* **Synchronization:** Updated the quality/source-facts canonical artifacts,
+  application synthesis, OKF capability/project/index records, registry, issue
+  blockers, and completion records. No commit was created.
+
+### Deterministic quality checks delivery slicing
+
+* **Approval:** The user approved eleven dependency-ordered implementation
+  slices for the specified Deterministic quality checks capability.
+* **Delivery:** Created ready-for-agent issues 053–063 for the quality profile
+  and file-size tracer bullet, callable metrics, documentation coverage, graph
+  rules, explicit constraints, report lifecycle/baselines, SOLID signals,
+  bounded queries, headless/export projections, and the viewer projection.
+* **Artifact impact:** Product and architecture truth remain unchanged; the
+  existing application synthesis already covers this quality boundary. Updated
+  the owning capability references, orchestration status, issue registry, and
+  planning frontier.
+* **State:** The deterministic-quality child remains `specified`; no topology
+  or parent roll-up state transition occurred. State totals remain 0 `foggy`,
+  0 `bounded`, 4 `specified`, and 14 `implemented`.
+
+### Source facts and symbol index issue 052 closeout
+
+* **Closeout:** Archived issue 052 after the user approved its final
+  visual-review gate. Issues 048–052 are now verified, archived, and approved.
+* **State:** Advanced [Source facts and symbol index](capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md)
+  from `specified` to `implemented`.
+* **Roll-up:** Recomputed [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
+  as `specified`, unchanged because its deterministic-quality and
+  live-analysis/MCP children remain specified. State totals are now 0 `foggy`,
+  0 `bounded`, 4 `specified`, and 14 `implemented`.
+* **Synchronization:** Updated the source-facts orchestration status,
+  application PRD, application architecture summary, OKF project/index
+  records, and active issue registry.
+
 ### File line-threshold human projection requirement
 
 * **Specification:** Added the explicit `source:file.max-lines` human-projection

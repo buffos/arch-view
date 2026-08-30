@@ -3,9 +3,9 @@ type: capability
 title: Source facts and symbol index
 description: Expose files, symbols, documentation, and source-level metrics in a stable searchable index.
 tags: [code-intelligence, source-index, symbols, documentation]
-timestamp: 2026-08-29T00:00:00Z
-state: specified
-state_changed: 2026-08-29T00:00:00Z
+timestamp: 2026-08-30T08:15:05Z
+state: implemented
+state_changed: 2026-08-30T08:15:05Z
 project: /project.md
 parent: /capabilities/code-quality-and-intelligence.md
 artifact_root: docs/architecture/code-quality-and-intelligence/source-facts-and-symbol-index
@@ -24,7 +24,7 @@ issues:
   - docs/agents/issues/done/20260829-049-registered-go-source-fact-extractor.md
   - docs/agents/issues/done/20260829-050-scope-safe-source-index-aggregation.md
   - docs/agents/issues/done/20260829-051-structural-source-fact-queries.md
-  - docs/agents/issues/pending/20260829-052-module-source-facts-viewer.md
+  - docs/agents/issues/done/20260829-052-module-source-facts-viewer.md
 ---
 
 # Intent
@@ -33,7 +33,12 @@ Make the source structure behind each architecture module directly inspectable a
 
 # Scope
 
-This capability covers first-class files, physical line counts, module descriptions, documentation evidence, declarations such as functions/classes/interfaces, containment, visibility, and the foundation for later call or implementation relationships. It does not own quality policy or MCP transport.
+This capability covers first-class files, physical line counts, module
+descriptions, documentation evidence, declarations such as
+functions/classes/interfaces, extractor-reported callable body spans and
+versioned source metrics, containment, visibility, and the foundation for
+later call or implementation relationships. It does not own quality policy or
+MCP transport.
 
 # Relationships
 
@@ -51,7 +56,7 @@ Observed code facts:
 - The optional source-index attachment now exposes deterministic files,
   declarations, documentation, spans, provenance, coverage, and bounded query
   projections through the analysis, canonical, aggregate, and local viewer
-  paths. The final rendered viewer approval remains outstanding.
+  paths. The final rendered viewer approval is recorded for issue 052.
 - The local viewer consumes the attachment progressively: graph startup uses a
   compact model response, node/group details show only human-scale summary
   fields, and a same-tab inspection route loads bounded Files, Symbols,
@@ -64,6 +69,10 @@ User-confirmed target decisions:
 - Files and symbols are first-class scoped observations. Containment is represented by extensible relations (`module -> file -> symbol`) rather than singular module fields or duplicated container arrays.
 - `FileRecord` owns repository-relative path, language, namespaced roles, deterministic size facts, content hash, analysis status, provenance, and extension blocks. Full source content is not part of the index.
 - `SymbolRecord` initially covers named declarations and keeps a stable coarse category plus an open language-specific kind. Calls, inheritance, implementations, and references are separate relations/occurrences, not symbol arrays.
+- Callable symbols may carry an extractor-reported, hash-linked `body_span`;
+  the Go extractor also advertises `source:callable.metrics` with versioned
+  body-line, cyclomatic-complexity, and maximum-nesting metrics. These are
+  provider facts consumed by deterministic quality rules, not quality findings.
 - Documentation is a separate provenance-backed record with all candidates retained, language-owned precedence, and explicit `present`, `absent`, `unknown`, `unsupported`, and `partial` states.
 - Canonical spans use UTF-8 byte offsets, one-based line/column values, end-exclusive ranges, and a file content hash. Existing `SourceReference` remains backward-compatible and can be adapted.
 - Registered language extractors own syntax declarations, visibility, documentation, semantic resolution, and uncertainty. The core owns orchestration, validation, deduplication, identity assignment, and snapshot assembly.
@@ -75,7 +84,7 @@ User-confirmed target decisions:
 
 Bounded boundary:
 
-- This capability specifies the source-facts contract and its deterministic extraction boundary: files, intrinsic file size, named declarations, documentation evidence, containment, provenance, optional occurrences/relations, and snapshot metadata.
+- This capability specifies the source-facts contract and its deterministic extraction boundary: files, intrinsic file size, named declarations, documentation evidence, extractor-reported callable spans/metrics, containment, provenance, optional occurrences/relations, and snapshot metadata.
 - It does not define quality policy thresholds, cyclomatic-complexity algorithms, architectural violation rules, live folder watching, MCP transport, or LLM remediation workflows. Those are downstream capabilities consuming this contract.
 - The v1 contract may carry empty or omitted capability-dependent collections. It must still provide a file record for every eligible file when the producing analyzer can enumerate the source scope.
 
@@ -88,15 +97,12 @@ architecture readiness review, and orchestration status.
 
 The exact-spec set is readiness-reviewed. The approved implementation batch has
 delivered the source-index contract, Go extractor, scope-safe aggregation,
-bounded queries, and viewer projection; the final visual-review gate remains
-open for issue 052. Quality policy and live/MCP behavior remain outside this
-child.
+bounded queries, and viewer projection; issue 052's final visual-review gate
+is approved. Quality policy and live/MCP behavior remain outside this child.
 
 # Delivery
 
-The approved dependency-ordered delivery batch is issues 048–052. Issues
-048–051 are verified and archived; issue 052 is implemented with automated
-coverage and is awaiting the required final visual inspection. The node remains
-`specified` until that review and the remaining artifact synchronization are
-approved; the parent roll-up remains independently governed by its other
-children.
+The approved dependency-ordered delivery batch is issues 048–052. All five
+issues are verified, archived, and approved, including issue 052's required
+final visual inspection. The node is `implemented`; the parent roll-up remains
+independently governed by its other children.

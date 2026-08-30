@@ -3,7 +3,7 @@ type: project
 title: Arch View
 description: Analyze supported codebases and generate navigable architecture views.
 tags: [architecture, code-analysis, multi-language, golang]
-timestamp: 2026-08-29T00:00:00Z
+timestamp: 2026-08-30T08:15:05Z
 prd: docs/prd.md
 architecture_summary: docs/architecture/application-architecture-summary.md
 verification:
@@ -73,9 +73,12 @@ issues 044–047, including its approved visual review. The advanced ELK rendere
 support leaf remains specified and ready for later delivery issue slicing.
 The [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
 capability is a pure structural-child roll-up with effective state `specified`,
-the minimum of its three children. Its source-facts, deterministic-quality, and
-live-analysis/MCP children are specified and readiness-reviewed. The source-
-facts child is implemented through issues 048–052 pending its final visual
-gate; the parent has no standalone implementation slice or PRD, and remaining
-implementation is routed to the other children. No parent state transition is
-claimed until the visual gate is approved.
+the minimum of its three children. Its three children are readiness-reviewed;
+the deterministic-quality and live-analysis/MCP children remain specified. The
+source-facts child is implemented through issues 048–052, including its approved
+final visual gate; the parent has no standalone implementation slice or PRD,
+and remaining implementation is routed to the other children. Deterministic
+quality checks delivered and archived issues 053–058, with issues 059–063
+remaining pending for the rest of the specified quality scope. The parent
+remains `specified` because the deterministic-quality and live-analysis/MCP
+children are still specified.
