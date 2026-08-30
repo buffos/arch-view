@@ -57,9 +57,9 @@ This capability includes interactive diagram rendering, hierarchy drill-down, zo
 This capability is implemented for its current specified scope. Its local web surface, renderer-neutral scene contract, local-first reference visibility, navigation/import evidence behavior, progressive disclosure, source safety, session layout, ELK layout settings, project configuration discovery, and accessibility requirements are linked from the exact-spec artifacts. Additional renderer features are tracked separately in the specified [Advanced ELK renderer support](explore-architecture/advanced-elk-renderer-support.md) child.
 
 The implemented [Multi-analyzer project orchestration](/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
-child now provides the cached combined and per-analyzer scope projections. The
-future [Project analyzer assignments and view selection](/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
-child will add persisted assignment and source-scope semantics; it does not
+child provides the cached combined and per-analyzer scope projections. The
+implemented [Project analyzer assignments and view selection](/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
+child provides persisted assignment and source-scope semantics; it does not
 make analyzer semantics a viewer responsibility.
 
 ## Delivery progress

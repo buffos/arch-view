@@ -19,13 +19,13 @@ and shared-consumer path.
 
 ## Readiness
 
-READY FOR ARCHITECTURE IMPLEMENTATION
+IMPLEMENTATION VERIFIED
 
-The process runtime was implemented and verified through issues 030–033 under
-the existing plugin-runtime capability without changing the canonical model,
-viewer, or export contracts. The capability remains `specified` for future
-frontiers including broader plugin distribution/discovery and the child-owned
-assignment/source-scope policy consumed by multi-analyzer orchestration.
+The process runtime and its child capabilities were implemented and verified
+through issues 030–047 under the existing plugin-runtime capability without
+changing the canonical model, viewer, or export contracts. The plugin-runtime
+capability is `implemented`; its compiled distribution, multi-analyzer, and
+assignment/source-scope children are implemented as well.
 
 ## Artifact impact
 

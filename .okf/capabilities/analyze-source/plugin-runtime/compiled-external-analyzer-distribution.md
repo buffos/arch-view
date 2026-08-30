@@ -74,5 +74,6 @@ fallback policy, runtime provenance, five-analyzer parity, deterministic
 assembly, and Windows release behavior are verified. Linux amd64 and Darwin
 arm64 execution remain explicitly deferred under the root `when-supported`
 policy until matching runners/toolchains are available. This node is
-`implemented`; the parent plugin-runtime capability remains `specified` for
-its later multi-analyzer and assignment/view children.
+`implemented`; the parent plugin-runtime capability and its later
+multi-analyzer and assignment/view children are implemented after their
+verified delivery batches.

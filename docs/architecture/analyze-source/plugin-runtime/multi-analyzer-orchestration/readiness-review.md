@@ -42,9 +42,10 @@ impact, not a new actor or a change to the static read-only product boundary.
 - Product truth: synchronized for combined/per-scope views and partial status.
 - Architecture truth: synchronized for the scheduler, source-scope policy,
   aggregate model, cache identity, and canonical normalization dependency.
-- Delivery truth: existing approved issues 039–043 are synchronized with the
-  new source-scope contract; no new capability node is created.
+- Delivery truth: existing approved issues 039–043 and consuming assignment
+  issues 044–047 are synchronized with the source-scope contract; no new
+  capability node is created.
 
 ## Readiness
 
-READY FOR ARCHITECTURE IMPLEMENTATION
+`IMPLEMENTATION VERIFIED`

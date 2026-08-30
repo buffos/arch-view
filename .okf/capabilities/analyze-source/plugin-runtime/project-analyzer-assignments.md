@@ -4,8 +4,8 @@ title: Project analyzer assignments and view selection
 description: Persist project-relative analyzer assignments and let users switch the visible analyzer scope in the application.
 tags: [plugins, configuration, selection, viewer, multi-language]
 timestamp: 2026-08-29T00:00:00Z
-state: specified
-state_changed: 2026-08-28T00:00:00Z
+state: implemented
+state_changed: 2026-08-29T00:00:00Z
 project: /project.md
 parent: /capabilities/analyze-source/plugin-runtime.md
 artifact_root: docs/architecture/analyze-source/plugin-runtime/project-analyzer-assignments
@@ -23,7 +23,7 @@ issues:
   - docs/agents/issues/done/20260829-044-load-and-validate-analysis-configuration.md
   - docs/agents/issues/done/20260829-045-resolve-configured-assignments-and-source-scopes.md
   - docs/agents/issues/done/20260829-046-session-cache-and-selective-invalidation.md
-  - docs/agents/issues/pending/20260829-047-configured-scope-viewer-journey.md
+  - docs/agents/issues/done/20260829-047-configured-scope-viewer-journey.md
 ---
 
 # Intent
@@ -49,10 +49,9 @@ consumes the selected scope without owning analyzer semantics.
 
 # Planning state
 
-This child is specified and readiness-reviewed. Issues 044–046 are implemented,
-verified, and archived; issue 047 has completed automated verification and
-remains `awaiting-human-review` for its visual gate. The user-confirmed target
-is a
+This child is implemented after issues 044–047 were completed, verified, and
+archived, including the declared visual review for the configured viewer. The
+user-confirmed target is a
 configuration mapping from repository-relative folders to stable logical
 analyzer IDs, with automatic detection as a fallback and a dropdown that
 switches among the resulting analyzer/project scopes. The cached `All` and
@@ -67,4 +66,3 @@ invocation root; filtering follows root discovery and exclusions win. The
 exact v1/v2 schema, precedence, validation, cache keys, invalidation, API, UI
 states, and acceptance scenarios are linked above. The combined model is
 backed by cached per-job results so scope switching does not re-run analysis.
-The node remains `specified` until issue 047 receives visual approval.

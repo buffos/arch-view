@@ -2,13 +2,13 @@
 
 ## State
 
-- Planning state: `specified`.
+- Planning state: `implemented`.
 - The exact-spec pipeline is complete; the source-scope filter extension is
   incorporated in the v2 configuration contract. Approved implementation
   issues 044–047 cover configuration loading/validation, planner integration,
-  selective session caching, and the configured viewer journey. Issues 044–046
-  are implemented, verified, and archived; issue 047 is awaiting its required
-  visual review.
+  selective session caching, and the configured viewer journey. All four issues
+  are implemented, verified, archived, and complete, including issue 047's
+  required visual review.
 
 ## Evidence
 
@@ -21,8 +21,8 @@
 - The session cache reuses immutable per-job snapshots and reports selective
   invalidation metadata through aggregate scope summaries and reanalysis.
 - Issue 047's configured mixed-language fixture and viewer metadata wiring are
-  automated-test complete; the browser surface still needs the declared visual
-  review.
+  automated-test complete, and the declared visual review was approved by the
+  user.
 
 ## Artifact sync
 
@@ -36,10 +36,9 @@
   analysis-configuration and viewer-scope boundary; issues 044–046 implement
   the configuration, planning, and cache portions without changing that
   boundary.
-- **Delivery:** The approved multi-analyzer issues 039–043 are verified,
-  archived, and consume the resolved source-scope policy. Issues 044–046 are
-  verified and archived; issue 047 remains registered as
-  `awaiting-human-review` with the visual-review gate.
+- **Delivery:** The approved multi-analyzer issues 039–043 and the assignment
+  issues 044–047 are verified and archived. The assignment/view capability is
+  now complete and implemented.
 
 ## Exact-spec inventory
 
@@ -59,11 +58,9 @@ behavior, and the `All`/individual scope UI.
 
 ## Readiness decision
 
-IMPLEMENTATION SLICES VERIFIED; VISUAL REVIEW PENDING. Issues 044–046 consume
-the resolved policy at their defined configuration, planning, and cache seams.
-Issue 047 has completed its automated implementation and is waiting for the
-declared visual review before this child can move from `specified` to
-`implemented`.
+IMPLEMENTATION VERIFIED AND VISUALLY APPROVED. Issues 044–047 consume the
+resolved policy at their configuration, planning, cache, and viewer seams.
+The child capability is now `implemented`.
 
 ## Artifact impact
 
@@ -72,6 +69,5 @@ declared visual review before this child can move from `specified` to
 - Product truth: assignment and scope-selection workflows are synchronized.
 - Architecture truth: configuration, source filtering, cache, runtime, and
   viewer boundaries are current.
-- Delivery truth: issues 044–046 are verified and archived; issue 047 is
-  registered as `awaiting-human-review`. The node remains `specified` until
-  that visual gate is complete.
+- Delivery truth: issues 044–047 are verified, archived, and complete. The
+  node is `implemented` after the approved visual gate.

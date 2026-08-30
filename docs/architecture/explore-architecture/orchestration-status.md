@@ -5,7 +5,7 @@
 - Planning state: `implemented`.
 - State transition: `bounded -> specified` on 2026-08-25; `specified -> implemented` on 2026-08-27 after the complete issue/scenario audit and repository verification gate.
 - Topology: confirmed as the interactive investigation capability.
-- Next route: the current 17-scenario Explore scope and the consuming Python analysis slice in issues 017–019 are complete. Future ELK renderer extensions are tracked by the specified [Advanced ELK renderer support child](../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md); the TypeScript slice (020–022), Rust slice (023–025), and Clojure slice (026–029) are also complete. The external plugin protocol/pilot and cached multi-analyzer scope viewer are complete; persisted analyzer assignment and source-scope semantics remain the specified future consumer under [the plugin-runtime child](../../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md).
+- Next route: the current 17-scenario Explore scope and the consuming Python analysis slice in issues 017–019 are complete. Future ELK renderer extensions are tracked by the specified [Advanced ELK renderer support child](../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md); the TypeScript slice (020–022), Rust slice (023–025), and Clojure slice (026–029) are also complete. The external plugin protocol/pilot, cached multi-analyzer scope viewer, and persisted analyzer assignment/source-scope consumer are complete; the assignment child remains outside Explore's presentation ownership.
 
 ## Confirmed boundary
 

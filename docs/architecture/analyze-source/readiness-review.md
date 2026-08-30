@@ -12,7 +12,8 @@ No High or Medium findings remain. The PRD, glossary, domain model, use cases, c
 
 ## Readiness
 
-`READY FOR ARCHITECTURE IMPLEMENTATION` for the specified observation contract.
+`IMPLEMENTATION VERIFIED` for the specified observation contract and the
+completed analysis implementation slices.
 
 ## Verification and synthesis gate
 
@@ -23,4 +24,4 @@ Acceptance scenarios cover backend and end-to-end surfaces where applicable; fro
 - Capability truth: updated with the complete exact-spec set.
 - Product truth: updated because analysis statuses, CLI behavior, and acceptance behavior are now explicit.
 - Architecture truth: updated because analyzer-host ports and safety boundaries are now exact.
-- Delivery truth: issues 001 through 006 are completed for the first Go analyzer/model, viewer, and export slice; future language-adapter work remains in the ordered roadmap.
+- Delivery truth: issues 001 through 006 are completed for the first Go analyzer/model, viewer, and export slice; language adapters, external runtime, multi-analyzer orchestration, and project assignment/view selection are implemented through issues 017–047.

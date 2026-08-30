@@ -55,6 +55,6 @@ to be captured in the exact artifact set.
 - **Product:** application PRD and viewer journey are affected and must remain synchronized.
 - **Architecture:** configuration ownership, analyzer-host precedence, source
   filtering, aggregate cache, and viewer projection boundaries are affected.
-- **Delivery:** issues 044–046 are verified and archived implementation records;
-  issue 047 remains active for its configured-viewer visual gate. No new
-  capability node is created.
+- **Delivery:** issues 044–047 are verified and archived implementation records,
+  including the approved configured-viewer visual gate. No new capability node
+  is created.

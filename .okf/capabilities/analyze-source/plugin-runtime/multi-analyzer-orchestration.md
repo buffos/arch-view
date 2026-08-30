@@ -76,5 +76,5 @@ source-scope policy.
 
 This node is `implemented`: its scoped multi-analyzer delivery and required
 artifact synchronization are complete. The separate
-project-analyzer-assignments capability remains specified for persisted
+project-analyzer-assignments capability is also implemented for persisted
 assignment and source-scope configuration.

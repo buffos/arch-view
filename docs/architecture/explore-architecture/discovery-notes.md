@@ -38,8 +38,8 @@ model plus individual analyzer/project scopes. The viewer exposes those cached
 scopes through a dropdown and preserves the current local-first/evidence
 workflow, but it does not own analyzer detection, assignment precedence,
 process lifecycle, or language semantics. The persisted assignment/source-scope
-contract is a specified child of the plugin-runtime capability and remains
-outside the implemented Explore v1 scope.
+contract is an implemented child of the plugin-runtime capability and remains
+outside the Explore capability's presentation ownership.
 
 ## Actors and inputs
 
@@ -50,11 +50,11 @@ outside the implemented Explore v1 scope.
 
 ## Implementation and verification focus
 
-The current Explore exact-spec set is complete. Remaining work is
-implementation and verification of the specified viewer contract, browser
-packaging, layout/rendering thresholds, source-safety cases, accessibility,
-and the future assignment-driven configuration consumer without moving analyzer
-semantics into the viewer.
+The current Explore exact-spec set is implemented and verified. Remaining work
+is bounded verification and tuning of viewer thresholds, source-safety cases,
+and accessibility, together with integration coverage for the implemented
+assignment-driven configuration consumer without moving analyzer semantics
+into the viewer.
 
 ## Issue 007 implementation note
 

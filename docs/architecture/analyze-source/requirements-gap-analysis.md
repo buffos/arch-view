@@ -46,8 +46,12 @@ Defined as repository-relative paths, one-based locations, `info|warning|error` 
 
 ### External protocol
 
-The in-process contract is specified first; the future process protocol now has v1 frame semantics in the plugin contract and remains an interoperability/schema publication risk, not a blocker for the built-in runtime.
+The in-process contract is specified first; the process protocol now has v1
+frame semantics in the plugin contract and remains an interoperability/schema
+verification risk, not a blocker for the implemented runtime.
 
 ## Readiness
 
-The capability has passed the architecture specification pipeline and readiness review. It may enter implementation/issue slicing after the application synthesis gate is verified.
+The capability has passed the architecture specification pipeline and readiness
+review. Its implementation and issue slices are complete; the remaining
+platform-specific checks follow the root `when-supported` policy.

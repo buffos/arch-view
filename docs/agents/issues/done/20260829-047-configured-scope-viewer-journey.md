@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md`
 - Related consumer node: `/.okf/capabilities/explore-architecture.md`
 - Artifact root: `docs/architecture/analyze-source/plugin-runtime/project-analyzer-assignments/`
-- Issue file: `docs/agents/issues/pending/20260829-047-configured-scope-viewer-journey.md`
+- Issue file: `docs/agents/issues/done/20260829-047-configured-scope-viewer-journey.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `awaiting-human-review`
+- Suggested state: `done`
 
 ## Parent Artifacts
 
@@ -93,6 +93,11 @@ individual projections, unavailable/partial diagnostics, invalid-configuration
 states, cache/reanalysis behavior, keyboard accessibility, and preservation of
 existing navigation and details behavior.
 
+User approval: visual review approved on 2026-08-29. The mixed-language
+fixture, configured scope labels and identities, partial/unavailable states,
+projection-only selection, reanalysis metadata, keyboard access, and existing
+navigation/details behavior were accepted.
+
 ## Blocked by
 
 Unblocked by and delivered after
@@ -148,8 +153,8 @@ Automated verification passed:
 The reproducible manual review fixture is
 `docs/architecture/analyze-source/plugin-runtime/project-analyzer-assignments/fixtures/configured-mixed/`.
 No browser harness is present, so browser automation remains deferred under
-the root `when-supported` policy. The required visual review has not yet been
-performed or approved.
+the root `when-supported` policy. The required manual visual review was
+performed and approved by the user.
 
 ## Scenario traceability
 
@@ -161,5 +166,5 @@ performed or approved.
 
 ## Handoff
 
-Automated verification is complete. The owning node remains `specified` until
-the declared visual review is completed and approved.
+Automated verification and the declared visual review are complete. The owning
+capability node is now eligible for `implemented` state.

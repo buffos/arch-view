@@ -5,3 +5,7 @@
 - [Explore and inspect architecture](explore-architecture.md) - Navigate diagrams, dependency evidence, cycles, and source files.
   - [Advanced ELK renderer support](explore-architecture/advanced-elk-renderer-support.md) - Track future renderer support for additional ELK presentation features.
 - [Export and automate](export-and-automate.md) - Produce headless artifacts and support repeatable analysis workflows.
+- [Code quality and code intelligence](code-quality-and-intelligence.md) - Build deterministic quality findings and compact, searchable source intelligence.
+  - [Source facts and symbol index](code-quality-and-intelligence/source-facts-and-symbol-index.md) - Expose files, symbols, documentation, and source metrics.
+  - [Deterministic quality checks](code-quality-and-intelligence/deterministic-quality-checks.md) - Evaluate reproducible metrics and architecture rules.
+  - [Live analysis and MCP](code-quality-and-intelligence/live-analysis-and-mcp.md) - Watch configured folders and expose compact code intelligence to tools and LLMs.

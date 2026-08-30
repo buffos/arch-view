@@ -2,7 +2,13 @@
 
 ## Status
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043 are verified, archived, and visually approved; project analyzer assignments are the next specified plugin-runtime frontier and are now tracked by approved ready-for-agent issues 044–047, with issue 047 carrying the visual-review gate.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043 and project analyzer assignment issues 044–047 are verified, archived, and visually approved; source-index issues 048–051 are verified and archived, while issue 052 is implemented and awaiting its final visual inspection; the advanced ELK renderer child remains the specified plugin/viewer frontier.
+The Code quality and code intelligence capability is a pure structural-child
+roll-up with effective state `specified`, the minimum of its three children.
+Its Source facts and symbol index child is implemented through issues 048–052
+pending final visual approval; Deterministic quality checks and Live
+analysis/MCP remain specified and readiness-reviewed. The parent has no
+standalone PRD or implementation slice.
 
 ## Boundary summary
 
@@ -29,6 +35,11 @@ Language-neutral architecture model
         |
         +--> local web viewer
         +--> versioned JSON, SVG, HTML, and CI outputs
+
+        +--> code facts and symbol index
+                 |
+                 +--> deterministic quality findings
+                 +--> live analysis snapshots and MCP queries
 ```
 
 ## Current reference architecture
@@ -137,7 +148,7 @@ The local host resolves the nearest versioned `.archview.json` from the selected
 
 Configuration writes distinguish two actions. Ordinary `Save` has no destination input and atomically overwrites exactly the active discovered `.archview.json`; it never creates a new file or copies settings to the analyzed project root, and it requires `Save As` when no active file exists. `Save As` is the only operation that accepts a user-selected custom destination folder; it writes the fixed `.archview.json` filename there atomically after explicit confirmation and makes that path active for the current session. Model-only sessions can use session settings but cannot persist a project file. Analyzer options, viewport state, and manual positions are separate from this configuration. Project-backed HTML analysis embeds the discovered profile for browser use; raw model-only export uses defaults because it has no source-root discovery context. Go static SVG continues to use its explicit deterministic contract.
 
-The specified future analysis-assignment extension adds a separately owned
+The implemented analysis-assignment extension adds a separately owned
 `analysis` section to the versioned project configuration. It maps
 repository-relative folders or project roots to stable logical analyzer IDs and
 defines global exclusion globs plus analyzer-ID-scoped include globs relative
@@ -150,15 +161,62 @@ configuration or unavailable analyzer IDs are surfaced. The viewer can expose
 cached individual scopes and a combined view through a dropdown, but it does
 not decide analyzer semantics.
 
-## Specified future capability decisions
+### Code quality and code intelligence
+
+This boundary is represented by a pure structural-child roll-up. It consumes
+analyzer observations and canonical model facts without changing the
+architecture graph's default module-level granularity; the source-facts child
+adds an optional, independently
+versioned `SourceIndex` sibling beside modules, relationships, source
+references, diagnostics, and derived data. It retains authoritative
+per-scope snapshots containing files, intrinsic size facts, named declarations,
+documentation candidates, hash-linked spans, provenance, containment, and
+typed extension/metric slots. A combined result retains per-scope authority
+and may add a deterministic projection without inferring cross-scope
+relationships.
+
+Registered language extractors own declaration, visibility, documentation, and
+semantic uncertainty. The core source-index service owns validation, opaque ID
+assignment, coverage, canonical ordering, and digest assembly. The implemented
+quality child evaluates versioned metric/rule strategies and emits structured
+exact findings or explicitly labeled advisory SOLID signals with rule IDs,
+thresholds, severity, revision, coverage, and source evidence. Its quality
+profile is independent from analyzer, assignment, layout, and live settings.
+Human-facing consumers may summarize scope-safe file line-threshold findings and
+filter to affected files, while the quality report remains the sole source of
+threshold truth.
+
+The specified live-analysis child owns folder watching, event coalescing,
+conservative invalidation, freshness, cache identity, and atomic revision
+replacement. Viewer, CLI/export, and MCP clients consume the same immutable
+snapshot/query envelope. MCP is a read-only transport/query adapter, not the
+owner of language semantics or quality policy; stdio is the default local
+transport and network transport is explicit. The design must not execute target
+applications or present subjective architectural approval, semantic comment
+quality, or SOLID heuristics as proven facts.
+
+The local viewer treats the source index as a progressive-disclosure read model.
+Graph startup requests the model with `include_source_index=false`, so the
+right-hand card stays a compact summary and does not wait for the complete
+source index. Selecting a node or group opens a same-tab, history-backed
+inspection route with Overview, Structure, Files, Symbols, Dependencies,
+Evidence, and Technical details sections. Files and symbols use bounded
+25-item queries with local filters and explicit `module_id`/`file_id`
+containment filters; membership is resolved only from declared containment or
+declaration relations. File-only provenance is distinct from line locations,
+source excerpts are opt-in and read-only, and IDs, hashes, provider versions,
+and snapshot data remain secondary technical details. Embedded exports apply
+the same bounded read model locally.
+
+## Capability decisions and remaining frontier
 
 The multi-analyzer, assignment, and advanced-renderer capabilities have exact
 schemas, contracts, scenarios, and readiness reviews. The compiled-distribution
 capability is implemented through issues 034–038. Multi-analyzer issues
 039–043 are verified, archived, and visually approved; those issues consume the
-resolved source-scope policy. The assignment frontier is now sliced into
-approved issues 044–047; the advanced-renderer frontier still requires later
-issue slicing, implementation, and verification:
+resolved source-scope policy. The assignment capability is implemented through
+verified, archived, and visually approved issues 044–047. The advanced-renderer
+frontier still requires later issue slicing, implementation, and verification:
 
 - Opening a repository discovers marker-driven nested project roots within
   bounded exclusions. A strong manifest owns its subtree unless a nested
@@ -180,6 +238,13 @@ issue slicing, implementation, and verification:
   with concrete renderer support. Browser, embedded HTML, and browser SVG share
   the renderer-neutral geometry; Go static SVG remains deterministic
   orthogonal unless separately specified.
+- The Code quality and code intelligence roll-up remains a specified extension.
+  Its Source facts and symbol index child is implemented through issues 048–052
+  pending final visual approval; Deterministic quality checks and Live analysis
+  and MCP remain specified and readiness-reviewed, with exact records,
+  provenance, scope isolation, versioned rules, immutable revisions, bounded
+  queries, and compatibility/permission rules. The aggregate parent has no
+  standalone implementation issues; delivery is owned by the children.
 
 The layout catalog, profile validation, option-handler registry, session state,
 and persistence are grouped under `internal/viewer/layout`; HTTP handlers only
@@ -201,12 +266,31 @@ escapes the exported artifact.
 4. Each analyzer returns modules, relationships, evidence, diagnostics, and
    source references; the host merges results with collision-safe identity and
    provenance while retaining partial failures.
-5. The canonical model capability normalizes observations, validates identity
+5. The source-index service enumerates each resolved eligible scope, invokes
+   registered language extractors, and attaches optional per-scope source
+   snapshots with files, symbols, documentation, spans, provenance, coverage,
+   and deterministic digest. Combined runs retain those snapshots and may
+   construct a derived projection.
+6. The canonical model capability normalizes observations, validates identity
    and relationship integrity, and asks the model graph capability to derive
    cycles/layers.
-6. The scene capability projects the model into the renderer-neutral interactive contract.
-7. The local host resolves project layout configuration and exposes the effective profile/catalog to the viewer.
-8. The routing/layout adapters calculate positions and route sections; the renderer-neutral viewer or exporter serializes the resulting view.
+7. The scene capability projects the model into the renderer-neutral interactive contract.
+8. The local host resolves project layout configuration and exposes the effective profile/catalog to the viewer.
+9. The routing/layout adapters calculate positions and route sections; the renderer-neutral viewer or exporter serializes the resulting view.
+10. The graph viewer requests only the model needed for scene rendering. Its
+    compact summary card exposes human-scale counts and status; its separate
+    accessible scene list preserves keyboard navigation and search.
+11. The same-tab inspection controller reads bounded files, symbols,
+    documentation, and entity evidence on demand, caches section/filter state,
+    and exposes technical identifiers only in the secondary Technical details
+    section. Embedded exports answer these queries from their local source index.
+12. Language adapters and the source index provide source facts, symbols,
+    documentation, and metrics to quality and query consumers.
+13. The quality engine evaluates configured deterministic rules and stores
+    revision-aware findings with source evidence.
+14. The live snapshot service watches configured folders, updates affected
+    analysis state, and exposes the same compact facts to viewer, CLI/export,
+    and MCP.
 
 ## Shared policies
 
@@ -217,8 +301,19 @@ escapes the exported artifact.
 - External and generated code are filtered by explicit policy, not silently discarded.
 - Language-specific concepts such as interfaces, protocols, or abstract classes are represented as metadata and relation semantics, not hard-coded into the core.
 - Saved models use a versioned, language-neutral JSON interchange format. Visual artifacts are deterministic projections of the same model/view contract; source contents are not embedded by default.
+- The optional `SourceIndex` is independently versioned, scope-first, and
+  additive. Files, symbols, documentation, occurrences, relations, and
+  metrics carry explicit provenance and coverage; unsupported/unknown facts are
+  never fabricated as absence. Full source content is not embedded by default.
+- The graph viewer does not eagerly download the complete source index. Its
+  inspection view uses bounded query pages, explicit containment/declaration
+  membership, readable source locations, opt-in bounded excerpts, and a
+  secondary technical-details disclosure.
+- Source-index IDs are opaque and snapshot-local; canonical spans use
+  hash-linked UTF-8 byte coordinates. Registered extractors own language
+  semantics, while the core owns validation and deterministic assembly.
 - `.archview.json` is versioned project configuration with separate `layout` and
-  future `analysis` ownership. Nearest-ancestor discovery is deterministic and
+  `analysis` ownership. Nearest-ancestor discovery is deterministic and
   invalid nearest configuration is surfaced rather than silently bypassed.
   Ordinary `Save` is explicit, active-file-only, and atomic; only explicit
   `Save As` may select a custom destination folder, with the fixed filename and
@@ -232,6 +327,15 @@ escapes the exported artifact.
 - Multi-analyzer execution must use collision-safe identities and preserve
   analyzer/project provenance; one failed job must not erase successful or
   partial results from other jobs.
+- Given the same source, analyzer implementation, and quality configuration,
+  deterministic metrics and findings must be reproducible. Findings remain
+  separate from analyzer diagnostics, and exact facts must be distinguishable
+  from heuristic or advisory signals.
+- Live snapshots replace atomically, carry explicit revisions and freshness
+  state, and keep source paths root-safe. MCP retrieval is compact and
+  read-only by default; source edits require an explicit downstream action.
+- Quality configuration has separate ownership from analyzer options,
+  project assignments, and viewer layout semantics.
 
 ## Verification
 
@@ -263,8 +367,11 @@ behind the same host/model/viewer/export boundary and does not add external
 protocol fields to the canonical model.
 
 The compiled external analyzer distribution is implemented through issues
-034–038 after application synthesis. The remaining specified frontiers are
-[project analyzer assignments and view selection](../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md) and [advanced ELK renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md). The multi-analyzer child is implemented through issues 039–043, while the assignment/view child is sliced into approved issues 044–047 and the advanced-renderer child remains ready for later delivery issue slicing.
+034–038 after application synthesis. The project analyzer assignments and view
+selection child is implemented through verified, archived, and visually
+approved issues 044–047. The remaining specified frontier is [advanced ELK
+renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md).
+The multi-analyzer child is implemented through issues 039–043.
 The 2026-08-28 brownfield audit also confirmed that the existing Go analyzer,
 canonical model generation, and export/automation boundaries exhaust their
 current exact specifications. Their planning nodes are implemented. This is a
@@ -277,6 +384,11 @@ representation for supported ELK spline output; automated verification and
 visual review are complete. The current Explore scope is implemented. Future
 renderer extensions are tracked in the [Advanced ELK renderer support future
 work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
+The source-facts/index contract, Go-first extractor, scope-safe projection,
+bounded query boundary, and module viewer are implemented through issues
+048–052; the final visual gate is pending. The next future sequence is the
+deterministic quality rules/findings contract followed by the live analysis
+snapshot/folder-watching/structural-search/MCP boundary.
 
 ## Residual implementation decisions
 
@@ -284,9 +396,6 @@ work register](explore-architecture/advanced-elk-renderer-support/future-work.md
 - Reference-boundary aggregation, import-list density, and session-scoped layout behavior remain verification/tuning concerns. Broader target-specific ELK option support is tracked in the [Advanced ELK renderer support future-work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
 - The implemented multi-project/multi-analyzer viewer path has passed issue
   043's declared visual-review gate.
-- Implementation of the specified folder-to-analyzer assignment and
-  invocation-root source-scope schema, validation, cache keys, and application
-  dropdown/API behavior.
 - Implementation of the specified advanced ELK scene/route fields, feature
   fixtures, and cross-surface export parity.
 - Benchmark-driven tuning of process frame/stderr limits, timeout defaults,
@@ -294,6 +403,18 @@ work register](explore-architecture/advanced-elk-renderer-support/future-work.md
 - Linux amd64 and Darwin arm64 packaged-analyzer execution remain deferred
   verification surfaces until matching runners or toolchains are available.
 - Future call-graph/type-level relation capabilities.
+- Final visual approval for the implemented source-index module-inspection
+  projection; broader language coverage and metric-producing extensions remain
+  future work.
+- Implementation and language coverage for the specified quality profile,
+  metric-provider, rule, finding, baseline, signal, and report contracts.
+- Implementation and packaging verification for live watcher/MCP snapshot
+  behavior, permissions, and transport remain future work.
+- Conservative semantic resolution for calls/implements and confidence
+  categories.
+- Implementation of quality configuration, baselines/suppressions, watcher
+  lifecycle, snapshot consistency, and MCP packaging/permissions specified by
+  the three code-quality children.
 
 These are implementation and extension risks, not blockers to the specified v1 scope.
 
@@ -315,4 +436,29 @@ These are implementation and extension risks, not blockers to the specified v1 s
 - [Explore and inspect architecture](../../.okf/capabilities/explore-architecture.md)
 - [Advanced ELK renderer support](explore-architecture/advanced-elk-renderer-support/future-work.md)
 - [Export and automate](../../.okf/capabilities/export-and-automate.md)
+- [Code quality and code intelligence](../../.okf/capabilities/code-quality-and-intelligence.md)
+- [Source facts and symbol index discovery notes](code-quality-and-intelligence/source-facts-and-symbol-index/discovery-notes.md)
+- [Source facts and symbol index requirements gap analysis](code-quality-and-intelligence/source-facts-and-symbol-index/requirements-gap-analysis.md)
+- [Source facts and symbol index PRD](code-quality-and-intelligence/source-facts-and-symbol-index/prd.md)
+- [Source facts and symbol index domain model](code-quality-and-intelligence/source-facts-and-symbol-index/canonical-domain-model.md)
+- [Source facts and symbol index use cases](code-quality-and-intelligence/source-facts-and-symbol-index/canonical-use-cases.md)
+- [Source facts and symbol index contract](code-quality-and-intelligence/source-facts-and-symbol-index/canonical-api-cli-contract.md)
+- [Source facts and symbol index acceptance scenarios](code-quality-and-intelligence/source-facts-and-symbol-index/acceptance-scenarios.md)
+- [Source facts and symbol index readiness review](code-quality-and-intelligence/source-facts-and-symbol-index/readiness-review.md)
+- [Deterministic quality checks discovery notes](code-quality-and-intelligence/deterministic-quality-checks/discovery-notes.md)
+- [Deterministic quality checks requirements gap analysis](code-quality-and-intelligence/deterministic-quality-checks/requirements-gap-analysis.md)
+- [Deterministic quality checks PRD](code-quality-and-intelligence/deterministic-quality-checks/prd.md)
+- [Deterministic quality checks domain model](code-quality-and-intelligence/deterministic-quality-checks/canonical-domain-model.md)
+- [Deterministic quality checks use cases](code-quality-and-intelligence/deterministic-quality-checks/canonical-use-cases.md)
+- [Deterministic quality checks contract](code-quality-and-intelligence/deterministic-quality-checks/canonical-api-cli-contract.md)
+- [Deterministic quality checks acceptance scenarios](code-quality-and-intelligence/deterministic-quality-checks/acceptance-scenarios.md)
+- [Deterministic quality checks readiness review](code-quality-and-intelligence/deterministic-quality-checks/readiness-review.md)
+- [Live analysis and MCP discovery notes](code-quality-and-intelligence/live-analysis-and-mcp/discovery-notes.md)
+- [Live analysis and MCP requirements gap analysis](code-quality-and-intelligence/live-analysis-and-mcp/requirements-gap-analysis.md)
+- [Live analysis and MCP PRD](code-quality-and-intelligence/live-analysis-and-mcp/prd.md)
+- [Live analysis and MCP domain model](code-quality-and-intelligence/live-analysis-and-mcp/canonical-domain-model.md)
+- [Live analysis and MCP use cases](code-quality-and-intelligence/live-analysis-and-mcp/canonical-use-cases.md)
+- [Live analysis and MCP contract](code-quality-and-intelligence/live-analysis-and-mcp/canonical-api-cli-contract.md)
+- [Live analysis and MCP acceptance scenarios](code-quality-and-intelligence/live-analysis-and-mcp/acceptance-scenarios.md)
+- [Live analysis and MCP readiness review](code-quality-and-intelligence/live-analysis-and-mcp/readiness-review.md)
 - [Application PRD](../prd.md)

@@ -22,12 +22,16 @@ Arch View helps developers understand a codebase by turning source structure and
 # Scope
 
 The product starts with a Go implementation and adds Python, TypeScript, Rust,
-and Clojure analyzers through a common plugin contract. The confirmed future
-direction is to distribute supported analyzers as compiled external executables,
-run multiple analyzers for one repository, and let project configuration map
-folders to analyzer IDs for selectable application views. It includes source
+and Clojure analyzers through a common plugin contract. The confirmed direction
+is to distribute supported analyzers as compiled external executables, run
+multiple analyzers for one repository, and let project configuration map
+folders to analyzer IDs for selectable application views. These analysis and
+assignment flows are implemented; advanced renderer extensions remain future
+work. The product includes source
 analysis, a language-neutral architecture model, interactive exploration, and
-headless export.
+headless export. The confirmed future direction also includes deterministic
+code-quality checks, a searchable code-intelligence index, and a live MCP
+surface for compact, evidence-backed repository queries.
 
 The upstream [reference implementation](https://github.com/unclebob/arch-view)
 is read-only input to the design. It is not product source.
@@ -38,12 +42,17 @@ is read-only input to the design. It is not product source.
 - Child: [Generate architecture models](/capabilities/generate-models.md)
 - Child: [Explore and inspect architecture](/capabilities/explore-architecture.md)
 - Child: [Export and automate](/capabilities/export-and-automate.md)
+- Child: [Code quality and code intelligence](/capabilities/code-quality-and-intelligence.md)
 - Application PRD: [Arch View product requirements](../docs/prd.md)
 - Application architecture: [Application architecture summary](../docs/architecture/application-architecture-summary.md)
 
 # Planning baseline
 
-The confirmed product boundary is static architecture discovery and visualization. Manual diagram authoring, cloud collaboration, runtime tracing, and automatic architectural judgment are outside the initial product scope.
+The confirmed product boundary is static architecture discovery, visualization,
+and a future deterministic code-quality/code-intelligence extension. Manual
+diagram authoring, cloud collaboration, runtime tracing, and subjective or
+LLM-generated architectural judgment remain outside the deterministic product
+scope.
 
 # Current delivery frontier
 
@@ -59,8 +68,14 @@ distribution child is implemented; its Linux amd64 and Darwin arm64 execution
 checks remain documented under the root `when-supported` policy. The
 multi-analyzer orchestration leaf is implemented through the verified and
 user-approved issues 039–043, including its mixed-language viewer review. The
-project analyzer assignments/view selection leaf remains specified while
-issues 044–046 are implemented and verified and issue 047 awaits its declared
-visual-review gate. The advanced
-ELK renderer support leaf remains specified and ready for later delivery issue
-slicing.
+project analyzer assignments/view selection leaf is implemented through
+issues 044–047, including its approved visual review. The advanced ELK renderer
+support leaf remains specified and ready for later delivery issue slicing.
+The [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
+capability is a pure structural-child roll-up with effective state `specified`,
+the minimum of its three children. Its source-facts, deterministic-quality, and
+live-analysis/MCP children are specified and readiness-reviewed. The source-
+facts child is implemented through issues 048–052 pending its final visual
+gate; the parent has no standalone implementation slice or PRD, and remaining
+implementation is routed to the other children. No parent state transition is
+claimed until the visual gate is approved.

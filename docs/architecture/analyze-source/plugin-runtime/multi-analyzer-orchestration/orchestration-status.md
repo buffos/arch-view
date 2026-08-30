@@ -29,10 +29,10 @@
 - **Product and architecture:** The application synthesis records the
   implemented multi-job orchestration boundary and the separate assignment
   ownership.
-- **Delivery:** Issues 039–043 are archived as verified delivery records. The
-  assignment/view consumer issues 044–046 are also archived as verified
-  records, while issue 047 remains awaiting visual review. The owning
-  capability node and plugin-runtime roll-ups reference the completed paths.
+- **Delivery:** Issues 039–043 and assignment/view consumer issues 044–047 are
+  archived as verified delivery records, including the approved configured
+  viewer review. The owning capability node and plugin-runtime roll-ups
+  reference the completed paths.
 
 ## Exact-spec inventory
 
@@ -56,8 +56,8 @@ IMPLEMENTATION VERIFIED FOR THE ORCHESTRATION BOUNDARY. The application
 synthesis gate is current, issues 039–043 passed their acceptance and
 repository checks, and the user approved issue 043's declared mixed-language
 `visual-review` gate. Configured assignment and source-scope integration is
-implemented through issues 044–046; issue 047 remains a separate
-`awaiting-human-review` viewer gate owned by the assignment/view capability.
+implemented through issues 044–047, including the approved configured-viewer
+gate owned by the assignment/view capability.
 
 ## Artifact impact
 
@@ -68,10 +68,9 @@ implemented through issues 044–046; issue 047 remains a separate
 - Architecture truth: source-scope policy, aggregate model, cache identity,
   and canonical-normalization dependency are current.
 - Delivery truth: issue files, the registry, the owning capability reference,
-  and the parent roll-ups record completed issues 039–046. Issue 047 remains
-  active until its required visual review is approved. This orchestration
-  capability remains implemented; the assignment/view child remains specified
-  until that gate closes.
+  and the parent roll-ups record completed issues 039–047, including the
+  approved configured-viewer review. This orchestration capability and the
+  assignment/view child are implemented.
 
 ## Implementation evidence
 

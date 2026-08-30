@@ -39,9 +39,9 @@ canonical product workflow.
   availability.
 - Architecture truth: synchronized; package discovery, trust, and launch
   boundaries are explicit.
-- Delivery truth: no issues created; issue slicing may begin only after all
-  four specified nodes and the application synthesis gate are reviewed.
+- Delivery truth: issues 034–038 are archived after implementation and
+  verification; the capability and the plugin-runtime roll-up are synchronized.
 
 ## Readiness
 
-READY FOR ARCHITECTURE IMPLEMENTATION
+`IMPLEMENTATION VERIFIED`

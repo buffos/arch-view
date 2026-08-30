@@ -26,21 +26,21 @@ The runtime owns analyzer registration, manifest validation, project detection, 
   standard-library ast module. It is a parity pilot, not a new language and not
   a replacement for the in-process Python adapter.
 
-## Confirmed future direction
+## Confirmed direction
 
-- **User-confirmed target behavior:** Supported analyzers should ultimately be
-  shipped as compiled external executables that reuse the same analyzer
-  implementations as the current in-process adapters. The end user should not
-  need a Python, Rust, Node, or other language runtime.
-- **User-confirmed target behavior:** The host should plan and run multiple
-  analyzer jobs concurrently for mixed-language or nested projects, then merge
-  their language-neutral results.
-- **User-confirmed target behavior:** Project configuration should map
+- **Implemented target behavior:** Supported analyzers are shipped as compiled
+  external executables that reuse the same analyzer implementations as the
+  in-process adapters; in-process adapters remain available for development,
+  tests, or explicit migration fallback.
+- **Implemented target behavior:** The host plans and runs multiple analyzer
+  jobs concurrently for mixed-language or nested projects, then merges their
+  language-neutral results.
+- **Implemented target behavior:** Project configuration maps
   repository-relative folders or project roots to analyzer IDs, with a viewer
   control for switching between individual scopes and the combined view.
-- **User-confirmed target behavior:** The same project configuration should
-  define global exclusion globs and analyzer-ID-scoped include globs relative
-  to the invocation root. Source filtering is applied after root discovery;
+- **Implemented target behavior:** The same project configuration defines
+  global exclusion globs and analyzer-ID-scoped include globs relative to the
+  invocation root. Source filtering is applied after root discovery;
   exclusions win and the configuration is not a full `.gitignore` dialect.
 - **User-confirmed target behavior:** Compiled external artifacts are the
   production implementation for stable logical analyzer IDs; in-process
@@ -53,23 +53,22 @@ The runtime owns analyzer registration, manifest validation, project detection, 
   merge identity, partial-success behavior, and cached per-job results.
 - **Observed in code:** The current host selects one analyzer per `Run`, and the
   current external Python descriptor launches `python launcher.py`.
-- **Mismatch:** The script-based, single-analyzer pilot does not yet provide
-  the confirmed compiled, multi-analyzer, assignment-driven target. This is
-  net-new future scope beyond the completed v1 pilot, not a failure of the
-  pilot's existing contract.
+- **Current boundary:** The script-based, single-analyzer pilot remains
+  supported for compatibility, while the compiled, multi-analyzer,
+  assignment-driven path is the implemented production-capable extension.
 
 ## Runtime flow
 
 `load descriptor -> validate manifest -> register -> detect/select -> resolve options -> launch one process -> handshake/frame validation -> analyze with context -> validate result -> normalize -> return partial result/diagnostics`.
 
-## Specified future boundaries and implementation follow-up
+## Runtime boundaries and verification follow-up
 
 - Exact Go interfaces, manifest fields, capability names, and option schema.
 - Detection scoring and project-root normalization rules.
 - Cancellation, timeout, panic/error recovery, and resource-limit behavior.
 - Whether built-in analyzers run in separate goroutines or processes when optional tool-assisted resolution is enabled.
-- Protocol migration beyond v1 remains outside the pilot. The specified child
+- Protocol migration beyond v1 remains outside the current boundary. The child
   capabilities own executable distribution/package management, multi-analyzer
-  scheduling/merging, and analysis assignment/source-scope configuration. Their exact
-  schemas, algorithms, and acceptance scenarios are complete and readiness-
-  reviewed; implementation and verification remain future work.
+  scheduling/merging, and analysis assignment/source-scope configuration. Their
+  exact schemas, algorithms, acceptance scenarios, implementation, and
+  verification are complete and readiness-reviewed.

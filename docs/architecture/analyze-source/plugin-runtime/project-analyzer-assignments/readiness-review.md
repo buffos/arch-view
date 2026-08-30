@@ -43,10 +43,9 @@ separate existing product capability.
 - Product truth: synchronized for configuration-driven analyzer selection and the dropdown journey.
 - Architecture truth: synchronized for precedence, source filtering, cache,
   runtime, and viewer boundaries.
-- Delivery truth: issues 044–046 are verified and archived under the owning
-  capability node; issue 047 remains active as the configured-viewer visual
-  review gate.
+- Delivery truth: issues 044–047 are verified and archived under the owning
+  capability node, including the approved configured-viewer visual review gate.
 
 ## Readiness
 
-READY FOR ARCHITECTURE IMPLEMENTATION
+`IMPLEMENTATION VERIFIED`

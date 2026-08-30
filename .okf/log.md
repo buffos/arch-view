@@ -1,5 +1,172 @@
 # Update Log
 
+## 2026-08-30
+
+### File line-threshold human projection requirement
+
+* **Specification:** Added the explicit `source:file.max-lines` human-projection
+  requirement: count files over the configured limit, offer an affected-files
+  filter, preserve scope/report coverage, and never re-evaluate raw file facts
+  in the consumer.
+* **Synchronization:** Updated the deterministic-quality capability, PRD,
+  acceptance scenario, use-case, contract, gap analysis, readiness review, and
+  application product/architecture summaries.
+* **Delivery:** No implementation issue was created. Issue 052 remains
+  `awaiting-human-review`; the threshold/filter implementation is specified but
+  not scheduled in the delivery registry.
+
+### Symbols filter and documentation lookup correction
+
+* **Implementation:** Fixed inspection Symbols filter focus loss and empty
+  result controls, added extractor-reported `language_kind` filtering, and
+  changed documentation status loading to use bounded repeated subject IDs.
+* **Compatibility:** The HTTP and embedded source-index adapters preserve the
+  existing response envelope and support repeated `subject_id` values; the
+  legacy singular query remains supported.
+* **Verification:** Focused Go/JavaScript tests and a 1440×1000 local Chrome
+  smoke check passed. Issue 052 remains `awaiting-human-review`.
+
+## 2026-08-29
+
+### Source facts and symbol index delivery implementation
+
+* **Implementation:** Completed issues 048–051: the versioned optional
+  `SourceIndex` attachment, deterministic file facts, registered Go
+  declarations/documentation extraction, scope-safe canonical and aggregate
+  propagation, structural queries, and bounded read-only evidence.
+* **Viewer:** Implemented issue 052's module source-facts projection with
+  explicit containment, scope qualification, distinct coverage states,
+  provenance, and opt-in bounded source context. Automated HTTP, JavaScript,
+  full-test, race, vet, and build gates pass.
+* **Closeout:** Archived issues 048–051 and removed them from the active issue
+  registry. Issue 052 remains active as `awaiting-human-review` because its
+  required populated/partial/unsupported/combined/legacy visual inspection
+  has not yet been approved.
+* **State:** The source-facts capability remains `specified` until the 052
+  visual gate is approved; the code-quality roll-up and its other children are
+  unchanged.
+
+## 2026-08-29
+
+### Source facts and symbol index delivery slicing
+
+* **Approval:** The user approved five dependency-ordered delivery slices for
+  the specified Source facts and symbol index capability.
+* **Delivery:** Created ready-for-agent issues 048–051 for the versioned
+  source-index/file-fact contract, registered Go extraction, scope-safe
+  canonical/aggregate attachment, and bounded structural queries. Created
+  issue 052 for the module-inspection viewer workflow with a required
+  `visual-review` gate.
+* **Graph/frontier:** Linked all five pending issue paths from the source-facts
+  capability. The node remains `specified`; no topology or state transition
+  occurred. The code-quality roll-up remains `specified` because its other
+  structural children remain specified.
+* **Artifact impact:** Delivery truth changed. The application PRD, application
+  architecture summary, and exact-spec content remain unchanged because the
+  approved batch implements their existing synchronized scope. Capability
+  ownership remains unchanged; the source-facts node now carries the five
+  delivery references. The source-facts orchestration status, issue registry,
+  max issue ID, and planning frontier references were updated.
+* **Scope note:** Initial delivery is Go-first as permitted by the exact
+  specification. Python, TypeScript, Rust, and Clojure extractor parity remain
+  later additive work; unsupported or unknown coverage must remain explicit.
+
+## 2026-08-29
+
+### Code quality and code intelligence roll-up state
+
+* **State transition:** Moved [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md) from `bounded` to a pure structural-child roll-up with materialized state `specified`, using `state_policy.mode: rollup`, `source: structural_children`, and `reducer: min`. Its effective state is the minimum of its three specified children.
+* **Routing:** The parent has no standalone PRD, issue batch, or implementation scope. Future specification and delivery work starts at the least-mature structural child; the parent becomes effectively `implemented` only when every structural child is implemented and no parent-only scope exists.
+* **Artifact sync:** Updated the parent concept, planning index, project concept, application PRD, and application architecture summary. Existing own-state parents with their own PRDs and scopes were left unchanged. Product and architecture behavior are unchanged.
+* **Progress:** State totals are now 0 `foggy`, 0 `bounded`, 5 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Source facts and symbol index bounded
+
+* **State transition:** `foggy -> bounded` for [Source facts and symbol index](capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md).
+* **Boundary:** Clarified a scope-first `SourceIndex` sibling with first-class files, symbols, documentation, spans, provenance, containment, and extensible relations.
+* **Extensibility:** Confirmed opaque IDs, open vocabularies, registered extractors, explicit unsupported/unknown/partial coverage, deterministic snapshots, and typed extension blocks.
+* **Separation:** Kept quality thresholds, semantic quality rules, live watching, MCP transport, search ranking, and remediation outside this capability.
+* **Progress:** State totals after transition are 2 `foggy`, 2 `bounded`, 1 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Source facts and symbol index specified
+
+* **State transition:** `bounded -> specified` for [Source facts and symbol index](capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md).
+* **Specification:** Added the complete exact-spec set: discovery/gap analysis, glossary, PRD, domain model, use cases, source-index contract, acceptance scenarios, readiness review, and orchestration status.
+* **Synthesis:** Synchronized the application PRD and architecture summary with the optional `SourceIndex` attachment, scope-first authority, extractor registry, provenance/coverage, opaque IDs, deterministic digest, and compact query boundary.
+* **Readiness:** No High or Medium specification findings remain. Implementation and language coverage are future delivery work; quality policy and live/MCP remain foggy children.
+* **Progress:** State totals after transition are 2 `foggy`, 1 `bounded`, 2 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Deterministic quality checks bounded
+
+* **State transition:** `foggy -> bounded` for [Deterministic quality checks](capabilities/code-quality-and-intelligence/deterministic-quality-checks.md).
+* **Boundary:** The child now owns versioned metrics, configurable deterministic rules, findings, evidence, baselines, and severity; source facts remain owned by the specified sibling.
+* **Decision:** Static SOLID output is explicitly an evidence-backed signal, never a proven violation. Rule/metric providers are registered strategies so new rules do not require central branching.
+* **Progress:** State totals after transition are 1 `foggy`, 2 `bounded`, 2 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Deterministic quality checks specified
+
+* **State transition:** `bounded -> specified` for [Deterministic quality checks](capabilities/code-quality-and-intelligence/deterministic-quality-checks.md).
+* **Specification:** Added the exact metric/rule/finding profile, domain, use-case, contract, acceptance, readiness, and orchestration artifacts.
+* **Design boundary:** Exact threshold/graph findings are separated from advisory SOLID signals; versioned registries, formula identity, coverage, evidence, and baseline matching keep future extensions additive and reproducible.
+* **Synthesis:** Refreshed the application PRD and architecture summary to make quality a future report sibling consuming SourceIndex/model facts; live/MCP remains foggy.
+* **Progress:** State totals after transition are 1 `foggy`, 1 `bounded`, 3 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Live analysis and MCP bounded
+
+* **State transition:** `foggy -> bounded` for [Live analysis and MCP](capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md).
+* **Boundary:** The child now owns configured-root watching, event coalescing, selective/full reanalysis orchestration, immutable snapshot revisions, compact structural search, quality-report retrieval, and MCP transport/permissions.
+* **Separation:** Watchers do not parse; MCP does not own language semantics, quality policy, or source edits. A fix handoff is explicit and downstream.
+* **Progress:** State totals after transition are 0 `foggy`, 2 `bounded`, 3 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Live analysis and MCP specified
+
+* **State transition:** `bounded -> specified` for [Live analysis and MCP](capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md).
+* **Specification:** Added the exact watcher/revision/query/MCP set: lifecycle, event normalization, overflow recovery, conservative invalidation, atomic publication, last-ready retention, structural search, quality/evidence tools, budgets/cursors, transport, root safety, and read-only permissions.
+* **Synthesis:** Refreshed the application PRD and architecture summary to make live analysis the shared downstream read surface for source facts and quality reports; no autonomous remediation is included.
+* **Readiness:** No High or Medium specification findings remain. Implementation and packaging verification remain future delivery work.
+* **Progress:** State totals after transition are 0 `foggy`, 1 `bounded`, 4 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Code quality and code intelligence topology
+
+* **Topology:** Added the bounded [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md) capability with three foggy children: [Source facts and symbol index](capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md), [Deterministic quality checks](capabilities/code-quality-and-intelligence/deterministic-quality-checks.md), and [Live analysis and MCP](capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md).
+* **Target:** Recorded the future direction for first-class files, documentation, declarations, deterministic metrics/findings, configurable quality rules, live snapshots, structural code search, and MCP reporting.
+* **Boundary:** Kept subjective architectural approval, runtime tracing, target-code execution, and implicit source mutation outside the deterministic product scope; SOLID output is reserved for explicitly labeled signals.
+* **Artifact sync:** Updated the project concept, planning indexes, application PRD, and application architecture summary. No delivery issues or exact-spec artifacts were created because the new children remain foggy.
+* **Progress:** Current capability totals are 3 `foggy`, 1 `bounded`, 1 `specified`, and 13 `implemented`.
+
+## 2026-08-29
+
+### Project analyzer assignments completion and graph update
+
+* **Review:** The user approved the declared visual review for issue 047 after
+  inspecting the configured mixed-language viewer journey.
+* **State transitions:** Advanced `Project analyzer assignments and view
+  selection`, `Analyzer plugin runtime`, and `Analyze source code` from
+  `specified` to `implemented` after issues 044–047 were completed, verified,
+  and archived. Current totals are 0 `foggy`, 0 `bounded`, 1 `specified`, and
+  13 `implemented`.
+* **Artifact sync:** Updated affected capability nodes, parent roll-ups,
+  implementation/orchestration statuses, application planning references,
+  issue registry, and issue paths. The Advanced ELK renderer support node is
+  the remaining specified frontier; no topology was added or split.
+* **Verification:** Strict OKF validation, full Go tests, race tests, vet,
+  build, module verification, JavaScript checks/tests, and `git diff --check`
+  pass. No commit was created.
+
 ## 2026-08-29
 
 ### Project analyzer assignments implementation

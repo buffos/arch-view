@@ -2,8 +2,10 @@
 
 ## State
 
-- Planning state: `specified`.
-- State transition: `bounded -> specified` on 2026-08-25.
+- Planning state: `implemented`.
+- State transition: `bounded -> specified` on 2026-08-25; `specified ->
+  implemented` on 2026-08-29 after all child delivery slices and the configured
+  viewer review were completed.
 - Exact-spec set is complete and readiness-reviewed.
 
 ## Artifact inventory
@@ -42,6 +44,9 @@
   batch's deterministic root discovery/job planning, bounded execution/
   lifecycle, namespaced aggregation/status, CLI/HTTP exposure, and cached
   viewer scope selection. The required visual-review gate is approved.
+- Issues 044–047 completed strict configuration loading, assignment and
+  source-scope planning, session cache invalidation, and configured viewer
+  integration. Issue 047's required visual review is approved.
 
 ## Next step and artifact impact
 
@@ -50,11 +55,11 @@ multi-analyzer delivery records, including the approved visual review. The
 current v1 pilot remains an explicitly supplied, script-based external Python
 process with one analyzer selected per run, while the compiled-distribution
 child is now the verified packaged runtime path for release execution. The
-parent capability remains `specified`; the separate project assignment/view
+parent capability is implemented; the separate project assignment/view
 child owns the readiness-reviewed invocation-root source-scope and assignment
 frontier, while the multi-analyzer batch consumes its resolved policy. Issues
-044–046 are verified and archived delivery records for that child; issue 047
-remains active as `awaiting-human-review` for its required visual gate.
+044–047 are verified and archived delivery records for that child, including
+the approved visual gate.
 
 - [Compiled external analyzer distribution](compiled-external-analyzer-distribution/discovery-notes.md)
 - [Multi-analyzer project orchestration](multi-analyzer-orchestration/discovery-notes.md)
@@ -63,8 +68,8 @@ remains active as `awaiting-human-review` for its required visual gate.
 Product and architecture synthesis now record the target compiled-binary,
 multi-job, assignment/view, and source-scope boundaries. Delivery truth includes
 completed issues 034–038 for the compiled-distribution child, completed issues
-039–043 for multi-analyzer orchestration, completed issues 044–046 for the
-project assignment/configuration child, and active issue 047 for its viewer
-review gate. That child remains `specified`; approved
+039–043 for multi-analyzer orchestration, and completed issues 044–047 for the
+project assignment/configuration child, including its approved viewer gate. The
+plugin-runtime child is implemented; approved
 issue dependencies, platform deferrals, and user-confirmed packaged-artifact
 trust policy are recorded in the planning map and log.

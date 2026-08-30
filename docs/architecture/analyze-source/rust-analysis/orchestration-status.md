@@ -27,7 +27,7 @@
 
 ## Next step and artifact impact
 
-The approved slices were implemented in dependency order and archived after acceptance verification. Issue 025 completed the required application PRD and architecture-summary refresh. Rust has no remaining delivery blocker; the TypeScript slice (020–022) and Clojure slice (026–029) are also complete under the still-specified parent capability, with the external plugin protocol remaining as future work.
+The approved slices were implemented in dependency order and archived after acceptance verification. Issue 025 completed the required application PRD and architecture-summary refresh. Rust has no remaining delivery blocker; the TypeScript slice (020–022), Clojure slice (026–029), and external plugin runtime are also complete under the now-implemented Analyze source capability.
 
 ## Compiled entrypoint evidence
 

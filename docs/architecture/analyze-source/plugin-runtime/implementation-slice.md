@@ -13,18 +13,16 @@ This slice does not add a language or a capability node. It ports the existing P
 - **User-confirmed target:** the first external deployment is an existing Python analyzer port, not a sixth language. It must be explicitly opted into and must not require model, layout, viewer, or exporter changes.
 - **Verified implementation:** the process host lifecycle, external Python implementation, public opt-in path, compiled entrypoints, trusted package catalog, packaged runtime selection, explicit fallback policy, and public packaged path are complete; packaged and in-process results reach the unchanged model, viewer/source, and export consumers.
 
-## Next future frontiers
+## Subsequent child frontiers
 
-The remaining user-confirmed target beyond this completed slice is represented
-by two specified child capabilities rather than being folded into the
-implemented runtime/distribution work. The multi-analyzer child now has an
-approved implementation sequence; the assignment/view child remains a later
-frontier:
+The user-confirmed extensions beyond this completed runtime/distribution slice
+were represented by two separate child capabilities rather than folded into
+the runtime boundary. Both child frontiers are now implemented and verified:
 
 - [Multi-analyzer project orchestration](../../../../.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md)
   plans and merges concurrent analyzer jobs for mixed or nested projects.
 - [Project analyzer assignments and view selection](../../../../.okf/capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
-  adds repository-relative assignments and application scope switching.
+  delivers repository-relative assignments and application scope switching.
 
 The [compiled external analyzer distribution](../../../../.okf/capabilities/analyze-source/plugin-runtime/compiled-external-analyzer-distribution.md)
 child is implemented. Its Linux amd64 and Darwin arm64 execution checks remain
@@ -96,10 +94,9 @@ separate project-analyzer-assignments child.
 
 ## Approved project-assignment delivery sequence
 
-Issues 044–047 are the approved vertical sequence for the specified project
-analyzer assignments and view-selection child. Issues 044–046 are verified and
-archived; issue 047 has completed automated verification and remains
-`awaiting-human-review` for its declared visual gate. They reuse the completed
+Issues 044–047 are the approved vertical sequence for the implemented project
+analyzer assignments and view-selection child. All four issues are verified and
+archived, including issue 047's approved visual gate. They reuse the completed
 multi-analyzer planner, aggregate, transport, and viewer projection seams;
 they do not add a new capability node or duplicate issue 043's selector.
 
@@ -108,7 +105,7 @@ they do not add a new capability node or duplicate issue 043's selector.
 | [044](../../../agents/issues/done/20260829-044-load-and-validate-analysis-configuration.md) | Completed: load v1/v2 `.archview.json` profiles and validate assignments, filters, analyzer options, and layout preservation | Configuration boundary | none | none |
 | [045](../../../agents/issues/done/20260829-045-resolve-configured-assignments-and-source-scopes.md) | Completed: resolve configured assignments/source scopes through CLI, HTTP, `open`, and reanalysis planning | Assignment and planning integration | 044 | none |
 | [046](../../../agents/issues/done/20260829-046-session-cache-and-selective-invalidation.md) | Completed: reuse immutable session scope results and invalidate only affected jobs | Cache and reanalysis | 045 | none |
-| [047](../../../agents/issues/pending/20260829-047-configured-scope-viewer-journey.md) | Automated implementation complete: expose configured scopes, diagnostics, and cache/reanalysis states through the existing viewer journey | Viewer integration | 046 | visual-review |
+| [047](../../../agents/issues/done/20260829-047-configured-scope-viewer-journey.md) | Completed: expose configured scopes, diagnostics, and cache/reanalysis states through the existing viewer journey, with approved visual review | Viewer integration | 046 | visual-review |
 
 ## Slice acceptance
 
@@ -148,8 +145,8 @@ plugin-runtime boundary; it does not change product topology or canonical model
 semantics. Issues 030–033 remain the completed delivery record for the v1
 external Python pilot. Issues 039–043 now represent verified delivery for the
 multi-analyzer planning, execution, aggregation, transport, and cached viewer
-scope-selection path. Issues 044–046 are verified delivery records for the
-assignment/configuration frontier; issue 047 remains active for its required
+scope-selection path. Issues 044–047 are verified delivery records for the
+assignment/configuration and configured-viewer frontier, including the approved
 visual review. The application PRD and application architecture summary
 require no semantic change for this delivery slicing; their product
 actors, workflows, and architectural boundaries remain unchanged.

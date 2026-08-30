@@ -63,5 +63,5 @@ issue 038; the package contract and Windows release path are verified.
 - Architecture truth: package trust, platform, and launch boundaries are current.
 - Delivery truth: issues 034–038 are archived after implementation and
   verification. The capability is `implemented`; the parent plugin-runtime
-  node remains `specified` for its separate multi-analyzer and assignment/view
-  children.
+  node and its separate multi-analyzer and assignment/view children are also
+  implemented after their verified delivery batches.
