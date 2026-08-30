@@ -49,6 +49,19 @@ const (
 	ErrAnalyzerPackageAPIIncompatible   ErrorCode = "analyzer_package_api_incompatible"
 	ErrAnalyzerRuntimeOverrideRequired  ErrorCode = "analyzer_runtime_override_required"
 	ErrAnalyzerPackageLaunchFailed      ErrorCode = "analyzer_package_launch_failed"
+	ErrSourceScopeUnavailable           ErrorCode = "source_scope_unavailable"
+	ErrSourceFileEnumerationFailed      ErrorCode = "source_file_enumeration_failed"
+	ErrSourceFileHashFailed             ErrorCode = "source_file_hash_failed"
+	ErrSourceExtractorUnavailable       ErrorCode = "source_extractor_unavailable"
+	ErrSourceExtractorFailed            ErrorCode = "source_extractor_failed"
+	ErrSourceFactInvalid                ErrorCode = "source_fact_invalid"
+	ErrSourceSpanInvalid                ErrorCode = "source_span_invalid"
+	ErrSourceReferenceInvalid           ErrorCode = "source_reference_invalid"
+	ErrSourceRelationInvalid            ErrorCode = "source_relation_invalid"
+	ErrDocumentationSelectionInvalid    ErrorCode = "documentation_selection_invalid"
+	ErrMetricFactInvalid                ErrorCode = "metric_fact_invalid"
+	ErrSourceIndexDigestMismatch        ErrorCode = "source_index_digest_mismatch"
+	ErrSourceIndexCapabilityUnsupported ErrorCode = "source_index_capability_unsupported"
 )
 
 type HostError struct {

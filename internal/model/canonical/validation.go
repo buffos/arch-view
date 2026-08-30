@@ -33,6 +33,11 @@ func Validate(value model.Model) error {
 	if value.Modules == nil || value.References == nil || value.SourceReferences == nil || value.Relationships == nil || value.Diagnostics == nil {
 		return analysis.NewHostError(analysis.ErrInvalidModel, "model collections must be serialized as arrays", nil)
 	}
+	if value.SourceIndex != nil {
+		if err := analysis.ValidateSourceIndex(*value.SourceIndex); err != nil {
+			return analysis.WrapHostError(analysis.ErrInvalidModel, "model source index is invalid", err, nil)
+		}
+	}
 	if value.Derived.Cycles == nil || value.Derived.FeedbackRelationshipIDs == nil || value.Derived.Layers == nil || value.Derived.AlgorithmProvenance == nil {
 		return analysis.NewHostError(analysis.ErrInvalidModel, "model derived projections are incomplete", nil)
 	}

@@ -151,6 +151,7 @@ type AnalysisResult struct {
 	SourceReferences   []SourceReference         `json:"source_references"`
 	Diagnostics        []Diagnostic              `json:"diagnostics"`
 	Summary            AnalysisSummary           `json:"summary"`
+	SourceIndex        *SourceIndex              `json:"source_index,omitempty"`
 }
 
 type AnalyzerInfo struct {

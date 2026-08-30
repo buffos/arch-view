@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/sourceindex"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
 )
@@ -312,6 +313,7 @@ func mergeUsableResults(run AnalysisRun, usableJobs, allJobs []AnalyzerJob, diag
 		Project:  analysis.ProjectInfo{RootLabel: run.Repository.RootLabel, Boundary: "aggregate"},
 		Modules:  []analysis.ModuleObservation{}, Relationships: []analysis.RelationshipObservation{}, References: []analysis.Reference{}, SourceReferences: []analysis.SourceReference{}, Diagnostics: []analysis.Diagnostic{},
 	}
+	sourceSnapshots := make([]analysis.SourceIndexSnapshot, 0)
 	for _, job := range usableJobs {
 		result, ok := run.scopeResults[job.ScopeID]
 		if !ok {
@@ -323,6 +325,28 @@ func mergeUsableResults(run AnalysisRun, usableJobs, allJobs []AnalyzerJob, diag
 		merged.References = append(merged.References, value.References...)
 		merged.SourceReferences = append(merged.SourceReferences, value.SourceReferences...)
 		merged.Diagnostics = append(merged.Diagnostics, value.Diagnostics...)
+		if result.SourceIndex != nil {
+			for _, snapshot := range result.SourceIndex.Snapshots {
+				namespaced, namespaceErr := sourceindex.NamespaceScopeSnapshot(snapshot, job.ScopeID, job.RelativeProjectRoot)
+				if namespaceErr != nil {
+					return analysis.AnalysisResult{}, namespaceErr
+				}
+				sourceSnapshots = append(sourceSnapshots, namespaced)
+			}
+		}
+	}
+	if len(sourceSnapshots) > 0 {
+		sort.Slice(sourceSnapshots, func(i, j int) bool { return sourceSnapshots[i].SnapshotID < sourceSnapshots[j].SnapshotID })
+		projection, projectionErr := sourceindex.BuildCombinedProjection(sourceSnapshots)
+		if projectionErr != nil {
+			return analysis.AnalysisResult{}, projectionErr
+		}
+		merged.SourceIndex = &analysis.SourceIndex{
+			SchemaVersion: analysis.SourceIndexSchemaVersion,
+			Snapshots:     sourceSnapshots,
+			Projection:    projection,
+			Extensions:    []analysis.ExtensionBlock{},
+		}
 	}
 	for _, job := range allJobs {
 		result, hasResult := run.scopeResults[job.ScopeID]
@@ -421,6 +445,7 @@ func aggregateModelFromCanonical(value model.Model, scopes []ScopeSummary) *Aggr
 		Relationships:    value.Relationships,
 		Diagnostics:      value.Diagnostics,
 		Derived:          value.Derived,
+		SourceIndex:      value.SourceIndex,
 	}
 	result.ModelID = aggregateModelID(*result)
 	return result
@@ -522,6 +547,7 @@ func cloneAnyValue(value any) any {
 }
 
 func cloneAnalysisResult(value analysis.AnalysisResult) analysis.AnalysisResult {
+	value.SourceIndex = sourceindex.CloneSourceIndex(value.SourceIndex)
 	value.Modules = append([]analysis.ModuleObservation(nil), value.Modules...)
 	for index := range value.Modules {
 		value.Modules[index].Hierarchy = append([]string(nil), value.Modules[index].Hierarchy...)

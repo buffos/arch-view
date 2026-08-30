@@ -29,7 +29,7 @@ func ScanProjectWithSyntaxProvider(ctx context.Context, request analysis.Analyze
 	includeGenerated := optionBool(options, "include_generated")
 	excludePatterns := optionStrings(options, "exclude")
 	packages := make(map[string]*Package)
-	result := ScanResult{}
+	result := ScanResult{SyntaxProvider: syntaxProvider}
 
 	walkErr := filepath.WalkDir(project.ModuleRoot, func(filePath string, entry fs.DirEntry, walkErr error) error {
 		if ctx.Err() != nil {
@@ -100,13 +100,38 @@ func ScanProjectWithSyntaxProvider(ctx context.Context, request analysis.Analyze
 		if generated && !includeGenerated {
 			return nil
 		}
+		relativeModulePath, relErr := filepath.Rel(project.ModuleRoot, filepath.Dir(filePath))
+		if relErr != nil {
+			return relErr
+		}
+		if relativeModulePath == "." {
+			relativeModulePath = "."
+		}
+		roles := []string{"role:source"}
+		if strings.HasSuffix(entry.Name(), "_test.go") {
+			roles = append(roles, "role:test")
+		}
+		if generated {
+			roles = append(roles, "role:generated")
+		}
+		sourceFileIndex := len(result.SourceFiles)
+		result.SourceFiles = append(result.SourceFiles, SourceFile{
+			RelativePath:   relativeProject,
+			Content:        append([]byte(nil), content...),
+			Language:       analysis.LanguageRef{ID: "language:go"},
+			Roles:          roles,
+			AnalysisStatus: analysis.FileAnalysisComplete,
+			ModuleID:       PackageID(project.ModulePath, relativeModulePath),
+		})
 		if syntaxProvider == nil {
+			result.SourceFiles[sourceFileIndex].AnalysisStatus = analysis.FileAnalysisUnknown
 			result.Diagnostics = append(result.Diagnostics, goSyntaxBackendDiagnostic(relativeProject, errors.New("go tree-sitter syntax provider is not configured")))
 			return nil
 		}
 		parsed, parseErr := syntaxProvider.Parse(ctx, syntax.Source{Path: relativeProject, Content: content})
 		if parseErr != nil {
 			parsed.Close()
+			result.SourceFiles[sourceFileIndex].AnalysisStatus = analysis.FileAnalysisUnparsed
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
@@ -115,20 +140,15 @@ func ScanProjectWithSyntaxProvider(ctx context.Context, request analysis.Analyze
 		}
 		defer parsed.Close()
 		for _, issue := range parsed.Issues {
+			result.SourceFiles[sourceFileIndex].AnalysisStatus = analysis.FileAnalysisPartial
 			result.Diagnostics = append(result.Diagnostics, goSyntaxIssueDiagnostic(relativeProject, issue))
 		}
 		if parsed.Tree == nil || parsed.Tree.Root() == nil {
+			result.SourceFiles[sourceFileIndex].AnalysisStatus = analysis.FileAnalysisUnparsed
 			result.Diagnostics = append(result.Diagnostics, goSyntaxBackendDiagnostic(relativeProject, errors.New("tree-sitter returned no Go syntax tree")))
 			return nil
 		}
 		root := parsed.Tree.Root()
-		relativeModulePath, relErr := filepath.Rel(project.ModuleRoot, filepath.Dir(filePath))
-		if relErr != nil {
-			return relErr
-		}
-		if relativeModulePath == "." {
-			relativeModulePath = "."
-		}
 		pkg := packages[filepath.Clean(filepath.Dir(filePath))]
 		if pkg == nil {
 			pkg = &Package{
@@ -143,6 +163,7 @@ func ScanProjectWithSyntaxProvider(ctx context.Context, request analysis.Analyze
 			Path: relativeProject,
 			Kind: "file",
 		}
+		result.SourceFiles[sourceFileIndex].SourceReferenceIDs = []string{fileSource.ID}
 		fileRecord := File{
 			RelativePath:    relativeProject,
 			PackageName:     goSyntaxPackageName(root),
@@ -238,5 +259,6 @@ func ScanProjectWithSyntaxProvider(ctx context.Context, request analysis.Analyze
 		}
 		return result.Imports[i].FromImportPath < result.Imports[j].FromImportPath
 	})
+	sort.Slice(result.SourceFiles, func(i, j int) bool { return result.SourceFiles[i].RelativePath < result.SourceFiles[j].RelativePath })
 	return result, nil
 }

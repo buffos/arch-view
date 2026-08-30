@@ -1,16 +1,26 @@
 package observations
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/sourceindex"
 	"github.com/buffo/arch-view/internal/analyzers/go/imports"
 	"github.com/buffo/arch-view/internal/analyzers/go/scanner"
 )
 
-func Build(scan scanner.ScanResult, request analysis.AnalyzeRequest, project scanner.Project, manifest analysis.Manifest) analysis.AnalysisResult {
+func Build(scan scanner.ScanResult, request analysis.AnalyzeRequest, project scanner.Project, manifest analysis.Manifest, registries ...*sourceindex.Registry) analysis.AnalysisResult {
+	return BuildContext(context.Background(), scan, request, project, manifest, registries...)
+}
+
+func BuildContext(ctx context.Context, scan scanner.ScanResult, request analysis.AnalyzeRequest, project scanner.Project, manifest analysis.Manifest, registries ...*sourceindex.Registry) analysis.AnalysisResult {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	options := request.Options.Values
 	includeExternal := optionBool(options, "include_external")
 	packagesByImportPath := make(map[string]*scanner.Package, len(scan.Packages))
@@ -140,6 +150,59 @@ func Build(scan scanner.ScanResult, request analysis.AnalyzeRequest, project sca
 		SourceReferences: scan.SourceReferences,
 		Diagnostics:      diagnostics,
 	}
+	requestedCapabilities := []string{
+		sourceindex.CapabilityDeclarations,
+		sourceindex.CapabilityDocumentation,
+		sourceindex.CapabilityFiles,
+		sourceindex.CapabilitySize,
+		sourceindex.CapabilityVisibility,
+	}
+	scope := sourceIndexScope(request.SourceScope, project)
+	producer := analysis.ProducerContext{
+		AnalyzerID:      manifest.ID,
+		AnalyzerVersion: manifest.Version,
+		ProtocolVersion: manifest.APIVersion,
+		Extractors:      []analysis.ExtractorIdentity{},
+	}
+	sourceInputs := make([]sourceindex.SourceFileInput, 0, len(scan.SourceFiles))
+	for _, file := range scan.SourceFiles {
+		sourceInputs = append(sourceInputs, sourceindex.SourceFileInput{
+			Path:               file.RelativePath,
+			Content:            file.Content,
+			Language:           file.Language,
+			Roles:              file.Roles,
+			AnalysisStatus:     file.AnalysisStatus,
+			Provenance:         sourceFileProvenance(file, manifest),
+			ModuleID:           file.ModuleID,
+			SourceReferenceIDs: file.SourceReferenceIDs,
+		})
+	}
+	registry := (*sourceindex.Registry)(nil)
+	if len(registries) > 0 {
+		registry = registries[0]
+	}
+	if len(sourceInputs) > 0 || registry != nil {
+		sourceIndex, sourceDiagnostics, sourceErr := sourceindex.BuildSourceIndex(ctx, sourceindex.BuildInput{
+			Scope:                 scope,
+			Producer:              producer,
+			Files:                 sourceInputs,
+			RequestedCapabilities: requestedCapabilities,
+			SyntaxProvider:        scan.SyntaxProvider,
+			Extractors:            registry,
+		})
+		diagnostics = append(diagnostics, sourceDiagnostics...)
+		if sourceErr != nil {
+			diagnostics = append(diagnostics, analysis.Diagnostic{
+				Code:        "source_index_build_failed",
+				Severity:    "error",
+				Message:     sourceErr.Error(),
+				Recoverable: true,
+			})
+		} else {
+			result.SourceIndex = &sourceIndex
+		}
+	}
+	result.Diagnostics = diagnostics
 	for _, diagnostic := range diagnostics {
 		if diagnostic.Recoverable {
 			result.Status = analysis.StatusPartial
@@ -148,6 +211,69 @@ func Build(scan scanner.ScanResult, request analysis.AnalyzeRequest, project sca
 	}
 	result.Summary = analysis.ComputeSummary(result)
 	return result
+}
+
+func sourceIndexScope(sourceScope *analysis.SourceScope, project scanner.Project) analysis.ScopeContext {
+	scope := analysis.ScopeContext{
+		ProjectRoot: project.RelativeModuleRoot,
+		Mode:        analysis.SourceIndexScopeMode,
+	}
+	if scope.ProjectRoot == "" {
+		scope.ProjectRoot = "."
+	}
+	if sourceScope == nil {
+		return scope
+	}
+	if sourceScope.ProjectRoot != "" {
+		scope.ProjectRoot = sourceScope.ProjectRoot
+	}
+	if fingerprint, ok := sourceDigest(sourceScope.MatchedSourceSetFingerprint); ok {
+		scope.SourceScopeFingerprint = fingerprint
+	}
+	if policy, ok := sourceDigest(sourceScope.PolicyFingerprint); ok {
+		scope.SourcePolicyFingerprint = &policy
+	}
+	return scope
+}
+
+func sourceFileProvenance(file scanner.SourceFile, manifest analysis.Manifest) analysis.FactProvenance {
+	status := analysis.FactStatusObserved
+	switch file.AnalysisStatus {
+	case analysis.FileAnalysisPartial:
+		status = analysis.FactStatusPartial
+	case analysis.FileAnalysisUnparsed, analysis.FileAnalysisUnknown:
+		status = analysis.FactStatusUnknown
+	}
+	return analysis.FactProvenance{
+		Status:          status,
+		Basis:           "syntax",
+		EvidenceIDs:     append([]string{}, file.SourceReferenceIDs...),
+		Provider:        manifest.ID,
+		ProviderVersion: manifest.Version,
+	}
+}
+
+func sourceDigest(value string) (analysis.ContentDigest, bool) {
+	value = strings.TrimSpace(value)
+	if len(value) >= len("sha256:") && strings.EqualFold(value[:len("sha256:")], "sha256:") {
+		value = value[len("sha256:"):]
+	}
+	if !isSHA256(value) {
+		return analysis.ContentDigest{}, false
+	}
+	return analysis.ContentDigest{Algorithm: analysis.SourceHashAlgorithm, Value: strings.ToLower(value)}, true
+}
+
+func isSHA256(value string) bool {
+	if len(value) != 64 {
+		return false
+	}
+	for _, character := range value {
+		if !((character >= '0' && character <= '9') || (character >= 'a' && character <= 'f') || (character >= 'A' && character <= 'F')) {
+			return false
+		}
+	}
+	return true
 }
 
 func analyzerInfo(manifest analysis.Manifest) analysis.AnalyzerInfo {

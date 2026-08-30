@@ -158,6 +158,11 @@ func ValidateAnalysisResult(result AnalysisResult, manifest Manifest, projectRoo
 			return NewHostError(ErrResultInvalid, "partial result must retain a recoverable diagnostic", nil)
 		}
 	}
+	if result.SourceIndex != nil {
+		if err := ValidateSourceIndex(*result.SourceIndex); err != nil {
+			return WrapHostError(ErrResultInvalid, "analysis result source index is invalid", err, nil)
+		}
+	}
 	if _, err := json.Marshal(result); err != nil {
 		return WrapHostError(ErrResultInvalid, "analysis result is not serializable", err, nil)
 	}

@@ -39,6 +39,9 @@ const Name = "service"
 	if result.Status != analysis.StatusComplete {
 		t.Fatalf("status = %q, want complete; diagnostics=%#v", result.Status, result.Diagnostics)
 	}
+	if result.SourceIndex == nil || len(result.SourceIndex.Snapshots) != 1 || len(result.SourceIndex.Snapshots[0].Files) != 2 || len(result.SourceIndex.Snapshots[0].Symbols) == 0 {
+		t.Fatalf("source-index attachment = %#v, want one snapshot with files and declarations", result.SourceIndex)
+	}
 	repeat, err := New().Analyze(context.Background(), analysis.AnalyzeRequest{
 		ProjectRoot: root,
 		Options:     goOptions(t, nil),

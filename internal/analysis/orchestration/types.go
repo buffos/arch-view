@@ -287,6 +287,7 @@ type AggregateModel struct {
 	Relationships    []analysis.RelationshipObservation `json:"relationships"`
 	Diagnostics      []model.Diagnostic                 `json:"diagnostics"`
 	Derived          model.Derived                      `json:"derived"`
+	SourceIndex      *analysis.SourceIndex              `json:"source_index,omitempty"`
 }
 
 type AnalysisRun struct {

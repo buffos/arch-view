@@ -24,6 +24,7 @@ type Model struct {
 	Relationships    []analysis.RelationshipObservation `json:"relationships"`
 	Diagnostics      []Diagnostic                       `json:"diagnostics"`
 	Derived          Derived                            `json:"derived"`
+	SourceIndex      *analysis.SourceIndex              `json:"source_index,omitempty"`
 }
 
 type Project struct {

@@ -7,24 +7,27 @@ import (
 	"sort"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/analysis/sourceindex"
 	"github.com/buffo/arch-view/internal/analysis/syntax"
 	gosyntax "github.com/buffo/arch-view/internal/analysis/syntax/go"
 	"github.com/buffo/arch-view/internal/analyzers/go/observations"
 	"github.com/buffo/arch-view/internal/analyzers/go/scanner"
+	"github.com/buffo/arch-view/internal/analyzers/go/sourcefacts"
 )
 
 type Analyzer struct {
-	syntaxProvider syntax.Provider
+	syntaxProvider   syntax.Provider
+	sourceExtractors *sourceindex.Registry
 }
 
 func New() *Analyzer {
-	return &Analyzer{syntaxProvider: gosyntax.NewProvider()}
+	return &Analyzer{syntaxProvider: gosyntax.NewProvider(), sourceExtractors: sourcefacts.NewRegistry()}
 }
 
 // NewWithSyntaxProvider constructs an analyzer with an explicit source syntax
 // provider for acceptance tests and alternate Tree-sitter environments.
 func NewWithSyntaxProvider(provider syntax.Provider) *Analyzer {
-	return &Analyzer{syntaxProvider: provider}
+	return &Analyzer{syntaxProvider: provider, sourceExtractors: sourcefacts.NewRegistry()}
 }
 
 func (Analyzer) Manifest() analysis.Manifest {
@@ -102,7 +105,7 @@ func (a Analyzer) Analyze(ctx context.Context, request analysis.AnalyzeRequest) 
 	if err != nil {
 		return analysis.AnalysisResult{}, err
 	}
-	return observations.Build(scan, request, project, a.Manifest()), nil
+	return observations.BuildContext(ctx, scan, request, project, a.Manifest(), a.sourceExtractors), nil
 }
 
 func existsAsFile(path string) bool {
