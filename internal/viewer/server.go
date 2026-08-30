@@ -18,7 +18,7 @@ import (
 	"github.com/buffo/arch-view/internal/viewer/layout"
 )
 
-//go:embed web/index.html web/styles.css web/app.js web/app/*.js web/layout_request.js web/graph_route.js web/vendor/elk.bundled.js web/vendor/elk-worker.min.js
+//go:embed web/index.html web/styles.css web/styles/*.css web/app.js web/app/*.js web/layout_request.js web/graph_route.js web/vendor/elk.bundled.js web/vendor/elk-worker.min.js
 var webFiles embed.FS
 
 const (
@@ -231,7 +231,7 @@ func (s *Server) handleAsset(writer http.ResponseWriter, request *http.Request) 
 		http.NotFound(writer, request)
 		return
 	}
-	data, err := webFiles.ReadFile("web/" + name)
+	data, err := Asset(name)
 	if err != nil {
 		http.NotFound(writer, request)
 		return

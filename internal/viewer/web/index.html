@@ -27,6 +27,7 @@
     </header>
 
     <main id="main-content" class="page-shell">
+      <div id="graph-view">
       <section class="hero-row" aria-labelledby="view-title">
         <div>
           <p class="eyebrow">TOP-LEVEL OVERVIEW</p>
@@ -109,15 +110,21 @@
           </div>
           <div id="details-context" class="details-context" aria-live="polite"></div>
           <div id="details-content" class="details-content">
-            <p class="muted">Use the graph or the keyboard-accessible list below to inspect the same scene facts.</p>
+            <p class="muted">Use the graph or the accessible scene list to inspect the current projection.</p>
           </div>
-          <div class="facts-divider"></div>
-          <div class="list-heading">
-            <h4>Accessible list &amp; imports</h4>
-            <span id="list-count" class="muted"></span>
-          </div>
-          <div id="accessible-list" class="accessible-list" aria-label="Architecture items"></div>
         </aside>
+      </section>
+
+      <section class="scene-list-card" aria-labelledby="accessible-list-title">
+        <div class="card-heading compact">
+          <div>
+            <p class="eyebrow">KEYBOARD VIEW</p>
+            <h3 id="accessible-list-title">Accessible scene list</h3>
+          </div>
+          <span id="list-count" class="muted"></span>
+        </div>
+        <p class="muted scene-list-description">Search and select the same nodes, relationships, imports, cycles, and diagnostics shown in the graph.</p>
+        <div id="accessible-list" class="accessible-list" aria-label="Architecture items"></div>
       </section>
 
       <dialog id="layout-settings-dialog" class="layout-settings-dialog" aria-labelledby="layout-settings-title">
@@ -184,6 +191,37 @@
           </div>
           <div id="diagnostics" class="support-list"></div>
         </article>
+      </section>
+      </div>
+
+      <section id="inspection-view" class="inspection-view" aria-labelledby="inspection-title" hidden>
+        <header class="inspection-header">
+          <div class="inspection-heading">
+            <button id="inspection-back" class="button secondary" type="button">Back to graph</button>
+            <p class="eyebrow">HUMAN-ORIENTED INSPECTION</p>
+            <h2 id="inspection-title">Node inspection</h2>
+            <p id="inspection-subtitle" class="lede">Select a node or group from the architecture graph.</p>
+          </div>
+          <div class="inspection-scope-control">
+            <label class="select-control" for="inspection-scope">
+              <span>Analysis scope</span>
+              <select id="inspection-scope" aria-label="Inspection analysis scope"></select>
+            </label>
+            <div id="inspection-scope-status" class="inspection-scope-status" aria-live="polite"></div>
+          </div>
+        </header>
+        <div class="inspection-layout">
+          <nav id="inspection-navigation" class="inspection-navigation" aria-label="Inspection sections">
+            <button type="button" class="inspection-nav-item active" data-inspection-section="overview" aria-current="page"><span>Overview</span><span class="inspection-nav-count" data-inspection-count="overview"></span></button>
+            <button type="button" class="inspection-nav-item" data-inspection-section="structure"><span>Structure</span><span class="inspection-nav-count" data-inspection-count="structure"></span></button>
+            <button type="button" class="inspection-nav-item" data-inspection-section="files"><span>Files</span><span class="inspection-nav-count" data-inspection-count="files"></span></button>
+            <button type="button" class="inspection-nav-item" data-inspection-section="symbols"><span>Symbols</span><span class="inspection-nav-count" data-inspection-count="symbols"></span></button>
+            <button type="button" class="inspection-nav-item" data-inspection-section="dependencies"><span>Dependencies</span><span class="inspection-nav-count" data-inspection-count="dependencies"></span></button>
+            <button type="button" class="inspection-nav-item" data-inspection-section="evidence"><span>Evidence</span><span class="inspection-nav-count" data-inspection-count="evidence"></span></button>
+            <button type="button" class="inspection-nav-item" data-inspection-section="technical"><span>Technical details</span><span class="inspection-nav-count" data-inspection-count="technical"></span></button>
+          </nav>
+          <div id="inspection-content" class="inspection-content" tabindex="-1" aria-live="polite"></div>
+        </div>
       </section>
     </main>
 

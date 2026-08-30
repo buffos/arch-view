@@ -3,10 +3,12 @@ package viewer
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/analysis/orchestration"
+	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/viewer/scene"
 )
 
@@ -36,7 +38,16 @@ func (s *Server) handleModel(writer http.ResponseWriter, request *http.Request) 
 		return
 	}
 	if len(parts) == 1 {
-		writeJSON(writer, http.StatusOK, value)
+		response, responseErr := modelForResponse(value, request)
+		if responseErr != nil {
+			writeHTTPError(writer, http.StatusBadRequest, responseErr)
+			return
+		}
+		writeJSON(writer, http.StatusOK, response)
+		return
+	}
+	if parts[1] == "source-index" {
+		s.handleSourceIndex(writer, request, parts, modelID, &value, nil)
 		return
 	}
 	if len(parts) != 2 || parts[1] != "projection" {
@@ -81,7 +92,16 @@ func (s *Server) handleAggregateModel(writer http.ResponseWriter, request *http.
 		return
 	}
 	if len(parts) == 1 {
-		writeJSON(writer, http.StatusOK, aggregate.Model)
+		response, responseErr := aggregateModelForResponse(*aggregate.Model, request)
+		if responseErr != nil {
+			writeHTTPError(writer, http.StatusBadRequest, responseErr)
+			return
+		}
+		writeJSON(writer, http.StatusOK, response)
+		return
+	}
+	if parts[1] == "source-index" {
+		s.handleSourceIndex(writer, request, parts, modelID, nil, aggregate)
 		return
 	}
 	if len(parts) != 2 || parts[1] != "projection" {
@@ -116,4 +136,38 @@ func (s *Server) handleAggregateModel(writer http.ResponseWriter, request *http.
 	sceneSnapshot.AggregateStatus = aggregate.Status
 	sceneSnapshot.ScopeStatus = "aggregate"
 	writeJSON(writer, http.StatusOK, sceneSnapshot)
+}
+
+// modelForResponse keeps the historical full model response by default while
+// allowing the graph viewer to opt out of the potentially large source-index
+// attachment. The copy prevents a transport preference from mutating the
+// server's canonical model cached for other clients.
+func modelForResponse(value model.Model, request *http.Request) (model.Model, error) {
+	includeSourceIndex := true
+	if raw := request.URL.Query().Get("include_source_index"); raw != "" {
+		parsed, err := strconv.ParseBool(raw)
+		if err != nil {
+			return model.Model{}, analysis.NewHostError(analysis.ErrInvalidRequest, "include_source_index must be a boolean", map[string]any{"include_source_index": raw})
+		}
+		includeSourceIndex = parsed
+	}
+	if !includeSourceIndex {
+		value.SourceIndex = nil
+	}
+	return value, nil
+}
+
+func aggregateModelForResponse(value orchestration.AggregateModel, request *http.Request) (orchestration.AggregateModel, error) {
+	includeSourceIndex := true
+	if raw := request.URL.Query().Get("include_source_index"); raw != "" {
+		parsed, err := strconv.ParseBool(raw)
+		if err != nil {
+			return orchestration.AggregateModel{}, analysis.NewHostError(analysis.ErrInvalidRequest, "include_source_index must be a boolean", map[string]any{"include_source_index": raw})
+		}
+		includeSourceIndex = parsed
+	}
+	if !includeSourceIndex {
+		value.SourceIndex = nil
+	}
+	return value, nil
 }

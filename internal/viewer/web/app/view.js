@@ -1,13 +1,27 @@
 import { classForState, displayProjectRoot, escapeHTML, formatLanguage, formatList, nodeLanguageBadge, nodeLanguageText, referenceScopeLabel, referenceVisibilityLabel } from "./utils.js";
 
+function showBanner(context, message, tone) {
+  const banner = context.elements.errorBanner;
+  banner.textContent = message;
+  banner.hidden = false;
+  banner.classList.toggle("error", tone !== "info");
+  banner.classList.toggle("info", tone === "info");
+  banner.setAttribute("role", tone === "info" ? "status" : "alert");
+}
+
 export function showError(context, message) {
-  context.elements.errorBanner.textContent = message;
-  context.elements.errorBanner.hidden = false;
+  showBanner(context, message, "error");
+}
+
+export function showNotice(context, message) {
+  showBanner(context, message, "info");
 }
 
 export function hideError(context) {
-  context.elements.errorBanner.hidden = true;
-  context.elements.errorBanner.textContent = "";
+  const banner = context.elements.errorBanner;
+  banner.hidden = true;
+  banner.textContent = "";
+  banner.classList.remove("error", "info");
 }
 
 export function sceneLayoutKey(scene) {
@@ -20,6 +34,7 @@ export function sceneLayoutKey(scene) {
 
 export function renderAll(context, services) {
   const scene = context.state.scene;
+  if (!scene) return;
   const activeScope = activeScopeDescriptor(context);
   const projectLabel = context.aggregateEnabled && activeScope && activeScope.value !== "all"
     ? scene.project.root_label + " · " + activeScope.root + " · " + activeScope.language
@@ -40,6 +55,7 @@ export function renderAll(context, services) {
   services.renderAccessibleList();
   services.renderSupportLists();
   services.renderDetails();
+  if (services.renderInspection) services.renderInspection();
 }
 
 export function renderScopeSelector(context) {

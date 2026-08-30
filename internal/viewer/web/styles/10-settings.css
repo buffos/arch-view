@@ -1,0 +1,314 @@
+.layout-settings-dialog {
+  width: min(78rem, calc(100vw - 2rem));
+  max-height: min(90vh, 58rem);
+  padding: 0;
+  color: var(--text);
+  background: var(--card-strong);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
+}
+
+.layout-settings-dialog::backdrop {
+  background: rgba(3, 6, 16, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.layout-settings-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 58rem);
+  padding: 1.25rem;
+}
+
+.layout-settings-header,
+.layout-settings-footer,
+.layout-save-as {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.layout-settings-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.layout-settings-header h3 {
+  margin-bottom: 0.35rem;
+}
+
+.layout-settings-header .muted {
+  max-width: 48rem;
+  margin-bottom: 0;
+  line-height: 1.45;
+}
+
+.layout-settings-origin {
+  margin: 0.85rem 0;
+  padding: 0.65rem 0.8rem;
+  color: var(--cyan);
+  background: rgba(110, 231, 249, 0.06);
+  border: 1px solid rgba(110, 231, 249, 0.18);
+  border-radius: 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.layout-settings-diagnostic {
+  margin-bottom: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  color: var(--muted-strong);
+  background: rgba(110, 231, 249, 0.06);
+  border: 1px solid rgba(110, 231, 249, 0.2);
+  border-radius: 0.6rem;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.layout-settings-diagnostic.error {
+  color: #ffd5dc;
+  background: rgba(127, 29, 52, 0.38);
+  border-color: rgba(251, 113, 133, 0.45);
+}
+
+.layout-settings-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.settings-field {
+  display: flex;
+  flex: 1 1 20rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--muted-strong);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.settings-field input,
+.settings-field select,
+.layout-option-input {
+  width: 100%;
+  padding: 0.58rem 0.68rem;
+  color: var(--text);
+  background: var(--control-surface);
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+}
+
+.settings-field small {
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.layout-options-list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 8rem;
+  max-height: 42vh;
+  padding: 0.1rem 0.3rem 0.1rem 0;
+  overflow: auto;
+}
+
+.layout-option-group {
+  margin: 0.7rem 0 0;
+  color: var(--cyan);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.layout-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 15rem);
+  gap: 1rem;
+  padding: 0.75rem 0.8rem;
+  background: rgba(8, 13, 27, 0.42);
+  border: 1px solid var(--line-soft);
+  border-radius: 0.65rem;
+}
+
+.layout-option.editable {
+  border-color: rgba(110, 231, 183, 0.24);
+}
+
+.layout-option.not-applicable,
+.layout-option.catalog-only {
+  opacity: 0.72;
+}
+
+.layout-option-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 0.3rem;
+}
+
+.layout-option-title strong {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.layout-option-title code {
+  color: var(--cyan);
+  font-size: 0.64rem;
+  overflow-wrap: anywhere;
+}
+
+.layout-option-meta {
+  margin-bottom: 0.3rem;
+  color: var(--violet);
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.layout-option-copy p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.layout-option-control {
+  display: flex;
+  align-items: center;
+}
+
+.layout-option-state {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.layout-save-as {
+  align-items: end;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.confirm-field {
+  display: flex;
+  align-items: center;
+  flex: 1 1 22rem;
+  gap: 0.5rem;
+  padding-bottom: 0.65rem;
+  color: var(--muted-strong);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.confirm-field input {
+  accent-color: var(--cyan);
+}
+
+.layout-settings-footer {
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.layout-settings-status-error {
+  display: inline-block;
+  padding: 0.35rem 0.55rem;
+  color: #ffd5dc;
+  background: rgba(127, 29, 52, 0.28);
+  border: 1px solid rgba(251, 113, 133, 0.38);
+  border-radius: 0.45rem;
+}
+
+.layout-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1080px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+  .details-card {
+    position: static;
+  }
+}
+
+@media (max-width: 680px) {
+  .topbar,
+  .hero-row {
+    align-items: start;
+    flex-direction: column;
+  }
+  .session-meta {
+    text-align: left;
+  }
+  .hero-actions {
+    width: 100%;
+    justify-content: start;
+  }
+  .search-control {
+    flex: 1 1 12rem;
+  }
+  .search-control input {
+    width: 100%;
+  }
+  .summary-grid,
+  .bottom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .graph-wrap {
+    min-height: 25rem;
+  }
+  .graph-wrap svg {
+    min-height: 24rem;
+  }
+  .footer {
+    align-items: start;
+    flex-direction: column;
+  }
+  .scene-heading-actions {
+    justify-content: start;
+  }
+  .canvas-meta-bar,
+  .canvas-meta-summary {
+    align-items: start;
+    justify-content: start;
+    flex-direction: column;
+  }
+  .layout-settings-controls,
+  .layout-save-as,
+  .layout-settings-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .layout-settings-controls {
+    grid-template-columns: 1fr;
+  }
+  .layout-option {
+    grid-template-columns: 1fr;
+  }
+  .layout-option-state {
+    text-align: left;
+  }
+  .layout-settings-actions {
+    justify-content: start;
+  }
+}

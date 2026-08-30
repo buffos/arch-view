@@ -1,0 +1,129 @@
+body.list-mode .graph-wrap {
+  min-height: 12rem;
+}
+body.list-mode .graph-wrap svg {
+  min-height: 11rem;
+  opacity: 0.45;
+}
+
+html.canvas-focus,
+html.canvas-fullscreen,
+body.canvas-focus,
+body.canvas-fullscreen {
+  overflow: hidden;
+}
+
+.scene-card:fullscreen,
+body.canvas-focus .scene-card {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  padding: 0.85rem 1.25rem 1rem;
+  overflow: hidden;
+  background: var(--bg-soft);
+  border: 0;
+  border-radius: 0;
+}
+
+.scene-card:fullscreen .card-heading,
+body.canvas-focus .scene-card .card-heading {
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.scene-card:fullscreen .scene-heading,
+body.canvas-focus .scene-card .scene-heading {
+  margin-bottom: 0;
+}
+
+.scene-card:fullscreen .scene-heading-actions,
+body.canvas-focus .scene-card .scene-heading-actions {
+  justify-content: end;
+  gap: 0.45rem;
+}
+
+.scene-card:fullscreen .card-heading .eyebrow,
+body.canvas-focus .scene-card .card-heading .eyebrow {
+  display: none;
+}
+
+.scene-card:fullscreen .card-heading h3,
+body.canvas-focus .scene-card .card-heading h3 {
+  font-size: 0.95rem;
+}
+
+.scene-card:fullscreen .state-pill,
+.scene-card:fullscreen .layer-pill,
+.scene-card:fullscreen .reference-pill,
+body.canvas-focus .scene-card .state-pill,
+body.canvas-focus .scene-card .layer-pill,
+body.canvas-focus .scene-card .reference-pill {
+  padding: 0.22rem 0.45rem;
+  font-size: 0.62rem;
+}
+
+.scene-card:fullscreen .scene-navigation,
+body.canvas-focus .scene-card .scene-navigation {
+  min-height: 1.8rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.3rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.scene-card:fullscreen .canvas-meta-bar,
+body.canvas-focus .scene-card .canvas-meta-bar {
+  margin-top: 0.55rem;
+  margin-bottom: 0.5rem;
+  padding-top: 0.55rem;
+}
+
+.scene-card:fullscreen .canvas-meta-summary,
+body.canvas-focus .scene-card .canvas-meta-summary {
+  gap: 0.45rem;
+}
+
+.scene-card:fullscreen .layer-legend,
+body.canvas-focus .scene-card .layer-legend {
+  min-height: 0;
+  margin: 0;
+}
+
+.scene-card:fullscreen .reference-summary,
+body.canvas-focus .scene-card .reference-summary {
+  min-height: 0;
+  margin: 0;
+}
+
+.scene-card:fullscreen .viewport-toolbar,
+body.canvas-focus .scene-card .viewport-toolbar {
+  min-height: 2rem;
+  margin: 0;
+}
+
+.scene-card:fullscreen .graph-wrap,
+body.canvas-focus .scene-card .graph-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+  overflow: hidden;
+}
+
+.scene-card:fullscreen .graph-wrap svg,
+body.canvas-focus .scene-card .graph-wrap svg {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.scene-card:fullscreen .scene-help,
+body.canvas-focus .scene-card .scene-help {
+  display: none;
+}

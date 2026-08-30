@@ -42,7 +42,7 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 		t.Fatalf("root response = %d %q", rootResponse.StatusCode, rootResponse.Header.Get("Content-Type"))
 	}
 	rootText := string(rootBody)
-	if !strings.Contains(rootText, "SEMANTIC SCENE") || !strings.Contains(rootText, value.ModelID) || !strings.Contains(rootText, "reference-visibility") || !strings.Contains(rootText, "Accessible list &amp; imports") || !strings.Contains(rootText, "type=\"module\"") || !strings.Contains(rootText, "/assets/vendor/elk-worker.min.js") || strings.Contains(rootText, "__ARCH_VIEW_MODEL_ID__") {
+	if !strings.Contains(rootText, "SEMANTIC SCENE") || !strings.Contains(rootText, value.ModelID) || !strings.Contains(rootText, "reference-visibility") || !strings.Contains(rootText, "Accessible scene list") || !strings.Contains(rootText, "HUMAN-ORIENTED INSPECTION") || !strings.Contains(rootText, "type=\"module\"") || !strings.Contains(rootText, "/assets/vendor/elk-worker.min.js") || strings.Contains(rootText, "__ARCH_VIEW_MODEL_ID__") {
 		t.Fatalf("root page did not contain the model bootstrap: %s", rootText)
 	}
 
@@ -133,8 +133,9 @@ func TestServerServesReadOnlyModelSceneAndBrowserAssets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read styles.css: %v", err)
 	}
-	if stylesResponse.StatusCode != http.StatusOK || !strings.Contains(string(stylesBody), ".edge-hit") || !strings.Contains(string(stylesBody), "fill: none") {
-		t.Fatalf("edge hit-area style missing from response = %d", stylesResponse.StatusCode)
+	stylesText := string(stylesBody)
+	if stylesResponse.StatusCode != http.StatusOK || !strings.Contains(stylesText, ".edge-hit") || !strings.Contains(stylesText, "fill: none") || strings.Contains(stylesText, "@import") || !strings.Contains(stylesText, "select option") {
+		t.Fatalf("stylesheet response = %d edge=%t fill=%t imports=%t options=%t", stylesResponse.StatusCode, strings.Contains(stylesText, ".edge-hit"), strings.Contains(stylesText, "fill: none"), strings.Contains(stylesText, "@import"), strings.Contains(stylesText, "select option"))
 	}
 
 	modelResponse, err := http.Get(httpServer.URL + "/v1/models/" + url.PathEscape(value.ModelID))

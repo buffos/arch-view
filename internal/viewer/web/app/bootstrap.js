@@ -5,16 +5,33 @@ import { downloadCurrentSVG } from "./export.js";
 import { applyLayoutProfile, closeLayoutSettings, loadLayoutConfig, openLayoutSettings, prepareLayout, renderLayoutSettings, resetLayoutProfile, saveLayoutProfile, saveLayoutProfileAs, updateLayoutDraftAlgorithm, updateLayoutDraftOption } from "./layout.js";
 import { createNavigation } from "./navigation.js";
 import { changeZoom, fitViewport, persistViewport, renderViewportControls, resetLayout, resetZoom, syncFocusButton, toggleFocusMode } from "./viewport.js";
-import { renderAccessibleList, renderDetails, renderSupportLists, openSource, selectEntity } from "./details.js";
+import { renderAccessibleList, renderDetails, renderSupportLists, openSource, openSourceFact, selectEntity } from "./details.js";
+import { createInspectionController, parseInspectionRoute } from "./inspection.js";
 import { hideError, renderAll, renderBreadcrumbs, renderSceneState, renderScopeSelector, sceneLayoutKey, showError } from "./view.js";
+
+export function loadInitialState(navigation, context, initialPath) {
+  const modelLoad = navigation.loadModel();
+  const scopeLoad = navigation.loadScopes();
+  return Promise.all([modelLoad, scopeLoad]).then(function () {
+    const pathValue = initialPath || (context.embeddedExport && Array.isArray(context.embeddedExport.initial_path) ? context.embeddedExport.initial_path : []);
+    return navigation.loadScene(pathValue);
+  });
+}
 
 export function bootstrap() {
   const context = createContext();
   const api = createAPI(context);
+  const initialRoute = parseInspectionRoute(window.location.search);
+  if (initialRoute && !initialRoute.invalid) {
+    if (initialRoute.scope && context.aggregateEnabled) context.state.activeScope = initialRoute.scope;
+    if (initialRoute.referenceVisibility) context.state.referenceVisibility = initialRoute.referenceVisibility;
+  }
   const services = {
     changeZoom: function (delta) { changeZoom(context, delta, services); },
     navigationTo: function () {},
     openSource: function (evidenceID) { return openSource(context, evidenceID, api, services); },
+    openSourceFact: function (entityID) { return openSourceFact(context, entityID, api, services); },
+    openInspection: function () {},
     persistViewport: function () { persistViewport(context); },
     prepareLayout: function (scene, profile) { return prepareLayout(context, scene, profile, services); },
     renderAccessibleList: function () { renderAccessibleList(context, services); },
@@ -22,6 +39,7 @@ export function bootstrap() {
     renderBreadcrumbs: function () { renderBreadcrumbs(context, services.navigationTo); },
     renderDetails: function () { renderDetails(context, services); },
     renderGraph: function () { renderGraph(context, services); },
+    renderInspection: function () {},
     renderLayoutSettings: function () { renderLayoutSettings(context); },
     renderSceneState: function () { renderSceneState(context); },
     renderScopeSelector: function () { renderScopeSelector(context); },
@@ -30,8 +48,12 @@ export function bootstrap() {
     sceneLayoutKey: sceneLayoutKey,
     selectEntity: function (kind, id, preserveDoubleClick) { selectEntity(context, kind, id, preserveDoubleClick, services); }
   };
+  const inspection = createInspectionController(context, api, services);
+  services.openInspection = inspection.openInspection;
+  services.renderInspection = inspection.render;
   const navigation = createNavigation(context, api, services);
   services.navigationTo = navigation.navigationTo;
+  inspection.bindNavigation(navigation);
 
   context.elements.footerModelID.textContent = context.modelID;
   context.elements.reanalysisButton.hidden = !context.reanalysisEnabled;
@@ -81,9 +103,9 @@ export function bootstrap() {
   context.elements.downloadSVG.addEventListener("click", function () { downloadCurrentSVG(context); });
   document.addEventListener("fullscreenchange", function () { syncFocusButton(context); });
   context.elements.reanalysisButton.addEventListener("click", navigation.reanalyze);
-  if (context.embeddedExport && context.embeddedExport.initial_reference_visibility) context.state.referenceVisibility = context.embeddedExport.initial_reference_visibility;
-  void navigation.loadModel().then(function () { return navigation.loadScopes(); }).then(function () {
-    return navigation.loadScene(context.embeddedExport && Array.isArray(context.embeddedExport.initial_path) ? context.embeddedExport.initial_path : []);
+  if (context.embeddedExport && context.embeddedExport.initial_reference_visibility && !initialRoute) context.state.referenceVisibility = context.embeddedExport.initial_reference_visibility;
+  void loadInitialState(navigation, context, initialRoute && !initialRoute.invalid ? initialRoute.path : null).then(function () {
+    inspection.initialize();
   });
   void loadLayoutConfig(context, api, services);
 }

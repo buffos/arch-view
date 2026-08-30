@@ -37,9 +37,11 @@ export function createNavigation(context, api, services) {
   async function loadModel() {
     const requestedModelID = api.currentModelID();
     try {
-      const value = await api.getJSON("/v1/models/" + encodeURIComponent(requestedModelID));
+      const value = await api.getJSON("/v1/models/" + encodeURIComponent(requestedModelID) + "?include_source_index=false");
       if (requestedModelID !== api.currentModelID()) return;
       context.state.model = value;
+      context.state.sourceIndex = value && value.source_index ? value.source_index : null;
+      context.state.sourceIndexError = "";
       if (context.state.scene) services.renderDetails();
     } catch (error) {
       showError(context, error.message || "The canonical model could not be loaded.");
@@ -109,6 +111,29 @@ export function createNavigation(context, api, services) {
     }
   }
 
+  async function loadSourceIndex(sceneRequest) {
+    context.state.sourceIndexRequest += 1;
+    const request = context.state.sourceIndexRequest;
+    if (context.embeddedExport || !context.aggregateEnabled) {
+      context.state.sourceIndex = context.state.model && context.state.model.source_index ? context.state.model.source_index : null;
+      context.state.sourceIndexError = "";
+      return;
+    }
+    const scope = context.state.activeScope || "all";
+    try {
+      const query = new URLSearchParams();
+      query.set("scope", scope);
+      const value = await api.getJSON("/v1/models/" + encodeURIComponent(api.currentModelID()) + "/source-index?" + query.toString());
+      if (sceneRequest !== context.state.sceneRequest || request !== context.state.sourceIndexRequest) return;
+      context.state.sourceIndex = value && value.source_index ? value.source_index : value;
+      context.state.sourceIndexError = "";
+    } catch (error) {
+      if (sceneRequest !== context.state.sceneRequest || request !== context.state.sourceIndexRequest) return;
+      context.state.sourceIndex = null;
+      context.state.sourceIndexError = error.message || "Source facts are unavailable for this scope.";
+    }
+  }
+
   async function reanalyze() {
     if (!context.reanalysisEnabled || context.elements.reanalysisButton.disabled) return;
     context.elements.reanalysisButton.disabled = true;
@@ -140,5 +165,5 @@ export function createNavigation(context, api, services) {
     }
   }
 
-  return { goBack, loadModel, loadScene, loadScopes, navigationTo, reanalyze, rememberSceneContext };
+  return { goBack, loadModel, loadScene, loadScopes, loadSourceIndex, navigationTo, reanalyze, rememberSceneContext };
 }

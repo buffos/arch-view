@@ -84,9 +84,10 @@ function moduleNames(context, moduleIDs) {
 
 function locationText(link) {
   if (!link) return "";
-  const start = link.start ? "L" + link.start.line + ":" + link.start.column : "line unavailable";
-  const end = link.end ? "–L" + link.end.line + ":" + link.end.column : "";
-  return link.path + " · " + start + end;
+  const path = link.path || "Location unavailable";
+  if (!link.start || !link.start.line || link.start.line < 1) return path + " · File provenance only";
+  const endLine = link.end && link.end.line && link.end.line >= link.start.line ? link.end.line : link.start.line;
+  return path + " · " + (endLine === link.start.line ? "Line " + link.start.line : "Lines " + link.start.line + "–" + endLine);
 }
 
 function evidenceLinks(context, ids) {
@@ -157,13 +158,144 @@ function moduleSection(context, node) {
   return detailSection("Canonical modules", '<ul class="module-list">' + modules + "</ul>");
 }
 
+function activeSourceSnapshot(context) {
+  const index = context.state.sourceIndex;
+  if (!index) return null;
+  if (context.aggregateEnabled && (context.state.activeScope || "all") === "all" && index.projection) return index.projection;
+  const snapshots = Array.isArray(index.snapshots) ? index.snapshots : [];
+  const activeScope = context.aggregateEnabled ? context.state.activeScope : "";
+  return snapshots.find(function (snapshot) {
+    return !activeScope || activeScope === "all" || snapshot.scope_context && snapshot.scope_context.scope_id === activeScope;
+  }) || snapshots[0] || null;
+}
+
+export function sourceFactStatus(snapshot, files) {
+	if (!snapshot) return "unavailable";
+	const coverage = snapshot.coverage || [];
+	const hasUnsupported = coverage.some(function (item) { return item.status === "unsupported"; });
+	const hasUnknown = coverage.some(function (item) { return item.status === "unknown"; }) || files.some(function (file) { return file.analysis_status === "unknown" || file.analysis_status === "unparsed"; });
+	const hasPartial = coverage.some(function (item) { return item.status === "partial"; }) || files.some(function (file) { return file.analysis_status === "partial"; });
+	const hasObserved = coverage.some(function (item) { return item.status === "observed"; });
+	if (!files.length && hasUnsupported && !hasObserved) return "unsupported";
+	if (hasPartial || (hasUnsupported && files.length)) return "partial";
+	if (hasUnknown) return "unknown";
+	if (!files.length) return "missing";
+	return "populated";
+}
+
+export function sourceFactModuleData(snapshot, node) {
+  if (!snapshot || !node || !node.module_ids || !node.module_ids.length) return { files: [], symbols: [], documentation: [], relations: [] };
+  const moduleIDs = new Set(node.module_ids);
+  const fileIDs = new Set();
+  const relations = (snapshot.relations || []).filter(function (relation) {
+    if (relation.category !== "contains" && relation.category !== "declares") return false;
+    if (!relation.to_ref) return false;
+    if (relation.from_ref && relation.from_ref.kind === "module" && moduleIDs.has(relation.from_ref.id) && relation.to_ref.kind === "file") {
+      fileIDs.add(relation.to_ref.id);
+      return true;
+    }
+    return false;
+  });
+  const files = (snapshot.files || []).filter(function (file) { return fileIDs.has(file.id); });
+  const symbolIDs = new Set();
+  (snapshot.relations || []).forEach(function (relation) {
+    if (!relation.to_ref || !relation.from_ref || relation.from_ref.kind !== "file" || relation.to_ref.kind !== "symbol") return;
+    if (fileIDs.has(relation.from_ref.id)) symbolIDs.add(relation.to_ref.id);
+  });
+  const symbols = (snapshot.symbols || []).filter(function (symbol) { return symbolIDs.has(symbol.id); });
+  const documentation = (snapshot.documentation || []).filter(function (record) {
+    return (record.subject_ref && record.subject_ref.kind === "file" && fileIDs.has(record.subject_ref.id)) || (record.subject_ref && record.subject_ref.kind === "symbol" && symbolIDs.has(record.subject_ref.id));
+  });
+  (snapshot.relations || []).forEach(function (relation) {
+    if (!relation.from_ref) return;
+    if (relation.from_ref.kind === "file" && fileIDs.has(relation.from_ref.id) && !relations.includes(relation)) relations.push(relation);
+  });
+  files.sort(function (left, right) { return String(left.path).localeCompare(String(right.path)); });
+  symbols.sort(function (left, right) { return String(left.id).localeCompare(String(right.id)); });
+  documentation.sort(function (left, right) { return String(left.id).localeCompare(String(right.id)); });
+  relations.sort(function (left, right) { return String(left.id).localeCompare(String(right.id)); });
+  return { files: files, symbols: symbols, documentation: documentation, relations: relations };
+}
+
+function sourceFactHash(file) {
+  const value = file && file.size && file.size.content_hash ? file.size.content_hash.value : "";
+  return value ? value.slice(0, 12) + "…" : "hash unavailable";
+}
+
+function sourceFactProvenance(value) {
+  const provenance = value || {};
+  const provider = String(provenance.provider || "").trim();
+  const version = String(provenance.provider_version || "").trim();
+  const identity = provider ? provider + (version ? "@" + version : "") : "provider unavailable";
+  return [provenance.status || "status unavailable", provenance.basis || "basis unavailable", identity].join(" · ");
+}
+
+function sourceFactSymbol(symbol, context, documentationBySubject) {
+  const visibility = symbol.visibility && symbol.visibility.classification ? symbol.visibility.classification : "unknown";
+  const title = (symbol.qualified_name || symbol.name || "Unnamed symbol") + " · " + visibility;
+  const documentation = (documentationBySubject && documentationBySubject[symbol.id]) || [];
+  const documentationStatus = documentation.length ? documentation.map(function (item) { return item.status || "unknown"; }).join(", ") : "not reported";
+  const meta = [symbol.category || "unknown", symbol.language_kind || "kind unavailable", (symbol.locations || []).length + " location(s)", "docs " + documentationStatus, sourceFactProvenance(symbol.provenance)].join(" · ");
+  const action = context.sourceEnabled && !context.embeddedExport
+    ? '<button type="button" class="source-fact-action" data-source-fact-id="' + escapeHTML(symbol.id) + '">Inspect bounded source</button>'
+    : "";
+  return '<li class="source-fact-symbol"><div><strong>' + escapeHTML(title) + '</strong><span>' + escapeHTML(meta) + '</span></div>' + action + '</li>';
+}
+
+function sourceFactsSection(context, node) {
+  const snapshot = activeSourceSnapshot(context);
+  if (!snapshot) {
+    const message = context.state.sourceIndexError || "This model revision does not include a source-facts attachment.";
+    return detailSection("Source facts", '<div class="source-facts-state source-facts-unavailable"><span class="state-pill warning">unavailable</span><p class="muted">' + escapeHTML(message) + "</p></div>");
+  }
+  const data = sourceFactModuleData(snapshot, node);
+  const state = sourceFactStatus(snapshot, data.files);
+  const coverage = (snapshot.coverage || []).map(function (item) {
+    return '<span class="source-fact-coverage"><strong>' + escapeHTML(item.capability) + '</strong> <span class="state-pill ' + (item.status === "observed" ? "ok" : item.status === "unsupported" ? "warning" : "") + '">' + escapeHTML(item.status) + '</span></span>';
+  }).join("");
+  if (!data.files.length) {
+    const stateClass = state === "populated" ? "ok" : "warning";
+    const copy = state === "unsupported" ? "The active analyzer does not support source-fact extraction for this scope." : state === "unknown" ? "Source-fact coverage is unknown because the source could not be parsed or inspected." : state === "unavailable" ? "Source-fact coverage is unavailable for this model revision." : "No explicit module-to-file containment facts are available for this node in the active scope.";
+    return detailSection("Source facts", '<div class="source-facts-state source-facts-' + escapeHTML(state) + '"><span class="state-pill ' + stateClass + '">' + escapeHTML(state) + '</span><p class="muted">' + escapeHTML(copy) + "</p></div>" + (coverage ? '<div class="source-fact-coverage-list">' + coverage + "</div>" : ""));
+  }
+  const symbolsByFile = {};
+  (snapshot.relations || []).forEach(function (relation) {
+    if (!relation.from_ref || !relation.to_ref || relation.from_ref.kind !== "file" || relation.to_ref.kind !== "symbol") return;
+    if (!symbolsByFile[relation.from_ref.id]) symbolsByFile[relation.from_ref.id] = [];
+    symbolsByFile[relation.from_ref.id].push(relation.to_ref.id);
+  });
+  const symbolsByID = {};
+  data.symbols.forEach(function (symbol) { symbolsByID[symbol.id] = symbol; });
+  const documentationBySubject = {};
+  data.documentation.forEach(function (documentation) {
+    if (!documentation.subject_ref || !documentation.subject_ref.id) return;
+    if (!documentationBySubject[documentation.subject_ref.id]) documentationBySubject[documentation.subject_ref.id] = [];
+    documentationBySubject[documentation.subject_ref.id].push(documentation);
+  });
+  const files = data.files.slice(0, 24).map(function (file) {
+    const fileDocumentation = data.documentation.filter(function (documentation) { return documentation.subject_ref && documentation.subject_ref.kind === "file" && documentation.subject_ref.id === file.id; });
+    const fileDocumentationStatus = fileDocumentation.length ? fileDocumentation.map(function (item) { return item.status || "unknown"; }).join(", ") : "not reported";
+    const symbolItems = (symbolsByFile[file.id] || []).map(function (id) { return symbolsByID[id]; }).filter(Boolean).slice(0, 8).map(function (symbol) { return sourceFactSymbol(symbol, context, documentationBySubject); }).join("");
+    const moreSymbols = Math.max(0, (symbolsByFile[file.id] || []).length - 8);
+    return '<li class="source-fact-file"><div class="source-fact-file-heading"><strong>' + escapeHTML(file.path) + '</strong><span>' + escapeHTML((file.size.byte_count || 0) + " bytes · " + (file.size.line_count || 0) + " lines · " + sourceFactHash(file)) + '</span></div><div class="source-fact-file-meta">' + escapeHTML((file.analysis_status || "unknown") + " · " + (file.roles || []).join(", ") + " · docs " + fileDocumentationStatus) + '</div><div class="source-fact-provenance">' + escapeHTML(sourceFactProvenance(file.provenance)) + '</div>' + (symbolItems ? '<ul class="source-fact-symbol-list">' + symbolItems + (moreSymbols ? '<li class="muted">' + moreSymbols + " more symbol(s)</li>" : "") + '</ul>' : '<p class="muted">No named declarations reported.</p>') + '</li>';
+  }).join("");
+  const moreFiles = Math.max(0, data.files.length - 24);
+  return detailSection("Source facts", '<div class="source-facts-state source-facts-' + escapeHTML(state) + '"><span class="state-pill ' + (state === "populated" ? "ok" : "warning") + '">' + escapeHTML(state) + '</span><span>' + escapeHTML(data.files.length + " file(s) · " + data.symbols.length + " symbol(s) · " + data.documentation.length + " documentation record(s)") + '</span></div>' + (coverage ? '<div class="source-fact-coverage-list">' + coverage + "</div>" : "") + '<ul class="source-fact-file-list">' + files + (moreFiles ? '<li class="muted">' + moreFiles + " more file(s)</li>" : "") + '</ul>');
+}
+
 function bindDetailActions(context, services) {
+  context.elements.detailsContent.querySelectorAll("[data-open-inspection]").forEach(function (element) {
+    element.addEventListener("click", function () { services.openInspection("node", element.dataset.openInspection); });
+  });
   const drill = context.elements.detailsContent.querySelector("[data-drill-path]");
   if (drill) drill.addEventListener("click", function () { services.navigationTo(drill.dataset.drillPath ? drill.dataset.drillPath.split("/") : []); });
   const filter = context.elements.detailsContent.querySelector("#detail-import-scope");
   if (filter) filter.addEventListener("change", function () { context.state.importScope = filter.value; renderDetails(context, services); });
   context.elements.detailsContent.querySelectorAll("[data-evidence-id]").forEach(function (element) {
     element.addEventListener("click", function () { services.openSource(element.dataset.evidenceId); });
+  });
+  context.elements.detailsContent.querySelectorAll("[data-source-fact-id]").forEach(function (element) {
+    element.addEventListener("click", function () { services.openSourceFact(element.dataset.sourceFactId); });
   });
   context.elements.detailsContent.querySelectorAll("[data-import-kind]").forEach(function (element) {
     element.addEventListener("click", function () { services.selectEntity(element.dataset.importKind, element.dataset.importId); });
@@ -179,7 +311,11 @@ function sourcePanel(context) {
   const lines = (excerpt.lines || []).map(function (line) {
     return '<span class="source-line"><span class="source-number" aria-hidden="true">' + escapeHTML(line.number) + '</span><span class="source-text">' + escapeHTML(line.text) + "</span></span>";
   }).join("");
-  const range = "L" + excerpt.start.line + ":" + excerpt.start.column + "–L" + excerpt.end.line + ":" + excerpt.end.column;
+  const startLine = excerpt.start && excerpt.start.line;
+  const endLine = excerpt.end && excerpt.end.line;
+  const range = startLine && endLine
+    ? (startLine === endLine ? "Line " + startLine : "Lines " + startLine + "–" + endLine)
+    : "File provenance only";
   return detailSection("Read-only source", '<div class="source-meta"><strong>' + escapeHTML(excerpt.path) + '</strong><span>' + escapeHTML(range) + ' · read-only</span></div><pre class="source-excerpt"><code>' + lines + "</code></pre>");
 }
 
@@ -193,7 +329,7 @@ function activeScopeDetails(context) {
       language: formatLanguage(languageValue),
       languageValue: languageValue,
       status: scene.status,
-      meta: "Model-only session · " + displayProjectRoot(scene.project.root_label)
+      meta: "Local model scope"
     };
   }
   if (active === "all") {
@@ -204,7 +340,7 @@ function activeScopeDetails(context) {
       language: "Multi",
       languageValue: "multi",
       status: scene.aggregate_status || scene.status,
-      meta: displayProjectRoot(scene.project.root_label) + " · " + usable + "/" + scopes.length + " scopes usable"
+      meta: usable + "/" + scopes.length + " scopes usable"
     };
   }
   const scope = (context.state.scopes || []).find(function (item) { return item.scope_id === active; });
@@ -217,7 +353,7 @@ function activeScopeDetails(context) {
     language: formatLanguage(languageValue),
     languageValue: languageValue,
     status: scope && scope.status ? scope.status : scene.scope_status || scene.status,
-    meta: selectionSourceLabel(scope) + " · " + analyzerIdentityLabel(scope) + " · " + scopeCacheLabel(scope) + " · " + sourceIdentityLabel(scope) + " · " + moduleCount
+    meta: selectionSourceLabel(scope) + " · " + moduleCount
   };
 }
 
@@ -264,6 +400,23 @@ function scopeStatusClass(status) {
   return "";
 }
 
+export function compactSummaryFields(node) {
+  const counts = node && node.counts ? node.counts : {};
+  return {
+    label: node && node.label || "Unnamed item",
+    kind: node && node.kind || "node",
+    hierarchy: node && node.hierarchy_path ? node.hierarchy_path.slice() : [],
+    counts: {
+      modules: counts.module_count || 0,
+      relationships: counts.relationship_count || 0,
+      evidence: counts.evidence_count || 0
+    },
+    statuses: [node && node.cycle_state, node && node.diagnostic_state, node && node.confidence_state, node && node.identity_state].filter(function (value) {
+      return value && value !== "none" && value !== "not_applicable" && value !== "high" && value !== "stable";
+    })
+  };
+}
+
 function renderDetailsContext(context) {
   if (!context.elements.detailsContext || !context.state.scene) return;
   const value = activeScopeDetails(context);
@@ -279,7 +432,7 @@ export function renderDetails(context, services) {
   if (!state.selected) {
     context.elements.detailsTitle.textContent = "Select an item";
     context.elements.detailsKind.textContent = context.aggregateEnabled ? "All scopes" : "Overview";
-    context.elements.detailsContent.innerHTML = '<p class="muted">The graphic and list use the same renderer-neutral scene. Select a node or directed relationship to inspect stable IDs, aggregation counts, layers, uncertainty, and evidence.</p>' + '<div class="detail-table">' + detailRow("Hierarchy", scene.hierarchy_path.length ? scene.hierarchy_path.join(" / ") : "Top level") + detailRow("Model status", scene.status, scene.status === "complete" ? "high" : "warning") + detailRow("Language", formatLanguage(scene.project.language)) + detailRow("Boundary", scene.project.boundary) + detailRow("Revision", scene.model_revision) + "</div>" + sourcePanel(context);
+    context.elements.detailsContent.innerHTML = '<p class="muted">Select a node or directed relationship to see its compact summary. Use Open inspection for human-oriented source details.</p>' + '<div class="detail-table">' + detailRow("Hierarchy", scene.hierarchy_path.length ? scene.hierarchy_path.join(" / ") : "Top level") + detailRow("Model status", scene.status, scene.status === "complete" ? "high" : "warning") + detailRow("Language", formatLanguage(scene.project.language)) + "</div>";
     bindDetailActions(context, services);
     return;
   }
@@ -289,13 +442,16 @@ export function renderDetails(context, services) {
     context.elements.detailsTitle.textContent = node.label;
     context.elements.detailsKind.textContent = node.kind + " · " + formatLanguage(nodeLanguageBadge(context, node));
     const drill = node.kind === "group" ? '<button class="button secondary detail-action" type="button" data-drill-path="' + escapeHTML(node.hierarchy_path.join("/")) + '">Open group</button>' : "";
-    context.elements.detailsContent.innerHTML = drill + '<div class="detail-table">' +
-      detailRow("Stable ID", node.id, "emphasis") + detailRow("Hierarchy", formatList(node.hierarchy_path, "Top level")) + detailRow("Language", nodeLanguageText(context, node), "emphasis") + detailRow("Modules", node.counts.module_count) + detailRow("Visible relationships", node.counts.relationship_count) +
-      (node.counts.internal_relationship_count ? detailRow("Internal relationships", node.counts.internal_relationship_count + " (collapsed in overview)", "emphasis") : "") +
-      (node.internal_relationship_ids && node.internal_relationship_ids.length ? detailRow("Internal IDs", formatList(node.internal_relationship_ids)) : "") + detailRow("Layer", node.layer == null ? formatList((node.layers || []).map(function (item) { return "Layer " + item; }), "Unassigned") : "Layer " + node.layer) +
-      detailRow("Cycle state", node.cycle_state, node.cycle_state !== "none" ? "cycle" : "") + detailRow("Diagnostics", node.diagnostic_state, node.diagnostic_state !== "none" ? "warning" : "") + detailRow("Identity", node.identity_state || "stable") +
-      detailRow("Relationship confidence", node.confidence_state === "not_applicable" ? "Not aggregated for local node" : node.confidence_state, node.confidence_state === "not_applicable" ? "" : node.confidence_state) + (node.reference_scope ? detailRow("Reference scope", referenceScopeLabel(node.reference_scope)) : "") + detailRow("Evidence", node.counts.evidence_count) + detailRow("Tags", formatList(node.tags)) +
-      "</div>" + moduleSection(context, node) + importSection(context, node) + detailSection("Source evidence", evidenceLinks(context, node.evidence_ids)) + sourcePanel(context);
+    const summary = compactSummaryFields(node);
+    const statusBadges = [];
+    if (node.cycle_state && node.cycle_state !== "none") statusBadges.push('<span class="state-pill error">' + escapeHTML(node.cycle_state) + " cycle</span>");
+    if (node.diagnostic_state && node.diagnostic_state !== "none") statusBadges.push('<span class="state-pill warning">' + escapeHTML(node.diagnostic_state) + " diagnostics</span>");
+    if (node.confidence_state && node.confidence_state !== "not_applicable" && node.confidence_state !== "high") statusBadges.push('<span class="state-pill warning">' + escapeHTML(node.confidence_state) + " confidence</span>");
+    if (node.identity_state && node.identity_state !== "stable") statusBadges.push('<span class="state-pill warning">' + escapeHTML(node.identity_state) + " identity</span>");
+    const counts = node.counts || {};
+    context.elements.detailsContent.innerHTML = '<p class="details-summary-copy">A compact view of the selected item. Open inspection for source structure and evidence.</p><div class="detail-actions"><button class="button detail-action" type="button" data-open-inspection="' + escapeHTML(node.id) + '">Open inspection</button>' + drill + '</div><div class="detail-table">' +
+      detailRow("Hierarchy", formatList(summary.hierarchy, "Top level")) + detailRow("Language", nodeLanguageText(context, node), "emphasis") + detailRow("Active scope", activeScopeDetails(context).name) + detailRow("Modules", summary.counts.modules) + detailRow("Visible relationships", summary.counts.relationships) + detailRow("Evidence links", summary.counts.evidence) +
+      "</div>" + (statusBadges.length ? '<div class="detail-status-row" aria-label="Non-neutral status">' + statusBadges.join("") + "</div>" : "");
     bindDetailActions(context, services);
     return;
   }
@@ -355,6 +511,7 @@ export async function openSource(context, evidenceID, api, services) {
   const request = ++context.state.sourceRequest;
   context.state.source = { loading: true, link: link };
   services.renderDetails();
+  if (services.renderInspection) services.renderInspection();
   const query = new URLSearchParams({ model_id: api.currentModelID(), evidence_id: evidenceID, path: link.path });
   if (context.aggregateEnabled && context.state.activeScope) query.set("scope", context.state.activeScope);
   if (link.start) query.set("start_line", String(link.start.line));
@@ -364,10 +521,36 @@ export async function openSource(context, evidenceID, api, services) {
     if (request !== context.state.sourceRequest || !context.state.scene || data.model_revision !== context.state.scene.model_revision) return;
     context.state.source = { data: data, link: link };
     services.renderDetails();
+    if (services.renderInspection) services.renderInspection();
   } catch (error) {
     if (request !== context.state.sourceRequest) return;
     context.state.source = { error: error.message || "The source excerpt could not be loaded.", link: link };
     services.renderDetails();
+    if (services.renderInspection) services.renderInspection();
+  }
+}
+
+export async function openSourceFact(context, entityID, api, services) {
+  if (!context.sourceEnabled) return;
+  const request = ++context.state.sourceRequest;
+  context.state.source = { loading: true, link: { id: entityID, kind: "source fact" } };
+  services.renderDetails();
+  if (services.renderInspection) services.renderInspection();
+  const query = new URLSearchParams({ include_source: "true" });
+  if (context.aggregateEnabled && context.state.activeScope) query.set("scope", context.state.activeScope);
+  try {
+    const endpoint = "/v1/models/" + encodeURIComponent(api.currentModelID()) + "/source-index/evidence/" + encodeURIComponent(entityID) + "?" + query.toString();
+    const response = await api.getJSON(endpoint);
+    if (request !== context.state.sourceRequest || !context.state.scene) return;
+    if (!response.source_context) throw new Error("No bounded source context was returned for this source fact.");
+    context.state.source = { data: response.source_context, link: { id: entityID, kind: "source fact" } };
+    services.renderDetails();
+    if (services.renderInspection) services.renderInspection();
+  } catch (error) {
+    if (request !== context.state.sourceRequest) return;
+    context.state.source = { error: error.message || "The source-fact excerpt could not be loaded.", link: { id: entityID, kind: "source fact" } };
+    services.renderDetails();
+    if (services.renderInspection) services.renderInspection();
   }
 }
 
