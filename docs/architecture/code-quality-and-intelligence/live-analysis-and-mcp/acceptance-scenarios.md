@@ -1,7 +1,8 @@
 # Live analysis and MCP acceptance scenarios
 
-These are backend/contract scenarios. They cover the shared read model and
-security boundary; visual rendering remains a downstream consumer concern.
+These are backend/contract scenarios. They cover the shared read model,
+freshness assurance, analyzer-neutral agent queries, quality-policy boundary,
+and security contract; visual rendering remains a downstream consumer concern.
 
 ## LAM-AC-001 — Initial ready snapshot
 
@@ -126,8 +127,9 @@ it does not look like a successful empty caller list.
 
 **When** an MCP tool responds
 
-**Then** it enforces the configured default max bytes/items, sets truncation and
-omitted fields, and returns a cursor. Full source content is not included.
+**Then** it enforces the operation-specific compact default and configured hard
+max bytes/items, sets truncation and omitted fields, and returns a cursor. Full
+source content is not included.
 
 ## LAM-AC-014 — Source context is explicit and safe
 
@@ -148,15 +150,17 @@ rejected.
 **Then** semantic records, statuses, evidence, ordering, and revision metadata
 match; only transport envelopes differ.
 
-## LAM-AC-016 — Read-only permission boundary
+## LAM-AC-016 — Default read-only permission boundary
 
-**Given** a v1 MCP session
+**Given** a v1 MCP session with its default read-only operation policy
 
 **When** a client requests shell execution, target application execution,
-configuration write, or source edit
+arbitrary configuration write, or source edit
 
 **Then** the operation is rejected with permission/unsupported diagnostics and
-the live snapshot remains unchanged.
+the live snapshot remains unchanged. Explicit quality-profile or baseline
+operations are allowed only through their separate validated allowlisted
+permission and authorization.
 
 ## LAM-AC-017 — Transport is replaceable
 
@@ -177,3 +181,89 @@ adapter additionally enforces its authentication/origin policy.
 **Then** MCP can return evidence for the finding but cannot write a patch. If a
 future authorized workflow edits the file, the watcher observes a new event and
 re-evaluates it as a new candidate revision.
+
+## LAM-AC-019 — Strict query reconciles missed watcher events
+
+**Given** the watcher reports no pending event but a file changed after the
+last ready revision
+
+**When** a client requests findings with `consistency=require_current`
+
+**Then** the coordinator's reconciliation detects the changed input, starts or
+joins a bounded reanalysis, and returns only the newly verified revision as
+`current`; it never trusts the clean watcher state alone.
+
+## LAM-AC-020 — Edit storms produce one coherent build
+
+**Given** an editor emits many modify/rename events for several files during a
+short edit burst
+
+**When** the debounce window closes and multiple clients request current data
+
+**Then** events are deduplicated into one event group, clients join one
+single-flight reconciliation/build, and the published revision includes the
+verified final input or reports `input_unstable`.
+
+## LAM-AC-021 — Source changes during analysis are not current
+
+**Given** a candidate build starts and one included file changes before the
+candidate is published
+
+**When** the coordinator verifies the input fingerprint
+
+**Then** it discards and retries the candidate within policy; after the retry
+limit it retains the last-ready revision and reports `input_unstable` rather
+than publishing a stale candidate as current.
+
+## LAM-AC-022 — Analyzer-neutral capability coverage
+
+**Given** a session contains scopes produced by different registered analyzers
+
+**When** an agent searches symbols, documentation, text, or callers/callees
+
+**Then** the query uses the same language-neutral contract, identifies the
+contributing analyzer/capability per scope, and reports unsupported/unknown
+coverage explicitly without a language-specific MCP branch.
+
+## LAM-AC-023 — Temporary quality settings do not persist
+
+**Given** a verified source revision and a valid profile
+
+**When** an agent requests `evaluate_quality` with temporary rule bindings and
+`persist=false`
+
+**Then** the returned report records the effective profile/options identity and
+uses the deterministic-quality service, while the project profile document and
+future default evaluation remain unchanged.
+
+## LAM-AC-024 — Quality policy writes require explicit permission
+
+**Given** a session with the default read-only operation policy
+
+**When** a client requests profile save or baseline creation
+
+**Then** the request is rejected without changing project files. When the
+separate policy-write permission and authorization are granted, the request is
+validated, restricted to the profile/baseline destination, and audited.
+
+## LAM-AC-025 — Baseline requires a current compatible report
+
+**Given** a baseline request refers to an old, partial, or incompatible report
+
+**When** `create_baseline` is requested
+
+**Then** the policy service rejects it with an explicit stale/incompatible
+diagnostic. A baseline can be created only from the exact selected finding keys
+and compatible rule/profile/formula versions of a verified report.
+
+## LAM-AC-026 — Agent fix loop compares revisions
+
+**Given** a quality finding is returned at revision 12 and the agent edits the
+affected source outside MCP
+
+**When** the agent waits for current revision 13 and compares the two quality
+reports
+
+**Then** the result identifies added, unchanged, suppressed, and resolved
+findings by stable finding key, and partial/unsupported coverage is not treated
+as resolution.

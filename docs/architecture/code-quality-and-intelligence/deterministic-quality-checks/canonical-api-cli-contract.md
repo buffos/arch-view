@@ -143,8 +143,10 @@ without a separately specified, observable rule.
 
 ## Catalog and report queries
 
-The local HTTP adapter and future transport adapters expose equivalent read
-semantics:
+The local HTTP adapter and future transport adapters, including the live/MCP
+gateway, expose equivalent catalog, report, comparison, and explicitly
+permissioned policy semantics. The adapter delegates to the quality services;
+it does not re-evaluate rules or implement a second baseline matcher:
 
 - `GET /v1/quality/profiles` — discover project-local profile documents and
   report invalid entries without making them selectable.

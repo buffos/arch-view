@@ -75,7 +75,7 @@ slice; it extends the product through three child territories:
 
 - The [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) is implemented through issues 048–052 as an optional, scope-first attachment with first-class files, physical line counts, hashes, documentation, named declarations, visibility, containment, provenance, typed extension points, bounded queries, and human-oriented module inspection. The graph presents a compact summary card; a same-tab inspection route progressively loads bounded Files, Symbols, and evidence views, while technical identifiers remain secondary. Its required final visual-review gate is approved.
 - The [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063: configurable size, complexity, documentation, coupling, cycle, dependency-direction, and layer rules; deterministic report lifecycle/baselines; conservative SOLID signals; bounded queries; headless/export projections; and the report-backed viewer. Metrics/rules are versioned registry strategies; unsupported inputs are not passes, and SOLID output is explicitly a signal rather than a provable violation. Issue 063 passed its desktop and responsive visual review.
-- The [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) child is now specified for configured-folder watching, revision-aware immutable snapshots, compact structural code search, and on-demand quality reports to LLM tools. Reporting is read-only by default; source changes remain an explicit downstream action.
+- The [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) child is specified for configured-folder watching across all registered analyzers, request-time freshness reconciliation, revision-aware immutable snapshots, compact structural and exact-text search, and quality reports for LLM tools. It also delegates temporary quality evaluations and explicitly authorized profile/baseline policy operations to the deterministic-quality services. Source changes remain an explicit downstream action.
 
 The source-facts child is implemented through its approved visual review. The
 deterministic-quality child is `implemented`; issues 053–063 have delivered the quality profile and
@@ -117,7 +117,13 @@ transport permissions separately owned.
     a configured line limit and filter to those files, and exports the same
     findings for automation.
 14. A coding assistant queries the live MCP surface for current findings,
-    symbols, callers/callees where available, and bounded source context.
+    analyzer-neutral symbols, exact text matches, callers/callees where
+    available, documentation, and bounded source context; it edits through its
+    own tools and compares the next verified revision.
+15. A coding assistant or developer lists available quality rules/profiles,
+    requests a temporary evaluation with explicit settings, and—when the
+    session grants policy-write permission—previews and creates a baseline from
+    selected findings without changing source code.
 
 ## Non-goals
 
@@ -127,6 +133,8 @@ transport permissions separately owned.
 - Presenting subjective or LLM-generated judgments as deterministic findings;
   SOLID labels and comment usefulness remain signals or coverage checks.
 - Implicit source mutation from analysis, watching, or MCP reporting.
+- Unreviewed quality-policy mutation: profile saves and baselines require
+  explicit operation permission and authorization.
 - Perfect resolution of dynamic imports, generated code, or runtime dispatch.
 - Treating `.archview.json` as a container for canonical model data, viewport
   state, or manual diagram positions. Its separately owned `analysis` section
@@ -153,7 +161,7 @@ transport permissions separately owned.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `implemented`, including the v1 canonical model and graph-projection contract.
 - [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) is `specified` for future extensions.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `implemented`, including JSON v1 and deterministic HTML/SVG/CI behavior.
-- [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md): `specified` as a structural roll-up; its [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) child is implemented through issues 048–052 with final visual approval, while [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) and [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) remain `specified`. The parent has no standalone implementation slice.
+- [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md): `specified` as a structural roll-up; its [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) child is implemented through issues 048–052 with final visual approval, its [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063, and [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) remains `specified`. The parent has no standalone implementation slice.
 
 ## Cross-capability dependencies
 
@@ -174,10 +182,12 @@ language semantics, while the core owns validation, opaque IDs, coverage,
 canonical ordering, and digest assembly. The specified quality child evaluates
 versioned metrics and rules through registries, emits exact findings or
 explicitly labeled SOLID signals, and keeps baselines/coverage separate from
-source facts. The specified live child owns watcher freshness, conservative
-invalidation, atomic coherent revisions, compact structural queries, budgets,
-and read-only permissions; MCP remains its transport/query adapter rather than
-an owner of analysis semantics.
+source facts. The specified live child owns watcher hints, request-time
+reconciliation, conservative invalidation, stable-input verification, atomic
+coherent revisions, analyzer-neutral compact queries, budgets, and operation
+permissions. MCP remains its transport/query adapter and delegates quality
+evaluation/profile/baseline semantics to the quality child rather than owning
+them.
 
 ## Implementation sequence
 
@@ -205,11 +215,11 @@ an owner of analysis semantics.
     approval of the module-inspection projection is recorded.
 12. Specify and then implement configurable deterministic quality rules,
     findings, architecture constraints, and machine-readable quality reports.
-    The quality contract is now specified and readiness-reviewed; delivery is
-    not claimed.
+    The quality contract and issues 053–063 are implemented and verified.
 13. Specify and then implement live analysis snapshots, folder watching,
-    compact structural search, and MCP reporting with explicit freshness and
-    source-safety policies. The live/MCP contract is now specified and
+    request-time freshness reconciliation, analyzer-neutral search, quality
+    service delegation, and MCP reporting with explicit source-safety and
+    policy-permission rules. The live/MCP contract is now specified and
     readiness-reviewed; delivery is not claimed.
 
 The specification set is complete and readiness-reviewed. A 2026-08-28
@@ -237,10 +247,11 @@ assignment/view selection and its source-scope policy are implemented through
 verified issues 044–047, including the approved configured-viewer visual
 review. Advanced ELK renderer support remains the specified renderer-only
 extension of the implemented viewer. The code-quality and code-intelligence
-roll-up remains `specified`; its source-facts child is implemented with its
-approved final visual gate, while deterministic-quality and live-analysis/MCP remain
-specified. Further implementation work starts at the least-mature remaining
-child rather than at the aggregate parent.
+  roll-up remains `specified`; its source-facts child is implemented with its
+  approved final visual gate, deterministic-quality is implemented through
+  issues 053–063, and live-analysis/MCP remains specified. Further
+  implementation work starts at the least-mature remaining child rather than
+  at the aggregate parent.
 
 ## Verification strategy
 
@@ -276,9 +287,10 @@ No high or medium blocker prevents the specified planning baseline. The followin
   implementation is delivered through issues 053–063, including the real Go
   structural-fact producer for SOLID signals and the `quality baseline` CLI
   workflow and the visually reviewed report-backed viewer.
-- Live watcher/MCP snapshot behavior, permissions, and transport are specified
-  and readiness-reviewed but still require implementation and packaging
-  verification.
+- Live watcher/MCP snapshot behavior, request-time freshness reconciliation,
+  analyzer-neutral queries, quality-service delegation, permissions, and
+  transport are specified and readiness-reviewed but still require
+  implementation and packaging verification.
 
 ## Specification sources
 

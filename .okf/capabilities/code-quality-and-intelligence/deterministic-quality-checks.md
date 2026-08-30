@@ -80,6 +80,11 @@ Specified boundary:
 - Project-backed viewers may explicitly persist a validated complete rule
   selection to an existing quality profile or save it as a new direct JSON
   profile; temporary viewer selections remain session-owned.
+- The live-analysis/MCP child may delegate profile/rule discovery, temporary
+  evaluations, profile saves, baseline previews, and baseline creation to the
+  quality catalog/evaluation/policy services. This child remains the owner of
+  rule, profile, finding, suppression, and baseline semantics; live/MCP owns
+  freshness, transport, and operation authorization.
 - File line-threshold semantics belong to this capability; viewer, CLI, export,
   and MCP surfaces consume the resulting findings and do not own threshold
   evaluation.

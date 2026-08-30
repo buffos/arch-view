@@ -19,8 +19,10 @@ signal requiring human review.
   quality engine's central dispatch.
 - **Viewer/CLI/export client:** decorates graph/source subjects and exports the
   same report.
-- **Future MCP client:** requests current findings with compact evidence and
-  asks for source context separately.
+- **Future MCP client:** requests current findings with compact evidence,
+  asks for source context separately, and delegates temporary evaluations or
+  explicitly authorized profile/baseline operations to this capability's
+  services.
 
 ## Goals
 
@@ -38,6 +40,8 @@ signal requiring human review.
 10. Make file line-threshold findings usable in human-facing projections by
     summarizing affected files and offering an explicit filter without
     duplicating rule evaluation.
+11. Let live/MCP clients reuse the catalog, evaluation, comparison, and policy
+    services without creating a second quality implementation.
 
 ## Non-goals
 
@@ -47,6 +51,8 @@ signal requiring human review.
 - Runtime performance, production telemetry, dynamic dispatch certainty, or
   unpinned VCS-history claims.
 - Automatic source edits, refactoring, or LLM-generated remediation.
+- Implicit profile changes or automatic baselining without an explicit
+  permissioned policy operation.
 - Inferring intended layer/dependency policy from directory or type names.
 - Treating unsupported/unknown analysis as a clean result.
 
@@ -93,6 +99,9 @@ signal requiring human review.
 - Explainable through compact evidence and explicit coverage.
 - Backward-compatible optional report attachment.
 - Bounded report size and stable pagination for future consumers.
+- Controlled policy access: profile/baseline writes require explicit
+  authorization, exact-version validation, and audit data; read/evaluation
+  consumers may remain read-only.
 
 ## Success criteria
 
@@ -101,5 +110,6 @@ threshold boundaries, metric formulas, docs coverage, graph rules, scope
 isolation, baseline/revision behavior, open/closed registries, and SOLID signal
 labeling. The implemented Go analyzer publishes the structural facts required
 by the SOLID rules, and the application consumes the quality report through
-viewer, CLI, and export projections. Live/MCP remains a future consumer of the
-same contract.
+viewer, CLI, and export projections. Live/MCP is a future consumer of the same
+catalog, report, comparison, and policy services; it must not duplicate their
+semantics.

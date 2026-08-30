@@ -6,9 +6,9 @@ This is the application-level architecture baseline. It describes the target Go 
 The Code quality and code intelligence capability is a pure structural-child
 roll-up with effective state `specified`, the minimum of its three children.
 Its Source facts and symbol index child is implemented through issues 048–052
-with final visual approval recorded; Deterministic quality checks and Live
-analysis/MCP remain specified and readiness-reviewed. The parent has no
-standalone PRD or implementation slice.
+with final visual approval recorded; Deterministic quality checks is implemented
+through issues 053–063; and Live analysis/MCP remains specified and readiness-
+reviewed. The parent has no standalone PRD or implementation slice.
 
 ## Boundary summary
 
@@ -192,11 +192,14 @@ quality documents. They can be created from a report with the local
 selected profile and re-evaluate the report.
 
 The specified live-analysis child owns folder watching, event coalescing,
-conservative invalidation, freshness, cache identity, and atomic revision
-replacement. Viewer, CLI/export, and MCP clients consume the same immutable
-snapshot/query envelope. MCP is a read-only transport/query adapter, not the
-owner of language semantics or quality policy; stdio is the default local
-transport and network transport is explicit. The design must not execute target
+request-time freshness reconciliation, conservative invalidation, stable-input
+verification, cache identity, and atomic revision replacement. Viewer,
+CLI/export, and MCP clients consume the same immutable snapshot/query envelope.
+MCP is an analyzer-neutral transport/query adapter over shared services; it
+delegates quality evaluation, profile, and baseline semantics to the quality
+child. Read operations are the default, while analysis and quality-policy
+operations require separate permissions. Stdio is the default local transport
+and network transport is explicit. The design must not execute target
 applications or present subjective architectural approval, semantic comment
 quality, or SOLID heuristics as proven facts.
 
@@ -248,8 +251,10 @@ frontier still requires later issue slicing, implementation, and verification:
   with final visual approval recorded; Deterministic quality checks is
   implemented through issues 053–063, including issue 063's visual review.
   Live analysis and MCP remain specified and readiness-reviewed, with exact
-  records, provenance, scope isolation, versioned rules, immutable revisions,
-  bounded queries, and compatibility/permission rules. The aggregate parent
+  records, provenance, scope isolation, analyzer-neutral capability coverage,
+  request-time freshness verification, versioned rules, immutable revisions,
+  bounded queries, quality-service delegation, and compatibility/permission
+  rules. The aggregate parent
   has no standalone implementation issues; delivery is owned by the children.
 
 The layout catalog, profile validation, option-handler registry, session state,
@@ -294,9 +299,10 @@ escapes the exported artifact.
     documentation, and metrics to quality and query consumers.
 13. The quality engine evaluates configured deterministic rules and stores
     revision-aware findings with source evidence.
-14. The live snapshot service watches configured folders, updates affected
-    analysis state, and exposes the same compact facts to viewer, CLI/export,
-    and MCP.
+14. The live snapshot service watches configured folders, reconciles source
+    state for strict requests, updates affected multi-analyzer analysis state,
+    and exposes the same compact facts to viewer, CLI/export, and MCP. Quality
+    requests delegate to the shared quality catalog/evaluation/policy services.
 
 ## Shared policies
 
@@ -330,6 +336,11 @@ escapes the exported artifact.
   `Baseline this` actions. Baselines are written as separate
   `quality-baselines/*.json` documents; attaching one updates only the
   selected profile reference and re-runs the in-process quality evaluation.
+- Live/MCP may use the same profile/rule catalog and evaluation services with
+  temporary non-persisted rule bindings. Profile saves and baseline creation
+  are separate allowlisted policy operations, require explicit authorization,
+  and are rejected for stale or incompatible reports; MCP never implements a
+  second quality evaluator or baseline matcher.
 - Source-index IDs are opaque and snapshot-local; canonical spans use
   hash-linked UTF-8 byte coordinates. Registered extractors own language
   semantics, while the core owns validation and deterministic assembly.
@@ -352,9 +363,12 @@ escapes the exported artifact.
   deterministic metrics and findings must be reproducible. Findings remain
   separate from analyzer diagnostics, and exact facts must be distinguishable
   from heuristic or advisory signals.
-- Live snapshots replace atomically, carry explicit revisions and freshness
-  state, and keep source paths root-safe. MCP retrieval is compact and
-  read-only by default; source edits require an explicit downstream action.
+- Live snapshots replace atomically, carry explicit revisions, input
+  fingerprints, reconciliation status, and freshness state, and keep source
+  paths root-safe. Strict MCP queries verify current input before returning a
+  `current` result; read retrieval is compact and default, while quality-policy
+  writes are explicit and audited. Source edits require a separate downstream
+  action.
 - Quality configuration has separate ownership from analyzer options,
   project assignments, and viewer layout semantics.
 
@@ -408,9 +422,9 @@ work register](explore-architecture/advanced-elk-renderer-support/future-work.md
 The source-facts/index contract, Go-first extractor, scope-safe projection,
 bounded query boundary, and module viewer are implemented through issues
 048–052; the final visual gate is approved. Deterministic quality issues
-053–063 are implemented and visually verified. The next
-future sequence is the live analysis snapshot/folder-watching/structural-
-search/MCP boundary.
+053–063 are implemented and visually verified. The next future sequence is the
+live analysis snapshot/folder-watching/reconciliation/analyzer-neutral-search/
+quality-delegation/MCP boundary.
 
 ## Residual implementation decisions
 
@@ -428,8 +442,9 @@ search/MCP boundary.
 - Broader language coverage and metric-producing extensions for the implemented
   source-index module-inspection projection remain future work.
 - Broader language coverage for quality metrics and SOLID structural facts.
-- Implementation and packaging verification for live watcher/MCP snapshot
-  behavior, permissions, and transport remain future work.
+- Implementation and packaging verification for live watcher/MCP snapshot,
+  request-time reconciliation, analyzer-neutral query, quality delegation,
+  policy-permission, and transport behavior remain future work.
 - Conservative semantic resolution for calls/implements and confidence
   categories.
 
