@@ -50,6 +50,10 @@ QualityEvaluation {
   model_revision?: string
   profile_id: NamespacedId
   profile_version: string
+  profile_digest?: ContentDigest
+  options_digest?: ContentDigest
+  baseline?: BaselineRef
+  baseline_digest?: ContentDigest
   provider_identities: ProviderIdentity[]
   coverage: QualityCoverage[]
   metrics: MetricFact[]
@@ -181,6 +185,7 @@ only reported relationships.
 Baseline {
   schema_version: "arch-view.quality-baseline/v1"
   baseline_id: NamespacedId
+  revision?: string
   entries: BaselineEntry[]
   extensions: ExtensionBlock[]
 }
@@ -190,6 +195,7 @@ BaselineEntry {
   rule_id: NamespacedId
   rule_version: string
   profile_id: NamespacedId
+  profile_version: string
   formula_versions: { metric_id: NamespacedId, version: string }[]
   reason: string
   owner?: string
@@ -273,7 +279,10 @@ diagnostic remains a language/contract fact, not proof of an LSP violation.
   carries explicit unresolved/coverage status.
 - Threshold units and value kinds match the observed metric; no numeric coercion
   or missing-value default is implicit.
-- The evaluation fingerprint includes source/model snapshot IDs, profile and
-  baseline digests, rule/provider versions, formula versions, and options.
+- The evaluation fingerprint includes source/model snapshot IDs, profile,
+  options, and baseline digests, rule/provider versions, and formula versions.
+- The persisted report carries profile and options digests explicitly so a
+  normalized report can be validated after JSON round-tripping without
+  rehydrating the original profile or options object.
 - The report digest excludes operational timestamps and is calculated after
   canonical sorting. Equal inputs produce equal semantic reports.

@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`
 - Related capability nodes: `/.okf/capabilities/export-and-automate.md`, `/.okf/capabilities/explore-architecture.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/deterministic-quality-checks/`
-- Issue file: `docs/agents/issues/pending/20260830-062-quality-cli-and-export-projections.md`
+- Issue file: `docs/agents/issues/done/20260830-062-quality-cli-and-export-projections.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -35,17 +35,17 @@ baseline/suppression status in the report.
 
 ## Acceptance criteria
 
-- [ ] Headless analysis accepts an explicit versioned quality profile and
+- [x] Headless analysis accepts an explicit versioned quality profile and
   produces the canonical optional quality report for the selected scope(s).
-- [ ] JSON output preserves the report envelope, identity, coverage, exact
+- [x] JSON output preserves the report envelope, identity, coverage, exact
   findings, signals, evidence references, diagnostics, and suppression state.
-- [ ] HTML/SVG projections may annotate architecture subjects from the report
+- [x] HTML/SVG projections may annotate architecture subjects from the report
   but do not mutate module, relationship, source, or finding semantics.
-- [ ] Exit policy is an explicit caller projection over configured severity and
+- [x] Exit policy is an explicit caller projection over configured severity and
   status; it does not delete or rewrite report findings.
-- [ ] Omitted quality profiles/reports retain existing output behavior and
+- [x] Omitted quality profiles/reports retain existing output behavior and
   legacy consumers remain compatible.
-- [ ] Tests cover profile input, deterministic JSON, HTML/SVG inclusion or
+- [x] Tests cover profile input, deterministic JSON, HTML/SVG inclusion or
   annotation, exit-policy boundaries, and report omission.
 
 ## Artifact sync required
@@ -68,7 +68,7 @@ required verification.
 
 ## Blocked by
 
-- Blocked by `docs/agents/issues/pending/20260830-061-quality-report-query-and-evidence.md`.
+- Completed dependency: `docs/agents/issues/done/20260830-061-quality-report-query-and-evidence.md`.
 
 ## Specification anchors
 
@@ -89,9 +89,19 @@ CI operator and documentation/export actors in application Journeys 4, 6, and
 - Frontend integration: `not-applicable`.
 - End-to-end: `when-supported` for headless analysis and deterministic exports.
 
+## Completion evidence
+
+- `go test ./cmd/arch-view ./internal/export -count=1`
+- CLI tests cover profile input, report JSON round-trip, HTML/SVG projections,
+  omitted-report compatibility, and explicit severity/status exit policies.
+- Aggregate runs retain per-scope quality reports while also attaching the
+  combined report for viewer scope selection.
+- The full batch verification passed: `go test ./... -count=1`,
+  `go test -race ./...`, `go vet ./...`, `go build ./...`, JavaScript syntax
+  and viewer tests, and `git diff --check`.
+
 ## Handoff
 
 Issue 063 completes the human-facing viewer path, including the report-backed
 file line-threshold summary and affected-file filter. Live analysis and MCP
 remain a separate specified capability.
-

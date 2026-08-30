@@ -4,8 +4,8 @@ title: Deterministic quality checks
 description: Evaluate reproducible source and architecture metrics against configurable rules and report evidence-backed findings.
 tags: [code-quality, metrics, rules, architecture]
 timestamp: 2026-08-30T08:33:39Z
-state: specified
-state_changed: 2026-08-29T00:00:00Z
+state: implemented
+state_changed: 2026-08-30T19:45:00Z
 project: /project.md
 parent: /capabilities/code-quality-and-intelligence.md
 artifact_root: docs/architecture/code-quality-and-intelligence/deterministic-quality-checks
@@ -26,11 +26,11 @@ issues:
   - docs/agents/issues/done/20260830-056-documentation-coverage-findings.md
   - docs/agents/issues/done/20260830-057-graph-coupling-and-cycle-findings.md
   - docs/agents/issues/done/20260830-058-explicit-architecture-constraint-findings.md
-  - docs/agents/issues/pending/20260830-059-deterministic-report-lifecycle-and-baselines.md
-  - docs/agents/issues/pending/20260830-060-solid-structural-signals.md
-  - docs/agents/issues/pending/20260830-061-quality-report-query-and-evidence.md
-  - docs/agents/issues/pending/20260830-062-quality-cli-and-export-projections.md
-  - docs/agents/issues/pending/20260830-063-quality-viewer-and-affected-file-filter.md
+  - docs/agents/issues/done/20260830-059-deterministic-report-lifecycle-and-baselines.md
+  - docs/agents/issues/done/20260830-060-solid-structural-signals.md
+  - docs/agents/issues/done/20260830-061-quality-report-query-and-evidence.md
+  - docs/agents/issues/done/20260830-062-quality-cli-and-export-projections.md
+  - docs/agents/issues/done/20260830-063-quality-viewer-and-affected-file-filter.md
 ---
 
 # Intent
@@ -77,6 +77,9 @@ Specified boundary:
 - Quality profiles, versioned metric/rule strategies, threshold semantics,
   exact findings, advisory signals, coverage, evidence, baselines, and
   deterministic report identity are defined in the linked exact-spec set.
+- Project-backed viewers may explicitly persist a validated complete rule
+  selection to an existing quality profile or save it as a new direct JSON
+  profile; temporary viewer selections remain session-owned.
 - File line-threshold semantics belong to this capability; viewer, CLI, export,
   and MCP surfaces consume the resulting findings and do not own threshold
   evaluation.
@@ -87,10 +90,12 @@ Specified boundary:
 # Delivery
 
 The readiness-reviewed implementation frontier is sliced into issues 053–063.
-Issues 053–058 are implemented, verified, and archived: they establish the
+Issues 053–063 are implemented, verified, and archived: they establish the
 versioned profile/catalog, source and graph providers, exact size/complexity/
-documentation/coupling/cycle/constraint rules, and the optional report
-foundation. Issues 059–063 remain pending for report lifecycle, signals,
-queries, exports, and viewer projections. The capability remains `specified`
-until the full scoped quality delivery is complete and its artifacts are
-synchronized.
+documentation/coupling/cycle/constraint rules, report lifecycle and baselines,
+conservative SOLID signals, bounded queries/evidence, and headless/export
+projections. The Go source-index path publishes the structural facts consumed
+by the SOLID signals, and the local CLI exposes validated baseline creation.
+Issue 063 is verified and archived after desktop and responsive visual review
+of the viewer projection. All scoped issues and acceptance criteria are now
+implemented, so this capability is `implemented`.

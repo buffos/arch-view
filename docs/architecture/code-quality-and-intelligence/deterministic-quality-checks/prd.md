@@ -99,5 +99,7 @@ signal requiring human review.
 The scenarios in [acceptance-scenarios.md](acceptance-scenarios.md) pass for
 threshold boundaries, metric formulas, docs coverage, graph rules, scope
 isolation, baseline/revision behavior, open/closed registries, and SOLID signal
-labeling. The application synthesis describes the quality report as a future
-consumer of the specified source-index contract.
+labeling. The implemented Go analyzer publishes the structural facts required
+by the SOLID rules, and the application consumes the quality report through
+viewer, CLI, and export projections. Live/MCP remains a future consumer of the
+same contract.

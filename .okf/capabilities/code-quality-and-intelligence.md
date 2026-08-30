@@ -45,9 +45,9 @@ not replace language analysis, architecture rendering, or source editing.
 
 The parent is a pure structural-child roll-up. Its materialized `state` is the
 minimum of its three structural children (`specified` at present). All three
-children are readiness-reviewed. The source-facts child is implemented through
-its approved batch; its deterministic-quality and live-analysis/MCP siblings
-remain specified. The parent has no standalone PRD or issue batch, and
+children are readiness-reviewed. The source-facts and deterministic-quality
+children are implemented through their approved batches; live-analysis/MCP
+remains specified. The parent has no standalone PRD or issue batch, and
 remaining implementation work is routed to the other children.
 If parent-only behavior is later introduced, the policy
 must explicitly switch to `mode: own` before adding parent-owned artifacts or

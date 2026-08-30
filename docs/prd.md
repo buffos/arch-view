@@ -74,17 +74,16 @@ is an aggregate/navigation boundary with no standalone PRD or implementation
 slice; it extends the product through three child territories:
 
 - The [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) is implemented through issues 048–052 as an optional, scope-first attachment with first-class files, physical line counts, hashes, documentation, named declarations, visibility, containment, provenance, typed extension points, bounded queries, and human-oriented module inspection. The graph presents a compact summary card; a same-tab inspection route progressively loads bounded Files, Symbols, and evidence views, while technical identifiers remain secondary. Its required final visual-review gate is approved.
-- The [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is now specified for configurable size, complexity, documentation, coupling, cycle, dependency-direction, and layer rules with evidence-backed findings. Metrics/rules are versioned registry strategies; unsupported inputs are not passes, and SOLID output is explicitly a signal rather than a provable violation.
+- The [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063: configurable size, complexity, documentation, coupling, cycle, dependency-direction, and layer rules; deterministic report lifecycle/baselines; conservative SOLID signals; bounded queries; headless/export projections; and the report-backed viewer. Metrics/rules are versioned registry strategies; unsupported inputs are not passes, and SOLID output is explicitly a signal rather than a provable violation. Issue 063 passed its desktop and responsive visual review.
 - The [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) child is now specified for configured-folder watching, revision-aware immutable snapshots, compact structural code search, and on-demand quality reports to LLM tools. Reporting is read-only by default; source changes remain an explicit downstream action.
 
 The source-facts child is implemented through its approved visual review. The
-deterministic-quality child remains `specified` while its initial registry,
-source/graph providers, exact rules, and optional report foundation are
-delivered through issues 053–058; report lifecycle, signals, queries,
-exports, and viewer projections remain in issues 059–063. The live/MCP child
-remains specified and not implemented. Their exact contracts keep source
-facts, quality policy, snapshot lifecycle, structural search, and transport
-permissions separately owned.
+deterministic-quality child is `implemented`; issues 053–063 have delivered the quality profile and
+catalog, source/graph providers, exact rules, report lifecycle and baseline
+workflow, SOLID signals, bounded queries, and headless/export projections. The
+live/MCP child remains specified and not implemented. Their exact contracts
+keep source facts, quality policy, snapshot lifecycle, structural search, and
+transport permissions separately owned.
 
 ## Primary user journeys
 
@@ -273,10 +272,10 @@ No high or medium blocker prevents the specified planning baseline. The followin
   issues 048–052 implement the Go-first attachment, language extractor,
   scope-safe projection, bounded queries, and viewer projection. The final
   visual-review gate is approved.
-- The deterministic quality contract is specified and readiness-reviewed. Its
-  initial registry, provider, exact-rule, constraint, and optional-report
-  foundation is delivered through issues 053–058; report lifecycle, signals,
-  queries, exports, and viewer projections remain for issues 059–063.
+- The deterministic quality contract is implemented and readiness-reviewed. Its
+  implementation is delivered through issues 053–063, including the real Go
+  structural-fact producer for SOLID signals and the `quality baseline` CLI
+  workflow and the visually reviewed report-backed viewer.
 - Live watcher/MCP snapshot behavior, permissions, and transport are specified
   and readiness-reviewed but still require implementation and packaging
   verification.

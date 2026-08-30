@@ -184,7 +184,12 @@ thresholds, severity, revision, coverage, and source evidence. Its quality
 profile is independent from analyzer, assignment, layout, and live settings.
 Human-facing consumers may summarize scope-safe file line-threshold findings and
 filter to affected files, while the quality report remains the sole source of
-threshold truth.
+threshold truth. The Go analyzer publishes the syntax-observable structural
+facts required by the SOLID signal rules. Baselines are separate validated
+quality documents. They can be created from a report with the local
+`arch-view quality baseline` command or from the project-backed viewer's
+`Create baseline` action, which can explicitly attach the new document to the
+selected profile and re-evaluate the report.
 
 The specified live-analysis child owns folder watching, event coalescing,
 conservative invalidation, freshness, cache identity, and atomic revision
@@ -240,11 +245,12 @@ frontier still requires later issue slicing, implementation, and verification:
   orthogonal unless separately specified.
 - The Code quality and code intelligence roll-up remains a specified extension.
   Its Source facts and symbol index child is implemented through issues 048–052
-  with final visual approval recorded; Deterministic quality checks and Live analysis
-  and MCP remain specified and readiness-reviewed, with exact records,
-  provenance, scope isolation, versioned rules, immutable revisions, bounded
-  queries, and compatibility/permission rules. The aggregate parent has no
-  standalone implementation issues; delivery is owned by the children.
+  with final visual approval recorded; Deterministic quality checks is
+  implemented through issues 053–063, including issue 063's visual review.
+  Live analysis and MCP remain specified and readiness-reviewed, with exact
+  records, provenance, scope isolation, versioned rules, immutable revisions,
+  bounded queries, and compatibility/permission rules. The aggregate parent
+  has no standalone implementation issues; delivery is owned by the children.
 
 The layout catalog, profile validation, option-handler registry, session state,
 and persistence are grouped under `internal/viewer/layout`; HTTP handlers only
@@ -309,6 +315,21 @@ escapes the exported artifact.
   inspection view uses bounded query pages, explicit containment/declaration
   membership, readable source locations, opt-in bounded excerpts, and a
   secondary technical-details disclosure.
+- A project-backed viewer discovers separate `quality-profiles/*.json`
+  documents through `GET /v1/quality/profiles`; choosing one invokes the
+  in-process `POST /v1/quality/evaluate` bridge over the loaded model or cached
+  scope. The viewer can also load the complete registered rule catalog through
+  `GET /v1/quality/rules` and apply an enabled/disabled selection through the
+  optional session-only `rule_bindings` request field. `Apply & run checks`
+  remains session-only; explicit `PUT /v1/quality/profiles/save` and
+  `PUT /v1/quality/profiles/save-as` actions validate and persist an existing
+  or newly named profile. Quality evaluation remains in-process and does not
+  rerun an analyzer. Successful evaluations are cached by scope so the
+  same-session inspection route retains the report.
+- The viewer's quality report exposes `Create baseline` and per-finding
+  `Baseline this` actions. Baselines are written as separate
+  `quality-baselines/*.json` documents; attaching one updates only the
+  selected profile reference and re-runs the in-process quality evaluation.
 - Source-index IDs are opaque and snapshot-local; canonical spans use
   hash-linked UTF-8 byte coordinates. Registered extractors own language
   semantics, while the core owns validation and deterministic assembly.
@@ -386,9 +407,10 @@ renderer extensions are tracked in the [Advanced ELK renderer support future
 work register](explore-architecture/advanced-elk-renderer-support/future-work.md).
 The source-facts/index contract, Go-first extractor, scope-safe projection,
 bounded query boundary, and module viewer are implemented through issues
-048–052; the final visual gate is approved. The next future sequence is the
-deterministic quality rules/findings contract followed by the live analysis
-snapshot/folder-watching/structural-search/MCP boundary.
+048–052; the final visual gate is approved. Deterministic quality issues
+053–063 are implemented and visually verified. The next
+future sequence is the live analysis snapshot/folder-watching/structural-
+search/MCP boundary.
 
 ## Residual implementation decisions
 
@@ -405,15 +427,11 @@ snapshot/folder-watching/structural-search/MCP boundary.
 - Future call-graph/type-level relation capabilities.
 - Broader language coverage and metric-producing extensions for the implemented
   source-index module-inspection projection remain future work.
-- Implementation and language coverage for the specified quality profile,
-  metric-provider, rule, finding, baseline, signal, and report contracts.
+- Broader language coverage for quality metrics and SOLID structural facts.
 - Implementation and packaging verification for live watcher/MCP snapshot
   behavior, permissions, and transport remain future work.
 - Conservative semantic resolution for calls/implements and confidence
   categories.
-- Implementation of quality configuration, baselines/suppressions, watcher
-  lifecycle, snapshot consistency, and MCP packaging/permissions specified by
-  the three code-quality children.
 
 These are implementation and extension risks, not blockers to the specified v1 scope.
 

@@ -159,6 +159,56 @@ Persistence uses `PUT /v1/layout/config` for the exact active file and
 `PUT /v1/layout/config/save-as` for an explicitly confirmed custom directory.
 Model-only sessions can apply settings but cannot persist a project file.
 
+### Human quality-profile workflow
+
+Quality profiles are separate versioned JSON documents, not keys inside
+`.archview.json`. A project-backed viewer discovers only direct JSON files in
+the project-relative `quality-profiles/` directory. The file name is the
+human-facing label; `profile_id` and `profile_version` identify the selected
+contract. Invalid files remain visible in the selector as unavailable so a
+configuration problem is not mistaken for “no profiles”. This repository
+includes `quality-profiles/default.json` as a small starter profile.
+
+Start the project viewer as usual:
+
+```text
+go run ./cmd/arch-view open --project . --port 0
+```
+
+Choose a profile in the viewer to evaluate the already loaded model and active
+analysis scope. This is an in-process, read-only evaluation; it does not rerun
+the analyzer. The report is kept in the viewer session and is then available
+through the existing bounded findings, coverage, evidence, and source-context
+queries. The `Configure rules` action loads the complete registered rule
+catalog, shows every rule as enabled or off, and separates two actions:
+`Apply & run checks` changes the selection only for the current viewer session;
+`Save to profile` persists the selection to the selected profile, while `Save
+as new` creates a new profile in `quality-profiles/`. Saving validates the
+complete profile before writing it. The report is cached for the current
+viewer route, so opening inspection after evaluation keeps the same quality
+result instead of treating it as missing.
+Self-contained HTML exports and model-only sessions remain read-only because
+they have no project profile directory or evaluation host.
+
+From a completed report, the project viewer also offers `Create baseline` (or
+`Baseline this` on an individual finding). The dialog records the reason and
+optional owner, writes a separate JSON document to `quality-baselines/`, and
+attaches it to the selected profile when confirmed. Existing files are never
+overwritten; the viewer re-runs the profile after an attachment so matching
+findings become suppressed while remaining visible in the report.
+
+For automation or terminal-driven workflows, use the equivalent CLI command:
+
+```text
+go run ./cmd/arch-view quality baseline --input analysis.json \
+  --output quality-baseline.json --baseline-id baseline:main \
+  --all-active --reason "accepted existing findings"
+```
+
+You can repeat `--finding <finding-id-or-key>` instead of `--all-active` to
+select specific findings. The generated file is supplied to a later
+`analyze` run with `--quality-baseline quality-baseline.json`.
+
 ### Scope boundaries
 
 - Analyzers discover source facts and emit modules, relationships, tags,

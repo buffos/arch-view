@@ -74,11 +74,10 @@ support leaf remains specified and ready for later delivery issue slicing.
 The [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
 capability is a pure structural-child roll-up with effective state `specified`,
 the minimum of its three children. Its three children are readiness-reviewed;
-the deterministic-quality and live-analysis/MCP children remain specified. The
+the deterministic-quality child is implemented and live-analysis/MCP remains specified. The
 source-facts child is implemented through issues 048–052, including its approved
 final visual gate; the parent has no standalone implementation slice or PRD,
 and remaining implementation is routed to the other children. Deterministic
-quality checks delivered and archived issues 053–058, with issues 059–063
-remaining pending for the rest of the specified quality scope. The parent
-remains `specified` because the deterministic-quality and live-analysis/MCP
-children are still specified.
+quality checks delivered and archived issues 053–063, including the final
+desktop and responsive visual review. The parent remains `specified` because
+the live-analysis/MCP child remains specified.

@@ -16,6 +16,8 @@ data. It does not revise the analyzer protocol.
     "source_snapshot_ids": ["opaque-source-snapshot-id"],
     "profile_id": "profile:default",
     "profile_version": "1.0.0",
+    "profile_digest": { "algorithm": "sha256", "value": "opaque-profile-digest" },
+    "options_digest": { "algorithm": "sha256", "value": "opaque-options-digest" },
     "coverage": [],
     "metrics": [],
     "findings": [],
@@ -55,9 +57,12 @@ passed all rules. Older clients may ignore the field.
 ```
 
 Rule configuration is typed by the rule namespace/schema, not an unversioned
-generic metadata map. The host may store this profile in a separate quality
-configuration section, but it must remain independent from layout and analyzer
-assignment options.
+generic metadata map. For a project-backed local viewer, profiles are separate
+JSON documents discovered from the direct project-relative
+`quality-profiles/*.json` directory. They are not stored inside
+`.archview.json`, which remains layout/analyzer configuration. The file name is
+presentation metadata; profile identity remains the versioned `profile_id` and
+`profile_version` in the document and report.
 
 ## Exact finding example
 
@@ -138,21 +143,49 @@ without a separately specified, observable rule.
 
 ## Catalog and report queries
 
-Future transport adapters expose equivalent read semantics:
+The local HTTP adapter and future transport adapters expose equivalent read
+semantics:
 
-- `GET /v1/quality/rules` — registered rules, versions, capabilities, and
-  assessment kind.
+- `GET /v1/quality/profiles` — discover project-local profile documents and
+  report invalid entries without making them selectable.
+- `GET /v1/quality/rules` — return the complete registered rule catalog. With
+  `profile_id` and `profile_version`, each entry also reports whether the
+  selected profile explicitly binds it and whether it is enabled. Catalog
+  defaults are suitable for session-only viewer toggles and do not alter the
+  profile document.
+- `PUT /v1/quality/profiles/save` — validate and persist the selected
+  profile's complete `rule_bindings` array back to its discovered JSON file.
+- `PUT /v1/quality/profiles/save-as` — validate and create a new profile JSON
+  file from a selected profile. The request supplies the source profile
+  identity, new profile identity/version, direct `.json` filename, and the
+  complete `rule_bindings` array; an existing destination is rejected.
+- `POST /v1/quality/evaluate` — evaluate the already loaded model or selected
+  cached analysis scope with one discovered profile; it does not invoke an
+  analyzer. The request uses
+  `arch-view.quality-evaluation-request/v1` and carries `profile_id`,
+  `profile_version`, an optional scope, and an optional `rule_bindings` array.
+  When supplied, that array is a temporary session selection; it is validated
+  and evaluated without writing the project profile.
 - `POST /v1/quality/validate` — validate a quality profile.
-- `POST /v1/quality/evaluate` — evaluate a selected immutable source/model
-  snapshot and profile.
 - `GET /v1/models/{model_id}/quality` — retrieve bounded report/coverage.
 - `GET /v1/models/{model_id}/quality/findings` — filter and paginate findings.
 - `GET /v1/models/{model_id}/quality/findings/{finding_id}/evidence` — retrieve
   bounded evidence/context.
+- `GET /v1/models/{model_id}/quality/coverage` — filter and paginate coverage
+  states independently from findings.
+- `POST /v1/quality/baselines/create` — create a validated
+  `arch-view.quality-baseline/v1` document from all active findings in the
+  selected report or from explicit finding IDs/keys. The project-backed viewer
+  supplies the profile identity, baseline identity, revision, reason, optional
+  owner, and direct JSON filename. The request may attach the new baseline to
+  the selected profile; the file is written under the separate
+  `quality-baselines/` directory and an existing destination is rejected.
 
-These routes are a transport mapping, not an implementation requirement of this
-planning pass. Unknown rules/configuration return structured `422` diagnostics;
-partial provider coverage returns a valid report with explicit status.
+Unknown rules/configuration return structured `422` diagnostics; a missing
+report is represented explicitly, and partial provider coverage returns a valid
+report with explicit status. Evidence never includes source text unless the
+caller makes an explicit bounded source-context request; line and byte budgets
+are validated at the boundary.
 
 Consumers may filter the bounded findings query by
 `rule_id=source:file.max-lines` and file subject, then present a summary such as
@@ -163,17 +196,38 @@ coverage must remain visible.
 
 ## CLI/export behavior
 
-Headless analysis may accept a versioned quality profile and emits the same
-`quality_report` JSON used by viewer and future MCP adapters. Exit policy is a
-caller-owned projection over finding severity/status; the report itself remains
-complete and does not hide baselined findings. HTML/SVG may color or annotate
-subjects from the report, but quality findings do not mutate architecture
-semantics. No source edits are performed.
+Headless analysis may accept `--quality-profile`, `--quality-baseline`,
+`--quality-exit-on`, and repeatable `--quality-exit-status` flags and emits the
+same `quality_report` JSON used by the viewer and future MCP adapters. Exit
+policy is a caller-owned projection over finding severity/status; the report
+itself remains complete and does not hide baselined findings. Omitting the exit
+policy is a no-op. HTML/SVG may color or annotate subjects from the report, but
+quality findings do not mutate architecture semantics. No source edits are
+performed.
+
+The local CLI also provides a baseline creation workflow for automation:
+
+```text
+arch-view quality baseline --input <analysis|model|quality-report.json> \
+  --output <baseline.json|-> --baseline-id baseline:<name> \
+  (--finding <finding-id-or-key> ... | --all-active) --reason <text>
+```
+
+The command resolves report-local finding IDs or stable finding keys, copies
+the exact rule/profile/formula identity required by the baseline contract,
+validates the result, and writes a separate
+`arch-view.quality-baseline/v1` document. `--all-active` selects every active
+finding in the input report. Existing files are protected unless
+`--overwrite` is supplied. The resulting file is consumed by a later analysis
+run with `--quality-baseline`; baseline creation never changes the source,
+profile, or original report. The viewer's create action performs the same
+exact-version construction and may explicitly update the selected profile's
+baseline reference before re-evaluating it.
 
 ## Determinism and safety
 
-- Profile, rule/provider versions, source/model snapshot IDs, baseline, formula
-  versions, and options are part of the evaluation fingerprint.
+- Profile/options/baseline digests, rule/provider versions, source/model
+  snapshot IDs, and formula versions are part of the evaluation fingerprint.
 - Findings and metrics are canonically ordered and digested; operational times
   are excluded from semantic equality.
 - Unknown/unsupported/not-evaluable coverage is never converted to pass or

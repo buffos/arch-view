@@ -13,7 +13,7 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 0 `foggy`, 0 `bounded`, 4 `specified`, 14 `implemented`.
+- State totals: 0 `foggy`, 0 `bounded`, 3 `specified`, 15 `implemented`.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their
@@ -32,9 +32,9 @@
 `specified`, the minimum of its three children. All three code-quality child
   capabilities are readiness-reviewed; the source-facts child has
   delivered issues 048–052 and is implemented after its approved final
-  visual-review gate. The deterministic-quality and live-analysis/MCP children
-  remain specified; deterministic quality has delivered and archived issues
-  053–058 and retains pending issues 059–063, so the parent roll-up remains
+  visual-review gate. Deterministic quality has delivered and archived issues
+  053–063 and is implemented after its desktop and responsive visual review.
+  The live-analysis/MCP child remains specified, so the parent roll-up remains
   specified.
 
 ## Application synthesis

@@ -2,11 +2,11 @@
 
 ## State
 
-- Planning state: `specified` after the bounded-to-specified transition.
+- Planning state: `implemented` after verified delivery and visual review.
 - The exact-spec pipeline is complete and readiness-reviewed.
-- The approved delivery batch is sliced into issues 053–063. Issues 053–058
-  are implemented, verified, and archived; issues 059–063 remain pending in
-  dependency order.
+- The approved delivery batch is sliced into issues 053–063. All issues are
+  implemented, verified, and archived, including issue 063's required desktop
+  and responsive visual review.
 
 ## Exact-spec inventory
 
@@ -32,34 +32,38 @@ scope isolation, and deterministic report digests.
   and signal behavior are distinguishable and machine-readable.
 - **Architecture:** quality findings remain a sibling projection and do not
   mutate canonical architecture facts.
-- **Delivery:** issues 053–058 are verified and archived delivery slices owned
+- **Delivery:** issues 053–063 are verified and archived delivery slices owned
   by this capability. The initial profile/catalog, source and graph providers,
-  exact rule families, explicit coverage, and optional report foundation are
-  implemented. Issues 059–063 remain active for lifecycle, signals, queries,
-  exports, and viewer projections; the capability remains `specified`.
+  exact rule families, explicit coverage, report lifecycle/baselines, SOLID
+  signals, bounded queries/evidence, and headless/export projections are
+  implemented. The Go source-index path now supplies the structural facts
+  required by all five SOLID signals, and the local CLI can create validated
+  baseline documents from report findings. Issue 063's report-backed viewer,
+  affected-file filter, profile editor, and visual review are complete; the
+  capability is `implemented`.
 
 ## Readiness decision
 
-READY FOR ARCHITECTURE IMPLEMENTATION. The first delivery segment is complete
-through the profile/catalog, callable metrics, documentation, graph rules,
-explicit constraints, and optional report foundation in issues 053–058. The
-remaining delivery proceeds through report lifecycle, signals, bounded
-queries, exports, and consumer projections in issues 059–063. The live
-analysis/MCP child remains specified and will consume this report contract
+IMPLEMENTED. Issues 053–063 are complete through
+the profile/catalog, exact rule families, report lifecycle and baseline
+workflow, signals, bounded queries, evidence, and headless/export projections.
+Issue 063 passed its required visual review for the human-facing viewer. The
+live analysis/MCP child remains specified and will consume this report contract
 later.
 
 ## Artifact impact assessment
 
 - **Product:** no impact. The application PRD already describes deterministic
-  quality as specified future behavior and application Journey 13.
+  quality and application Journey 13; its delivered implementation details
+  are synchronized with issues 053–063.
 - **Architecture:** no impact. The application architecture summary already
   defines the quality report as an optional sibling over source-index and
   canonical model facts, with viewer/CLI/export as consumers and MCP outside
   this child.
 - **Capability:** updated this orchestration record and the owning node's
   delivery references to record issues 053–063.
-- **Delivery:** added the approved dependency-ordered issue batch, archived
-  verified issues 053–058, and retained pending issues 059–063; the registry
-  max issue ID remains 063.
-- **Topology/state:** no topology or planning-state transition; the child
-  remains `specified` and the code-quality roll-up remains `specified`.
+- **Delivery:** archived the complete dependency-ordered issue batch after
+  automated and visual verification; the registry max issue ID remains 063.
+- **Topology/state:** no topology change. The deterministic-quality child
+  advances to `implemented`; the code-quality roll-up remains `specified`
+  because live analysis/MCP remains specified.

@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`
 - Related capability nodes: `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/generate-models.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/deterministic-quality-checks/`
-- Issue file: `docs/agents/issues/pending/20260830-060-solid-structural-signals.md`
+- Issue file: `docs/agents/issues/done/20260830-060-solid-structural-signals.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -30,24 +30,30 @@
 Add registered structural signal rules for SRP, OCP, LSP, ISP, and DIP using
 observable source/model facts. Every result must be explicitly classified as a
 `signal`, carry deterministic indicators, evidence, heuristic provenance, and
-limitations, and avoid exact-violation or proof language.
+limitations, and avoid exact-violation or proof language. The Go analyzer must
+publish the required structural source facts so the rules work through the
+real analyzer → source index → quality evaluator path, not only in synthetic
+quality fixtures.
 
 ## Acceptance criteria
 
-- [ ] All five `signal:solid.*` rules register through the same open catalog
+- [x] All five `signal:solid.*` rules register through the same open catalog
   and emit the common quality-result shape.
-- [ ] Every signal has `assessment_kind: signal`, appropriate informational
+- [x] Every signal has `assessment_kind: signal`, appropriate informational
   severity, structural evidence, deterministic indicator values, and explicit
   limitations.
-- [ ] No signal uses exact-violation wording, claims responsibility intent or
+- [x] No signal uses exact-violation wording, claims responsibility intent or
   substitutability is proven, or converts compiler/type facts into a SOLID
   verdict.
-- [ ] Unsupported or insufficient structural facts produce explicit coverage
+- [x] Unsupported or insufficient structural facts produce explicit coverage
   or not-evaluable output without a clean pass or exact violation.
-- [ ] Signal outputs participate in canonical ordering, digesting, scope
+- [x] Signal outputs participate in canonical ordering, digesting, scope
   provenance, and report comparison without changing exact-finding semantics.
-- [ ] Tests cover DQC-AC-011, DQC-AC-012, conservative thresholds, evidence,
+- [x] Tests cover DQC-AC-011, DQC-AC-012, conservative thresholds, evidence,
   limitations, and unsupported inputs.
+- [x] The Go source extractor publishes `source:solid.structure` facts and the
+  Go analyzer end-to-end path evaluates all five SOLID signals without
+  unsupported/not-evaluable coverage when the source is valid.
 
 ## Artifact sync required
 
@@ -69,7 +75,7 @@ contract tests; presentation calibration belongs to downstream consumers.
 
 ## Blocked by
 
-- Blocked by `docs/agents/issues/pending/20260830-059-deterministic-report-lifecycle-and-baselines.md`.
+- Completed dependency: `docs/agents/issues/done/20260830-059-deterministic-report-lifecycle-and-baselines.md`.
 
 ## Specification anchors
 
@@ -90,8 +96,21 @@ structural indicators without pretending they are automated design approval.
 - Frontend integration: `not-applicable`.
 - End-to-end: `when-supported` for report generation and signal provenance.
 
+## Completion evidence
+
+- `go test ./internal/quality -count=1`
+- SOLID signal fixtures cover all five registered rules, conservative
+  thresholds, advisory wording, structural evidence, explicit limitations,
+  and unsupported/partial coverage.
+- `go test ./internal/analyzers/go -count=1` covers the source extractor and
+  real analyzer-to-quality path; a repository analysis with
+  `quality-profiles/full.json` reports `observed` coverage for SRP, OCP, LSP,
+  ISP, and DIP.
+- The full batch verification passed: `go test ./... -count=1`,
+  `go test -race ./...`, `go vet ./...`, `go build ./...`, JavaScript syntax
+  and viewer tests, and `git diff --check`.
+
 ## Handoff
 
 Issue 061 exposes exact findings, signals, coverage, and bounded evidence to
 local consumers. The live/MCP capability remains outside this batch.
-

@@ -2,6 +2,66 @@
 
 ## 2026-08-30
 
+### Deterministic quality visual review and capability closeout
+
+* **Review:** Inspected the project-backed quality viewer at the normal desktop
+  viewport and at 390×844. Verified compact summaries, exact/signal wording,
+  coverage states, evidence actions, the complete rule catalog, focus styling,
+  Back navigation, responsive layout, and absence of page-level horizontal
+  overflow.
+* **Correction:** Fixed the affected-file control after live review showed it
+  broadened file queries by unioning module and report selectors. Aggregate
+  quality evaluation now uses the source projection identity, and affected-only
+  queries send exact report file subjects. A live rerun returned 23 of 23
+  affected repository files with no unrelated entries.
+* **Verification:** Added regression coverage for aggregate projection identity,
+  immutable quality-query results, canonical ordering/scoped coverage, selector
+  validation, exclusive profile/baseline writes, and affected-file query shape.
+* **Closeout:** Archived issue 063 and advanced Deterministic quality checks from
+  `specified` to `implemented`. The Code quality and code intelligence roll-up
+  remains `specified` because Live analysis and MCP remains specified.
+
+### Deterministic quality implementation-gap closure
+
+* **SOLID producer:** Connected the Go source extractor and observation builder
+  to `source:solid.structure`, so the five registered SOLID signals receive
+  real syntax-observable structural facts instead of unsupported coverage on
+  valid Go analysis.
+* **Baseline workflow:** Added `arch-view quality baseline` to create a
+  validated separate baseline document from selected finding IDs/keys or all
+  active findings, with explicit overwrite protection.
+* **Verification:** Added extractor, Go analyzer end-to-end, and CLI tests;
+  a real `quality-profiles/full.json` repository run reports observed coverage
+  for SRP, OCP, LSP, ISP, and DIP.
+* **Synchronization:** Updated issue completion evidence, the deterministic
+  quality gap analysis, canonical CLI contract, application PRD, and
+  application architecture summary. No capability-state transition was made;
+  issue 063 remains at its final visual-review gate.
+
+### Deterministic quality checks issues 059–063 implementation batch
+
+* **Implementation:** Delivered deterministic report lifecycle and baseline
+  matching, conservative SOLID structural signals, bounded quality queries and
+  evidence, headless quality-profile/exit-policy support, JSON/HTML/SVG quality
+  projections, and the viewer quality summary/affected-file filter.
+* **Boundaries:** Reports preserve stable finding keys, report-local IDs,
+  exact-version suppression, provider failures, explicit coverage states, and
+  canonical scope/provenance. Source context remains an explicit bounded
+  read-only request; the viewer does not re-evaluate file thresholds.
+* **Verification:** `go test ./... -count=1`, `go test -race ./...`,
+  `go vet ./...`, `go build ./...`, all viewer JavaScript syntax checks and
+  tests, and `git diff --check` pass.
+* **OKF:** strict bundle conformance validation passes with no issues.
+* **Closeout:** Issues 059–062 are verified and archived. Issue 063 is
+  implemented and remains `awaiting-human-review` for the final desktop and
+  responsive viewer inspection; the deterministic-quality capability remains
+  `specified` and no capability-state transition was made.
+* **Synchronization:** Updated the quality capability, orchestration status,
+  issue registry, project/index records, and issue completion evidence. No
+  commit was created.
+
+## 2026-08-30
+
 ### Deterministic quality checks issues 053–058 delivery and closeout
 
 * **Implementation:** Delivered the neutral `arch-view.quality/v1` profile,

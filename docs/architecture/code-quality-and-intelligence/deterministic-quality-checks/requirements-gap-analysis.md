@@ -45,6 +45,16 @@ provenance, and the future viewer/export/live consumers.
   commit/repository input is pinned. It is not part of current static source
   determinism.
 
+## Implementation gaps audited after issue delivery
+
+The initial delivery audit found two gaps between the specified contract and
+the shipped behavior. Both are now resolved:
+
+| Gap | Resolution | Verification |
+|---|---|---|
+| The five SOLID rules were registered, but the real Go analyzer did not publish `source:solid.structure`, so a full-profile report classified them as unsupported. | The Go source extractor now derives syntax-observable structural counts and the Go observation builder requests the capability. | Extractor, Go analyzer end-to-end, and real repository report checks show all five SOLID rules with `observed` coverage for valid Go source. |
+| Baseline lifecycle functions existed, but users had no command to create a baseline from a report; only `--quality-baseline` consumption was exposed. | Added `arch-view quality baseline` with finding/stable-key selection, `--all-active`, validation, and overwrite protection. | CLI test covers analysis-envelope input, baseline output, and the overwrite guard. |
+
 ## Exact assumptions
 
 - Default threshold operator is `greater_than` for maximum limits and
