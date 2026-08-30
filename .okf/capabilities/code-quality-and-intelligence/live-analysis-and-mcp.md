@@ -1,9 +1,9 @@
 ---
 type: capability
 title: Live analysis and MCP
-description: Keep a configured source view current and expose compact structural search and quality reports to tools and LLMs.
-tags: [mcp, watcher, incremental-analysis, code-search]
-timestamp: 2026-08-29T00:00:00Z
+description: Keep a configured multi-analyzer source view current and expose compact, analyzer-neutral search, quality evaluation, and controlled quality-policy operations to tools and LLMs.
+tags: [mcp, watcher, live-analysis, multi-analyzer, code-search, quality-policy]
+timestamp: 2026-08-31T00:00:00Z
 state: specified
 state_changed: 2026-08-29T00:00:00Z
 project: /project.md
@@ -19,15 +19,39 @@ use_cases: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp
 contract: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/canonical-api-cli-contract.md
 scenarios: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/acceptance-scenarios.md
 readiness_review: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/readiness-review.md
+issues:
+  - docs/agents/issues/pending/20260831-064-live-session-config-and-initial-snapshot.md
+  - docs/agents/issues/pending/20260831-065-watcher-events-and-coalescing.md
+  - docs/agents/issues/pending/20260831-066-coherent-revision-store-and-publication.md
+  - docs/agents/issues/pending/20260831-067-freshness-reconciliation-and-single-flight.md
+  - docs/agents/issues/pending/20260831-068-analyzer-neutral-query-surface.md
+  - docs/agents/issues/pending/20260831-069-exact-text-and-source-context.md
+  - docs/agents/issues/pending/20260831-070-quality-gateway-and-temporary-evaluation.md
+  - docs/agents/issues/pending/20260831-071-permissioned-quality-policy-operations.md
+  - docs/agents/issues/pending/20260831-072-local-live-session-cli-bridge.md
+  - docs/agents/issues/pending/20260831-073-live-viewer-integration.md
+  - docs/agents/issues/pending/20260831-074-mcp-stdio-server-and-documentation.md
+  - docs/agents/issues/pending/20260831-075-authenticated-http-mcp-transport.md
+  - docs/agents/issues/pending/20260831-076-cross-analyzer-agent-workflow-and-final-review.md
 ---
 
 # Intent
 
-Give developers and coding assistants a low-token, revision-aware way to query current source facts and quality findings as repositories change.
+Give developers and coding assistants a low-token, revision-aware way to query
+verified source facts and quality findings across all registered analyzers as a
+repository changes.
 
 # Scope
 
-This capability covers configured-folder watching, debounced invalidation, analysis snapshots, selective or bounded reanalysis, compact structural search, quality-report retrieval, and MCP exposure. The watcher/index service owns freshness and snapshot consistency; MCP is a transport and query surface. Source edits and autonomous fixes are outside the initial scope.
+This capability covers configured-folder watching, event coalescing, request-
+time freshness reconciliation, coherent analysis snapshots, selective or
+bounded reanalysis, analyzer-neutral structural and bounded text search,
+quality-report retrieval/evaluation, explicitly authorized quality-profile and
+baseline operations, and MCP exposure. The live coordinator owns freshness and
+snapshot consistency; analyzers own language semantics; the quality capability
+owns rule/profile/baseline semantics; MCP is a bounded transport and query/
+command surface. Source edits, autonomous fixes, shell execution, and target
+application execution remain outside this capability.
 
 # Relationships
 
@@ -42,22 +66,54 @@ This capability covers configured-folder watching, debounced invalidation, analy
 
 Observed code facts:
 
-- The local host already performs bounded analyzer orchestration, caching,
-  source-safe inspection, and deterministic model/view generation; no MCP
-  server or folder watcher is part of the current product contract.
+- The local host already performs bounded multi-analyzer orchestration,
+  per-scope caching, source-safe inspection, canonical model generation, and
+  deterministic model/view output; no MCP server, live coordinator, or folder
+  watcher is part of the current product contract.
+- The source-index capability provides analyzer-reported files, declarations,
+  documentation, spans, relations, provenance, coverage, and deterministic
+  snapshot digests. The quality capability provides versioned rules, profiles,
+  evaluations, findings, coverage, comparisons, and baselines.
 
 User-confirmed target behavior:
 
-- Configured folders should be monitored for selected violations, and an LLM
-  should be able to request concise findings, symbol/file search,
-  callers/callees where available, and bounded source context.
+- Configured folders should be monitored for changes across all registered
+  analyzers, not through a Go-specific MCP path.
+- A coding assistant should be able to search structure or exact text, locate
+  a symbol or finding, follow its evidence and callers/callees when available,
+  and request only the bounded source context needed to act.
+- A request that requires current information should verify the source state
+  and wait for a coherent revision instead of trusting watcher events alone.
+- A model may request a temporary quality configuration, inspect available
+  rules/profiles, and—only when explicitly authorized—save a profile or create
+  a baseline through the deterministic-quality services.
+- Findings are evidence for an explicit downstream source edit. The live
+  watcher and MCP surface do not silently edit code or baseline findings.
 
 Specified boundary:
 
-- The exact-spec set defines configured-root watching, event coalescing,
-  conservative invalidation, immutable coherent revisions, last-ready failure
-  behavior, deterministic structural search, MCP tools/resources, byte/item
-  budgets, root-safe permissions, stdio-first packaging, and explicit
-  remediation handoff.
-- Watchers do not parse; MCP does not own language semantics, quality policy,
-  or source edits. Implementation and packaging remain future delivery work.
+- The exact-spec set defines configured-root watching, analyzer capability
+  negotiation, event coalescing, request-time reconciliation, stable-input
+  verification, conservative invalidation, immutable coherent revisions,
+  last-ready failure behavior, deterministic structural/exact-text search,
+  quality catalog/evaluation/policy delegation, MCP tools/resources, budgets,
+  root-safe permissions, stdio-first packaging, and explicit remediation
+  handoff.
+- Watchers produce change hints. A strict `require_current` query may use a
+  cheap dirty/manifest check as a fast path, but must use an authoritative
+  content/input fingerprint whenever the watcher or manifest cannot prove the
+  eligible source unchanged. It then joins one bounded reanalysis when needed;
+  no response is labeled current until the candidate input is verified stable.
+- Watchers do not parse; MCP does not own analyzer semantics, source facts,
+  graph semantics, quality rules, profile/baseline meaning, or source edits.
+  Implementation and packaging remain future delivery work.
+
+# Delivery
+
+The approved dependency-ordered implementation frontier is issues 064–076.
+Issues 064–071 establish the live session, watcher/reconciliation, immutable
+revisions, analyzer-neutral queries, bounded source context, and delegated
+quality operations. Issues 072–075 add the local CLI/viewer bridge, MCP stdio
+and documentation, and optional authenticated HTTP transport. Issue 076 is the
+cross-analyzer conformance and final product-approval gate. The capability
+remains `specified` until this scoped delivery is verified and synchronized.

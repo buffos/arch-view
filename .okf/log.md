@@ -1,5 +1,34 @@
 # Update Log
 
+## 2026-08-31
+
+### Live analysis and MCP implementation slicing
+
+* **Decision:** Approved the dependency-ordered implementation batch for the
+  specified [Live analysis and MCP](capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md) node.
+* **Delivery:** Created issues 064–076 covering live session configuration,
+  watcher/coalescing, coherent revisions, authoritative freshness and
+  single-flight rebuilds, analyzer-neutral queries, bounded text/source
+  context, quality delegation and policy permissions, local CLI/viewer
+  consumers, MCP stdio/documentation, optional authenticated HTTP, and final
+  cross-analyzer product approval.
+* **Synchronization:** Updated the owning node, orchestration status, issue
+  registry, and max issue ID. Application PRD and architecture summary have no
+  impact because the approved batch implements their existing synchronized
+  live/MCP boundary.
+* **State:** No topology or planning-state transition. Effective totals remain
+  0 `foggy`, 0 `bounded`, 3 `specified`, and 15 `implemented` nodes.
+
+## 2026-08-31
+
+### Live analysis and MCP specification refresh
+
+* **Scope:** Refreshed the specified [Live analysis and MCP](capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md) child from the agent workflow: all registered analyzers, analyzer-neutral search, request-time freshness reconciliation, stable-input verification, and the external fix/reanalysis loop.
+* **Quality boundary:** Added delegation to the implemented deterministic-quality catalog, evaluation, comparison, profile, and baseline services. Temporary rule settings remain non-persisted; profile/baseline writes require separate explicit permissions and audit data.
+* **Freshness contract:** Watcher events remain hints. Strict queries reconcile the source, coalesce edit storms, join single-flight work, verify input before/after analysis, and return `input_unstable` rather than claiming current data when edits do not settle.
+* **Artifact sync:** Updated the live capability node and exact-spec set, the deterministic-quality consumer boundary, the application PRD, and the application architecture summary. No issue references or delivery claims were added.
+* **State:** No planning-state transition. Effective totals remain 0 `foggy`, 0 `bounded`, 3 `specified`, and 15 `implemented` nodes.
+
 ## 2026-08-30
 
 ### Deterministic quality visual review and capability closeout
