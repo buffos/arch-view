@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/analyze-source.md`, `/.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/explore-architecture.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-068-analyzer-neutral-query-surface.md`
+- Issue file: `docs/agents/issues/done/20260831-068-analyzer-neutral-query-surface.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -37,20 +37,20 @@ adding language-specific MCP branches.
 
 ## Acceptance criteria
 
-- [ ] `list_scopes`, `find_files`, `find_symbols`, `get_documentation`,
+- [x] `list_scopes`, `find_files`, `find_symbols`, `get_documentation`,
   `get_module_facts`, and capability-aware `get_callers_callees` are available
   through a shared service and local read adapter.
-- [ ] The same query over the same revision, filters, projection, ordering,
+- [x] The same query over the same revision, filters, projection, ordering,
   and budget returns deterministic records, counts, truncation, and cursors.
-- [ ] Cursors are bound to session, snapshot/revision, query, projection,
+- [x] Cursors are bound to session, snapshot/revision, query, projection,
   ordering, and budget; changed contexts are rejected.
-- [ ] Results identify contributing analyzer/capability coverage across mixed
+- [x] Results identify contributing analyzer/capability coverage across mixed
   Go, Python, TypeScript, Rust, and Clojure scopes where fixtures provide them.
-- [ ] Unsupported, unknown, partial, and not-evaluable capabilities remain
+- [x] Unsupported, unknown, partial, and not-evaluable capabilities remain
   explicit instead of being represented as empty successful results.
-- [ ] `require_current` delegates to the freshness service before querying;
+- [x] `require_current` delegates to the freshness service before querying;
   specific revisions remain immutable and `latest_ready` labels staleness.
-- [ ] Tests cover deterministic pagination, scope isolation, mixed analyzers,
+- [x] Tests cover deterministic pagination, scope isolation, mixed analyzers,
   legacy models without source indexes, unsupported caller/callee queries,
   cursor rejection, and budget metadata.
 
@@ -104,3 +104,30 @@ in application Journey 14.
 
 Issue 069 adds exact text and safe source context. Issues 070 and 071 add the
 quality read and policy paths over the same revision/query boundary.
+
+## Implementation completed
+
+The analyzer-neutral query surface and local adapter now expose scopes, files,
+symbols, documentation, module facts, and capability-aware callers/callees.
+Responses use revision-bound envelopes, deterministic ordering, explicit
+coverage, projections, bounded pages, and opaque cursors. Membership filters
+follow only declared containment/declaration relations, and stored queries
+retain source language/path context without analyzer-specific branches.
+
+## Verification result
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+## Artifact synchronization
+
+- Application PRD and application architecture summary: no impact; Journey 14
+  already owns the shared analyzer-neutral query boundary.
+- Owning capability and orchestration status: synchronized with this batch;
+  the query boundary is complete while later consumers remain active.
+- Issue registry and OKF log: synchronized during batch closeout.

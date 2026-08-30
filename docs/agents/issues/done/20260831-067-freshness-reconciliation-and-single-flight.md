@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-067-freshness-reconciliation-and-single-flight.md`
+- Issue file: `docs/agents/issues/done/20260831-067-freshness-reconciliation-and-single-flight.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -38,21 +38,21 @@ dependency impact is proven; otherwise broaden the rescan.
 
 ## Acceptance criteria
 
-- [ ] `latest_ready` and `require_current` have distinct, explicit response
+- [x] `latest_ready` and `require_current` have distinct, explicit response
   semantics and never claim current data from watcher state alone.
-- [ ] `require_current` performs authoritative reconciliation inside the
+- [x] `require_current` performs authoritative reconciliation inside the
   request path, including when no watcher event is pending.
-- [ ] Concurrent strict requests for the same target join one single-flight
+- [x] Concurrent strict requests for the same target join one single-flight
   reconciliation/build and receive the same published revision or the same
   explicit failure.
-- [ ] Candidate input is verified before and after analysis. A change during
+- [x] Candidate input is verified before and after analysis. A change during
   analysis discards the candidate and retries within policy; exhausted retries
   preserve the last-ready revision and return `input_unstable`.
-- [ ] Selective invalidation uses explicit scope/cache/dependency identity only
+- [x] Selective invalidation uses explicit scope/cache/dependency identity only
   when safe; uncertain impact schedules a broader rescan.
-- [ ] Periodic reconciliation protects against missed watcher events without
+- [x] Periodic reconciliation protects against missed watcher events without
   publishing duplicate semantic revisions for unchanged input.
-- [ ] Tests cover missed events, clean-but-changed metadata, edit storms,
+- [x] Tests cover missed events, clean-but-changed metadata, edit storms,
   concurrent strict requests, source changes during analysis, retry limits,
   selective invalidation, and timeout behavior.
 
@@ -107,3 +107,30 @@ analysis workflow in application Journey 14.
 
 Issue 068 can safely expose revision-bound analyzer-neutral queries. Issue 072
 can build the local lifecycle/status bridge on this freshness service.
+
+## Implementation completed
+
+`require_current` now performs authoritative fingerprint reconciliation inside
+the request path, joins an existing rebuild, verifies candidates before and
+after analysis, retries bounded instability, and retains the previous ready
+revision on failure. Watcher and periodic signals are treated as hints;
+selective invalidation is used only when explicit scope identity makes it
+safe. Freshness and degraded state are updated without nested lock hazards.
+
+## Verification result
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+## Artifact synchronization
+
+- Application PRD and application architecture summary: no impact; the
+  request-time freshness behavior implements the existing Journey 14 boundary.
+- Owning capability and orchestration status: synchronized with this batch;
+  remaining delivery issues are still active.
+- Issue registry and OKF log: synchronized during batch closeout.

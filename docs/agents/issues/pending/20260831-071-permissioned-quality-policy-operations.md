@@ -70,7 +70,7 @@ re-evaluates a stale report.
 
 ## Blocked by
 
-- `docs/agents/issues/pending/20260831-070-quality-gateway-and-temporary-evaluation.md`
+—
 
 ## Specification anchors
 

@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-066-coherent-revision-store-and-publication.md`
+- Issue file: `docs/agents/issues/done/20260831-066-coherent-revision-store-and-publication.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -36,20 +36,20 @@ an event without creating semantic revision noise.
 
 ## Acceptance criteria
 
-- [ ] Candidate construction uses the existing multi-analyzer orchestration,
+- [x] Candidate construction uses the existing multi-analyzer orchestration,
   source-index, model, and deterministic-quality services without duplicating
   their semantics.
-- [ ] A published revision has one matching source input fingerprint and
+- [x] A published revision has one matching source input fingerprint and
   coherent source/model/quality/scope references; no reader can observe a
   mixed candidate.
-- [ ] Publication assigns monotonic session-local revisions and swaps the
+- [x] Publication assigns monotonic session-local revisions and swaps the
   active pointer atomically for concurrent readers.
-- [ ] Analyzer, source-index, validation, or quality failure preserves the last
+- [x] Analyzer, source-index, validation, or quality failure preserves the last
   ready revision and exposes stale/degraded diagnostics instead of an empty
   replacement.
-- [ ] Equal semantic input/digest can acknowledge the event without changing
+- [x] Equal semantic input/digest can acknowledge the event without changing
   the semantic revision, while operational event status remains observable.
-- [ ] Tests cover concurrent reads, publication races, failed candidates,
+- [x] Tests cover concurrent reads, publication races, failed candidates,
   partial multi-analyzer results, digest equality, and revision ordering.
 
 ## Artifact sync required
@@ -104,3 +104,30 @@ analysis, as described by application Journey 14.
 
 Issue 067 adds request-time reconciliation and the single-flight/stable-input
 rules that decide when a new candidate is required.
+
+## Implementation completed
+
+The session-local memory store now publishes validated revisions atomically,
+assigns monotonic revisions, preserves immutable historical reads, and keeps
+the last ready revision when a rebuild fails. Snapshot records carry verified
+input identity plus coherent source-index, model, quality, and scope
+references. Stored orchestration runs retain their non-serialized scope
+selection caches through an independent clone boundary.
+
+## Verification result
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+## Artifact synchronization
+
+- Application PRD and application architecture summary: no impact; revision
+  publication remains the specified shared coordinator boundary.
+- Owning capability and orchestration status: synchronized with this batch;
+  the capability remains `specified` because later delivery issues remain.
+- Issue registry and OKF log: synchronized during batch closeout.

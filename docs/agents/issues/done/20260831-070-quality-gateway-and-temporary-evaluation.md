@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-070-quality-gateway-and-temporary-evaluation.md`
+- Issue file: `docs/agents/issues/done/20260831-070-quality-gateway-and-temporary-evaluation.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -39,21 +39,21 @@ second evaluator or matcher.
 
 ## Acceptance criteria
 
-- [ ] Profile and complete rule-catalog reads expose version, parameters,
+- [x] Profile and complete rule-catalog reads expose version, parameters,
   capability coverage, and supported/unsupported status through bounded
   results.
-- [ ] Findings and evidence preserve exact versus signal assessment kind,
+- [x] Findings and evidence preserve exact versus signal assessment kind,
   severity, status, coverage, evidence references, rule/formula/provider
   versions, and selected source revision.
-- [ ] `evaluate_quality` validates a profile and optional temporary bindings,
+- [x] `evaluate_quality` validates a profile and optional temporary bindings,
   runs the existing quality service against a verified source/model revision,
   and never persists temporary settings.
-- [ ] `compare_quality_reports` delegates stable finding-key/version matching
+- [x] `compare_quality_reports` delegates stable finding-key/version matching
   and distinguishes added, unchanged, suppressed, and resolved findings;
   partial/unsupported coverage cannot imply resolution.
-- [ ] Strict quality requests ensure current input before evaluation; stale or
+- [x] Strict quality requests ensure current input before evaluation; stale or
   incompatible reports are explicitly labeled/rejected as appropriate.
-- [ ] Tests cover catalog/profile reads, findings/evidence pagination,
+- [x] Tests cover catalog/profile reads, findings/evidence pagination,
   temporary settings, scope isolation, report comparison, missing/legacy
   quality reports, and explicit unsupported coverage.
 
@@ -110,3 +110,31 @@ existing quality semantics shared by viewer, CLI, and MCP.
 
 Issue 071 adds the separately authorized profile-save and baseline-policy
 commands over this gateway.
+
+## Implementation completed
+
+`QualityGateway` now delegates catalog/profile reads, bounded findings and
+evidence, temporary profile evaluation, and report comparison to the existing
+deterministic-quality services. Quality requests are anchored to verified live
+revisions, preserve exact/signal and coverage semantics, bind temporary
+reports to their source revision, and reject persistence from this read/eval
+boundary. Evidence can compose bounded source context without reimplementing
+quality or source-index semantics.
+
+## Verification result
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+## Artifact synchronization
+
+- Application PRD and application architecture summary: no impact; quality
+  ownership remains with the deterministic-quality capability and Journey 15.
+- Owning capability and orchestration status: synchronized with this batch;
+  issue 071 remains the next policy-write boundary.
+- Issue registry and OKF log: synchronized during batch closeout.

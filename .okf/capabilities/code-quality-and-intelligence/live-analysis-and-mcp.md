@@ -20,13 +20,13 @@ contract: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/
 scenarios: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/acceptance-scenarios.md
 readiness_review: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/readiness-review.md
 issues:
-  - docs/agents/issues/pending/20260831-064-live-session-config-and-initial-snapshot.md
-  - docs/agents/issues/pending/20260831-065-watcher-events-and-coalescing.md
-  - docs/agents/issues/pending/20260831-066-coherent-revision-store-and-publication.md
-  - docs/agents/issues/pending/20260831-067-freshness-reconciliation-and-single-flight.md
-  - docs/agents/issues/pending/20260831-068-analyzer-neutral-query-surface.md
-  - docs/agents/issues/pending/20260831-069-exact-text-and-source-context.md
-  - docs/agents/issues/pending/20260831-070-quality-gateway-and-temporary-evaluation.md
+  - docs/agents/issues/done/20260831-064-live-session-config-and-initial-snapshot.md
+  - docs/agents/issues/done/20260831-065-watcher-events-and-coalescing.md
+  - docs/agents/issues/done/20260831-066-coherent-revision-store-and-publication.md
+  - docs/agents/issues/done/20260831-067-freshness-reconciliation-and-single-flight.md
+  - docs/agents/issues/done/20260831-068-analyzer-neutral-query-surface.md
+  - docs/agents/issues/done/20260831-069-exact-text-and-source-context.md
+  - docs/agents/issues/done/20260831-070-quality-gateway-and-temporary-evaluation.md
   - docs/agents/issues/pending/20260831-071-permissioned-quality-policy-operations.md
   - docs/agents/issues/pending/20260831-072-local-live-session-cli-bridge.md
   - docs/agents/issues/pending/20260831-073-live-viewer-integration.md

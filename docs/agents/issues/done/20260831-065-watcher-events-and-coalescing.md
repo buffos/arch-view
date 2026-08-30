@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/analyze-source.md`, `/.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-065-watcher-events-and-coalescing.md`
+- Issue file: `docs/agents/issues/done/20260831-065-watcher-events-and-coalescing.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -36,18 +36,18 @@ supported local watcher implementation behind the same port.
 
 ## Acceptance criteria
 
-- [ ] Watcher events normalize path separators, reject root escapes, and retain
+- [x] Watcher events normalize path separators, reject root escapes, and retain
   event kind and backend sequence information where available.
-- [ ] Repeated edits to the same path and related paths within the configured
+- [x] Repeated edits to the same path and related paths within the configured
   debounce window produce one canonical event group with bounded memory.
-- [ ] Create/modify/delete/rename events preserve enough information for safe
+- [x] Create/modify/delete/rename events preserve enough information for safe
   invalidation; ambiguous rename is represented as delete/create or a full
   rescan trigger.
-- [ ] Overflow, backend error, out-of-scope path, and missed-sequence signals
+- [x] Overflow, backend error, out-of-scope path, and missed-sequence signals
   force an explicit full rescan plan and never commit guessed facts.
-- [ ] The watcher implementation is replaceable and tests can inject a fake
+- [x] The watcher implementation is replaceable and tests can inject a fake
   backend without sleeping on wall-clock timing.
-- [ ] Tests cover edit storms, rename/delete pairs, overflow, path traversal,
+- [x] Tests cover edit storms, rename/delete pairs, overflow, path traversal,
   debounce bounds, cancellation, and backend failure.
 
 ## Artifact sync required
@@ -101,3 +101,29 @@ application Journey 14.
 Issue 066 consumes event groups to build and publish coherent revisions. Issue
 067 adds authoritative request-time reconciliation because watcher events alone
 are not proof of freshness.
+
+## Implementation completed
+
+The watcher boundary now normalizes repository-relative paths, rejects unsafe
+events, coalesces bounded edit storms, preserves rename/delete information, and
+forces conservative full rescans for overflow, backend errors, ambiguous
+renames, sequence gaps, or pending-event limits. The polling backend is
+replaceable and tests use injected event sources and caller-supplied time.
+
+## Verification result
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+## Artifact synchronization
+
+- Application PRD and application architecture summary: no impact; watcher
+  ownership remains inside the specified live coordinator boundary.
+- Owning capability and orchestration status: synchronized with this batch;
+  issues 064–070 are complete and 071–076 remain active.
+- Issue registry and OKF log: synchronized during batch closeout.

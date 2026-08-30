@@ -66,9 +66,6 @@ available and does not silently start a watcher.
 
 ## Blocked by
 
-- `docs/agents/issues/pending/20260831-068-analyzer-neutral-query-surface.md`
-- `docs/agents/issues/pending/20260831-069-exact-text-and-source-context.md`
-- `docs/agents/issues/pending/20260831-070-quality-gateway-and-temporary-evaluation.md`
 - `docs/agents/issues/pending/20260831-072-local-live-session-cli-bridge.md`
 
 ## Specification anchors

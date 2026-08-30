@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/explore-architecture.md`, `/.okf/capabilities/export-and-automate.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-069-exact-text-and-source-context.md`
+- Issue file: `docs/agents/issues/done/20260831-069-exact-text-and-source-context.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -36,18 +36,18 @@ must never become arbitrary file access or unbounded file retrieval.
 
 ## Acceptance criteria
 
-- [ ] `find_text` supports bounded literal and safe-regex modes with path,
+- [x] `find_text` supports bounded literal and safe-regex modes with path,
   language, scope, case, line-size, item, byte, and cursor limits.
-- [ ] Text results are deterministic and contain file/line/column matches, not
+- [x] Text results are deterministic and contain file/line/column matches, not
   complete source files or fuzzy/embedding-ranked results.
-- [ ] `get_source_context` requires an indexed entity/span, selected revision,
+- [x] `get_source_context` requires an indexed entity/span, selected revision,
   and explicit bounded line/byte limits.
-- [ ] Source context validates root containment, selected scope/revision, and
+- [x] Source context validates root containment, selected scope/revision, and
   content hash where available; traversal, arbitrary paths, invalid spans, and
   over-budget requests fail with structured errors.
-- [ ] The existing viewer/source boundary is reused rather than duplicated,
+- [x] The existing viewer/source boundary is reused rather than duplicated,
   and quality evidence can compose with this read-only context operation.
-- [ ] Tests cover literal/regex determinism, large-match truncation, invalid
+- [x] Tests cover literal/regex determinism, large-match truncation, invalid
   regex, traversal, root/scope mismatch, changed content hash, and limits.
 
 ## Artifact sync required
@@ -100,3 +100,29 @@ inspection in application Journey 14.
 
 Issue 070 can expose quality evidence and temporary evaluations while reusing
 this bounded context operation.
+
+## Implementation completed
+
+The live query boundary now provides deterministic bounded literal/regex text
+search and explicit revision-bound source context. It validates indexed spans,
+scope membership, root-safe file access, content hashes, line/byte limits, and
+source-context budgets. Entity-only context requests resolve a unique source
+scope, while ambiguous or missing source evidence remains an explicit error.
+
+## Verification result
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+## Artifact synchronization
+
+- Application PRD and application architecture summary: no impact; the source
+  context behavior remains within the existing read-only Journey 14 boundary.
+- Owning capability and orchestration status: synchronized with this batch;
+  source-context delivery is complete and later transport work remains.
+- Issue registry and OKF log: synchronized during batch closeout.

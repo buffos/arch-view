@@ -2,6 +2,32 @@
 
 ## 2026-08-31
 
+### Live analysis and MCP implementation batch 064–070
+
+* **Implementation:** Completed issues 064–070: live-session configuration and
+  initial snapshots, bounded watcher normalization/coalescing, coherent
+  immutable revisions, authoritative freshness reconciliation and single-
+  flight rebuilds, analyzer-neutral queries, exact text/source context, and
+  delegated quality catalog/evaluation/query behavior.
+* **Hardening:** Preserved orchestration scope caches across revision clones,
+  treated duplicate watcher sequences and coalesced updates correctly, kept
+  freshness degraded on failed/unstable reconciliation, enforced explicit
+  source-context revisions, and added deterministic language/path/documentation
+  filtering plus bounded callers/callees/evidence responses. Forwarded the
+  configured source-index enabled flag and capability list through in-process
+  and process/plugin analyzer boundaries while preserving nil-request legacy
+  defaults.
+* **Delivery:** Archived issues 064–070, removed their active registry rows,
+  unblocked issues 071 and 072, and updated downstream blockers and the live
+  capability references.
+* **No impact:** Application PRD and application architecture remain aligned
+  with the approved shared live/query/quality boundaries. The capability
+  remains `specified` because issues 071–076 are still active.
+* **Verification:** `go test ./... -count=1`, `go test -race ./...`,
+  `go vet ./...`, `go build ./...`, and `git diff --check` pass.
+
+## 2026-08-31
+
 ### Live analysis and MCP implementation slicing
 
 * **Decision:** Approved the dependency-ordered implementation batch for the

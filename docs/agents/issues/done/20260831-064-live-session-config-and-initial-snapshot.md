@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/analyze-source.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-064-live-session-config-and-initial-snapshot.md`
+- Issue file: `docs/agents/issues/done/20260831-064-live-session-config-and-initial-snapshot.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -37,21 +37,21 @@ boundary that later CLI, viewer, and MCP adapters can share.
 
 ## Acceptance criteria
 
-- [ ] `arch-view.live/v1` configuration validates repository-relative roots,
+- [x] `arch-view.live/v1` configuration validates repository-relative roots,
   analyzer/source capability requests, quality-profile references, positive
   bounded limits, and read-only/no-shell/no-target defaults.
-- [ ] Absolute roots, traversal, symlink/junction escapes, invalid operation
+- [x] Absolute roots, traversal, symlink/junction escapes, invalid operation
   permissions, and unsupported configuration fail closed with structured
   diagnostics and no session access.
-- [ ] A valid session starts one initial bounded scan through the existing
+- [x] A valid session starts one initial bounded scan through the existing
   multi-analyzer planner/orchestrator and does not contain a Go-specific live
   branch.
-- [ ] The service reports `initializing` while the scan runs, publishes a
+- [x] The service reports `initializing` while the scan runs, publishes a
   usable `ready` or `degraded` result only through the shared snapshot boundary,
   and reports a structured failure when no usable revision exists.
-- [ ] Legacy models or scopes without a source index expose explicit
+- [x] Legacy models or scopes without a source index expose explicit
   unavailable/unsupported coverage rather than fabricated source facts.
-- [ ] Unit/service tests cover valid and invalid configuration, all registered
+- [x] Unit/service tests cover valid and invalid configuration, all registered
   analyzer registration, initial status transitions, cancellation, and
   no-ready failure behavior.
 
@@ -106,3 +106,33 @@ used by application Journey 14.
 
 Issue 065 adds watcher input to this session. Issue 066 hardens its snapshot
 publication and last-ready behavior.
+
+## Implementation completed
+
+The live session boundary is implemented in `internal/live/`. It validates
+root-safe configuration and operation permissions, starts the initial scan
+asynchronously, reports initializing/ready/degraded/failed states, and keeps
+legacy source-index absence explicit. The initial scan delegates to the shared
+multi-analyzer scanner and publishes only a validated revision. The configured
+source-index enabled flag and capability list are forwarded through the common
+analyzer and process-plugin boundaries, while a nil request preserves legacy
+analyzer defaults.
+
+## Verification result
+
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+## Artifact synchronization
+
+- Application PRD and application architecture summary: no impact; the
+  specified live-session boundary and Journey 14 remain unchanged.
+- Owning capability and orchestration status: synchronized with this
+  implementation batch; the capability remains `specified` while issues
+  071–076 remain active.
+- Issue registry and OKF log: synchronized during batch closeout.

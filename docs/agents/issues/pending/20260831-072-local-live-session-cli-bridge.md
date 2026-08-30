@@ -66,7 +66,7 @@ remain compatible unless an explicit live mode is selected.
 
 ## Blocked by
 
-- `docs/agents/issues/pending/20260831-067-freshness-reconciliation-and-single-flight.md`
+—
 
 ## Specification anchors
 
