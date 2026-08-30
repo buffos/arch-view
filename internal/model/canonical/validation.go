@@ -8,6 +8,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/quality"
 )
 
 // Validate checks the invariants of a canonical architecture model.
@@ -36,6 +37,14 @@ func Validate(value model.Model) error {
 	if value.SourceIndex != nil {
 		if err := analysis.ValidateSourceIndex(*value.SourceIndex); err != nil {
 			return analysis.WrapHostError(analysis.ErrInvalidModel, "model source index is invalid", err, nil)
+		}
+	}
+	if value.QualityReport != nil {
+		if err := quality.ValidateQualityEvaluation(*value.QualityReport); err != nil {
+			return analysis.WrapHostError(analysis.ErrInvalidModel, "model quality report is invalid", err, nil)
+		}
+		if !qualitySnapshotsBelongToSourceIndex(value.QualityReport.SourceSnapshotIDs, value.SourceIndex) {
+			return analysis.NewHostError(analysis.ErrInvalidModel, "model quality report references a source snapshot outside the attached source index", nil)
 		}
 	}
 	if value.Derived.Cycles == nil || value.Derived.FeedbackRelationshipIDs == nil || value.Derived.Layers == nil || value.Derived.AlgorithmProvenance == nil {
@@ -175,6 +184,28 @@ func Validate(value model.Model) error {
 		return analysis.NewHostError(analysis.ErrInvalidModel, "model id does not match canonical model content", map[string]any{"model_id": value.ModelID})
 	}
 	return nil
+}
+
+func qualitySnapshotsBelongToSourceIndex(snapshotIDs []string, index *analysis.SourceIndex) bool {
+	if len(snapshotIDs) == 0 {
+		return true
+	}
+	if index == nil {
+		return false
+	}
+	available := make(map[string]struct{}, len(index.Snapshots)+1)
+	for _, snapshot := range index.Snapshots {
+		available[snapshot.SnapshotID] = struct{}{}
+	}
+	if index.Projection != nil {
+		available[index.Projection.SnapshotID] = struct{}{}
+	}
+	for _, snapshotID := range snapshotIDs {
+		if _, ok := available[snapshotID]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func modelStatus(status analysis.AnalysisStatus) (model.Status, error) {

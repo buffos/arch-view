@@ -1,6 +1,10 @@
 package analysis
 
-import "context"
+import (
+	"context"
+
+	"github.com/buffo/arch-view/internal/quality"
+)
 
 const AnalyzerAPIVersion = "arch-view.analyzer/v1"
 
@@ -140,18 +144,19 @@ const (
 )
 
 type AnalysisResult struct {
-	RunID              string                    `json:"run_id"`
-	Status             AnalysisStatus            `json:"status"`
-	Analyzer           AnalyzerInfo              `json:"analyzer"`
-	Project            ProjectInfo               `json:"project"`
-	OptionsFingerprint string                    `json:"options_fingerprint,omitempty"`
-	Modules            []ModuleObservation       `json:"modules"`
-	Relationships      []RelationshipObservation `json:"relationships"`
-	References         []Reference               `json:"references"`
-	SourceReferences   []SourceReference         `json:"source_references"`
-	Diagnostics        []Diagnostic              `json:"diagnostics"`
-	Summary            AnalysisSummary           `json:"summary"`
-	SourceIndex        *SourceIndex              `json:"source_index,omitempty"`
+	RunID              string                     `json:"run_id"`
+	Status             AnalysisStatus             `json:"status"`
+	Analyzer           AnalyzerInfo               `json:"analyzer"`
+	Project            ProjectInfo                `json:"project"`
+	OptionsFingerprint string                     `json:"options_fingerprint,omitempty"`
+	Modules            []ModuleObservation        `json:"modules"`
+	Relationships      []RelationshipObservation  `json:"relationships"`
+	References         []Reference                `json:"references"`
+	SourceReferences   []SourceReference          `json:"source_references"`
+	Diagnostics        []Diagnostic               `json:"diagnostics"`
+	Summary            AnalysisSummary            `json:"summary"`
+	SourceIndex        *SourceIndex               `json:"source_index,omitempty"`
+	QualityReport      *quality.QualityEvaluation `json:"quality_report,omitempty"`
 }
 
 type AnalyzerInfo struct {

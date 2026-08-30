@@ -39,7 +39,8 @@ func Normalize(result analysis.AnalysisResult) (model.Model, error) {
 				"layer_algorithm":    "dependency-depth-v1",
 			},
 		},
-		SourceIndex: result.SourceIndex,
+		SourceIndex:   result.SourceIndex,
+		QualityReport: result.QualityReport,
 	}
 
 	value.Diagnostics = append(value.Diagnostics, normalizationConflictDiagnostics(result)...)

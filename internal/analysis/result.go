@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/buffo/arch-view/internal/quality"
 )
 
 func ValidateAnalysisResult(result AnalysisResult, manifest Manifest, projectRoot string) error {
@@ -163,10 +165,40 @@ func ValidateAnalysisResult(result AnalysisResult, manifest Manifest, projectRoo
 			return WrapHostError(ErrResultInvalid, "analysis result source index is invalid", err, nil)
 		}
 	}
+	if result.QualityReport != nil {
+		if err := quality.ValidateQualityEvaluation(*result.QualityReport); err != nil {
+			return WrapHostError(ErrResultInvalid, "analysis result quality report is invalid", err, nil)
+		}
+		if !qualitySnapshotsBelongToResult(result.QualityReport.SourceSnapshotIDs, result.SourceIndex) {
+			return NewHostError(ErrResultInvalid, "analysis result quality report references a source snapshot outside the attached source index", nil)
+		}
+	}
 	if _, err := json.Marshal(result); err != nil {
 		return WrapHostError(ErrResultInvalid, "analysis result is not serializable", err, nil)
 	}
 	return nil
+}
+
+func qualitySnapshotsBelongToResult(snapshotIDs []string, index *SourceIndex) bool {
+	if len(snapshotIDs) == 0 {
+		return true
+	}
+	if index == nil {
+		return false
+	}
+	available := make(map[string]struct{}, len(index.Snapshots)+1)
+	for _, snapshot := range index.Snapshots {
+		available[snapshot.SnapshotID] = struct{}{}
+	}
+	if index.Projection != nil {
+		available[index.Projection.SnapshotID] = struct{}{}
+	}
+	for _, snapshotID := range snapshotIDs {
+		if _, ok := available[snapshotID]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func isRepositoryRelativePath(path string) bool {

@@ -7,6 +7,7 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 	modelpkg "github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	"github.com/buffo/arch-view/internal/quality"
 )
 
 func TestNormalizeProducesDeterministicModelAndCycleProjections(t *testing.T) {
@@ -53,6 +54,54 @@ func TestNormalizeProducesDeterministicModelAndCycleProjections(t *testing.T) {
 	}
 	if projection.Nodes[0].Kind != "group" || projection.Nodes[1].Kind != "group" {
 		t.Fatalf("projection nodes = %#v", projection.Nodes)
+	}
+}
+
+func TestQualityReportIsOptionalValidatedModelSibling(t *testing.T) {
+	model, err := canonical.Normalize(fixtureAnalysisResult())
+	if err != nil {
+		t.Fatalf("normalize fixture: %v", err)
+	}
+	legacyJSON, err := json.Marshal(model)
+	if err != nil {
+		t.Fatalf("marshal legacy model: %v", err)
+	}
+	profile := quality.QualityProfile{SchemaVersion: quality.SchemaVersion, ProfileID: "profile:test", ProfileVersion: "1.0.0", SeverityPolicy: quality.TypedConfigBlock{Namespace: "severity:default", SchemaVersion: "1.0.0", Payload: map[string]any{}}, EnabledRules: []quality.RuleBinding{}, Constraints: []quality.ArchitectureConstraint{}, Extensions: []quality.ExtensionBlock{}}
+	report, err := quality.EvaluateQualityProfile(profile, quality.EvaluationInput{}, quality.NewDefaultCatalog())
+	if err != nil {
+		t.Fatalf("evaluate empty quality profile: %v", err)
+	}
+	withReportResult := fixtureAnalysisResult()
+	withReportResult.QualityReport = &report
+	modelWithReport, err := canonical.Normalize(withReportResult)
+	if err != nil {
+		t.Fatalf("normalize model with quality report: %v", err)
+	}
+	if err := canonical.Validate(modelWithReport); err != nil {
+		t.Fatalf("validate model with quality report: %v", err)
+	}
+	withReportJSON, err := json.Marshal(modelWithReport)
+	if err != nil {
+		t.Fatalf("marshal model with quality report: %v", err)
+	}
+	if string(withReportJSON) == string(legacyJSON) {
+		t.Fatal("quality report attachment did not change the serialized model")
+	}
+	withoutReportJSON, err := json.Marshal(model)
+	if err != nil {
+		t.Fatalf("marshal model after removing quality report: %v", err)
+	}
+	if string(withoutReportJSON) != string(legacyJSON) {
+		t.Fatal("omitted quality report changed the legacy model representation")
+	}
+
+	foreignReport, err := quality.EvaluateQualityProfile(profile, quality.EvaluationInput{SourceSnapshots: []quality.SourceSnapshot{{SnapshotID: "foreign-snapshot", ScopeID: "foreign-scope"}}}, quality.NewDefaultCatalog())
+	if err != nil {
+		t.Fatalf("evaluate foreign quality report: %v", err)
+	}
+	model.QualityReport = &foreignReport
+	if err := canonical.Validate(model); analysis.ErrorCodeOf(err) != analysis.ErrInvalidModel {
+		t.Fatalf("foreign quality report error code = %q, want %q", analysis.ErrorCodeOf(err), analysis.ErrInvalidModel)
 	}
 }
 

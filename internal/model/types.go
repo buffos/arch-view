@@ -1,6 +1,9 @@
 package model
 
-import "github.com/buffo/arch-view/internal/analysis"
+import (
+	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/quality"
+)
 
 const SchemaVersion = "arch-view.model/v1"
 
@@ -25,6 +28,7 @@ type Model struct {
 	Diagnostics      []Diagnostic                       `json:"diagnostics"`
 	Derived          Derived                            `json:"derived"`
 	SourceIndex      *analysis.SourceIndex              `json:"source_index,omitempty"`
+	QualityReport    *quality.QualityEvaluation         `json:"quality_report,omitempty"`
 }
 
 type Project struct {
