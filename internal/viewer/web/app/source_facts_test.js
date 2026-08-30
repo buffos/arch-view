@@ -2,7 +2,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const source = fs.readFileSync(path.join(__dirname, "details.js"), "utf8").replace(/^import .*?;\r?\n/, "");
+const source = fs.readFileSync(path.join(__dirname, "details.js"), "utf8")
+  .replace(/^import .*?;\r?\n/gm, "") + `
+function renderQualitySummary() { return ""; }
+`;
 
 import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(function (details) {
   const snapshot = { coverage: [{ capability: "source:declarations", status: "observed" }] };

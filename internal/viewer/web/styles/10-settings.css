@@ -94,6 +94,7 @@
 
 .settings-field input,
 .settings-field select,
+.settings-field textarea,
 .layout-option-input {
   width: 100%;
   padding: 0.58rem 0.68rem;
@@ -101,6 +102,12 @@
   background: var(--control-surface);
   border: 1px solid var(--line);
   border-radius: 0.55rem;
+}
+
+.settings-field textarea {
+  min-height: 5rem;
+  resize: vertical;
+  line-height: 1.45;
 }
 
 .settings-field small {
@@ -260,8 +267,31 @@
   .session-meta {
     text-align: left;
   }
-  .hero-actions {
+  .hero-row {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .hero-controls {
     width: 100%;
+  }
+  .hero-control-heading,
+  .hero-control-section-actions {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+  .hero-control-heading > .muted {
+    max-width: none;
+    text-align: left;
+  }
+  .hero-control-grid-view,
+  .hero-control-grid-quality {
+    grid-template-columns: 1fr;
+  }
+  .hero-control-grid-view .scope-selector-control {
+    grid-column: auto;
+  }
+  .hero-action-buttons,
+  .quality-profile-status-wrap {
     justify-content: start;
   }
   .search-control {

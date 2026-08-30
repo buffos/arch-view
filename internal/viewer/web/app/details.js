@@ -1,4 +1,5 @@
 import { classForState, confidenceState, displayProjectRoot, escapeHTML, formatLanguage, formatList, nodeLanguageBadge, nodeLanguageText, referenceScopeLabel } from "./utils.js";
+import { renderQualitySummary } from "./quality.js";
 
 export function selectEntity(context, kind, id, preserveDoubleClick, services) {
   if (!preserveDoubleClick) context.state.lastNodeClick = null;
@@ -451,7 +452,7 @@ export function renderDetails(context, services) {
     const counts = node.counts || {};
     context.elements.detailsContent.innerHTML = '<p class="details-summary-copy">A compact view of the selected item. Open inspection for source structure and evidence.</p><div class="detail-actions"><button class="button detail-action" type="button" data-open-inspection="' + escapeHTML(node.id) + '">Open inspection</button>' + drill + '</div><div class="detail-table">' +
       detailRow("Hierarchy", formatList(summary.hierarchy, "Top level")) + detailRow("Language", nodeLanguageText(context, node), "emphasis") + detailRow("Active scope", activeScopeDetails(context).name) + detailRow("Modules", summary.counts.modules) + detailRow("Visible relationships", summary.counts.relationships) + detailRow("Evidence links", summary.counts.evidence) +
-      "</div>" + (statusBadges.length ? '<div class="detail-status-row" aria-label="Non-neutral status">' + statusBadges.join("") + "</div>" : "");
+      "</div>" + (statusBadges.length ? '<div class="detail-status-row" aria-label="Non-neutral status">' + statusBadges.join("") + "</div>" : "") + renderQualitySummary(context);
     bindDetailActions(context, services);
     return;
   }

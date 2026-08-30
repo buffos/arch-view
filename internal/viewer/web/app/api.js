@@ -10,7 +10,13 @@ export function createAPI(context) {
   function embeddedJSON(path) {
     const url = new URL(path, window.location.href);
     const modelPath = "/v1/models/" + encodeURIComponent(context.modelID);
+    if (url.pathname === "/v1/quality/profiles") return { schema_version: "arch-view.quality-profiles/v1", status: "unavailable", profiles: [], message: "Quality evaluation is unavailable in a self-contained export." };
+    if (url.pathname === "/v1/quality/rules") return { schema_version: "arch-view.quality-rules/v1", status: "unavailable", rules: [], message: "Quality rule configuration is unavailable in a self-contained export." };
     if (url.pathname === modelPath) return context.embeddedExport.model;
+    if (url.pathname === modelPath + "/quality") return embeddedQualityReport(context);
+    if (url.pathname === modelPath + "/quality/findings") return embeddedQualityFindings(context, url);
+    if (url.pathname.indexOf(modelPath + "/quality/findings/") === 0) return embeddedQualityEvidence(context, url, modelPath);
+    if (url.pathname === modelPath + "/quality/coverage") return embeddedQualityCoverage(context, url);
     if (url.pathname === modelPath + "/source-index") {
       if (context.embeddedExport.model && context.embeddedExport.model.source_index) return context.embeddedExport.model.source_index;
       throw new Error("The exported model has no source-facts attachment.");
@@ -55,6 +61,110 @@ export function createAPI(context) {
   }
 
   return { currentModelID, getJSON, postJSON, putJSON };
+}
+
+function embeddedQualityValue(context) {
+  return context.embeddedExport && context.embeddedExport.model && context.embeddedExport.model.quality_report || null;
+}
+
+function embeddedQualityReport(context) {
+  const report = embeddedQualityValue(context);
+  if (!report) return { schema_version: "arch-view.quality-query/v1", status: "missing", coverage: [], message: "No quality report is attached to this model revision." };
+  return { schema_version: "arch-view.quality-query/v1", status: "available", report: report, coverage: report.coverage || [] };
+}
+
+function embeddedQualityPage(items, url, snapshotIDs, scopeID) {
+  const limitText = url.searchParams.get("limit") || "50";
+  if (!/^\d+$/.test(limitText)) throw new Error("The quality query limit must be an integer.");
+  const limit = Number(limitText);
+  if (limit < 1 || limit > 200) throw new Error("The quality query limit is outside the allowed bound.");
+  let start = 0;
+  const cursor = url.searchParams.get("cursor");
+  if (cursor) {
+    try {
+      const decoded = atob(cursor.replace(/-/g, "+").replace(/_/g, "/"));
+      if (!/^qv1:\d+$/.test(decoded)) throw new Error("invalid cursor");
+      start = Number(decoded.slice(4));
+    } catch (_) { throw new Error("The quality query cursor is malformed."); }
+  }
+  if (start > items.length) throw new Error("The quality query cursor is outside the result set.");
+  const end = Math.min(items.length, start + limit);
+  const next = end < items.length ? btoa("qv1:" + end).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_") : "";
+  return { schema_version: "arch-view.quality-query/v1", source_snapshot_ids: snapshotIDs || [], scope_id: scopeID || "", items: items.slice(start, end), total: items.length, next_cursor: next || undefined };
+}
+
+function embeddedQualityCoverageMatchesScope(coverage, scopeID) {
+  if (!scopeID) return true;
+  const evidenceIDs = coverage && coverage.provenance && coverage.provenance.evidence_ids || [];
+  if (!evidenceIDs.length) return true;
+  const prefix = "scope:" + scopeID + ":";
+  return evidenceIDs.some(function (evidenceID) { return evidenceID === "scope:" + scopeID || String(evidenceID).indexOf(prefix) === 0; });
+}
+
+function embeddedQualityFindings(context, url) {
+  const report = embeddedQualityValue(context);
+  const scopeID = url.searchParams.get("scope") === "all" ? "" : url.searchParams.get("scope") || "";
+  if (!report) return { schema_version: "arch-view.quality-query/v1", report_id: context.modelID, evaluation_id: "", source_snapshot_ids: [], scope_id: scopeID, items: [], total: 0, coverage: [], status: "missing", message: "No quality report is attached to this model revision." };
+  const matches = (report.findings || []).filter(function (finding) {
+    const subject = finding.subject_ref || {};
+    return (!url.searchParams.get("report_id") || url.searchParams.get("report_id") === report.evaluation_id) &&
+      (!url.searchParams.get("snapshot_id") || subject.snapshot_id === url.searchParams.get("snapshot_id")) &&
+      (!scopeID || subject.scope_id === scopeID) &&
+      (!url.searchParams.get("subject_id") || subject.id === url.searchParams.get("subject_id")) &&
+      (!url.searchParams.get("subject_kind") || subject.kind === url.searchParams.get("subject_kind")) &&
+      (!url.searchParams.get("file_id") || subject.kind === "file" && subject.id === url.searchParams.get("file_id")) &&
+      (!url.searchParams.get("rule_id") || finding.rule_id === url.searchParams.get("rule_id")) &&
+      (!url.searchParams.get("assessment_kind") || finding.assessment_kind === url.searchParams.get("assessment_kind")) &&
+      (!url.searchParams.get("severity") || finding.severity === url.searchParams.get("severity")) &&
+      (!url.searchParams.get("status") || finding.status === url.searchParams.get("status"));
+  }).slice().sort(function (left, right) {
+    return String(left.finding_key || "").localeCompare(String(right.finding_key || "")) || String(left.rule_id || "").localeCompare(String(right.rule_id || "")) || String(left.id || "").localeCompare(String(right.id || ""));
+  });
+  const page = embeddedQualityPage(matches, url, report.source_snapshot_ids || [], scopeID);
+  page.report_id = report.evaluation_id;
+  page.evaluation_id = report.evaluation_id;
+  page.coverage = (report.coverage || []).filter(function (coverage) {
+    return embeddedQualityCoverageMatchesScope(coverage, scopeID) && (!url.searchParams.get("rule_id") || coverage.rule_id === url.searchParams.get("rule_id"));
+  });
+  page.status = "available";
+  return page;
+}
+
+function embeddedQualityCoverage(context, url) {
+  const report = embeddedQualityValue(context);
+  if (!report) return { schema_version: "arch-view.quality-query/v1", report_id: context.modelID, evaluation_id: "", items: [], total: 0, status: "missing", message: "No quality report is attached to this model revision." };
+  const ruleID = url.searchParams.get("rule_id") || "";
+  const scopeID = url.searchParams.get("scope") === "all" ? "" : url.searchParams.get("scope") || "";
+  const items = (report.coverage || []).filter(function (coverage) { return embeddedQualityCoverageMatchesScope(coverage, scopeID) && (!ruleID || coverage.rule_id === ruleID); });
+  const page = embeddedQualityPage(items, url, [], "");
+  page.report_id = report.evaluation_id;
+  page.evaluation_id = report.evaluation_id;
+  page.status = "available";
+  return page;
+}
+
+function embeddedQualityEvidence(context, url, modelPath) {
+  const report = embeddedQualityValue(context);
+  if (!report) throw new Error("No quality report is attached to this model revision.");
+  const prefix = modelPath + "/quality/findings/";
+  const suffix = url.pathname.slice(prefix.length);
+  if (!suffix.endsWith("/evidence")) throw new Error("The quality evidence route is unavailable.");
+  const findingID = decodeURIComponent(suffix.slice(0, -"/evidence".length));
+  const finding = (report.findings || []).find(function (value) { return value.id === findingID || value.finding_key === findingID; });
+  if (!finding) throw new Error("The quality finding was not found in the exported report.");
+  const include = url.searchParams.get("include_source_context") || url.searchParams.get("include_source") || "false";
+  const includeSource = include === "true";
+  const result = { schema_version: "arch-view.quality-query/v1", report_id: report.evaluation_id, evaluation_id: report.evaluation_id, finding: finding };
+  if (includeSource) {
+    const lines = Number(url.searchParams.get("max_lines") || "120");
+    const bytes = Number(url.searchParams.get("max_bytes") || String(4 * 1024 * 1024));
+    if (!Number.isInteger(lines) || !Number.isInteger(bytes) || lines < 1 || lines > 120 || bytes < 1 || bytes > 4 * 1024 * 1024) throw new Error("The source-context budget is outside the allowed bound.");
+    result.source_context_requested = true;
+    result.source_context_max_lines = lines;
+    result.source_context_max_bytes = bytes;
+    throw new Error("Bounded source context is unavailable in this export because source contents were not embedded.");
+  }
+  return result;
 }
 
 function embeddedSourceIndex(context) {

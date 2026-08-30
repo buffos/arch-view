@@ -34,29 +34,73 @@
           <h2 id="view-title">Architecture at a glance</h2>
           <p id="view-description" class="lede">The scene is loaded from a validated, language-neutral model.</p>
         </div>
-        <div class="hero-actions">
-          <label class="search-control">
-            <span>Find a node</span>
-            <input id="search" type="search" placeholder="Search modules or groups" autocomplete="off">
-          </label>
-          <label class="select-control">
-            <span>References</span>
-            <select id="reference-visibility" aria-label="Reference visibility">
-              <option value="hidden">Local-first</option>
-              <option value="aggregated">Boundary summary</option>
-              <option value="expanded">Show imports</option>
-            </select>
-          </label>
-          <label id="scope-selector-control" class="select-control scope-selector-control" hidden>
-            <span>Analysis scope</span>
-            <div class="scope-picker">
-              <button id="scope-selector-button" class="scope-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="scope-selector-menu">Loading analysis scopes…</button>
-              <div id="scope-selector-menu" class="scope-picker-menu" role="listbox" tabindex="-1" hidden></div>
-              <select id="scope-selector" class="scope-selector-native" tabindex="-1" aria-hidden="true"></select>
+        <div class="hero-controls" aria-label="Viewer controls">
+          <section class="hero-control-section" data-control-section="view" aria-labelledby="view-controls-title">
+            <div class="hero-control-heading">
+              <div>
+                <p class="eyebrow">VIEW</p>
+                <h3 id="view-controls-title">Navigate the model</h3>
+              </div>
+              <span class="muted">Choose what the graph shows.</span>
             </div>
-          </label>
-          <button id="list-toggle" class="button secondary" type="button" aria-pressed="false">List/details</button>
-          <button id="reanalysis-button" class="button secondary" type="button" hidden>Reanalyze</button>
+            <div class="hero-control-grid hero-control-grid-view">
+              <label class="search-control">
+                <span>Find a node</span>
+                <input id="search" type="search" placeholder="Search modules or groups" autocomplete="off">
+              </label>
+              <label class="select-control">
+                <span>References</span>
+                <select id="reference-visibility" aria-label="Reference visibility">
+                  <option value="hidden">Local-first</option>
+                  <option value="aggregated">Boundary summary</option>
+                  <option value="expanded">Show imports</option>
+                </select>
+              </label>
+              <label id="scope-selector-control" class="select-control scope-selector-control" hidden>
+                <span>Analysis scope</span>
+                <div class="scope-picker">
+                  <button id="scope-selector-button" class="scope-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="scope-selector-menu">Loading analysis scopes…</button>
+                  <div id="scope-selector-menu" class="scope-picker-menu" role="listbox" tabindex="-1" hidden></div>
+                  <select id="scope-selector" class="scope-selector-native" tabindex="-1" aria-hidden="true"></select>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <section class="hero-control-section" data-control-section="quality" aria-labelledby="quality-controls-title">
+            <div class="hero-control-heading">
+              <div>
+                <p class="eyebrow">QUALITY</p>
+                <h3 id="quality-controls-title">Run deterministic checks</h3>
+              </div>
+              <span class="muted">Reports are read-only; baselines are explicit project files.</span>
+            </div>
+            <div class="hero-control-grid hero-control-grid-quality">
+              <label id="quality-profile-control" class="select-control quality-profile-control" hidden>
+                <span>Quality profile</span>
+                <select id="quality-profile" aria-label="Quality profile" disabled>
+                  <option value="">Loading quality profiles…</option>
+                </select>
+              </label>
+              <div class="quality-profile-status-wrap">
+                <span id="quality-profile-status" class="quality-profile-status" aria-live="polite"></span>
+                <button id="quality-profile-configure" class="button secondary" type="button" hidden>Configure rules</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="hero-control-section hero-control-section-actions" data-control-section="actions" aria-labelledby="action-controls-title">
+            <div class="hero-control-heading">
+              <div>
+                <p class="eyebrow">ACTIONS</p>
+                <h3 id="action-controls-title">Change the presentation</h3>
+              </div>
+            </div>
+            <div class="hero-action-buttons">
+              <button id="list-toggle" class="button secondary" type="button" aria-pressed="false">List/details</button>
+              <button id="reanalysis-button" class="button secondary" type="button" hidden>Reanalyze</button>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -165,6 +209,112 @@
               <button id="layout-settings-apply" class="button" type="button">Apply</button>
               <button id="layout-settings-save" class="button secondary" type="button">Save</button>
               <button id="layout-settings-save-as" class="button secondary" type="button">Save As</button>
+            </div>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="quality-profile-dialog" class="quality-profile-dialog" aria-labelledby="quality-profile-dialog-title">
+        <div class="quality-profile-shell">
+          <div class="quality-profile-header">
+            <div>
+              <p class="eyebrow">QUALITY PROFILE</p>
+              <h3 id="quality-profile-dialog-title">Configure quality checks</h3>
+              <p id="quality-profile-dialog-description" class="muted">Every available rule is listed. Switch rules on or off, then apply the selection temporarily or save it explicitly to a profile.</p>
+            </div>
+            <button id="quality-profile-close" class="button secondary" type="button" aria-label="Close quality profile settings">Close</button>
+          </div>
+          <div class="quality-profile-toolbar">
+            <label class="settings-field">
+              <span>Search rules</span>
+              <input id="quality-rule-search" type="search" placeholder="Search by rule, category, or description" autocomplete="off">
+            </label>
+            <span id="quality-rule-summary" class="muted" aria-live="polite"></span>
+          </div>
+          <div id="quality-rule-catalog" class="quality-rule-catalog" aria-live="polite"></div>
+          <div id="quality-profile-save-as-panel" class="quality-profile-save-as" hidden>
+            <div>
+              <p class="eyebrow">NEW PROFILE</p>
+              <h4>Save a durable copy</h4>
+              <p class="muted">This creates a new JSON profile in the project's <code>quality-profiles/</code> directory. The current profile stays unchanged.</p>
+            </div>
+            <div class="quality-profile-save-grid">
+              <label class="settings-field">
+                <span>File name</span>
+                <input id="quality-profile-save-as-file" type="text" placeholder="review.json" autocomplete="off">
+              </label>
+              <label class="settings-field">
+                <span>Profile ID</span>
+                <input id="quality-profile-save-as-id" type="text" placeholder="profile:review" autocomplete="off">
+              </label>
+              <label class="settings-field">
+                <span>Profile version</span>
+                <input id="quality-profile-save-as-version" type="text" placeholder="1.0.0" autocomplete="off">
+              </label>
+            </div>
+            <label class="confirm-field"><input id="quality-profile-save-as-confirm" type="checkbox"> <span>Confirm creating this profile file</span></label>
+            <div class="quality-profile-save-as-actions">
+              <button id="quality-profile-save-as-cancel" class="button secondary" type="button">Cancel</button>
+              <button id="quality-profile-save-as-submit" class="button" type="button" disabled>Save new profile</button>
+            </div>
+          </div>
+          <div class="quality-profile-footer">
+            <span id="quality-profile-editor-status" class="muted" aria-live="polite"></span>
+            <div class="quality-profile-actions">
+              <button id="quality-profile-save" class="button secondary" type="button">Save to profile</button>
+              <button id="quality-profile-save-as" class="button secondary" type="button">Save as new</button>
+              <button id="quality-profile-cancel" class="button secondary" type="button">Cancel</button>
+              <button id="quality-profile-apply" class="button" type="button">Apply &amp; run checks</button>
+            </div>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="quality-baseline-dialog" class="quality-baseline-dialog" aria-labelledby="quality-baseline-title">
+        <div class="quality-baseline-shell">
+          <div class="quality-profile-header">
+            <div>
+              <p class="eyebrow">QUALITY BASELINE</p>
+              <h3 id="quality-baseline-title">Create a baseline</h3>
+              <p class="muted">A baseline records findings that are accepted for now. It does not delete them; matching findings become suppressed when the profile is evaluated again.</p>
+            </div>
+            <button id="quality-baseline-close" class="button secondary" type="button" aria-label="Close quality baseline dialog">Close</button>
+          </div>
+          <div class="quality-baseline-form">
+            <div class="quality-baseline-selection-mode">
+              <label class="confirm-field"><input id="quality-baseline-all-active" type="checkbox" checked> <span>Include all active findings in this report</span></label>
+              <div id="quality-baseline-finding-selection" class="quality-baseline-finding-selection" aria-live="polite"></div>
+            </div>
+            <div class="quality-baseline-fields">
+              <label class="settings-field">
+                <span>Baseline file</span>
+                <input id="quality-baseline-file" type="text" placeholder="main-baseline.json" autocomplete="off">
+              </label>
+              <label class="settings-field">
+                <span>Baseline ID</span>
+                <input id="quality-baseline-id" type="text" placeholder="baseline:main" autocomplete="off">
+              </label>
+              <label class="settings-field">
+                <span>Revision</span>
+                <input id="quality-baseline-revision" type="text" placeholder="1.0.0" autocomplete="off">
+              </label>
+              <label class="settings-field quality-baseline-reason-field">
+                <span>Reason <sup aria-hidden="true">required</sup></span>
+                <textarea id="quality-baseline-reason" rows="3" placeholder="Why are these findings accepted for now?" autocomplete="off"></textarea>
+              </label>
+              <label class="settings-field">
+                <span>Owner <small>(optional)</small></span>
+                <input id="quality-baseline-owner" type="text" placeholder="team or person" autocomplete="off">
+              </label>
+            </div>
+            <label class="confirm-field"><input id="quality-baseline-attach" type="checkbox" checked> <span>Attach this baseline to the selected quality profile</span></label>
+            <p class="muted quality-baseline-note">The file is saved in the project's <code>quality-baselines/</code> directory. Existing files are never overwritten.</p>
+          </div>
+          <div class="quality-profile-footer">
+            <span id="quality-baseline-status" class="muted" aria-live="polite"></span>
+            <div class="quality-profile-actions">
+              <button id="quality-baseline-cancel" class="button secondary" type="button">Cancel</button>
+              <button id="quality-baseline-submit" class="button" type="button" disabled>Create baseline</button>
             </div>
           </div>
         </div>

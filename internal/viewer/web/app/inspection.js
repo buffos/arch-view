@@ -1,6 +1,7 @@
 import { classForState, confidenceState, escapeHTML, formatLanguage, nodeLanguageBadge, nodeLanguageText, referenceScopeLabel } from "./utils.js";
 import { samePath } from "./utils.js";
 import { showError, showNotice } from "./view.js";
+import { affectedFileIDs, loadMoreQualityFindings, loadQualityFindings, qualityAffectedOnly, qualityFileFilterMarkup, qualityReportStatus, renderQualityOverview, setQualityFindingRuleFilter, toggleQualityAffectedOnly } from "./quality.js";
 
 export const inspectionSections = Object.freeze([
   "overview",
@@ -242,16 +243,27 @@ function cacheKey(context, section) {
   const route = context.state.inspectionRoute || {};
   const filter = context.state.inspectionFilters && context.state.inspectionFilters[section] || "";
   const kind = section === "symbols" ? context.state.inspectionSymbolKind || "" : "";
-  return [section, context.state.activeScope || "", route.id || "", filter, kind].join("|");
+  const affected = section === "files" && qualityAffectedOnly(context) ? affectedFileIDs(context).join(",") : "";
+  return [section, context.state.activeScope || "", route.id || "", filter, kind, affected].join("|");
 }
 
-function sourceQuery(context, node, limit, cursor, section) {
-  const query = new URLSearchParams();
-  const scope = context.state.activeScope || "";
-  if (scope) query.set("scope", scope);
-  query.set("limit", String(limit || 25));
-  if (cursor) query.set("cursor", cursor);
-  (node.module_ids || []).forEach(function (moduleID) { query.append("module_id", moduleID); });
+export function sourceQuery(context, node, limit, cursor, section) {
+	const query = new URLSearchParams();
+	const scope = context.state.activeScope || "";
+	if (scope) query.set("scope", scope);
+	query.set("limit", String(limit || 25));
+	if (cursor) query.set("cursor", cursor);
+	const affectedOnly = section === "files" && qualityAffectedOnly(context);
+	// The source-index boundary unions module_id and file_id selectors. An
+	// affected-only request must therefore send only the report's exact file
+	// subjects; including the inspected node's modules would broaden the page
+	// back to every contained file.
+	if (!affectedOnly) (node.module_ids || []).forEach(function (moduleID) { query.append("module_id", moduleID); });
+	if (affectedOnly) {
+		const affected = affectedFileIDs(context);
+    if (affected.length) affected.forEach(function (fileID) { query.append("file_id", fileID); });
+    else query.set("file_id", "quality:no-matching-files");
+  }
   if (section === "symbols" && context.state.inspectionSymbolKind) query.set("language_kind", context.state.inspectionSymbolKind);
   return query;
 }
@@ -322,6 +334,7 @@ function renderOverview(context, node) {
     sectionCard("What this represents", '<div class="inspection-detail-table">' + detailRow("Kind", node.kind) + detailRow("Language", nodeLanguageText(context, node)) + detailRow("Hierarchy", (node.hierarchy_path || []).join(" / ") || "Top level") + detailRow("Active scope", activeScopeLabel(context)) + "</div>" + (statusBadges ? '<div class="inspection-status-row" aria-label="Non-neutral status">' + statusBadges + "</div>" : "")) +
     sectionCard("At a glance", '<div class="inspection-count-grid">' + countTile(counts.module_count, "modules") + countTile(counts.relationship_count, "visible relationships") + countTile(counts.internal_relationship_count, "collapsed relationships") + countTile(counts.evidence_count, "source references") + "</div>") +
     sectionCard("Source facts", '<div class="inspection-state-copy">' + statePill(context.sourceEnabled || context.embeddedExport ? "available" : "unavailable") + '<p>' + escapeHTML(sourceCopy) + "</p></div>") +
+    sectionCard("Quality checks", renderQualityOverview(context), "quality-overview-card") +
     '</div><p class="inspection-guidance">This page uses reported facts, counts, statuses, and locations. It does not invent an explanation when the model has not supplied one.</p>';
 }
 
@@ -347,7 +360,7 @@ function docsStatus(context, subjectID) {
 function renderFiles(context, data) {
   const items = data.items || [];
   const state = collectionState(data, items, "files");
-  if (!items.length && !data.error) return collectionMarkup(context, "files", data, state, emptySection(state, "No explicitly contained files were reported for this node."));
+  if (!items.length && !data.error) return collectionMarkup(context, "files", data, state, emptySection(state, qualityAffectedOnly(context) ? "No files over the active line threshold were reported for this node." : "No explicitly contained files were reported for this node."));
   const rows = items.map(function (file) {
     const language = file.language && (file.language.dialect || file.language.id) || "unknown";
     return '<li class="inspection-list-row"><div><strong>' + escapeHTML(file.path || "Unnamed file") + '</strong><span>' + escapeHTML(formatLanguage(String(language).replace(/^language:/, "")) + " · " + (file.size && file.size.line_count || 0) + " lines · " + (file.size && file.size.byte_count || 0) + " bytes") + '</span></div><div class="inspection-row-aside">' + statePill(file.analysis_status || "unknown") + '<small>docs ' + escapeHTML(docsStatus(context, file.id)) + '</small></div></li>';
@@ -399,10 +412,11 @@ function collectionMarkup(context, section, data, state, content) {
   const value = context.state.inspectionFilters && context.state.inspectionFilters[section] || "";
   const filter = '<label class="inspection-filter"><span>Filter ' + escapeHTML(section) + '</span><input type="search" data-inspection-filter="' + escapeHTML(section) + '" value="' + escapeHTML(value) + '" placeholder="Search ' + escapeHTML(section) + '" autocomplete="off"></label>';
   const kindFilter = section === "symbols" ? symbolKindFilterMarkup(context) : "";
+  const qualityFilter = section === "files" ? qualityFileFilterMarkup(context) : "";
   const more = data.next_cursor ? '<button type="button" class="button secondary" data-inspection-load-more="' + escapeHTML(section) + '">Load more</button>' : "";
 	const coverage = coverageMarkup(data, section);
   const total = data.total == null ? "" : String(data.total) + " total";
-  return '<div class="inspection-section-intro"><p>Results are explicitly bounded to 25 items per request.</p><span class="muted">' + escapeHTML(total) + '</span></div><div class="inspection-collection-state">' + statePill(state) + coverage + '</div><div class="inspection-filter-row">' + filter + kindFilter + '</div>' + content + (more ? '<div class="inspection-load-more">' + more + "</div>" : "");
+  return '<div class="inspection-section-intro"><p>Results are explicitly bounded to 25 items per request.</p><span class="muted">' + escapeHTML(total) + '</span></div><div class="inspection-collection-state">' + statePill(state) + coverage + '</div><div class="inspection-filter-row">' + filter + kindFilter + qualityFilter + '</div>' + content + (more ? '<div class="inspection-load-more">' + more + "</div>" : "");
 }
 
 function emptySection(state, copy) {
@@ -619,8 +633,53 @@ function bindContentActions(context) {
       void ensureSection(context, context._inspectionAPI, "symbols");
     });
   });
+  context.elements.inspectionContent.querySelectorAll("[data-quality-finding-rule]").forEach(function (select) {
+    select.addEventListener("change", function () {
+      const value = select.value || "";
+      setQualityFindingRuleFilter(context, value);
+      renderInspectionView(context);
+      const next = context.elements.inspectionContent.querySelector("[data-quality-finding-rule]");
+      if (next) next.focus();
+      void ensureSection(context, context._inspectionAPI, "overview");
+    });
+  });
   context.elements.inspectionContent.querySelectorAll("[data-inspection-load-more]").forEach(function (button) {
     button.addEventListener("click", function () { void loadCollection(context, context._inspectionAPI, button.dataset.inspectionLoadMore, true); });
+  });
+  context.elements.inspectionContent.querySelectorAll("[data-quality-affected-only]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      toggleQualityAffectedOnly(context);
+      invalidateCollectionCache(context, "files");
+      renderInspectionView(context);
+      void ensureSection(context, context._inspectionAPI, "files");
+    });
+  });
+  context.elements.inspectionContent.querySelectorAll("[data-quality-findings-load-more]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      void loadMoreQualityFindings(context, context._inspectionAPI).then(function () {
+        renderInspectionView(context);
+      }).catch(function () {
+        renderInspectionView(context);
+      });
+      renderInspectionView(context);
+    });
+  });
+  context.elements.inspectionContent.querySelectorAll("[data-quality-evidence]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      void context._inspectionServices.openQualityEvidence(button.dataset.qualityEvidence);
+      renderInspectionView(context);
+    });
+  });
+  context.elements.inspectionContent.querySelectorAll("[data-quality-source]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      void context._inspectionServices.openQualitySource(button.dataset.qualitySource);
+      renderInspectionView(context);
+    });
+  });
+  context.elements.inspectionContent.querySelectorAll("[data-quality-baseline-open]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (context._inspectionServices.openQualityBaseline) context._inspectionServices.openQualityBaseline(button.dataset.qualityBaselineOpen);
+    });
   });
   context.elements.inspectionContent.querySelectorAll("[data-open-source-evidence]").forEach(function (button) {
     button.addEventListener("click", function () { context._inspectionServices.openSource(button.dataset.openSourceEvidence); });
@@ -670,6 +729,16 @@ async function loadCollection(context, api, section, append) {
 
 async function ensureSection(context, api, section) {
   if (!api) return;
+  if (section === "overview") {
+    if (qualityReportStatus(context) !== "available" || context.state.qualityFindingsPage || context.state.qualityFindingsLoading) return;
+    try {
+      await loadQualityFindings(context, api);
+    } catch (_) {
+      // The report summary remains useful when the bounded findings query is unavailable.
+    }
+    renderInspectionView(context);
+    return;
+  }
   if (section === "technical") {
     if (context.state.inspectionTechnical || context.state.inspectionTechnicalLoading) return;
     const node = currentNode(context);
@@ -813,6 +882,7 @@ export function createInspectionController(context, api, services) {
     context.state.selected = { kind: "node", id: node.id };
     services.renderAll();
     renderInspectionView(context);
+    if (services.loadQualityReport) void services.loadQualityReport();
     void ensureSection(context, api, context.state.inspectionSection);
     if (options.focus !== false && context.elements.inspectionContent) context.elements.inspectionContent.focus();
     return true;

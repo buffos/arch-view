@@ -114,16 +114,18 @@ export function createNavigation(context, api, services) {
   async function loadSourceIndex(sceneRequest) {
     context.state.sourceIndexRequest += 1;
     const request = context.state.sourceIndexRequest;
-    if (context.embeddedExport || !context.aggregateEnabled) {
+    if (context.embeddedExport) {
       context.state.sourceIndex = context.state.model && context.state.model.source_index ? context.state.model.source_index : null;
-      context.state.sourceIndexError = "";
+      context.state.sourceIndexError = context.state.sourceIndex ? "" : "Source facts are not embedded in this export.";
       return;
     }
-    const scope = context.state.activeScope || "all";
     try {
       const query = new URLSearchParams();
-      query.set("scope", scope);
-      const value = await api.getJSON("/v1/models/" + encodeURIComponent(api.currentModelID()) + "/source-index?" + query.toString());
+      const scope = context.aggregateEnabled ? context.state.activeScope || "all" : "";
+      if (scope && scope !== "all") query.set("scope", scope);
+      const queryText = query.toString();
+      const endpoint = "/v1/models/" + encodeURIComponent(api.currentModelID()) + "/source-index" + (queryText ? "?" + queryText : "");
+      const value = await api.getJSON(endpoint);
       if (sceneRequest !== context.state.sceneRequest || request !== context.state.sourceIndexRequest) return;
       context.state.sourceIndex = value && value.source_index ? value.source_index : value;
       context.state.sourceIndexError = "";
@@ -152,11 +154,18 @@ export function createNavigation(context, api, services) {
       } else {
         context.state.model = response.model || context.state.model;
       }
+      context.state.qualityReportCache = {};
+      context.state.qualityFindingsCache = {};
+      context.state.qualityReport = null;
+      context.state.qualityReportStatus = "loading";
       context.state.selected = null;
       context.state.source = null;
       context.state.history = [];
       const loaded = await loadScene(previousPath);
       if (!loaded && previousPath.length) await loadScene([]);
+      const profile = context.state.activeQualityProfile;
+      if (profile) await services.evaluateQualityProfile(profile.profile_id, profile.profile_version, context.state.activeScope || "all");
+      else await services.loadQualityReport();
     } catch (error) {
       showError(context, error.message || "Reanalysis failed; the previous revision remains active.");
     } finally {

@@ -4,6 +4,8 @@ const path = require("node:path");
 
 const source = fs.readFileSync(path.join(__dirname, "inspection.js"), "utf8").replace(/^import .*?;\r?\n/gm, "") + `
 function escapeHTML(value) { return String(value == null ? "" : value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;"); }
+function qualityAffectedOnly(context) { return Boolean(context.state.qualityAffectedOnly); }
+function affectedFileIDs(context) { return context.state.affectedFileIDs || []; }
 `;
 
 import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(function (inspection) {
@@ -38,6 +40,11 @@ import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(
   assert.equal(inspection.inspectionScopeStatus({ status: "complete" }), "complete");
   assert.equal(inspection.sourceExcerptAvailable({ sourceEnabled: true }), true);
   assert.equal(inspection.sourceExcerptAvailable({ sourceEnabled: false, embeddedExport: {} }), false);
+	const affectedQuery = inspection.sourceQuery({ state: { activeScope: "scope-go", qualityAffectedOnly: true, affectedFileIDs: ["file-a", "file-b"] } }, { module_ids: ["module-a"] }, 25, "", "files");
+	assert.deepEqual(affectedQuery.getAll("file_id"), ["file-a", "file-b"]);
+	assert.deepEqual(affectedQuery.getAll("module_id"), [], "module selectors would union unrelated files into the report-backed filter");
+	const regularQuery = inspection.sourceQuery({ state: { activeScope: "scope-go", qualityAffectedOnly: false } }, { module_ids: ["module-a"] }, 25, "", "files");
+	assert.deepEqual(regularQuery.getAll("module_id"), ["module-a"]);
 	const mergedPage = inspection.mergeCollectionPage(
 		{ items: [{ id: "first" }], coverage: [{ status: "partial" }] },
 		{ items: [{ id: "second" }], total: 2, snapshot_id: "snapshot", scope_id: "scope" },

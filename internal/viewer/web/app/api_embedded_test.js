@@ -12,6 +12,36 @@ import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(
     embeddedExport: {
       model: {
         model_id: "model-1",
+        quality_report: {
+          schema_version: "arch-view.quality/v1",
+          evaluation_id: "evaluation:quality-1",
+          source_snapshot_ids: ["snapshot-1"],
+          profile_id: "profile:default",
+          profile_version: "1.0.0",
+          provider_identities: [],
+          coverage: [{ rule_id: "source:file.max-lines", rule_version: "1.0.0", status: "observed" }],
+          metrics: [],
+          findings: [{
+            id: "finding:large-file",
+            finding_key: "source:file.max-lines|file-a",
+            rule_id: "source:file.max-lines",
+            rule_version: "1.0.0",
+            assessment_kind: "exact",
+            status: "active",
+            severity: "warning",
+            subject_ref: { kind: "file", id: "file-a", scope_id: "scope-1", snapshot_id: "snapshot-1" },
+            message_code: "quality:file-too-large",
+            message: "The file is over the configured line threshold.",
+            observed_metric_ids: [],
+            evidence: { source_spans: [], entity_refs: [], relation_refs: [], metric_refs: [], diagnostic_refs: [] },
+            provenance: { status: "observed", basis: "quality", evidence_ids: [], provider: "rule:source", provider_version: "1.0.0" },
+            extensions: []
+          }],
+          diagnostics: [],
+          evaluation_fingerprint: { algorithm: "hash:sha-256", value: "a".repeat(64) },
+          report_digest: { algorithm: "hash:sha-256", value: "b".repeat(64) },
+          extensions: []
+        },
         source_index: {
           snapshots: [
             {
@@ -43,6 +73,32 @@ import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(
     }
   };
   const api = apiModule.createAPI(context);
+  const qualityProfiles = await api.getJSON("/v1/quality/profiles");
+  assert.equal(qualityProfiles.status, "unavailable");
+  assert.match(qualityProfiles.message, /self-contained export/);
+  const qualityRules = await api.getJSON("/v1/quality/rules?profile_id=profile%3Adefault&profile_version=1.0.0");
+  assert.equal(qualityRules.status, "unavailable");
+  assert.match(qualityRules.message, /self-contained export/);
+  const quality = await api.getJSON("/v1/models/model-1/quality");
+  assert.equal(quality.status, "available");
+  assert.equal(quality.report.findings[0].id, "finding:large-file");
+
+  const qualityFindings = await api.getJSON("/v1/models/model-1/quality/findings?scope=scope-1&rule_id=source:file.max-lines&subject_kind=file&limit=1");
+  assert.equal(qualityFindings.total, 1);
+  assert.equal(qualityFindings.items[0].subject_ref.id, "file-a");
+
+  const qualityCoverage = await api.getJSON("/v1/models/model-1/quality/coverage?rule_id=source:file.max-lines&limit=25");
+  assert.equal(qualityCoverage.total, 1);
+
+  const qualityEvidence = await api.getJSON("/v1/models/model-1/quality/findings/finding%3Alarge-file/evidence");
+  assert.equal(qualityEvidence.finding.rule_id, "source:file.max-lines");
+  assert.equal(qualityEvidence.source_context, undefined, "embedded quality evidence must omit source text by default");
+
+  await assert.rejects(
+    api.getJSON("/v1/models/model-1/quality/findings/finding%3Alarge-file/evidence?include_source_context=true"),
+    /source context is unavailable in this export/
+  );
+
   const page = await api.getJSON("/v1/models/model-1/source-index/files?scope=scope-1&module_id=module-a&module_id=module-a&limit=1");
   assert.equal(page.total, 1);
   assert.equal(page.items[0].id, "file-a");
