@@ -66,8 +66,9 @@ go run ./cmd/arch-view analyze --project . --format analysis-json --output analy
 
 | Option | What it does |
 | --- | --- |
-| **--quality-profile** | Loads a versioned quality profile JSON file. |
-| **--quality-baseline** | Loads a baseline JSON file that matches the report version. |
+| **--quality-profile** | Loads a versioned quality profile JSON file. If it references a baseline, Arch View loads the unique matching file from `quality-baselines/` automatically. |
+| **--quality-baseline** | Uses one explicit baseline for this run. It does not change the profile. |
+| **--no-quality-baseline** | Runs a clean report without the profile's baseline. It cannot be combined with **--quality-baseline**. |
 | **--quality-exit-on** | Makes the command return exit code 1 when a finding at or above info, warning, error, or blocker matches. |
 | **--quality-exit-status** | Limits the exit policy to selected statuses. Repeat it or use a comma-separated list. |
 
@@ -77,4 +78,8 @@ go run ./cmd/arch-view analyze --project . --format analysis-json --output analy
 go run ./cmd/arch-view analyze --project . --quality-profile quality-profiles/full.json --quality-exit-on error --format analysis-json --output analysis.json
 ~~~
 
-The report is still written. The exit code tells automation whether the selected policy matched.
+The report is still written. The exit code tells automation whether the selected
+policy matched. If the profile points to `baseline:main@1.0.0`, the command
+reads that exact baseline from `quality-baselines/`. A missing reference warns
+and leaves findings unsuppressed. An invalid or ambiguous reference stops the
+command.

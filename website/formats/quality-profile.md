@@ -12,7 +12,7 @@ A quality profile is a separate JSON file. Its schema version is **arch-view.qua
 | enabled_rules | The rules that are available to the profile, with true or false enabled state. |
 | severity_policy | Default severity behavior. |
 | constraints | Explicit forbidden-dependency and layer-direction policies. |
-| baseline | Optional reference to a baseline file. |
+| baseline | Optional `baseline_id` and `revision` reference. Arch View resolves the matching file from `quality-baselines/` during a normal run. |
 | extensions | Extra, namespaced data for compatible tools. |
 
 ## A clear profile
@@ -46,3 +46,19 @@ Each entry in enabled_rules can contain:
 | severity | Optional info, warning, error, or blocker value. |
 
 The rule reference explains what each parameter means. Do not copy a parameter block from a different rule without checking its namespace.
+
+## Baseline reference
+
+The reference is small and does not contain the baseline entries:
+
+~~~json
+"baseline": {
+  "baseline_id": "baseline:main",
+  "revision": "1.0.0"
+}
+~~~
+
+The CLI and live/MCP startup use this reference to load one unique file from
+`quality-baselines/`. A missing file warns and suppresses nothing. An invalid
+or ambiguous match is an error. A temporary CLI override or MCP selected
+baseline changes only that evaluation; it does not rewrite the profile.

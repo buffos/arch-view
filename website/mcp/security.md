@@ -32,5 +32,7 @@ the session was explicitly started with policy-write permission and the client
 provided the configured authorization. Baselines contain selected finding keys
 and exact version identities; creating one never means “hide every finding.”
 
-Preview a baseline first. Then create it only after a human or agent has
-recorded why each finding is accepted.
+Preview a baseline first. For the normal repeatable workflow, use
+`append_baseline` after a human or agent has recorded why each finding is
+accepted. It merges into the profile's canonical baseline. The older
+`create_baseline` operation remains available for a standalone baseline file.

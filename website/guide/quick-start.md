@@ -2,6 +2,10 @@
 
 This page gets you from a project folder to a browser view.
 
+If you are installing Arch View for normal use, start with [Installation](/guide/installation)
+to choose between the single-binary and packaged distributions. The commands
+below use the source-checkout form so that every step is visible.
+
 ## 1. Check that Go is available
 
 ~~~powershell

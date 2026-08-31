@@ -1,6 +1,10 @@
 # Baseline JSON
 
-A baseline is a separate JSON file. Its schema version is **arch-view.quality-baseline/v1**.
+A baseline is a separate JSON file. Its schema version is
+**arch-view.quality-baseline/v1**. A managed project normally keeps one
+canonical file for each quality profile in `quality-baselines/`. The profile
+stores the baseline ID and revision, so Arch View can discover that exact file
+without loading unrelated JSON files.
 
 ## Fields
 
@@ -8,7 +12,7 @@ A baseline is a separate JSON file. Its schema version is **arch-view.quality-ba
 | --- | --- |
 | schema_version | The baseline format version. |
 | baseline_id | The name of the baseline. |
-| revision | Optional human-readable revision. |
+| revision | Revision used for exact matching. A new managed baseline starts at `1.0.0`; later appends increment the numeric suffix. |
 | entries | Findings that were reviewed and accepted for now. |
 | extensions | Extra namespaced data for compatible tools. |
 
@@ -37,4 +41,7 @@ Each entry records the finding key, rule and profile versions, reason, and optio
 }
 ~~~
 
-The baseline is exact-version aware. If the code, rule, or calculation changes, review the entry again.
+The baseline is exact-version aware. If the code, rule, or calculation changes,
+review the entry again. Only active findings with observed coverage may be
+added. Unsupported, not-evaluable, partial, stale, and failed results are not
+valid baseline decisions.

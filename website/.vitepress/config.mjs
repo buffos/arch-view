@@ -31,6 +31,7 @@ export default defineConfig({
           text: 'Start here',
           items: [
             { text: 'What is Arch View?', link: '/guide/what-is-arch-view' },
+            { text: 'Installation', link: '/guide/installation' },
             { text: 'Quick start', link: '/guide/quick-start' },
             { text: 'How Arch View thinks about code', link: '/guide/core-concepts' }
           ]
@@ -79,6 +80,7 @@ export default defineConfig({
           items: [
             { text: 'MCP installation', link: '/mcp/installation' },
             { text: 'MCP tools', link: '/mcp/tools' },
+            { text: 'Agent skill', link: '/mcp/agent-skill' },
             { text: 'HTTP transport', link: '/mcp/http' },
             { text: 'Safety and freshness', link: '/mcp/security' }
           ]

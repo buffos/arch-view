@@ -27,3 +27,6 @@ go run ./cmd/arch-view analyzers --analyzer-runtime packaged
 ~~~
 
 The output includes the analyzer ID, language, version, capabilities, and options. See the [analyzer overview](/analyzers/overview) for how those fields affect analysis.
+
+For the difference between the single-binary and packaged analyzer
+installations, see the [installation guide](/guide/installation).
