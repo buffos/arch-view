@@ -17,14 +17,14 @@ function runGo(args, allowNonZero = false) {
   if (result.status !== 0 && (!allowNonZero || !output.includes('Usage of'))) {
     throw new Error(`go ${args.join(' ')} failed with exit code ${result.status}\n${output}`)
   }
-  return output
+  return { stdout: result.stdout, output }
 }
 
-const inventory = JSON.parse(runGo(['run', './cmd/docs-inventory', '-output', '-']))
+const inventory = JSON.parse(runGo(['run', './cmd/docs-inventory', '-output', '-']).stdout)
 const cliFlags = []
 
 for (const command of inventory.cli_commands) {
-  const help = runGo(['run', './cmd/arch-view', ...command.help_args], true)
+  const help = runGo(['run', './cmd/arch-view', ...command.help_args], true).output
   const flags = [...help.matchAll(/^\s+-([a-z][a-z0-9-]*)\s+/gim)].map((match) => match[1])
   for (const name of [...new Set(flags)].sort()) {
     cliFlags.push({
