@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/analysis/sourceindex"
@@ -93,7 +94,7 @@ func (session *LiveSession) ListScopes(ctx context.Context, request QueryRequest
 		items = append(items, ScopeInfo{ScopeID: scope.ScopeID, ProjectRoot: scope.ProjectRoot, AnalyzerID: scope.Analyzer.ID, AnalyzerVersion: scope.Analyzer.Version, Language: scope.Analyzer.Language, Status: string(scope.Status), Capabilities: capabilities})
 	}
 	sort.Slice(items, func(i, j int) bool { return items[i].ScopeID < items[j].ScopeID })
-	return session.pageEnvelope(record, freshness, returned, request, items, []string{"technical_ids"})
+	return session.pageEnvelope(record, freshness, returned, request, "list_scopes", items, []string{"technical_ids"})
 }
 
 func (session *LiveSession) FindFiles(ctx context.Context, request QueryRequest) (QueryEnvelope, error) {
@@ -130,7 +131,7 @@ func (session *LiveSession) FindFiles(ctx context.Context, request QueryRequest)
 		coverage = append(coverage, CapabilityCoverage{Capability: "source:index", Status: "unavailable", Reason: "source index is not attached to this revision"})
 	}
 	coverage = mergeCapabilityCoverage(coverage, session.requestedSourceCoverage(record, request.Query.ScopeIDs))
-	envelope, err := session.pageEnvelope(record, freshness, returned, request, items, []string{"provenance", "content_hash"})
+	envelope, err := session.pageEnvelope(record, freshness, returned, request, "find_files", items, []string{"provenance", "content_hash"})
 	if err == nil {
 		envelope.Capabilities = mergeCapabilityCoverage(envelope.Capabilities, coverage)
 	}
@@ -173,7 +174,7 @@ func (session *LiveSession) FindSymbols(ctx context.Context, request QueryReques
 		coverage = append(coverage, CapabilityCoverage{Capability: "source:index", Status: "unavailable", Reason: "source index is not attached to this revision"})
 	}
 	coverage = mergeCapabilityCoverage(coverage, session.requestedSourceCoverage(record, request.Query.ScopeIDs))
-	envelope, err := session.pageEnvelope(record, freshness, returned, request, items, []string{"provenance", "structural_facts", "body_span"})
+	envelope, err := session.pageEnvelope(record, freshness, returned, request, "find_symbols", items, []string{"provenance", "structural_facts", "body_span"})
 	if err == nil {
 		envelope.Capabilities = mergeCapabilityCoverage(envelope.Capabilities, coverage)
 	}
@@ -237,7 +238,7 @@ func (session *LiveSession) GetDocumentation(ctx context.Context, request QueryR
 		coverage = append(coverage, CapabilityCoverage{Capability: "source:documentation", Status: "unavailable", Reason: "source index is not attached to this revision"})
 	}
 	coverage = mergeCapabilityCoverage(coverage, session.requestedSourceCoverage(record, request.Query.ScopeIDs))
-	envelope, err := session.pageEnvelope(record, freshness, returned, request, items, []string{"raw_text"})
+	envelope, err := session.pageEnvelope(record, freshness, returned, request, "get_documentation", items, []string{"raw_text"})
 	if err == nil {
 		envelope.Capabilities = mergeCapabilityCoverage(envelope.Capabilities, coverage)
 	}
@@ -270,7 +271,7 @@ func (session *LiveSession) GetModuleFacts(ctx context.Context, request QueryReq
 		coverage = []CapabilityCoverage{{Capability: "source:index", Status: "unavailable", Reason: "source index is not attached to this revision"}}
 	}
 	coverage = mergeCapabilityCoverage(coverage, session.requestedSourceCoverage(record, request.Query.ScopeIDs))
-	return session.pageEnvelope(record, freshness, returned, request, ModuleFactsPage{Items: items, Total: len(items)}, nil, coverage)
+	return session.pageEnvelope(record, freshness, returned, request, "get_module_facts", ModuleFactsPage{Items: items, Total: len(items)}, nil, coverage)
 }
 
 func (session *LiveSession) GetCallersCallees(ctx context.Context, request QueryRequest, entityID string) (QueryEnvelope, error) {
@@ -306,17 +307,19 @@ func (session *LiveSession) GetCallersCallees(ctx context.Context, request Query
 			}
 		}
 	}
-	if len(coverage) == 0 {
+	if result.Status == "observed" {
+		coverage = mergeCapabilityCoverage(coverage, []CapabilityCoverage{{Capability: "source:callers-callees", Status: "observed"}})
+	} else {
 		status := "unsupported"
 		reason := "no registered analyzer reported caller/callee extraction"
 		if len(session.sourceSnapshots(record, request.Query.ScopeIDs)) == 0 {
 			status = "unavailable"
 			reason = "source index is not attached to this revision"
 		}
-		coverage = []CapabilityCoverage{{Capability: "source:callers-callees", Status: status, Reason: reason}}
+		coverage = mergeCapabilityCoverage(coverage, []CapabilityCoverage{{Capability: "source:callers-callees", Status: status, Reason: reason}})
 	}
 	coverage = mergeCapabilityCoverage(coverage, session.requestedSourceCoverage(record, request.Query.ScopeIDs))
-	return session.pageEnvelope(record, freshness, returned, request, result, nil, coverage)
+	return session.pageEnvelope(record, freshness, returned, request, "get_callers_callees", result, nil, coverage)
 }
 
 func (session *LiveSession) FindText(ctx context.Context, request TextSearchQuery) (QueryEnvelope, error) {
@@ -333,6 +336,9 @@ func (session *LiveSession) FindText(ctx context.Context, request TextSearchQuer
 	}
 	if strings.TrimSpace(request.Pattern) == "" {
 		return QueryEnvelope{}, newLiveError("QueryInvalid", "text pattern is required", nil)
+	}
+	if err := validateRecordScopeIDs(record, request.ScopeIDs); err != nil {
+		return QueryEnvelope{}, err
 	}
 	if request.Mode == "" {
 		request.Mode = "literal"
@@ -394,14 +400,14 @@ func (session *LiveSession) FindText(ctx context.Context, request TextSearchQuer
 			}
 			content, readErr := readSourceFile(session.validated.RepositoryRoot, snapshot, file.Path)
 			if readErr != nil {
-				continue
+				return QueryEnvelope{}, readErr
+			}
+			expectedHash := file.Size.ContentHash
+			if expectedHash.Value != "" && !strings.EqualFold(expectedHash.Value, digestBytes(content).Value) {
+				return QueryEnvelope{}, newLiveError("SourceContextContentChanged", "source file no longer matches the selected revision", map[string]any{"path": displayPath, "revision": record.Snapshot.Revision})
 			}
 			for lineNumber, line := range splitLines(string(content)) {
-				lineBytes := []byte(line)
-				if len(lineBytes) > request.MaxLineBytes {
-					lineBytes = lineBytes[:request.MaxLineBytes]
-				}
-				lineValue := string(lineBytes)
+				lineValue := truncateUTF8(line, request.MaxLineBytes)
 				matches := textMatchIndices(lineValue, request.Pattern, request.CaseSensitive, expression)
 				for _, match := range matches {
 					items = append(items, TextMatch{ScopeID: snapshot.ScopeContext.ScopeID, Path: displayPath, Line: lineNumber + 1, Column: match[0] + 1, EndColumn: match[1] + 1, Text: lineValue, MatchLength: match[1] - match[0]})
@@ -511,10 +517,13 @@ func (session *LiveSession) GetSourceContext(ctx context.Context, request Source
 		end = start + request.MaxLines - 1
 	}
 	excerpt := strings.Join(lines[start-1:end], "\n")
+	truncated := end < span.End.Line
 	if len([]byte(excerpt)) > request.MaxBytes {
-		return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "source context exceeds the requested byte budget", nil)
+		excerpt = truncateUTF8(excerpt, request.MaxBytes)
+		end = start + strings.Count(excerpt, "\n")
+		truncated = true
 	}
-	value := SourceContext{ScopeID: snapshot.ScopeContext.ScopeID, SnapshotID: snapshot.SnapshotID, Path: displaySourcePath(snapshot, file.Path), StartLine: start, EndLine: end, Content: excerpt, ContentHash: actualHash, Truncated: end < span.End.Line}
+	value := SourceContext{ScopeID: snapshot.ScopeContext.ScopeID, SnapshotID: snapshot.SnapshotID, Path: displaySourcePath(snapshot, file.Path), StartLine: start, EndLine: end, Content: excerpt, ContentHash: actualHash, Truncated: truncated}
 	return QueryEnvelope{SchemaVersion: QuerySchemaVersion, SessionID: session.validated.Config.SessionID, SnapshotID: record.Snapshot.SnapshotID, Revision: record.Snapshot.Revision, RequestedConsistency: request.Consistency, ReturnedConsistency: returned, Freshness: freshness, ScopeIDs: append([]string(nil), record.Snapshot.ScopeIDs...), Result: SourceContextResult{Context: value}, ResultCount: 1, OmittedFields: []string{}, Capabilities: []CapabilityCoverage{{Capability: "source:context", Status: "observed"}}, Budget: BudgetUsage{MaxBytes: request.MaxBytes, MaxItems: 1, EmittedBytes: len([]byte(excerpt)), EmittedItems: 1}, Diagnostics: []QueryDiagnostic{}}, nil
 }
 
@@ -528,6 +537,9 @@ func (session *LiveSession) prepareQuery(ctx context.Context, request QueryReque
 	}
 	if request.Consistency == "" {
 		request.Consistency = session.validated.Config.FreshnessPolicy.DefaultConsistency
+	}
+	if err := validateRecordScopeIDs(record, request.Query.ScopeIDs); err != nil {
+		return nil, Freshness{}, "", request, err
 	}
 	if err := validateStructuralQuery(request.Query); err != nil {
 		return nil, Freshness{}, "", request, err
@@ -544,7 +556,7 @@ func (session *LiveSession) prepareConsistency(ctx context.Context, consistency 
 	}
 	var record *RevisionRecord
 	var err error
-	returned := string(consistency)
+	returned := ""
 	switch consistency {
 	case ConsistencyRequireCurrent:
 		record, err = session.EnsureCurrentSnapshot(ctx)
@@ -573,7 +585,11 @@ func (session *LiveSession) prepareConsistency(ctx context.Context, consistency 
 		freshness.Status = FreshnessFailed
 	}
 	if consistency == ConsistencySpecific {
-		freshness.Status = FreshnessCurrent
+		freshness.Reconciliation = ReconciliationNotRequested
+		if latest, ok := session.store.ReadLatestReady(session.validated.Config.SessionID); ok && latest.Snapshot.Revision != record.Snapshot.Revision {
+			freshness.Status = FreshnessStale
+			freshness.LastReadyRevision = latest.Snapshot.Revision
+		}
 	}
 	return record, freshness, returned, nil
 }
@@ -592,7 +608,7 @@ func (session *LiveSession) normalizeBudget(maxBytes, maxItems int) (int, int, e
 	return maxBytes, maxItems, nil
 }
 
-func (session *LiveSession) pageEnvelope(record *RevisionRecord, freshness Freshness, returned string, request QueryRequest, values any, omitted []string, extra ...[]CapabilityCoverage) (QueryEnvelope, error) {
+func (session *LiveSession) pageEnvelope(record *RevisionRecord, freshness Freshness, returned string, request QueryRequest, operation string, values any, omitted []string, extra ...[]CapabilityCoverage) (QueryEnvelope, error) {
 	maxBytes, maxItems, err := session.normalizeBudget(request.MaxBytes, request.MaxItems)
 	if err != nil {
 		return QueryEnvelope{}, err
@@ -603,7 +619,7 @@ func (session *LiveSession) pageEnvelope(record *RevisionRecord, freshness Fresh
 			return QueryEnvelope{}, newLiveError(ErrorQueryCursor, "this query result does not support pagination", nil)
 		}
 	}
-	contextKey := queryContext(record, request, "structural", maxBytes, maxItems)
+	contextKey := queryContext(record, request, operation, maxBytes, maxItems)
 	offset, err := decodeQueryCursor(request.Cursor, contextKey)
 	if err != nil {
 		return QueryEnvelope{}, err
@@ -655,15 +671,12 @@ func queryContext(record *RevisionRecord, request any, kind string, maxBytes, ma
 		request = value
 	case QualityFindingsRequest:
 		value.Cursor = ""
-		value.QueryRequest.Cursor = ""
 		request = value
 	case QualityCatalogRequest:
 		value.Cursor = ""
-		value.QueryRequest.Cursor = ""
 		request = value
 	case QualityEvidenceRequest:
 		value.Cursor = ""
-		value.QueryRequest.Cursor = ""
 		request = value
 	}
 	value := struct {
@@ -1148,11 +1161,16 @@ func mergeCapabilityCoverage(left, right []CapabilityCoverage) []CapabilityCover
 }
 
 func mergeCoverageStatus(left, right string) string {
-	priority := map[string]int{"observed": 1, "partial": 2, "unknown": 3, "not_evaluable": 4, "unsupported": 5, "unavailable": 6}
-	if priority[right] > priority[left] {
+	if left == "" {
 		return right
 	}
-	return left
+	if right == "" || left == right {
+		return left
+	}
+	// Different providers/scopes reporting different states is aggregate
+	// partial coverage. Treating the least capable provider as authoritative
+	// would incorrectly erase facts observed by another analyzer.
+	return "partial"
 }
 
 func containsCapability(values []CapabilityCoverage, target string) bool {
@@ -1248,11 +1266,36 @@ func pathMatches(pattern, value string) bool {
 }
 
 func validateStructuralQuery(query StructuralQuery) error {
+	for name, value := range map[string]string{"path_prefix": query.PathPrefix, "path_glob": query.PathGlob} {
+		if value == "" {
+			continue
+		}
+		normalized := strings.ReplaceAll(value, "\\", "/")
+		if strings.ContainsAny(value, "\x00\r\n") || path.IsAbs(normalized) || normalized == ".." || strings.HasPrefix(normalized, "../") || strings.Contains(normalized, "/../") {
+			return newLiveError("QueryInvalid", name+" must remain repository-relative", map[string]any{name: value})
+		}
+	}
 	if query.PathGlob == "" {
 		return nil
 	}
 	if _, err := path.Match(query.PathGlob, ""); err != nil {
 		return newLiveError("QueryInvalid", "query path glob is invalid", map[string]any{"error": err.Error()})
+	}
+	return nil
+}
+
+func validateRecordScopeIDs(record *RevisionRecord, requested []string) error {
+	if len(requested) == 0 {
+		return nil
+	}
+	available := make(map[string]struct{}, len(record.Snapshot.ScopeIDs))
+	for _, scopeID := range record.Snapshot.ScopeIDs {
+		available[scopeID] = struct{}{}
+	}
+	for _, scopeID := range requested {
+		if _, ok := available[scopeID]; !ok {
+			return newLiveError(ErrorRevisionUnavailable, "requested scope is unavailable in the selected revision", map[string]any{"scope_id": scopeID, "revision": record.Snapshot.Revision})
+		}
 	}
 	return nil
 }
@@ -1273,6 +1316,17 @@ func splitLines(value string) []string {
 	value = strings.ReplaceAll(value, "\r\n", "\n")
 	value = strings.ReplaceAll(value, "\r", "\n")
 	return strings.Split(value, "\n")
+}
+
+func truncateUTF8(value string, maxBytes int) string {
+	if maxBytes < 1 || len(value) <= maxBytes {
+		return value
+	}
+	value = value[:maxBytes]
+	for !utf8.ValidString(value) {
+		value = value[:len(value)-1]
+	}
+	return value
 }
 
 func textMatchIndices(line, pattern string, caseSensitive bool, expression *regexp.Regexp) [][2]int {

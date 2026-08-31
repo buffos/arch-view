@@ -20,19 +20,17 @@ const (
 	LiveSchemaVersion  = "arch-view.live/v1"
 	QuerySchemaVersion = "arch-view.query/v1"
 
-	DefaultDebounce            = 250 * time.Millisecond
-	DefaultMaxPendingEvents    = 10_000
-	DefaultMaxParallelScopes   = 4
-	DefaultFreshnessMaxWait    = 5 * time.Second
-	DefaultStabilityRetries    = 2
-	DefaultQueryMaxBytes       = 16 * 1024
-	DefaultQueryMaxItems       = 50
-	DefaultQueryHardMaxBytes   = 1 << 20
-	DefaultQueryHardMaxItems   = 5_000
-	DefaultContextLines        = 40
-	DefaultContextHardLines    = 1_000
-	DefaultContextMaxBytes     = 64 * 1024
-	DefaultContextHardMaxBytes = 1 << 20
+	DefaultDebounce          = 250 * time.Millisecond
+	DefaultMaxPendingEvents  = 10_000
+	DefaultMaxParallelScopes = 4
+	DefaultFreshnessMaxWait  = 5 * time.Second
+	DefaultStabilityRetries  = 2
+	DefaultQueryMaxBytes     = 16 * 1024
+	DefaultQueryMaxItems     = 50
+	DefaultQueryHardMaxBytes = 1 << 20
+	DefaultQueryHardMaxItems = 5_000
+	DefaultContextLines      = 40
+	DefaultContextHardLines  = 1_000
 )
 
 type Consistency string
@@ -203,6 +201,7 @@ type LiveSnapshot struct {
 	SourceIndexRef         *OpaqueRef        `json:"source_index_ref,omitempty"`
 	ModelRef               *OpaqueRef        `json:"model_ref,omitempty"`
 	QualityReportRef       *OpaqueRef        `json:"quality_report_ref,omitempty"`
+	QualityPolicyRef       *OpaqueRef        `json:"quality_policy_ref,omitempty"`
 	ScopeIDs               []string          `json:"scope_ids"`
 	Diagnostics            []LiveDiagnostic  `json:"diagnostics"`
 	Freshness              Freshness         `json:"freshness"`
@@ -425,6 +424,8 @@ type QualityProfileInfo struct {
 	ProfileID      string `json:"profile_id"`
 	ProfileVersion string `json:"profile_version"`
 	FileName       string `json:"file_name,omitempty"`
+	Status         string `json:"status"`
+	Reason         string `json:"reason,omitempty"`
 }
 
 // QualityCatalogRequest selects the immutable revision used to anchor a
@@ -467,6 +468,8 @@ type QualityEvaluationRequest struct {
 	ProfileVersion string                `json:"profile_version"`
 	RuleBindings   []quality.RuleBinding `json:"rule_bindings,omitempty"`
 	Persist        bool                  `json:"persist"`
+	MaxBytes       int                   `json:"max_bytes,omitempty"`
+	MaxItems       int                   `json:"max_items,omitempty"`
 }
 
 type QualityEvaluationResult struct {
@@ -515,6 +518,8 @@ type QualityCompareRequest struct {
 	CurrentRevision  int         `json:"current_revision"`
 	PreviousReportID string      `json:"previous_report_id,omitempty"`
 	CurrentReportID  string      `json:"current_report_id,omitempty"`
+	MaxBytes         int         `json:"max_bytes,omitempty"`
+	MaxItems         int         `json:"max_items,omitempty"`
 }
 
 type QualityComparisonResult struct {

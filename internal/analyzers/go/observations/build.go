@@ -170,7 +170,13 @@ func BuildContext(ctx context.Context, scan scanner.ScanResult, request analysis
 		Extractors:      []analysis.ExtractorIdentity{},
 	}
 	sourceInputs := make([]sourceindex.SourceFileInput, 0, len(scan.SourceFiles))
+	allowedSourcePaths := requestedSourcePaths(request.SourceScope)
 	for _, file := range scan.SourceFiles {
+		if allowedSourcePaths != nil {
+			if _, ok := allowedSourcePaths[filepath.ToSlash(filepath.Clean(file.RelativePath))]; !ok {
+				continue
+			}
+		}
 		sourceInputs = append(sourceInputs, sourceindex.SourceFileInput{
 			Path:               file.RelativePath,
 			Content:            file.Content,
@@ -215,6 +221,17 @@ func BuildContext(ctx context.Context, scan scanner.ScanResult, request analysis
 		}
 	}
 	result.Summary = analysis.ComputeSummary(result)
+	return result
+}
+
+func requestedSourcePaths(scope *analysis.SourceScope) map[string]struct{} {
+	if scope == nil || scope.MatchedLocalPaths == nil {
+		return nil
+	}
+	result := make(map[string]struct{}, len(scope.MatchedLocalPaths))
+	for _, value := range scope.MatchedLocalPaths {
+		result[filepath.ToSlash(filepath.Clean(value))] = struct{}{}
+	}
 	return result
 }
 

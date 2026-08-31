@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -55,6 +56,7 @@ func ValidateLiveSession(ctx context.Context, config LiveSessionConfig, openedRe
 	if err := ctx.Err(); err != nil {
 		return ValidatedLiveSession{}, err
 	}
+	config = cloneLiveSessionConfig(config)
 	if config.SchemaVersion != LiveSchemaVersion {
 		return ValidatedLiveSession{}, newLiveError(ErrorLiveConfigInvalid, "live session schema version is unsupported", map[string]any{"schema_version": config.SchemaVersion, "expected": LiveSchemaVersion})
 	}
@@ -80,7 +82,7 @@ func ValidateLiveSession(ctx context.Context, config LiveSessionConfig, openedRe
 	if err := normalizeSourceRequest(&config.SourceIndexRequest); err != nil {
 		return ValidatedLiveSession{}, err
 	}
-	if err := validateQualityReference(ctx, config.QualityRequest, dependencies.Profiles); err != nil {
+	if err := validateQualityReference(ctx, config.QualityRequest, dependencies.Profiles, dependencies.QualityCatalog); err != nil {
 		return ValidatedLiveSession{}, err
 	}
 	normalizePolicies(&config)
@@ -91,6 +93,27 @@ func ValidateLiveSession(ctx context.Context, config LiveSessionConfig, openedRe
 		return ValidatedLiveSession{}, err
 	}
 	return ValidatedLiveSession{Config: config, RepositoryRoot: repositoryRoot.absolute}, nil
+}
+
+func cloneLiveSessionConfig(value LiveSessionConfig) LiveSessionConfig {
+	data, err := json.Marshal(value)
+	if err == nil {
+		var clone LiveSessionConfig
+		if json.Unmarshal(data, &clone) == nil {
+			return clone
+		}
+	}
+	clone := value
+	clone.WatchRoots = append([]WatchRoot(nil), value.WatchRoots...)
+	clone.AnalyzerIDs = append([]string(nil), value.AnalyzerIDs...)
+	clone.SourceIndexRequest.Capabilities = append([]string(nil), value.SourceIndexRequest.Capabilities...)
+	clone.PermissionPolicy.AllowedOperations = append([]Operation(nil), value.PermissionPolicy.AllowedOperations...)
+	clone.Extensions = append([]ExtensionBlock(nil), value.Extensions...)
+	if value.QualityRequest != nil {
+		qualityRequest := *value.QualityRequest
+		clone.QualityRequest = &qualityRequest
+	}
+	return clone
 }
 
 func (session *LiveSession) requireOperation(operation Operation) error {
@@ -215,6 +238,9 @@ func pathWithin(root, candidate string) bool {
 }
 
 func validateAnalyzerIDs(ids []string, registry *analysis.Registry) error {
+	if len(ids) > 0 && registry == nil {
+		return newLiveError(ErrorLiveConfigInvalid, "analyzer_ids require an analyzer registry for validation", nil)
+	}
 	seen := make(map[string]struct{}, len(ids))
 	for _, id := range ids {
 		if !safeIdentifier(id) {
@@ -256,17 +282,22 @@ func normalizeSourceRequest(request *SourceIndexRequest) error {
 	return nil
 }
 
-func validateQualityReference(ctx context.Context, request *QualityRequest, profiles QualityProfileResolver) error {
+func validateQualityReference(ctx context.Context, request *QualityRequest, profiles QualityProfileResolver, catalog *quality.Catalog) error {
 	if request == nil {
 		return nil
 	}
 	if !safeNamespaced(request.ProfileID) || !strings.HasPrefix(request.ProfileID, "profile:") || !safeVersion(request.ProfileVersion) {
 		return newLiveError(ErrorLiveConfigInvalid, "quality profile reference is invalid", map[string]any{"profile_id": request.ProfileID, "profile_version": request.ProfileVersion})
 	}
-	if profiles != nil {
-		if _, err := profiles.ResolveProfile(ctx, request.ProfileID, request.ProfileVersion); err != nil {
-			return newLiveError(ErrorLiveConfigInvalid, "quality profile reference could not be resolved", map[string]any{"profile_id": request.ProfileID, "profile_version": request.ProfileVersion, "error": err.Error()})
-		}
+	if profiles == nil || catalog == nil {
+		return newLiveError(ErrorLiveConfigInvalid, "quality profile references require a profile resolver and quality catalog", nil)
+	}
+	profile, err := profiles.ResolveProfile(ctx, request.ProfileID, request.ProfileVersion)
+	if err != nil {
+		return newLiveError(ErrorLiveConfigInvalid, "quality profile reference could not be resolved", map[string]any{"profile_id": request.ProfileID, "profile_version": request.ProfileVersion, "error": err.Error()})
+	}
+	if _, err := quality.ValidateQualityProfile(profile, catalog); err != nil {
+		return newLiveError(ErrorLiveConfigInvalid, "quality profile reference is invalid", map[string]any{"profile_id": request.ProfileID, "profile_version": request.ProfileVersion, "error": err.Error()})
 	}
 	return nil
 }
@@ -354,6 +385,9 @@ func validateExtensions(values []ExtensionBlock) error {
 	for _, value := range values {
 		if !safeNamespaced(value.Namespace) || !safeVersion(value.SchemaVersion) || !safeNamespaced(value.Capability) {
 			return newLiveError(ErrorLiveConfigInvalid, "extension identity is invalid", nil)
+		}
+		if _, err := json.Marshal(value.Payload); err != nil {
+			return newLiveError(ErrorLiveConfigInvalid, "extension payload must be JSON-serializable", map[string]any{"namespace": value.Namespace})
 		}
 		key := value.Namespace + "\x00" + value.SchemaVersion + "\x00" + value.Capability
 		if _, exists := seen[key]; exists {

@@ -18,6 +18,20 @@ var defaultFixedExclusions = []string{
 	"node_modules", "out", "target", "tmp", "vendor", "venv",
 }
 
+// IsDefaultExcludedDirectory reports whether discovery excludes a directory
+// name from every analyzer plan. Live input fingerprinting uses the same
+// boundary so VCS/cache churn cannot create revisions for files no analyzer
+// is eligible to observe.
+func IsDefaultExcludedDirectory(name string) bool {
+	name = strings.ToLower(strings.TrimSpace(name))
+	for _, excluded := range defaultFixedExclusions {
+		if name == excluded {
+			return true
+		}
+	}
+	return false
+}
+
 const hostConfigurationFileName = ".archview.json"
 
 func defaultDiscoveryPolicy() DiscoveryPolicy {

@@ -6,11 +6,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/buffo/arch-view/internal/analysis/orchestration"
 )
 
 // FileSystemFingerprinter computes an authoritative fingerprint from file
@@ -64,6 +67,9 @@ func (FileSystemFingerprinter) Fingerprint(ctx context.Context, repositoryRoot s
 				return nil
 			}
 			if entry.IsDir() {
+				if filePath != absoluteRoot && orchestration.IsDefaultExcludedDirectory(entry.Name()) {
+					return filepath.SkipDir
+				}
 				if !watchRoot.Recursive && filePath != absoluteRoot {
 					return filepath.SkipDir
 				}
@@ -72,7 +78,7 @@ func (FileSystemFingerprinter) Fingerprint(ctx context.Context, repositoryRoot s
 			if !entry.Type().IsRegular() {
 				return nil
 			}
-			content, err := os.ReadFile(filePath)
+			fileHash, size, err := hashFile(ctx, filePath)
 			if err != nil {
 				return err
 			}
@@ -84,8 +90,7 @@ func (FileSystemFingerprinter) Fingerprint(ctx context.Context, repositoryRoot s
 			if relative == "" || relative == "." || !pathWithin(root, filePath) {
 				return newLiveError(ErrorWatchRootInvalid, "fingerprinted file escaped repository root", map[string]any{"path": relative})
 			}
-			fileHash := sha256.Sum256(content)
-			filesByPath[relative] = FileFingerprint{Path: relative, Size: int64(len(content)), Hash: ContentDigest{Algorithm: "hash:sha-256", Value: hex.EncodeToString(fileHash[:])}}
+			filesByPath[relative] = FileFingerprint{Path: relative, Size: size, Hash: fileHash}
 			return nil
 		})
 		if walkErr != nil {
@@ -111,6 +116,37 @@ func (FileSystemFingerprinter) Fingerprint(ctx context.Context, repositoryRoot s
 		ContentFingerprint:  digestStrings(contentParts),
 		Files:               files,
 	}, nil
+}
+
+func hashFile(ctx context.Context, path string) (ContentDigest, int64, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return ContentDigest{}, 0, err
+	}
+	defer func() { _ = file.Close() }()
+	hash := sha256.New()
+	buffer := make([]byte, 64*1024)
+	var size int64
+	for {
+		if err := ctx.Err(); err != nil {
+			return ContentDigest{}, 0, err
+		}
+		count, readErr := file.Read(buffer)
+		if count > 0 {
+			written, writeErr := hash.Write(buffer[:count])
+			if writeErr != nil {
+				return ContentDigest{}, 0, writeErr
+			}
+			size += int64(written)
+		}
+		if readErr == io.EOF {
+			break
+		}
+		if readErr != nil {
+			return ContentDigest{}, 0, readErr
+		}
+	}
+	return ContentDigest{Algorithm: "hash:sha-256", Value: hex.EncodeToString(hash.Sum(nil))}, size, nil
 }
 
 func normalizeFingerprintPath(value string) string {

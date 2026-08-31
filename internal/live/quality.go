@@ -104,6 +104,21 @@ func (gateway *QualityGateway) ReadQualityCatalog(ctx context.Context, request Q
 		if err != nil {
 			return QueryEnvelope{}, newLiveError(ErrorQualityEvaluation, "quality profiles could not be listed", map[string]any{"error": err.Error()})
 		}
+		for index := range profiles {
+			profile, resolveErr := gateway.profiles.ResolveProfile(ctx, profiles[index].ProfileID, profiles[index].ProfileVersion)
+			if resolveErr != nil {
+				profiles[index].Status = "invalid"
+				profiles[index].Reason = resolveErr.Error()
+				continue
+			}
+			if _, validateErr := quality.ValidateQualityProfile(profile, gateway.catalog); validateErr != nil {
+				profiles[index].Status = "invalid"
+				profiles[index].Reason = validateErr.Error()
+				continue
+			}
+			profiles[index].Status = "valid"
+			profiles[index].Reason = ""
+		}
 	}
 	var selected *quality.QualityProfile
 	if request.ProfileID != "" || request.ProfileVersion != "" {
@@ -212,10 +227,18 @@ func (gateway *QualityGateway) EvaluateQuality(ctx context.Context, request Qual
 	if err != nil {
 		return QueryEnvelope{}, newLiveError(ErrorQualityEvaluation, "quality evaluation failed", map[string]any{"error": err.Error()})
 	}
-	gateway.session.rememberTemporaryReport(record.Snapshot.Revision, report)
 	reportCopy := cloneQualityReport(report)
 	result := QualityEvaluationResult{Status: "evaluated", Temporary: true, Report: &reportCopy}
-	return gateway.qualityEnvelope(record, freshness, returned, consistency, result, qualityCoverage(report), []string{}, BudgetUsage{MaxBytes: DefaultQueryMaxBytes, MaxItems: 1, EmittedBytes: jsonSize(result), EmittedItems: 1}), nil
+	maxBytes, maxItems, err := gateway.session.normalizeBudget(request.MaxBytes, request.MaxItems)
+	if err != nil {
+		return QueryEnvelope{}, err
+	}
+	emittedBytes := jsonSize(result)
+	if emittedBytes > maxBytes {
+		return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "quality evaluation exceeds the query byte budget", map[string]any{"max_bytes": maxBytes, "emitted_bytes": emittedBytes})
+	}
+	gateway.session.rememberTemporaryReport(record.Snapshot.Revision, report)
+	return gateway.qualityEnvelope(record, freshness, returned, consistency, result, qualityCoverage(report), []string{}, BudgetUsage{MaxBytes: maxBytes, MaxItems: maxItems, EmittedBytes: emittedBytes, EmittedItems: 1}), nil
 }
 
 func (gateway *QualityGateway) GetQualityFindings(ctx context.Context, request QualityFindingsRequest) (QueryEnvelope, error) {
@@ -290,7 +313,10 @@ func (gateway *QualityGateway) GetFindingEvidence(ctx context.Context, request Q
 		}
 		options.MaxBytes = request.MaxContextBytes
 		if options.MaxBytes == 0 {
-			options.MaxBytes = DefaultContextMaxBytes
+			options.MaxBytes = gateway.session.validated.Config.QueryPolicy.DefaultMaxBytes
+		}
+		if options.MaxLines < 1 || options.MaxLines > gateway.session.validated.Config.QueryPolicy.HardContextLines || options.MaxBytes < 1 || options.MaxBytes > gateway.session.validated.Config.QueryPolicy.HardMaxBytes {
+			return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "quality evidence source-context budget exceeds the configured hard bound", nil)
 		}
 	}
 	evidence, err := quality.NewQualityQueryService(report).GetFindingEvidence(report.EvaluationID, request.FindingID, options)
@@ -351,9 +377,11 @@ func (gateway *QualityGateway) CompareQualityReports(ctx context.Context, reques
 	var returned string
 	var err error
 	if request.CurrentRevision > 0 {
-		current, err = gateway.session.CurrentRecord(ConsistencySpecific, request.CurrentRevision)
-		returned = string(ConsistencySpecific)
-		freshness = Freshness{Status: FreshnessCurrent, RequestedConsistency: currentConsistency, LastReadyRevision: current.Snapshot.Revision, Reconciliation: ReconciliationNotRequested}
+		current, freshness, returned, err = gateway.session.prepareConsistency(ctx, ConsistencySpecific, request.CurrentRevision)
+		if err != nil {
+			return QueryEnvelope{}, err
+		}
+		currentConsistency = ConsistencySpecific
 	} else {
 		current, freshness, returned, err = gateway.session.prepareConsistency(ctx, currentConsistency, 0)
 	}
@@ -373,7 +401,15 @@ func (gateway *QualityGateway) CompareQualityReports(ctx context.Context, reques
 		return QueryEnvelope{}, qualityGatewayError(err)
 	}
 	result := QualityComparisonResult{Status: "observed", Comparison: &comparison}
-	return gateway.qualityEnvelope(current, freshness, returned, currentConsistency, result, []CapabilityCoverage{{Capability: "quality:comparison", Status: "observed"}}, []string{}, BudgetUsage{MaxBytes: DefaultQueryMaxBytes, MaxItems: 1, EmittedBytes: jsonSize(result), EmittedItems: 1}), nil
+	maxBytes, maxItems, err := gateway.session.normalizeBudget(request.MaxBytes, request.MaxItems)
+	if err != nil {
+		return QueryEnvelope{}, err
+	}
+	emittedBytes := jsonSize(result)
+	if emittedBytes > maxBytes {
+		return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "quality comparison exceeds the query byte budget", map[string]any{"max_bytes": maxBytes, "emitted_bytes": emittedBytes})
+	}
+	return gateway.qualityEnvelope(current, freshness, returned, currentConsistency, result, []CapabilityCoverage{{Capability: "quality:comparison", Status: "observed"}}, []string{}, BudgetUsage{MaxBytes: maxBytes, MaxItems: maxItems, EmittedBytes: emittedBytes, EmittedItems: 1}), nil
 }
 
 func (gateway *QualityGateway) CompareQualityRevisions(ctx context.Context, request QualityCompareRequest) (QueryEnvelope, error) {
@@ -423,7 +459,10 @@ func (gateway *QualityGateway) catalogEnvelope(record *RevisionRecord, freshness
 	}
 	result := QualityCatalogResult{Profiles: append([]QualityProfileInfo(nil), profiles...), Rules: append([]QualityRuleCatalogEntry(nil), page...), Capabilities: append([]quality.CapabilityDescriptor(nil), gateway.catalog.ListQualityCapabilities()...)}
 	budget.EmittedBytes = jsonSize(result)
-	budget.EmittedItems = len(page)
+	budget.EmittedItems = len(profiles) + len(page) + len(result.Capabilities)
+	if budget.EmittedBytes > maxBytes || budget.EmittedItems > maxItems {
+		return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "quality catalog metadata exceeds the query budget", map[string]any{"max_bytes": maxBytes, "max_items": maxItems, "emitted_bytes": budget.EmittedBytes, "emitted_items": budget.EmittedItems})
+	}
 	budget.Truncated = next != ""
 	envelope := gateway.qualityEnvelope(record, freshness, returned, request.Consistency, result, []CapabilityCoverage{{Capability: "quality:catalog", Status: "observed"}}, []string{}, budget)
 	envelope.ResultCount = total
@@ -455,15 +494,16 @@ func (gateway *QualityGateway) modelForScopes(record *RevisionRecord, scopeIDs [
 		return cloneModel(record.Model), nil
 	}
 	if len(scopeIDs) > 1 {
-		// The aggregate model is the only model that can represent multiple
-		// analyzer scopes without inventing a second merge algorithm here. The
-		// requested scope identities are still validated before it is used.
 		for _, scopeID := range scopeIDs {
 			if _, ok := record.ScopeModels[scopeID]; !ok {
 				return model.Model{}, newLiveError(ErrorRevisionUnavailable, "requested quality scope is unavailable", map[string]any{"scope_id": scopeID})
 			}
 		}
-		return cloneModel(record.Model), nil
+		value, err := record.Run.CombinedCanonicalModelForScopes(scopeIDs)
+		if err != nil {
+			return model.Model{}, newLiveError(ErrorQualityEvaluation, "requested quality scopes could not be combined", map[string]any{"error": err.Error()})
+		}
+		return value, nil
 	}
 	value, ok := record.ScopeModels[scopeIDs[0]]
 	if !ok {
@@ -484,8 +524,9 @@ func (session *LiveSession) rememberTemporaryReport(revision int, report quality
 	if session.qualityReportRevisions == nil {
 		session.qualityReportRevisions = make(map[string]int)
 	}
-	session.qualityReports[report.EvaluationID] = cloneQualityReport(report)
-	session.qualityReportRevisions[report.EvaluationID] = revision
+	key := revisionReportKey(revision, report.EvaluationID)
+	session.qualityReports[key] = cloneQualityReport(report)
+	session.qualityReportRevisions[key] = revision
 }
 
 func (gateway *QualityGateway) reportFor(record *RevisionRecord, reportID string) (quality.QualityEvaluation, error) {
@@ -512,16 +553,26 @@ func (gateway *QualityGateway) reportFor(record *RevisionRecord, reportID string
 		}
 	}
 	gateway.session.mu.RLock()
-	report, ok := gateway.session.qualityReports[reportID]
-	revision := gateway.session.qualityReportRevisions[reportID]
+	key := revisionReportKey(record.Snapshot.Revision, reportID)
+	report, ok := gateway.session.qualityReports[key]
 	gateway.session.mu.RUnlock()
-	if ok && revision == record.Snapshot.Revision {
+	if ok {
 		return cloneQualityReport(report), nil
 	}
-	if ok {
-		return quality.QualityEvaluation{}, newLiveError(ErrorQualityEvaluation, "quality report belongs to a different source revision", map[string]any{"report_id": reportID, "report_revision": revision, "requested_revision": record.Snapshot.Revision})
+	gateway.session.mu.RLock()
+	for storedKey, stored := range gateway.session.qualityReports {
+		if stored.EvaluationID == reportID {
+			revision := gateway.session.qualityReportRevisions[storedKey]
+			gateway.session.mu.RUnlock()
+			return quality.QualityEvaluation{}, newLiveError(ErrorQualityEvaluation, "quality report belongs to a different source revision", map[string]any{"report_id": reportID, "report_revision": revision, "requested_revision": record.Snapshot.Revision})
+		}
 	}
+	gateway.session.mu.RUnlock()
 	return quality.QualityEvaluation{}, newLiveError("QualityReportNotFound", "quality report was not found for the requested revision", map[string]any{"report_id": reportID})
+}
+
+func revisionReportKey(revision int, reportID string) string {
+	return fmt.Sprintf("%d\x00%s", revision, reportID)
 }
 
 func isMissingQualityReport(err error) bool {

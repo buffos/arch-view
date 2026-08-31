@@ -2,6 +2,8 @@ package live
 
 import (
 	"context"
+	"path"
+	"sort"
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
@@ -31,8 +33,11 @@ func (scanner *MultiAnalyzerScanner) Scan(ctx context.Context, request ScanReque
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if request.InputFingerprint.ContentFingerprint.Value != "" && len(request.InputFingerprint.Files) == 0 {
+		return ScanResult{}, newLiveError(ErrorSnapshotBuildFailed, "configured live roots contain no eligible input files", nil)
+	}
 	registry := scanner.Host.RegistrySnapshot()
-	policy := orchestration.SourceScopePolicy{PolicyVersion: orchestration.SourceScopePolicyVersion, InvocationRoot: ".", Exclude: []string{}, Include: []orchestration.AnalyzerIncludeRule{}}
+	policy := liveSourceScopePolicy(request.Config, registry, request.InputFingerprint)
 	planner := orchestration.NewAnalyzerJobPlanner(registry)
 	plan, err := planner.PlanAnalyzerJobs(ctx, orchestration.PlanRequest{
 		RepositoryRoot:    request.RepositoryRoot,
@@ -56,6 +61,16 @@ func (scanner *MultiAnalyzerScanner) Scan(ctx context.Context, request ScanReque
 		}
 		plan.Jobs = filtered
 	}
+	// A detected project with no files beneath the configured live roots is
+	// outside this session. Keeping it would attach model facts that the
+	// session fingerprint can never invalidate.
+	filteredJobs := make([]orchestration.AnalyzerJob, 0, len(plan.Jobs))
+	for _, job := range plan.Jobs {
+		if len(job.EffectiveSourceScope.MatchedLocalPaths) > 0 {
+			filteredJobs = append(filteredJobs, job)
+		}
+	}
+	plan.Jobs = filteredJobs
 	workerCount := request.Config.WatchPolicy.MaxParallelScopes
 	if workerCount < 1 {
 		workerCount = DefaultMaxParallelScopes
@@ -136,6 +151,49 @@ func (scanner *MultiAnalyzerScanner) Scan(ctx context.Context, request ScanReque
 	return result, nil
 }
 
+func liveSourceScopePolicy(config LiveSessionConfig, registry *analysis.Registry, input InputFingerprint) orchestration.SourceScopePolicy {
+	globs := make([]string, 0, len(config.WatchRoots))
+	for _, root := range config.WatchRoots {
+		value := root.Path
+		if root.Recursive {
+			if value == "" || value == "." {
+				value = "**"
+			} else {
+				value = path.Join(value, "**")
+			}
+			globs = append(globs, value)
+			continue
+		}
+		// Source-scope globs intentionally treat a matched directory as a
+		// recursive prefix. Enumerate authoritative direct files for a
+		// non-recursive watch root so analyzer and fingerprint semantics stay
+		// identical.
+		rootPath := strings.Trim(path.Clean(value), "/")
+		if rootPath == "" {
+			rootPath = "."
+		}
+		for _, file := range input.Files {
+			directory := path.Dir(file.Path)
+			if directory == rootPath {
+				globs = append(globs, file.Path)
+			}
+		}
+	}
+	globs = uniqueStrings(globs)
+	ids := append([]string(nil), config.AnalyzerIDs...)
+	if len(ids) == 0 && registry != nil {
+		for _, manifest := range registry.ListManifests() {
+			ids = append(ids, manifest.ID)
+		}
+	}
+	sort.Strings(ids)
+	include := make([]orchestration.AnalyzerIncludeRule, 0, len(ids))
+	for _, id := range ids {
+		include = append(include, orchestration.AnalyzerIncludeRule{AnalyzerID: id, Globs: append([]string(nil), globs...)})
+	}
+	return orchestration.SourceScopePolicy{PolicyVersion: orchestration.SourceScopePolicyVersion, InvocationRoot: ".", Exclude: []string{}, Include: include}
+}
+
 // StaticScanner is a test and adapter seam for callers that already have an
 // authoritative scan result. It still returns a defensive copy to preserve
 // the unpublished-candidate boundary.
@@ -156,8 +214,4 @@ func (scanner StaticScanner) Scan(context.Context, ScanRequest) (ScanResult, err
 		}
 	}
 	return result, nil
-}
-
-func normalizeScannerLanguage(value string) string {
-	return strings.ToLower(strings.TrimSpace(value))
 }

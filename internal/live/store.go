@@ -3,7 +3,6 @@ package live
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/buffo/arch-view/internal/analysis"
@@ -64,6 +63,9 @@ func (store *MemorySnapshotStore) PublishAtomically(candidate *RevisionRecord) (
 	if candidate.SessionID == "" || candidate.Snapshot.SnapshotID == "" || candidate.Snapshot.SemanticDigest.Value == "" {
 		return nil, newLiveError(ErrorSnapshotValidation, "candidate snapshot is missing immutable identity", nil)
 	}
+	if _, err := json.Marshal(candidate); err != nil {
+		return nil, newLiveError(ErrorSnapshotValidation, "candidate snapshot is not serializable", map[string]any{"error": err.Error()})
+	}
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	if store.revisions[candidate.SessionID] == nil {
@@ -100,17 +102,18 @@ func (store *MemorySnapshotStore) WaitForRevision(ctx context.Context, sessionID
 		ctx = context.Background()
 	}
 	for {
-		store.mu.RLock()
+		store.mu.Lock()
 		if current := store.latest[sessionID]; current != nil && current.Snapshot.Revision >= minimumRevision {
 			value := cloneRevisionRecord(current)
-			store.mu.RUnlock()
+			store.mu.Unlock()
 			return value, nil
 		}
 		wait := store.changed[sessionID]
 		if wait == nil {
 			wait = make(chan struct{})
+			store.changed[sessionID] = wait
 		}
-		store.mu.RUnlock()
+		store.mu.Unlock()
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -174,11 +177,4 @@ func cloneAnalysisResult(value analysis.AnalysisResult) analysis.AnalysisResult 
 		return value
 	}
 	return clone
-}
-
-func ensureRevisionSession(record *RevisionRecord, sessionID string) error {
-	if record == nil || record.SessionID != sessionID {
-		return fmt.Errorf("revision belongs to a different live session")
-	}
-	return nil
 }

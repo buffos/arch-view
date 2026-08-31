@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -38,6 +39,16 @@ func TestValidateLiveSessionRejectsUnsafeConfiguration(t *testing.T) {
 	config.RepositoryRoot = filepath.Join(root, "child")
 	_, err = ValidateLiveSession(context.Background(), config, root, ValidationDependencies{})
 	assertLiveErrorCode(t, err, ErrorWatchRootInvalid)
+
+	config = testLiveConfig("session:unknown-analyzer")
+	config.AnalyzerIDs = []string{"analyzer:missing"}
+	_, err = ValidateLiveSession(context.Background(), config, root, ValidationDependencies{})
+	assertLiveErrorCode(t, err, ErrorLiveConfigInvalid)
+
+	config = testLiveConfig("session:unknown-profile")
+	config.QualityRequest = &QualityRequest{ProfileID: "profile:missing", ProfileVersion: "1.0.0"}
+	_, err = ValidateLiveSession(context.Background(), config, root, ValidationDependencies{})
+	assertLiveErrorCode(t, err, ErrorLiveConfigInvalid)
 }
 
 func TestValidateLiveSessionNormalizesDefaultsAndReferences(t *testing.T) {
@@ -92,6 +103,40 @@ func TestMultiAnalyzerScannerHonorsSourceIndexRequest(t *testing.T) {
 	if len(requested) != 2 || requested[0] != sourceindex.CapabilityFiles || requested[1] != sourceindex.CapabilitySize {
 		t.Fatalf("live requested capabilities = %#v", requested)
 	}
+	if err := os.Mkdir(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeLiveFixture(t, filepath.Join(root, "src", "watched.go"), "package watched\n\nfunc Watched() {}\n")
+	config.WatchRoots = []WatchRoot{{Path: "src", Recursive: true}}
+	restrictedInput, err := (FileSystemFingerprinter{}).Fingerprint(context.Background(), root, config.WatchRoots)
+	if err != nil {
+		t.Fatal(err)
+	}
+	restricted, err := enabledScanner.Scan(context.Background(), ScanRequest{SessionID: config.SessionID, RepositoryRoot: root, Config: config, InputFingerprint: restrictedInput, Invalidation: InvalidationPlan{Mode: "full_rescan"}})
+	if err != nil {
+		t.Fatalf("watch-root-restricted live scan: %v", err)
+	}
+	files := restricted.Model.SourceIndex.Snapshots[0].Files
+	if len(files) != 1 || files[0].Path != "src/watched.go" {
+		t.Fatalf("watch roots and analyzer scope diverged: %#v", files)
+	}
+	if err := os.Mkdir(filepath.Join(root, "src", "nested"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeLiveFixture(t, filepath.Join(root, "src", "nested", "ignored.go"), "package nested\n")
+	config.WatchRoots[0].Recursive = false
+	nonRecursiveInput, err := (FileSystemFingerprinter{}).Fingerprint(context.Background(), root, config.WatchRoots)
+	if err != nil {
+		t.Fatal(err)
+	}
+	nonRecursive, err := enabledScanner.Scan(context.Background(), ScanRequest{SessionID: config.SessionID, RepositoryRoot: root, Config: config, InputFingerprint: nonRecursiveInput, Invalidation: InvalidationPlan{Mode: "full_rescan"}})
+	if err != nil {
+		t.Fatalf("non-recursive live scan: %v", err)
+	}
+	files = nonRecursive.Model.SourceIndex.Snapshots[0].Files
+	if len(files) != 1 || files[0].Path != "src/watched.go" {
+		t.Fatalf("non-recursive watch root leaked descendants: %#v", files)
+	}
 }
 
 func TestNormalizeWatchEventAndCoalesceEvents(t *testing.T) {
@@ -105,6 +150,11 @@ func TestNormalizeWatchEventAndCoalesceEvents(t *testing.T) {
 		t.Fatalf("normalized event = %#v, err = %v", event, err)
 	}
 	_, err = NormalizeWatchEvent(WatchEvent{Kind: "modify", Path: "../secret.go"}, root, roots)
+	assertLiveErrorCode(t, err, "WatchEventOutOfScope")
+	if err := os.MkdirAll(filepath.Join(root, "nested"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_, err = NormalizeWatchEvent(WatchEvent{Kind: "modify", Path: "nested/deep.go"}, root, []WatchRoot{{Path: ".", Recursive: false}})
 	assertLiveErrorCode(t, err, "WatchEventOutOfScope")
 
 	coalescer := NewEventCoalescer(WatchPolicy{DebounceMS: 100, MaxPendingEvents: 8})
@@ -141,6 +191,35 @@ func TestNormalizeWatchEventAndCoalesceEvents(t *testing.T) {
 	group = bounded.FlushIfReady(now.Add(101 * time.Millisecond))
 	if group == nil || !group.FullRescan || group.Reason != "pending_event_limit_exceeded" {
 		t.Fatalf("pending event bound did not force a flushable rescan: %#v", group)
+	}
+	numeric := NewEventCoalescer(WatchPolicy{MaxPendingEvents: 4})
+	numeric.Add(NormalizedEvent{Kind: "modify", Path: "src/ten.go", Sequence: "10"}, now)
+	numeric.Add(NormalizedEvent{Kind: "modify", Path: "src/two.go", Sequence: "2"}, now)
+	group = numeric.Flush()
+	if group.FirstSequence != "2" || group.LastSequence != "10" {
+		t.Fatalf("numeric sequence bounds = %q..%q", group.FirstSequence, group.LastSequence)
+	}
+}
+
+func TestFileSystemFingerprintExcludesAnalyzerIneligibleDirectories(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, ".git", "objects"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeLiveFixture(t, filepath.Join(root, "main.go"), "package main\n")
+	writeLiveFixture(t, filepath.Join(root, ".git", "objects", "noise"), "first")
+	fingerprinter := FileSystemFingerprinter{}
+	first, err := fingerprinter.Fingerprint(context.Background(), root, []WatchRoot{{Path: ".", Recursive: true}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeLiveFixture(t, filepath.Join(root, ".git", "objects", "noise"), "second")
+	second, err := fingerprinter.Fingerprint(context.Background(), root, []WatchRoot{{Path: ".", Recursive: true}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !inputEqual(first, second) || len(second.Files) != 1 || second.Files[0].Path != "main.go" {
+		t.Fatalf("excluded directory changed fingerprint: first=%#v second=%#v", first, second)
 	}
 }
 
@@ -180,6 +259,65 @@ func TestMemorySnapshotStorePublishesMonotonicImmutableRevisions(t *testing.T) {
 	}
 }
 
+func TestRevisionValidationRejectsCrossArtifactMismatch(t *testing.T) {
+	record := buildRevisionRecord("session:coherence", ScanResult{Model: testModel()}, testInput("coherent"), 1, false)
+	if err := validateRevisionCandidate(record); err != nil {
+		t.Fatalf("coherent candidate rejected: %v", err)
+	}
+	record.Snapshot.ModelRef.ID = "model:other"
+	assertLiveErrorCode(t, validateRevisionCandidate(record), ErrorSnapshotValidation)
+}
+
+func TestMemorySnapshotStoreWakesWaiterStartedBeforeFirstPublish(t *testing.T) {
+	store := NewMemorySnapshotStore()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	result := make(chan *RevisionRecord, 1)
+	errors := make(chan error, 1)
+	go func() {
+		record, err := store.WaitForRevision(ctx, "session:wait", 1)
+		result <- record
+		errors <- err
+	}()
+
+	candidate := &RevisionRecord{SessionID: "session:wait", Snapshot: LiveSnapshot{SnapshotID: "snapshot:first", SemanticDigest: digestJSON("first")}}
+	if _, err := store.PublishAtomically(candidate); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-errors; err != nil {
+		t.Fatalf("WaitForRevision() error = %v", err)
+	}
+	if record := <-result; record == nil || record.Snapshot.Revision != 1 {
+		t.Fatalf("WaitForRevision() = %#v", record)
+	}
+}
+
+func TestValidatedConfigurationIsDefensivelyCopied(t *testing.T) {
+	root := t.TempDir()
+	config := testLiveConfig("session:immutable-config")
+	config.SourceIndexRequest.Capabilities = []string{"source:files"}
+	validated, err := ValidateLiveSession(context.Background(), config, root, ValidationDependencies{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.SourceIndexRequest.Capabilities[0] = "source:mutated"
+	if validated.Config.SourceIndexRequest.Capabilities[0] != "source:files" {
+		t.Fatalf("validated config retained caller-owned storage: %#v", validated.Config.SourceIndexRequest.Capabilities)
+	}
+}
+
+func TestBuildInvalidationArrivingDuringBuildIsQueued(t *testing.T) {
+	done := make(chan struct{})
+	session := &LiveSession{building: true, buildDone: done}
+	joined := session.beginRebuild(InvalidationPlan{Mode: "selective", AffectedPaths: []string{"src/new.go"}, Reason: "watch_event"}, nil)
+	if joined != done || session.pendingPlan == nil {
+		t.Fatalf("invalidation was not queued: joined=%v pending=%#v", joined == done, session.pendingPlan)
+	}
+	if session.pendingPlan.Mode != "selective" || len(session.pendingPlan.AffectedPaths) != 1 {
+		t.Fatalf("queued invalidation = %#v", session.pendingPlan)
+	}
+}
+
 func TestStartLiveSessionReportsInitializingThenReady(t *testing.T) {
 	root := t.TempDir()
 	released := make(chan struct{})
@@ -188,10 +326,17 @@ func TestStartLiveSessionReportsInitializingThenReady(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Close()
+	t.Cleanup(func() { _ = session.Close() })
 	status := session.Status()
 	if status.State != SessionInitializing || status.Freshness.Status != FreshnessInitializing {
 		t.Fatalf("initial status = %#v", status)
+	}
+	statusEnvelope, err := session.GetSnapshotStatus(context.Background(), QueryRequest{Consistency: ConsistencyLatestReady})
+	if err != nil {
+		t.Fatalf("initial snapshot status error = %v", err)
+	}
+	if statusEnvelope.ReturnedConsistency != "unavailable" || len(statusEnvelope.Diagnostics) != 1 || statusEnvelope.Diagnostics[0].Code != ErrorNoReadySnapshot {
+		t.Fatalf("initial snapshot status envelope = %#v", statusEnvelope)
 	}
 	close(released)
 	if err := session.Wait(context.Background()); err != nil {
@@ -209,7 +354,7 @@ func TestStartLiveSessionNoReadyFailureAndCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer failure.Close()
+	t.Cleanup(func() { _ = failure.Close() })
 	if err := failure.Wait(context.Background()); err == nil {
 		t.Fatal("failed initial scan returned nil error")
 	}
@@ -236,7 +381,7 @@ func TestRequireCurrentReconcilesAndJoinsOneBuild(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Close()
+	t.Cleanup(func() { _ = session.Close() })
 	if err := session.Wait(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -272,18 +417,67 @@ func TestRequireCurrentReconcilesAndJoinsOneBuild(t *testing.T) {
 	if revision != 2 || scanner.Count() != initialCount+1 {
 		t.Fatalf("strict requests did not join one build: revision=%d scans=%d initial=%d", revision, scanner.Count(), initialCount)
 	}
+	_, freshness, _, err := session.prepareConsistency(context.Background(), ConsistencySpecific, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if freshness.Status != FreshnessStale || freshness.LastReadyRevision != 2 {
+		t.Fatalf("older specific revision freshness = %#v", freshness)
+	}
+}
+
+func TestWatcherStartupReconcilesTheInitialSnapshotGap(t *testing.T) {
+	root := t.TempDir()
+	fingerprinter := &mutableFingerprinter{value: testInput("initial")}
+	calls := make(chan int, 4)
+	scanner := &countingScanner{result: ScanResult{Model: testModel()}, calls: calls}
+	watcher := &mutatingWatchBackend{fingerprinter: fingerprinter, value: testInput("changed-before-start")}
+	config := testLiveConfig("session:watcher-start-gap")
+	config.FreshnessPolicy.MaxWaitMS = 2_000
+	session, err := StartLiveSession(context.Background(), config, root, SessionOptions{Scanner: scanner, Fingerprinter: fingerprinter, Watcher: watcher, StartWatcher: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = session.Close() })
+	if err := session.Wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for expected := 1; expected <= 2; expected++ {
+		select {
+		case call := <-calls:
+			if call != expected {
+				t.Fatalf("scan call = %d, want %d", call, expected)
+			}
+		case <-time.After(time.Second):
+			t.Fatalf("timed out waiting for scan %d", expected)
+		}
+	}
+	current, err := session.EnsureCurrentSnapshot(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current.Snapshot.Revision != 2 || scanner.Count() != 2 {
+		t.Fatalf("watcher-start reconciliation = revision %d, scans %d", current.Snapshot.Revision, scanner.Count())
+	}
 }
 
 func TestRevisionBoundQueriesSearchAndSourceContext(t *testing.T) {
 	root := t.TempDir()
 	content := "package main\n\n// Main returns a value.\nfunc Main() int {\n\treturn 42\n}\n"
+	otherContent := "package main\n\nvar Other = 1\n"
 	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile(filepath.Join(root, "other.go"), []byte(otherContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	index, _, err := sourceindex.BuildSourceIndex(context.Background(), sourceindex.BuildInput{
-		Scope:                 analysis.ScopeContext{ScopeID: "scope:test", ProjectRoot: ".", Mode: analysis.SourceIndexScopeMode},
-		Producer:              analysis.ProducerContext{AnalyzerID: "analyzer:test", AnalyzerVersion: "1.0.0"},
-		Files:                 []sourceindex.SourceFileInput{{Path: "main.go", Content: []byte(content), Language: analysis.LanguageRef{ID: "language:go"}, Roles: []string{"role:source"}, ModuleID: "example.com/main"}},
+		Scope:    analysis.ScopeContext{ScopeID: "scope:test", ProjectRoot: ".", Mode: analysis.SourceIndexScopeMode},
+		Producer: analysis.ProducerContext{AnalyzerID: "analyzer:test", AnalyzerVersion: "1.0.0"},
+		Files: []sourceindex.SourceFileInput{
+			{Path: "main.go", Content: []byte(content), Language: analysis.LanguageRef{ID: "language:go"}, Roles: []string{"role:source"}, ModuleID: "example.com/main"},
+			{Path: "other.go", Content: []byte(otherContent), Language: analysis.LanguageRef{ID: "language:go"}, Roles: []string{"role:source"}, ModuleID: "example.com/main"},
+		},
 		RequestedCapabilities: []string{sourceindex.CapabilityDeclarations, sourceindex.CapabilityDocumentation, sourceindex.CapabilityFiles, sourceindex.CapabilitySize, sourceindex.CapabilityVisibility},
 		SyntaxProvider:        gosyntax.NewProvider(),
 		Extractors:            sourcefacts.NewRegistry(),
@@ -302,12 +496,13 @@ func TestRevisionBoundQueriesSearchAndSourceContext(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Close()
+	t.Cleanup(func() { _ = session.Close() })
 	if err := session.Wait(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 
-	files, err := session.FindFiles(context.Background(), QueryRequest{Consistency: ConsistencySpecific, Revision: 1, MaxItems: 1, MaxBytes: 4096})
+	fileRequest := QueryRequest{Consistency: ConsistencySpecific, Revision: 1, MaxItems: 1, MaxBytes: 4096}
+	files, err := session.FindFiles(context.Background(), fileRequest)
 	if err != nil {
 		t.Fatalf("FindFiles() error = %v", err)
 	}
@@ -318,6 +513,26 @@ func TestRevisionBoundQueriesSearchAndSourceContext(t *testing.T) {
 	if files.ReturnedConsistency != string(ConsistencySpecific) || files.Revision != 1 {
 		t.Fatalf("file envelope = %#v", files)
 	}
+	if files.NextCursor == "" || filePage.Total != 2 {
+		t.Fatalf("first file page did not expose a continuation: %#v", files)
+	}
+	fileRequest.Cursor = files.NextCursor
+	secondFiles, err := session.FindFiles(context.Background(), fileRequest)
+	if err != nil {
+		t.Fatalf("second FindFiles() page error = %v", err)
+	}
+	secondFilePage := secondFiles.Result.(ItemPage[analysis.FileRecord])
+	if len(secondFilePage.Items) != 1 || secondFilePage.Items[0].Path != "other.go" || secondFiles.NextCursor != "" {
+		t.Fatalf("second file page = %#v", secondFiles.Result)
+	}
+	record, err := session.QuerySpecificRevision(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	crossOperationRequest := QueryRequest{Consistency: ConsistencySpecific, Revision: 1, MaxItems: 1, MaxBytes: 4096}
+	crossOperationRequest.Cursor = encodeQueryCursor(queryContext(record, crossOperationRequest, "find_files", 4096, 1), 1)
+	_, err = session.FindSymbols(context.Background(), crossOperationRequest)
+	assertLiveErrorCode(t, err, ErrorQueryCursor)
 
 	symbols, err := session.FindSymbols(context.Background(), QueryRequest{Consistency: ConsistencySpecific, Revision: 1, Query: StructuralQuery{Name: "Main", ScopeIDs: []string{"scope:test"}}, MaxItems: 10, MaxBytes: 4096})
 	if err != nil {
@@ -336,6 +551,12 @@ func TestRevisionBoundQueriesSearchAndSourceContext(t *testing.T) {
 	if !ok || len(textPage.Items) != 1 || textPage.Items[0].Line != 5 || textPage.Items[0].Path != "main.go" {
 		t.Fatalf("text result = %#v", textMatches.Result)
 	}
+	_, err = session.SearchExactText(context.Background(), TextSearchQuery{Consistency: ConsistencySpecific, Revision: 1, Pattern: "(", Mode: "regex", MaxItems: 10, MaxBytes: 4096})
+	assertLiveErrorCode(t, err, "QueryInvalid")
+	_, err = session.SearchExactText(context.Background(), TextSearchQuery{Consistency: ConsistencySpecific, Revision: 1, Pattern: "return", Mode: "literal", PathGlob: "../*", MaxItems: 10, MaxBytes: 4096})
+	assertLiveErrorCode(t, err, "QueryInvalid")
+	_, err = session.FindFiles(context.Background(), QueryRequest{Consistency: ConsistencySpecific, Revision: 1, Query: StructuralQuery{ScopeIDs: []string{"scope:missing"}}, MaxItems: 10, MaxBytes: 4096})
+	assertLiveErrorCode(t, err, ErrorRevisionUnavailable)
 
 	location := symbolPage.Items[0].Locations[0].Span
 	contextEnvelope, err := session.GetBoundedSourceContext(context.Background(), SourceContextRequest{Consistency: ConsistencySpecific, Revision: 1, ScopeID: "scope:test", EntityID: symbolPage.Items[0].ID, Span: &location, MaxLines: 3, MaxBytes: 256})
@@ -345,6 +566,14 @@ func TestRevisionBoundQueriesSearchAndSourceContext(t *testing.T) {
 	contextResult, ok := contextEnvelope.Result.(SourceContextResult)
 	if !ok || contextResult.Context.Path != "main.go" || contextResult.Context.StartLine < 1 || contextResult.Context.EndLine-contextResult.Context.StartLine+1 > 3 {
 		t.Fatalf("source context = %#v", contextEnvelope.Result)
+	}
+	truncatedEnvelope, err := session.GetBoundedSourceContext(context.Background(), SourceContextRequest{Consistency: ConsistencySpecific, Revision: 1, ScopeID: "scope:test", EntityID: symbolPage.Items[0].ID, Span: &location, MaxLines: 3, MaxBytes: 8})
+	if err != nil {
+		t.Fatalf("byte-bounded source context error = %v", err)
+	}
+	truncatedContext := truncatedEnvelope.Result.(SourceContextResult).Context
+	if !truncatedContext.Truncated || len([]byte(truncatedContext.Content)) > 8 {
+		t.Fatalf("byte-bounded source context = %#v", truncatedContext)
 	}
 
 	withoutSpanHash := location
@@ -373,6 +602,17 @@ func TestRevisionBoundQueriesSearchAndSourceContext(t *testing.T) {
 	if _, err := session.FindFiles(context.Background(), QueryRequest{Consistency: ConsistencySpecific, Revision: 1, Query: StructuralQuery{ModuleIDs: []string{"module:not-present"}}, MaxItems: 10, MaxBytes: 4096}); err != nil {
 		t.Fatalf("explicit containment query should return an empty result, got %v", err)
 	}
+	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte(strings.Replace(content, "return 42", "return 7", 1)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, err = session.SearchExactText(context.Background(), TextSearchQuery{Consistency: ConsistencySpecific, Revision: 1, Pattern: "return", Mode: "literal", ScopeIDs: []string{"scope:test"}, MaxItems: 10, MaxBytes: 4096})
+	assertLiveErrorCode(t, err, "SourceContextContentChanged")
+}
+
+func TestMixedCapabilityCoverageIsPartial(t *testing.T) {
+	if got := mergeCoverageStatus("observed", "unsupported"); got != "partial" {
+		t.Fatalf("mixed coverage = %q, want partial", got)
+	}
 }
 
 func TestQualityGatewayCatalogTemporaryEvaluationAndComparison(t *testing.T) {
@@ -384,7 +624,7 @@ func TestQualityGatewayCatalogTemporaryEvaluationAndComparison(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Close()
+	t.Cleanup(func() { _ = session.Close() })
 	if err := session.Wait(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -396,6 +636,9 @@ func TestQualityGatewayCatalogTemporaryEvaluationAndComparison(t *testing.T) {
 	catalogResult, ok := catalogEnvelope.Result.(QualityCatalogResult)
 	if !ok || len(catalogResult.Rules) == 0 || len(catalogResult.Profiles) != 1 {
 		t.Fatalf("catalog result = %#v", catalogEnvelope.Result)
+	}
+	if catalogResult.Profiles[0].Status != "valid" {
+		t.Fatalf("profile validation status = %#v", catalogResult.Profiles[0])
 	}
 
 	evaluation, err := gateway.EvaluateQuality(context.Background(), QualityEvaluationRequest{SessionID: "session:quality", Consistency: ConsistencySpecific, Revision: 1, ProfileID: profile.ProfileID, ProfileVersion: profile.ProfileVersion})
@@ -431,6 +674,30 @@ func TestQualityGatewayCatalogTemporaryEvaluationAndComparison(t *testing.T) {
 	if _, err := gateway.EvaluateQuality(context.Background(), QualityEvaluationRequest{Consistency: ConsistencySpecific, Revision: 1, ProfileID: profile.ProfileID, ProfileVersion: profile.ProfileVersion, Persist: true}); err == nil {
 		t.Fatal("temporary evaluation accepted persist=true")
 	}
+	_, err = gateway.CompareQualityReports(context.Background(), QualityCompareRequest{PreviousRevision: 1, CurrentRevision: 999})
+	assertLiveErrorCode(t, err, ErrorRevisionUnavailable)
+	current, ok := session.store.ReadLatestReady("session:quality")
+	if !ok {
+		t.Fatal("quality session has no ready record")
+	}
+	next := cloneRevisionRecord(current)
+	next.Snapshot.Revision = 0
+	next.Input = testInput("quality-next")
+	next.Snapshot.SourceInputFingerprint = next.Input.ContentFingerprint
+	next.Snapshot.InputVerification.ManifestFingerprint = next.Input.ManifestFingerprint
+	next.Snapshot.InputVerification.ContentFingerprint = &next.Input.ContentFingerprint
+	next.Snapshot.SemanticDigest = revisionSemanticDigest(next.Model, next.Run.Status, next.Snapshot.ScopeIDs, next.Model.QualityReport, next.Input.ContentFingerprint)
+	next.Snapshot.SnapshotID = digestID("live-snapshot", next.SessionID, next.Input.ContentFingerprint.Value, next.Snapshot.SemanticDigest.Value)
+	if _, err := session.publish(next); err != nil {
+		t.Fatalf("publish next quality revision: %v", err)
+	}
+	firstRevision, ok := session.store.ReadRevision("session:quality", 1)
+	if !ok {
+		t.Fatal("first quality revision was discarded")
+	}
+	if _, err := gateway.reportFor(firstRevision, evaluationResult.Report.EvaluationID); err != nil {
+		t.Fatalf("temporary report was discarded by a later publication: %v", err)
+	}
 }
 
 type blockingScanner struct {
@@ -450,10 +717,14 @@ func (scanner *blockingScanner) Scan(ctx context.Context, _ ScanRequest) (ScanRe
 type countingScanner struct {
 	result ScanResult
 	count  atomic.Int32
+	calls  chan int
 }
 
 func (scanner *countingScanner) Scan(context.Context, ScanRequest) (ScanResult, error) {
-	scanner.count.Add(1)
+	count := int(scanner.count.Add(1))
+	if scanner.calls != nil {
+		scanner.calls <- count
+	}
 	return scanner.result, nil
 }
 
@@ -475,6 +746,20 @@ func (fingerprinter *mutableFingerprinter) Set(value InputFingerprint) {
 	fingerprinter.value = cloneInputFingerprint(value)
 	fingerprinter.mu.Unlock()
 }
+
+type mutatingWatchBackend struct {
+	fingerprinter *mutableFingerprinter
+	value         InputFingerprint
+	events        chan WatchEvent
+}
+
+func (backend *mutatingWatchBackend) Start(context.Context, string, []WatchRoot, WatchPolicy) (<-chan WatchEvent, error) {
+	backend.fingerprinter.Set(backend.value)
+	backend.events = make(chan WatchEvent)
+	return backend.events, nil
+}
+
+func (backend *mutatingWatchBackend) Stop() error { return nil }
 
 func testLiveConfig(sessionID string) LiveSessionConfig {
 	return LiveSessionConfig{SchemaVersion: LiveSchemaVersion, SessionID: sessionID, RepositoryRoot: ".", WatchRoots: []WatchRoot{{Path: ".", Recursive: true}}, SourceIndexRequest: SourceIndexRequest{Enabled: false}}

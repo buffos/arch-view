@@ -210,6 +210,62 @@ func (r *AnalysisRun) CombinedCanonicalModel() (model.Model, bool) {
 	return r.combinedCanonical, true
 }
 
+// CombinedCanonicalModelForScopes reuses the canonical aggregation boundary
+// for an explicit subset. It never reruns analyzers and does not invent a
+// second model merge algorithm for live quality evaluation.
+func (r *AnalysisRun) CombinedCanonicalModelForScopes(scopeIDs []string) (model.Model, error) {
+	if r == nil || len(scopeIDs) == 0 {
+		return model.Model{}, analysis.NewHostError(analysis.ErrInvalidRequest, "at least one analysis scope is required", nil)
+	}
+	requested := make(map[string]struct{}, len(scopeIDs))
+	for _, scopeID := range scopeIDs {
+		scopeID = strings.TrimSpace(scopeID)
+		if scopeID == "" {
+			return model.Model{}, analysis.NewHostError(analysis.ErrAnalysisScopeNotFound, "analysis scope id is empty", nil)
+		}
+		requested[scopeID] = struct{}{}
+	}
+	jobs := make([]AnalyzerJob, 0, len(requested))
+	for _, planned := range r.JobPlan.Jobs {
+		if _, ok := requested[planned.ScopeID]; !ok {
+			continue
+		}
+		result, ok := r.scopeResults[planned.ScopeID]
+		if !ok {
+			return model.Model{}, analysis.NewHostError(analysis.ErrAnalysisScopeNotFound, "analysis scope has no usable result", map[string]any{"scope_id": planned.ScopeID})
+		}
+		job := cloneJob(planned)
+		resultCopy := cloneAnalysisResult(result)
+		job.Result = &resultCopy
+		jobs = append(jobs, job)
+		delete(requested, planned.ScopeID)
+	}
+	if len(requested) > 0 {
+		missing := make([]string, 0, len(requested))
+		for scopeID := range requested {
+			missing = append(missing, scopeID)
+		}
+		sort.Strings(missing)
+		return model.Model{}, analysis.NewHostError(analysis.ErrAnalysisScopeNotFound, "analysis scope was not found", map[string]any{"scope_ids": missing})
+	}
+	sort.Slice(jobs, func(i, j int) bool { return jobs[i].ScopeID < jobs[j].ScopeID })
+	plan := cloneJobPlan(r.JobPlan)
+	plan.Jobs = cloneJobs(jobs)
+	selected := make([]string, 0, len(jobs))
+	for _, job := range jobs {
+		selected = append(selected, job.ScopeID)
+	}
+	subset, err := AggregateScopeResults(ExecutionSnapshot{RunID: r.RunID + "/subset/" + strings.Join(selected, ","), Plan: plan, Jobs: jobs})
+	if err != nil {
+		return model.Model{}, err
+	}
+	value, ok := subset.CombinedCanonicalModel()
+	if !ok {
+		return model.Model{}, analysis.NewHostError(analysis.ErrInvalidModel, "selected analysis scopes produced no canonical model", map[string]any{"scope_ids": selected})
+	}
+	return value, nil
+}
+
 // AttachQualityReport adds the optional quality sibling to the cached
 // combined model and refreshes the aggregate model identity. It deliberately
 // leaves scope results and architecture semantics untouched.

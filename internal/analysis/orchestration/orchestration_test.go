@@ -843,6 +843,16 @@ func TestAggregateNamespacesObservationsAndPreservesScopeParity(t *testing.T) {
 	if _, err := run.SelectAnalysisScope("scope-missing"); analysis.ErrorCodeOf(err) != analysis.ErrAnalysisScopeNotFound {
 		t.Fatalf("missing scope error = %v", err)
 	}
+	subset, err := run.CombinedCanonicalModelForScopes([]string{"scope-b", "scope-a"})
+	if err != nil {
+		t.Fatalf("combine selected scopes: %v", err)
+	}
+	if len(subset.Modules) != 4 {
+		t.Fatalf("selected-scope aggregate modules = %#v", subset.Modules)
+	}
+	if _, err := run.CombinedCanonicalModelForScopes([]string{"scope-missing"}); analysis.ErrorCodeOf(err) != analysis.ErrAnalysisScopeNotFound {
+		t.Fatalf("missing combined scope error = %v", err)
+	}
 }
 
 func TestAggregateStatusRulesAndSourceIdentity(t *testing.T) {

@@ -87,16 +87,28 @@ func (session *LiveSession) GetSnapshotStatus(ctx context.Context, request Query
 		return QueryEnvelope{}, newLiveError("QueryInvalid", "status session_id does not match the live session", nil)
 	}
 	status := session.Status()
+	maxBytes, maxItems, budgetErr := session.normalizeBudget(request.MaxBytes, request.MaxItems)
+	if budgetErr != nil {
+		return QueryEnvelope{}, budgetErr
+	}
 	record, freshness, returned, err := session.prepareConsistency(ctx, request.Consistency, request.Revision)
 	if err != nil {
 		if liveErr, ok := err.(*QueryError); !ok || liveErr.Code != ErrorNoReadySnapshot {
 			return QueryEnvelope{}, err
 		}
 		result := SnapshotStatusResult{State: status.State, Diagnostics: append([]LiveDiagnostic(nil), status.Diagnostics...)}
-		return QueryEnvelope{SchemaVersion: QuerySchemaVersion, SessionID: session.validated.Config.SessionID, RequestedConsistency: request.Consistency, ReturnedConsistency: "no_ready_snapshot", Freshness: status.Freshness, ScopeIDs: []string{}, Result: result, ResultCount: 0, OmittedFields: []string{}, Capabilities: []CapabilityCoverage{}, Budget: BudgetUsage{MaxBytes: maxOrDefault(request.MaxBytes, DefaultQueryMaxBytes), MaxItems: maxOrDefault(request.MaxItems, DefaultQueryMaxItems), EmittedBytes: jsonSize(result), EmittedItems: 0}, Diagnostics: []QueryDiagnostic{}}, nil
+		emittedBytes := jsonSize(result)
+		if emittedBytes > maxBytes {
+			return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "snapshot status exceeds the query byte budget", map[string]any{"max_bytes": maxBytes, "emitted_bytes": emittedBytes})
+		}
+		return QueryEnvelope{SchemaVersion: QuerySchemaVersion, SessionID: session.validated.Config.SessionID, RequestedConsistency: request.Consistency, ReturnedConsistency: "unavailable", Freshness: status.Freshness, ScopeIDs: []string{}, Result: result, ResultCount: 0, OmittedFields: []string{}, Capabilities: []CapabilityCoverage{}, Budget: BudgetUsage{MaxBytes: maxBytes, MaxItems: maxItems, EmittedBytes: emittedBytes, EmittedItems: 0}, Diagnostics: []QueryDiagnostic{{Code: ErrorNoReadySnapshot, Message: "no ready live snapshot is available"}}}, nil
 	}
 	result := SnapshotStatusResult{State: status.State, Snapshot: &record.Snapshot, Diagnostics: append([]LiveDiagnostic(nil), status.Diagnostics...)}
-	return QueryEnvelope{SchemaVersion: QuerySchemaVersion, SessionID: session.validated.Config.SessionID, SnapshotID: record.Snapshot.SnapshotID, Revision: record.Snapshot.Revision, RequestedConsistency: request.Consistency, ReturnedConsistency: returned, Freshness: freshness, ScopeIDs: append([]string(nil), record.Snapshot.ScopeIDs...), Result: result, ResultCount: 1, OmittedFields: []string{}, Capabilities: []CapabilityCoverage{}, Budget: BudgetUsage{MaxBytes: maxOrDefault(request.MaxBytes, DefaultQueryMaxBytes), MaxItems: 1, EmittedBytes: jsonSize(result), EmittedItems: 1}, Diagnostics: []QueryDiagnostic{}}, nil
+	emittedBytes := jsonSize(result)
+	if emittedBytes > maxBytes {
+		return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "snapshot status exceeds the query byte budget", map[string]any{"max_bytes": maxBytes, "emitted_bytes": emittedBytes})
+	}
+	return QueryEnvelope{SchemaVersion: QuerySchemaVersion, SessionID: session.validated.Config.SessionID, SnapshotID: record.Snapshot.SnapshotID, Revision: record.Snapshot.Revision, RequestedConsistency: request.Consistency, ReturnedConsistency: returned, Freshness: freshness, ScopeIDs: append([]string(nil), record.Snapshot.ScopeIDs...), Result: result, ResultCount: 1, OmittedFields: []string{}, Capabilities: []CapabilityCoverage{}, Budget: BudgetUsage{MaxBytes: maxBytes, MaxItems: maxItems, EmittedBytes: emittedBytes, EmittedItems: 1}, Diagnostics: []QueryDiagnostic{}}, nil
 }
 
 // QueryLatestReady and QuerySpecificRevision are small selection ports used

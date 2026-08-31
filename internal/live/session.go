@@ -40,9 +40,13 @@ type LiveSession struct {
 	lastGroupID    string
 	lastFailure    *QueryError
 	lastReconcile  ReconciliationStatus
+	pendingPlan    *InvalidationPlan
+	pendingFailure error
 	cancel         context.CancelFunc
 	rootContext    context.Context
 	watcherCancel  context.CancelFunc
+	// qualityReports uses a revision+evaluation composite key so temporary
+	// reports remain queryable after newer live revisions are published.
 	qualityReports map[string]quality.QualityEvaluation
 	// qualityReportRevisions keeps temporary evaluation reports bound to the
 	// verified revision they were computed from. They are never promoted to a
@@ -99,7 +103,7 @@ func (session *LiveSession) Config() LiveSessionConfig {
 	if session == nil {
 		return LiveSessionConfig{}
 	}
-	return session.validated.Config
+	return cloneLiveSessionConfig(session.validated.Config)
 }
 
 func (session *LiveSession) RepositoryRoot() string {
@@ -240,6 +244,18 @@ func (session *LiveSession) startWatcher() {
 		return
 	}
 	go session.consumeWatcherEvents(watchCtx, events)
+	// Starting a backend establishes its own baseline. Reconcile immediately
+	// afterward so a change between the initial snapshot's final fingerprint
+	// and watcher startup cannot disappear into that baseline.
+	current, fingerprintErr := session.fingerprinter.Fingerprint(watchCtx, session.validated.RepositoryRoot, session.validated.Config.WatchRoots)
+	if fingerprintErr != nil {
+		session.triggerRebuild(InvalidationPlan{Mode: "full_rescan", Reason: "watcher_start_reconciliation_failed"}, fingerprintErr)
+		return
+	}
+	previous := session.lastInputValue()
+	if !inputEqual(previous, current) {
+		session.triggerRebuild(InvalidationPlan{Mode: "full_rescan", AffectedPaths: changedFingerprintPaths(previous, current), Reason: "watcher_start_reconciliation_changed"}, nil)
+	}
 }
 
 func (session *LiveSession) consumeWatcherEvents(ctx context.Context, events <-chan WatchEvent) {
@@ -363,7 +379,37 @@ func (session *LiveSession) runRebuild(ctx context.Context, plan InvalidationPla
 		session.lastReconcile = ReconciliationPassed
 	}
 	close(done)
+	pendingPlan := session.pendingPlan
+	pendingFailure := session.pendingFailure
+	session.pendingPlan = nil
+	session.pendingFailure = nil
+	if pendingPlan != nil && !session.closed {
+		nextDone := make(chan struct{})
+		session.building = true
+		session.buildDone = nextDone
+		session.stale = true
+		session.mu.Unlock()
+		go session.runRebuild(session.rootContext, *pendingPlan, pendingFailure, nextDone)
+		return
+	}
 	session.mu.Unlock()
+}
+
+func (session *LiveSession) queueRebuildLocked(plan InvalidationPlan, triggerErr error) {
+	if session.pendingPlan == nil {
+		copy := plan
+		copy.AffectedPaths = append([]string(nil), plan.AffectedPaths...)
+		copy.AffectedScopeIDs = append([]string(nil), plan.AffectedScopeIDs...)
+		session.pendingPlan = &copy
+	} else {
+		session.pendingPlan.Mode = "full_rescan"
+		session.pendingPlan.Reason = "changes_arrived_during_build"
+		session.pendingPlan.AffectedPaths = uniqueStrings(append(session.pendingPlan.AffectedPaths, plan.AffectedPaths...))
+		session.pendingPlan.AffectedScopeIDs = nil
+	}
+	if triggerErr != nil {
+		session.pendingFailure = triggerErr
+	}
 }
 
 func (session *LiveSession) publish(record *RevisionRecord) (*RevisionRecord, error) {
@@ -379,10 +425,16 @@ func (session *LiveSession) publish(record *RevisionRecord) (*RevisionRecord, er
 	}
 	session.mu.Lock()
 	session.lastInput = cloneInputFingerprint(recordInput(record))
-	session.qualityReports = cloneQualityReports(record.QualityReports)
-	session.qualityReportRevisions = make(map[string]int, len(record.QualityReports))
-	for reportID := range record.QualityReports {
-		session.qualityReportRevisions[reportID] = published.Snapshot.Revision
+	if session.qualityReports == nil {
+		session.qualityReports = make(map[string]quality.QualityEvaluation)
+	}
+	if session.qualityReportRevisions == nil {
+		session.qualityReportRevisions = make(map[string]int)
+	}
+	for reportID, report := range record.QualityReports {
+		key := revisionReportKey(published.Snapshot.Revision, reportID)
+		session.qualityReports[key] = cloneQualityReport(report)
+		session.qualityReportRevisions[key] = published.Snapshot.Revision
 	}
 	if published.Snapshot.State == SessionDegraded {
 		session.state = SessionDegraded
@@ -454,7 +506,47 @@ func validateRevisionCandidate(record *RevisionRecord) error {
 	if record.Snapshot.SourceInputFingerprint.Value == "" || record.Snapshot.InputVerification.Status != "verified" {
 		return newLiveError(ErrorSnapshotValidation, "revision candidate does not contain a verified source fingerprint", nil)
 	}
+	verifiedContent := record.Snapshot.InputVerification.ContentFingerprint
+	if verifiedContent == nil || *verifiedContent != record.Snapshot.SourceInputFingerprint || record.Input.ContentFingerprint != record.Snapshot.SourceInputFingerprint || record.Input.ManifestFingerprint != record.Snapshot.InputVerification.ManifestFingerprint {
+		return newLiveError(ErrorSnapshotValidation, "revision candidate input fingerprints do not identify one source state", nil)
+	}
+	if record.Snapshot.ModelRef == nil || record.Snapshot.ModelRef.Kind != "model" || record.Snapshot.ModelRef.ID != record.Model.ModelID {
+		return newLiveError(ErrorSnapshotValidation, "revision candidate model reference is incoherent", nil)
+	}
+	expectedSourceRef := sourceIndexRef(record.Model.SourceIndex)
+	if !equalOpaqueRef(record.Snapshot.SourceIndexRef, expectedSourceRef) {
+		return newLiveError(ErrorSnapshotValidation, "revision candidate source-index reference is incoherent", nil)
+	}
+	expectedQualityRef := qualityReportRef(record.Model.QualityReport)
+	if !equalOpaqueRef(record.Snapshot.QualityReportRef, expectedQualityRef) {
+		return newLiveError(ErrorSnapshotValidation, "revision candidate quality-report reference is incoherent", nil)
+	}
+	if !equalOpaqueRef(record.Snapshot.QualityPolicyRef, qualityPolicyRef(record.Model.QualityReport)) {
+		return newLiveError(ErrorSnapshotValidation, "revision candidate quality-policy reference is incoherent", nil)
+	}
+	if record.Model.QualityReport != nil {
+		stored, ok := record.QualityReports[record.Model.QualityReport.EvaluationID]
+		if !ok || stored.EvaluationID != record.Model.QualityReport.EvaluationID {
+			return newLiveError(ErrorSnapshotValidation, "revision candidate quality report is not attached to the same record", nil)
+		}
+	}
+	expectedScopes := revisionScopeIDs(record.Run, record.Model)
+	actualScopes := uniqueStrings(record.Snapshot.ScopeIDs)
+	if len(actualScopes) != len(record.Snapshot.ScopeIDs) || strings.Join(actualScopes, "\x00") != strings.Join(expectedScopes, "\x00") {
+		return newLiveError(ErrorSnapshotValidation, "revision candidate scope references are incoherent", nil)
+	}
+	expectedSemanticDigest := revisionSemanticDigest(record.Model, record.Run.Status, expectedScopes, record.Model.QualityReport, record.Input.ContentFingerprint)
+	if record.Snapshot.SemanticDigest != expectedSemanticDigest || record.Snapshot.SnapshotID != digestID("live-snapshot", record.SessionID, record.Input.ContentFingerprint.Value, expectedSemanticDigest.Value) {
+		return newLiveError(ErrorSnapshotValidation, "revision candidate semantic identity is incoherent", nil)
+	}
 	return nil
+}
+
+func equalOpaqueRef(left, right *OpaqueRef) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return *left == *right
 }
 
 func waitForSettle(ctx context.Context, duration time.Duration) error {
@@ -513,13 +605,8 @@ func buildRevisionRecord(sessionID string, scan ScanResult, input InputFingerpri
 	if qualityReport != nil {
 		qualityReports[qualityReport.EvaluationID] = cloneQualityReport(*qualityReport)
 	}
-	semanticDigest := digestJSON(struct {
-		Model     model.Model
-		RunStatus string
-		Scopes    []string
-		Quality   *quality.QualityEvaluation
-		Input     ContentDigest
-	}{Model: value, RunStatus: string(scan.Run.Status), Scopes: sortedScopeIDs(scan.Run.Scopes), Quality: qualityReport, Input: input.ContentFingerprint})
+	scopeIDs := revisionScopeIDs(scan.Run, value)
+	semanticDigest := revisionSemanticDigest(value, scan.Run.Status, scopeIDs, qualityReport, input.ContentFingerprint)
 	snapshotID := digestID("live-snapshot", sessionID, input.ContentFingerprint.Value, semanticDigest.Value)
 	state := SessionReady
 	if scan.Run.Status != analysis.StatusComplete || value.Status == model.StatusPartial {
@@ -536,11 +623,22 @@ func buildRevisionRecord(sessionID string, scan ScanResult, input InputFingerpri
 			SourceIndexRef:         sourceIndexRef(value.SourceIndex),
 			ModelRef:               &OpaqueRef{Kind: "model", ID: value.ModelID},
 			QualityReportRef:       qualityReportRef(qualityReport),
-			ScopeIDs:               sortedScopeIDs(scan.Run.Scopes), Diagnostics: append([]LiveDiagnostic(nil), scan.Diagnostics...),
+			QualityPolicyRef:       qualityPolicyRef(qualityReport),
+			ScopeIDs:               scopeIDs, Diagnostics: append([]LiveDiagnostic(nil), scan.Diagnostics...),
 			Freshness: Freshness{Status: FreshnessCurrent, Reconciliation: ReconciliationPassed}, SemanticDigest: semanticDigest, Extensions: []ExtensionBlock{},
 		},
 		Input: input, Run: scan.Run, Model: value, ScopeModels: scopeModels, ScopeResults: scopeResults, QualityReports: qualityReports,
 	}
+}
+
+func revisionSemanticDigest(value model.Model, status analysis.AnalysisStatus, scopeIDs []string, qualityReport *quality.QualityEvaluation, input ContentDigest) ContentDigest {
+	return digestJSON(struct {
+		Model     model.Model
+		RunStatus string
+		Scopes    []string
+		Quality   *quality.QualityEvaluation
+		Input     ContentDigest
+	}{Model: value, RunStatus: string(status), Scopes: append([]string(nil), scopeIDs...), Quality: qualityReport, Input: input})
 }
 
 func sourceIndexRef(value *analysis.SourceIndex) *OpaqueRef {
@@ -556,6 +654,21 @@ func qualityReportRef(value *quality.QualityEvaluation) *OpaqueRef {
 		return nil
 	}
 	return &OpaqueRef{Kind: "quality_report", ID: value.EvaluationID}
+}
+
+func qualityPolicyRef(value *quality.QualityEvaluation) *OpaqueRef {
+	if value == nil {
+		return nil
+	}
+	profileDigest := ""
+	if value.ProfileDigest != nil {
+		profileDigest = value.ProfileDigest.Value
+	}
+	optionsDigest := ""
+	if value.OptionsDigest != nil {
+		optionsDigest = value.OptionsDigest.Value
+	}
+	return &OpaqueRef{Kind: "quality_policy", ID: digestID("quality-policy", value.ProfileID, value.ProfileVersion, profileDigest, optionsDigest)}
 }
 
 func recordInput(record *RevisionRecord) InputFingerprint {
@@ -577,6 +690,19 @@ func sortedScopeIDs(values []orchestration.ScopeSummary) []string {
 	return result
 }
 
+func revisionScopeIDs(run orchestration.AnalysisRun, value model.Model) []string {
+	result := sortedScopeIDs(run.Scopes)
+	if value.SourceIndex != nil {
+		for _, snapshot := range value.SourceIndex.Snapshots {
+			result = append(result, snapshot.ScopeContext.ScopeID)
+		}
+		if value.SourceIndex.Projection != nil {
+			result = append(result, value.SourceIndex.Projection.ScopeContext.ScopeID)
+		}
+	}
+	return uniqueStrings(result)
+}
+
 func digestJSON(value any) ContentDigest {
 	data, err := json.Marshal(value)
 	if err != nil {
@@ -593,14 +719,6 @@ func digestID(prefix string, values ...string) string {
 		_, _ = hash.Write([]byte{0})
 	}
 	return prefix + "-" + hex.EncodeToString(hash.Sum(nil)[:12])
-}
-
-func cloneQualityReports(values map[string]quality.QualityEvaluation) map[string]quality.QualityEvaluation {
-	result := make(map[string]quality.QualityEvaluation, len(values))
-	for key, value := range values {
-		result[key] = cloneQualityReport(value)
-	}
-	return result
 }
 
 func cloneQualityReport(value quality.QualityEvaluation) quality.QualityEvaluation {

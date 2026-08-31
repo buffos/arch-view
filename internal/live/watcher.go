@@ -82,8 +82,14 @@ func normalizeWatchEventPath(value, repositoryRoot string, roots []WatchRoot) (s
 		} else if relative == watchPath || strings.HasPrefix(relative, watchPath+"/") {
 			allowed = true
 		}
-		if allowed && !watchRoot.Recursive && watchPath != "." && strings.Contains(strings.TrimPrefix(strings.TrimPrefix(relative, watchPath), "/"), "/") {
-			allowed = false
+		if allowed && !watchRoot.Recursive {
+			remainder := relative
+			if watchPath != "." && watchPath != "" {
+				remainder = strings.TrimPrefix(strings.TrimPrefix(relative, watchPath), "/")
+			}
+			if strings.Contains(remainder, "/") {
+				allowed = false
+			}
 		}
 		if allowed {
 			break
@@ -269,10 +275,10 @@ func (coalescer *EventCoalescer) flushLocked() *EventGroup {
 			paths[events[index].OldPath] = struct{}{}
 		}
 		if events[index].Sequence != "" {
-			if first == "" || events[index].Sequence < first {
+			if first == "" || sequenceLess(events[index].Sequence, first) {
 				first = events[index].Sequence
 			}
-			if events[index].Sequence > last {
+			if last == "" || sequenceLess(last, events[index].Sequence) {
 				last = events[index].Sequence
 			}
 		}
@@ -288,6 +294,15 @@ func (coalescer *EventCoalescer) flushLocked() *EventGroup {
 	coalescer.reason = ""
 	coalescer.lastEventAt = time.Time{}
 	return group
+}
+
+func sequenceLess(left, right string) bool {
+	leftNumber, leftErr := strconv.ParseUint(left, 10, 64)
+	rightNumber, rightErr := strconv.ParseUint(right, 10, 64)
+	if leftErr == nil && rightErr == nil {
+		return leftNumber < rightNumber
+	}
+	return left < right
 }
 
 func rescanIdentity(reason string) string {

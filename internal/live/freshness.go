@@ -75,7 +75,9 @@ func (session *LiveSession) EnsureCurrentSnapshot(ctx context.Context) (*Revisio
 		if !hasRecord {
 			return nil, newLiveError(ErrorNoReadySnapshot, "no ready live snapshot is available", nil)
 		}
-		return nil, newLiveError(ErrorAnalysisWaitTimeout, "a current live revision was not published within the wait budget", nil)
+		// The joined build may have completed for an earlier target while the
+		// source changed again. Reconcile once more and join the queued build;
+		// the context deadline remains the authoritative wait bound.
 	}
 }
 
@@ -92,6 +94,12 @@ func (session *LiveSession) beginRebuild(plan InvalidationPlan, triggerErr error
 	session.lastChanged = append([]string(nil), plan.AffectedPaths...)
 	session.lastGroupID = plan.EventGroupID
 	if session.building {
+		// Concurrent strict requests join the same target build. Watcher and
+		// periodic invalidations are queued because they may represent a later
+		// source state that arrived after the running build's final check.
+		if plan.Reason != "authoritative_reconciliation_changed" || triggerErr != nil {
+			session.queueRebuildLocked(plan, triggerErr)
+		}
 		return session.buildDone
 	}
 	session.building = true
