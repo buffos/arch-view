@@ -28,6 +28,7 @@
 /website/.vitepress/dist/
 /website/reference/layout-options.generated.md
 /website/public/demo/index.html
+/website/public/interactive-demo/index.html
 
 # Upstream reference checkout; never part of the product repository
 /external/

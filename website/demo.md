@@ -2,7 +2,7 @@
 
 <p class="small-note">This is a self-contained export. It does not run a new analysis and it does not need the Arch View server.</p>
 
-<p><a class="VPButton medium brand" href="../demo/index.html">Open the interactive demo</a></p>
+<p><a class="VPButton medium brand" href="../interactive-demo/index.html" target="_blank" rel="noopener">Open the interactive demo in a new tab</a></p>
 
 ## What the demo shows
 

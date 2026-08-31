@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process'
 
 const websiteRoot = path.resolve(import.meta.dirname, '..')
 const repositoryRoot = path.resolve(websiteRoot, '..')
-const outputPath = path.join(websiteRoot, 'public', 'demo', 'index.html')
+const outputPath = path.join(websiteRoot, 'public', 'interactive-demo', 'index.html')
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true })
 const result = spawnSync('go', ['run', './cmd/docs-demo', '-output', outputPath], {

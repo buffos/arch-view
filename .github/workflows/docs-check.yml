@@ -49,7 +49,7 @@ jobs:
 
       - name: Check generated site output
         working-directory: website
-        run: test -f .vitepress/dist/index.html && test -f public/demo/index.html
+        run: test -f .vitepress/dist/index.html && test -f public/interactive-demo/index.html
 
       - name: Check Go repository
         run: |
