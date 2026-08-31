@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/explore-architecture.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-073-live-viewer-integration.md`
+- Issue file: `docs/agents/issues/done/20260831-073-live-viewer-integration.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -36,18 +36,18 @@ available and does not silently start a watcher.
 
 ## Acceptance criteria
 
-- [ ] An explicit documented live viewer mode starts or attaches to the local
+- [x] An explicit documented live viewer mode starts or attaches to the local
   live session without changing the default one-shot `open` behavior.
-- [ ] The viewer exposes session state, revision, current/stale/updating/
+- [x] The viewer exposes session state, revision, current/stale/updating/
   degraded/unstable status, and diagnostics in accessible human-readable
   language.
-- [ ] Graph, source inspection, quality findings, and scope selection refresh
+- [x] Graph, source inspection, quality findings, and scope selection refresh
   from one published revision; no mixed source/model/quality content appears.
-- [ ] During a rebuild the previous ready view remains usable, and a failed or
+- [x] During a rebuild the previous ready view remains usable, and a failed or
   unstable rebuild never replaces it with an empty result.
-- [ ] The viewer uses the shared bounded query/source/quality services rather
+- [x] The viewer uses the shared bounded query/source/quality services rather
   than duplicating analyzer, freshness, or quality semantics.
-- [ ] Browser tests cover live start/attach, status transitions, revision
+- [x] Browser tests cover live start/attach, status transitions, revision
   refresh, stale/degraded/unstable notices, keyboard focus, responsive layout,
   and backward-compatible one-shot opening.
 
@@ -104,3 +104,37 @@ while analysis changes in the background.
 
 Issue 076 performs the final cross-analyzer viewer/MCP product inspection after
 the transport adapters are complete.
+
+## Implementation completed
+
+The viewer now has an explicit `open --live` mode and a live server adapter.
+The status controller exposes human-readable freshness and diagnostics, pins
+follow-up model/source/quality requests to the published revision, refreshes
+only after a new revision, and retains the previous ready view during updates
+or failures. One-shot opening remains unchanged.
+
+## Verification result
+
+- `go test ./internal/viewer/... ./cmd/arch-view -count=1`
+- `node --check` for every viewer JavaScript module
+- `node --test` for every viewer JavaScript test
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+The final review launches the real live viewer process, loads the page and
+status endpoint, verifies revision metadata, and checks that the status badge
+wraps at narrow widths without changing keyboard focus behavior.
+
+## Artifact synchronization
+
+- The live capability and orchestration status now record the viewer bridge as
+  verified and archived.
+- The application PRD and architecture summary have no product/ownership
+  impact; the viewer consumes the shared live/query/quality services.
+- The issue registry and OKF references are synchronized during batch
+  closeout.

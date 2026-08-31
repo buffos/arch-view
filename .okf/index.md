@@ -34,7 +34,8 @@
   delivered issues 048–052 and is implemented after its approved final
   visual-review gate. Deterministic quality has delivered and archived issues
   053–063 and is implemented after its desktop and responsive visual review.
-  The live-analysis/MCP child remains specified, so the parent roll-up remains
+  Live-analysis/MCP issues 064–075 are delivered and verified; issue 076 is
+  awaiting final human product approval, so the parent roll-up remains
   specified.
 
 ## Application synthesis

@@ -3,7 +3,7 @@
 ## State
 
 - Planning state: `specified` after the bounded-to-specified transition.
-- Issues 064–070 are implemented and verified in the shared live boundary; it
+- Issues 064–075 are implemented and verified in the shared live boundary; it
   does not create a topology change or advance the capability state.
 - The refreshed exact-spec pipeline covers analyzer-neutral live queries,
   request-time freshness reconciliation, stable-input verification, quality
@@ -44,9 +44,26 @@ explicit remediation boundaries.
 - **070:** Quality catalog/profile reads, findings/evidence, temporary
   evaluation, and report comparison delegate to the existing deterministic
   quality services through `QualityGateway`.
-- **071–076:** Permissioned policy writes, local CLI/viewer consumers, MCP
-  transports/documentation, cross-analyzer conformance, and final product
-  approval remain active delivery work.
+- **071:** Permissioned profile and baseline operations are implemented through
+  the shared quality-policy service. Default denial, explicit authorization,
+  exact report/profile identity, safe destinations, audit results, and atomic
+  non-conflicting writes are covered by policy tests.
+- **072:** `arch-view live start|status|wait|ensure-current` and the documented
+  local endpoint bridge are implemented. Analyzer-specific CLI options are
+  passed through the shared multi-analyzer scanner.
+- **073:** `open --live` and `NewLiveServer` attach the viewer to the same live
+  session. Status drives revision-pinned model, source, and quality reads; the
+  last ready revision remains visible during updates.
+- **074:** `arch-view mcp` provides the documented stdio JSON-RPC tools and
+  resources over the shared adapter. The website contains installation,
+  configuration, tool, quality, safety, freshness, and troubleshooting
+  guidance.
+- **075:** The opt-in local/authenticated HTTP adapter maps the same query and
+  quality services, enforces loopback/authentication/origin/request limits,
+  supports encoded opaque IDs, and returns structured transport errors.
+- **076:** Automated mixed-analyzer, freshness, transport, viewer, CLI, and
+  documentation evidence is complete. The final desktop/responsive viewer,
+  MCP usability, and product-behavior inspection remains a human gate.
 
 ## Artifact impact
 
@@ -59,9 +76,11 @@ explicit remediation boundaries.
 - **Architecture:** the coordinator owns reconciliation and snapshot truth;
   analyzers own language facts; deterministic quality owns profiles/rules/
   baselines; MCP delegates through one shared service boundary.
-- **Delivery:** issues 064–070 are archived as complete; remaining issue
-  blockers and owning-node references are synchronized. The node remains
-  `specified` because the approved frontier is not exhausted.
+- **Delivery:** issues 064–075 are archived as complete. Issue 076 remains in
+  `awaiting-human-review` with no unresolved implementation blocker; its
+  owning-node reference and final inspection checklist are synchronized. The
+  node remains `specified` because the product-approval frontier is not
+  exhausted.
 
 ## Approved delivery frontier
 
@@ -78,8 +97,8 @@ The approved dependency-ordered implementation batch is issues 064–076:
   final product approval.
 
 All slices are `feature`/`AFK`; only issue 076 has the `product-approval`
-review gate. Issues 064–075 are `ready-for-agent` and are ordered by their
-declared local-file dependencies.
+review gate. Issues 064–075 are verified and archived in dependency order;
+issue 076 is `awaiting-human-review`.
 
 ## Artifact impact assessment for implementation batch
 
@@ -92,14 +111,15 @@ declared local-file dependencies.
 - **Architecture:** no impact at slicing. The application architecture summary
   already defines the coordinator, query, quality-delegation, transport, and
   source-safety boundaries.
-- **Delivery:** issue files 064–070, registry rows, remaining blockers, and
-  node references are synchronized. No product or architecture change was
+- **Delivery:** issue files 064–075, registry rows, remaining blockers, and
+  node references are synchronized. Issue 076 records the automated evidence
+  and the remaining human inspection. No product or architecture change was
   needed because the implementation preserves the approved boundaries.
 
 ## Readiness decision
 
-IMPLEMENTATION IN PROGRESS. Issues 064–070 are complete and verified. Issues
-071–076 remain the active frontier for policy permissions, local consumers,
-MCP packaging, optional authenticated HTTP, cross-analyzer conformance, and
-final product approval. Source-edit/remediation remains a separate future
-capability and is not implemented here.
+AUTOMATED IMPLEMENTATION COMPLETE. Issues 064–075 are complete and verified.
+Issue 076 is awaiting the final human product inspection for cross-analyzer
+conformance, viewer/MCP usability, status wording, and safety boundaries.
+Source-edit/remediation remains a separate future capability and is not
+implemented here.

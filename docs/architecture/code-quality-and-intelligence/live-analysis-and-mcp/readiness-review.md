@@ -43,18 +43,23 @@ transport policy, and remediation boundary are explicit.
 
 ## Residual implementation risks
 
-- OS watcher behavior differs by platform; overflow/reconciliation recovery and
-  the polling/fake backend need focused tests.
-- A cheap manifest check and full content/input fingerprint must not be
-  conflated; the implementation must verify the candidate at both sides of the
-  analyzer build.
+- OS watcher behavior still differs by platform. The current local watcher is a
+  portable polling backend; overflow, missed-event, and startup-gap recovery
+  are covered by the shared reconciliation path, but platform-specific
+  performance tuning remains future work.
+- The live coordinator now checks an authoritative input fingerprint before and
+  after each candidate build. A cheap manifest check is still only a fast
+  path, never proof of currentness by itself.
 - Persisted snapshot retention and garbage collection need operational policy,
   but do not alter the immutable query contract.
-- MCP SDK versioning, authenticated network deployment, and client-specific
-  token estimation require packaging verification.
-- Profile/baseline writes require a clear host authorization mechanism and
-  audit storage; they must remain unavailable under default read-only policy.
-- Incremental reanalysis should remain conservative until dependency-impact
+- The MCP surface uses the repository's newline-delimited JSON-RPC adapter;
+  client-specific SDK packaging and authenticated network deployment remain
+  integration concerns. The CLI currently binds HTTP transports to loopback.
+- Profile/baseline writes use explicit operation permissions, an opaque host
+  authorization callback, safe project-relative destinations, atomic writes,
+  and audit results. They remain unavailable under the default read-only
+  session policy.
+- Incremental reanalysis remains conservative until dependency-impact
   benchmarks prove a narrower invalidation safe.
 
 ## Application synthesis gate
@@ -70,11 +75,15 @@ permissions, and the no-autonomous-source-fix rule.
   snapshot, query, quality-control, MCP, budget, security, and remediation
   boundaries.
 - **Product truth:** current/not-current compact source and quality information
-  is available to developers and coding assistants across analyzers.
+  is available to developers and coding assistants across registered
+  analyzers.
 - **Architecture truth:** watcher, coordinator, store, analyzers, quality
-  services, query provider, MCP adapter, and transports have focused ownership.
-- **Delivery truth:** no implementation issues are created in this pass.
+  services, query provider, MCP adapter, viewer, CLI, and transports have
+  focused ownership and share one revision/query boundary.
+- **Delivery truth:** issues 064–075 are implemented and verified. Issue 076
+  has automated conformance evidence and is waiting only for its final human
+  product-approval inspection.
 
 ## Readiness
 
-READY FOR ARCHITECTURE IMPLEMENTATION
+AUTOMATED IMPLEMENTATION COMPLETE. HUMAN PRODUCT REVIEW PENDING.

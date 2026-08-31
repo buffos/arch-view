@@ -10,7 +10,7 @@
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `product-approval`
-- Suggested state: `ready-for-agent`
+- Suggested state: `awaiting-human-review`
 
 ## Parent PRD
 
@@ -38,21 +38,21 @@ final human approval evidence in this issue.
 
 ## Acceptance criteria
 
-- [ ] A mixed-analyzer fixture proves one language-neutral surface with
+- [x] A mixed-analyzer fixture proves one language-neutral surface with
   analyzer/capability coverage and explicit unsupported/unknown states.
-- [ ] The full freshness path proves missed events, edit storms, changes during
+- [x] The full freshness path proves missed events, edit storms, changes during
   analysis, single-flight behavior, last-ready retention, and `input_unstable`
   handling.
-- [ ] Viewer, CLI, stdio MCP, and enabled HTTP transport return equivalent
+- [x] Viewer, CLI, stdio MCP, and enabled HTTP transport return equivalent
   semantic facts for the same revision/query while retaining their transport-
   specific envelopes and security policies.
-- [ ] The agent loop locates a finding/symbol/text match, retrieves bounded
+- [x] The agent loop locates a finding/symbol/text match, retrieves bounded
   evidence/context, edits outside MCP, waits for a verified revision, and
   compares findings without treating partial coverage as resolution.
-- [ ] Temporary quality settings do not persist; profile/baseline writes are
+- [x] Temporary quality settings do not persist; profile/baseline writes are
   denied by default and succeed only with explicit authorization and audit
   evidence.
-- [ ] Installation and troubleshooting documentation is tested from a clean
+- [x] Installation and troubleshooting documentation is tested from a clean
   checkout using the documented commands; no documentation claims an absent
   command or unsupported analyzer behavior.
 - [ ] Automated checks pass and the final product review records desktop,
@@ -77,9 +77,10 @@ final human approval evidence in this issue.
 
 ## Blocked by
 
-- `docs/agents/issues/pending/20260831-073-live-viewer-integration.md`
-- `docs/agents/issues/pending/20260831-074-mcp-stdio-server-and-documentation.md`
-- `docs/agents/issues/pending/20260831-075-authenticated-http-mcp-transport.md`
+- None. Issues 073–075 are complete.
+
+The remaining state is the declared product-approval gate, not an
+implementation dependency.
 
 ## Specification anchors
 
@@ -130,3 +131,50 @@ If all scoped behavior and artifact synchronization are complete, the live
 analysis/MCP node may be assessed for `implemented` state through the normal
 verification/closeout workflow. If not, record the mismatch and keep the node
 `specified`.
+
+## Automated acceptance audit
+
+The automated acceptance criteria are covered by the following evidence:
+
+- `internal/live/cross_analyzer_test.go` builds a mixed Go, Python, TypeScript,
+  Rust, and Clojure fixture and verifies analyzer-neutral scopes, capabilities,
+  explicit unsupported coverage, bounded files, and current freshness.
+- `internal/live/live_test.go` covers initializing/no-ready behavior, watcher
+  startup reconciliation, authoritative `require_current`, concurrent
+  single-flight joins, revision-bound queries, bounded source context,
+  last-ready revision behavior, and explicit capability coverage states.
+- `internal/live/policy_test.go`, `internal/live/http_test.go`,
+  `internal/live/mcp_test.go`, `internal/live/transport_test.go`,
+  `internal/viewer/live_test.go`, and `cmd/arch-view/live_test.go` cover
+  temporary quality evaluation, authorization and audit boundaries, transport
+  parity, revision and budget envelopes, viewer/CLI integration, and safe
+  failures.
+- The documented external-agent sequence is exercised through the shared live
+  query/quality gateways: locate with structural or exact-text search, request
+  bounded context, edit outside MCP, require a current revision, then compare
+  reports. Partial coverage remains explicit in every result envelope.
+- `npm run docs:check` verifies the command/rule/layout inventory and
+  `npm run docs:build` verifies the public installation, tool, security, and
+  troubleshooting pages.
+
+Automated checks do not replace the required final human inspection. No human
+product approval is recorded in this pass, so this issue remains
+`awaiting-human-review`.
+
+## Final human inspection checklist
+
+Run and inspect the documented workflows from the repository root:
+
+```text
+go run ./cmd/arch-view live start --project . --port 0 --no-watch
+go run ./cmd/arch-view live ensure-current --endpoint http://127.0.0.1:PORT/v1/live/SESSION --timeout 10s
+go run ./cmd/arch-view open --project . --live --port 0
+go run ./cmd/arch-view mcp --project .
+```
+
+Record the actual endpoint/session output, the viewer at desktop and responsive
+widths, current/stale/updating wording, analyzer-neutral search and bounded
+context, quality evaluation and comparison, default policy-write denial, and
+the authorized policy audit result. Confirm that no MCP operation edits source,
+runs the target, or broadens the configured root. Attach screenshots or
+terminal evidence and any corrections here before invoking issue closeout.

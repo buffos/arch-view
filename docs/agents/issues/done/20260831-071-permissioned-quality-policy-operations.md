@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-071-permissioned-quality-policy-operations.md`
+- Issue file: `docs/agents/issues/done/20260831-071-permissioned-quality-policy-operations.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -38,20 +38,20 @@ re-evaluates a stale report.
 
 ## Acceptance criteria
 
-- [ ] Default read-only sessions reject profile saves and baseline creation
+- [x] Default read-only sessions reject profile saves and baseline creation
   without modifying project files or live snapshots.
-- [ ] Profile save/save-as delegates complete profile validation to the
+- [x] Profile save/save-as delegates complete profile validation to the
   deterministic-quality policy service and restricts destinations to the
   configured profile area.
-- [ ] Baseline preview is dry-run only and reports the exact selected finding
+- [x] Baseline preview is dry-run only and reports the exact selected finding
   keys and policy identities that would be recorded.
-- [ ] Baseline creation requires an exact compatible current report, selected
+- [x] Baseline creation requires an exact compatible current report, selected
   finding keys, exact rule/profile/formula versions, a reason, safe destination,
   explicit authorization, and non-conflicting write behavior.
-- [ ] Every successful policy write returns an auditable result; failed,
+- [x] Every successful policy write returns an auditable result; failed,
   stale, incompatible, unauthorized, or invalid requests leave source,
   reports, and existing policy documents unchanged.
-- [ ] Tests cover default denial, authorization, destination traversal,
+- [x] Tests cover default denial, authorization, destination traversal,
   profile conflicts, stale/partial reports, baseline selection, audit output,
   overwrite rules, and source non-mutation.
 
@@ -108,3 +108,36 @@ baselines without allowing an agent to mutate policy by default.
 
 Issue 074 exposes these operations through MCP after the local CLI/session
 bridge and read/query surfaces are available.
+
+## Implementation completed
+
+The live quality gateway now exposes profile validation, profile save/save-as,
+baseline preview, and baseline creation through explicit operation permissions.
+Writes use the deterministic quality policy service, validate canonical profile
+identity against the current report, restrict destinations to the project
+policy directories, return audit data, and publish documents atomically. The
+default live policy remains read-only.
+
+## Verification result
+
+- `go test ./internal/live ./internal/quality/policy ./internal/quality -count=1`
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+The final review also verifies that partial rule coverage rejects baseline
+creation and that failed policy commands leave a source-file sentinel and the
+policy destination unchanged.
+
+## Artifact synchronization
+
+- Owning capability and orchestration status now record 071 as verified and
+  archived.
+- The application PRD and architecture summary have no product/ownership
+  impact; the deterministic-quality service remains the policy owner.
+- The issue registry and OKF references are synchronized during batch
+  closeout.

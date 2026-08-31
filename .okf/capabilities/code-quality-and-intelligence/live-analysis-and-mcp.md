@@ -27,11 +27,11 @@ issues:
   - docs/agents/issues/done/20260831-068-analyzer-neutral-query-surface.md
   - docs/agents/issues/done/20260831-069-exact-text-and-source-context.md
   - docs/agents/issues/done/20260831-070-quality-gateway-and-temporary-evaluation.md
-  - docs/agents/issues/pending/20260831-071-permissioned-quality-policy-operations.md
-  - docs/agents/issues/pending/20260831-072-local-live-session-cli-bridge.md
-  - docs/agents/issues/pending/20260831-073-live-viewer-integration.md
-  - docs/agents/issues/pending/20260831-074-mcp-stdio-server-and-documentation.md
-  - docs/agents/issues/pending/20260831-075-authenticated-http-mcp-transport.md
+  - docs/agents/issues/done/20260831-071-permissioned-quality-policy-operations.md
+  - docs/agents/issues/done/20260831-072-local-live-session-cli-bridge.md
+  - docs/agents/issues/done/20260831-073-live-viewer-integration.md
+  - docs/agents/issues/done/20260831-074-mcp-stdio-server-and-documentation.md
+  - docs/agents/issues/done/20260831-075-authenticated-http-mcp-transport.md
   - docs/agents/issues/pending/20260831-076-cross-analyzer-agent-workflow-and-final-review.md
 ---
 
@@ -66,14 +66,28 @@ application execution remain outside this capability.
 
 Observed code facts:
 
-- The local host already performs bounded multi-analyzer orchestration,
-  per-scope caching, source-safe inspection, canonical model generation, and
-  deterministic model/view output; no MCP server, live coordinator, or folder
-  watcher is part of the current product contract.
+- `internal/live` implements the analyzer-neutral live session: configured
+  roots, polling watcher hints, event coalescing, request-time reconciliation,
+  stable-input verification, single-flight rebuilds, immutable revisions, and
+  last-ready failure behavior.
+- The shared live query and quality gateways expose bounded scopes, files,
+  symbols, documentation, text, source context, module relations, quality
+  reports, evidence, comparisons, and temporary evaluations. They preserve
+  revision, freshness, coverage, cursor, and budget metadata.
+- `arch-view live` and `arch-view open --live` provide the local CLI/viewer
+  bridge. The viewer pins follow-up model, source, and quality reads to the
+  revision advertised by live status, so a refresh cannot mix revisions.
+- `arch-view mcp` provides newline-delimited JSON-RPC stdio by default. The
+  optional local and authenticated loopback HTTP adapters map to the same
+  services and fail closed on unsafe requests.
+- Quality profile and baseline writes are separate allowlisted operations.
+  They are denied by default, require explicit authorization, validate exact
+  report/profile identity, use safe project-relative destinations, and return
+  audit data. No live/MCP operation edits source code or runs the target.
 - The source-index capability provides analyzer-reported files, declarations,
   documentation, spans, relations, provenance, coverage, and deterministic
-  snapshot digests. The quality capability provides versioned rules, profiles,
-  evaluations, findings, coverage, comparisons, and baselines.
+  snapshot digests. The quality capability remains the owner of versioned
+  rules, profiles, evaluations, findings, coverage, comparisons, and baselines.
 
 User-confirmed target behavior:
 
@@ -90,7 +104,7 @@ User-confirmed target behavior:
 - Findings are evidence for an explicit downstream source edit. The live
   watcher and MCP surface do not silently edit code or baseline findings.
 
-Specified boundary:
+Implemented boundary:
 
 - The exact-spec set defines configured-root watching, analyzer capability
   negotiation, event coalescing, request-time reconciliation, stable-input
@@ -106,14 +120,16 @@ Specified boundary:
   no response is labeled current until the candidate input is verified stable.
 - Watchers do not parse; MCP does not own analyzer semantics, source facts,
   graph semantics, quality rules, profile/baseline meaning, or source edits.
-  Implementation and packaging remain future delivery work.
+  Issues 064–075 implement this boundary. Issue 076 remains the final
+  cross-analyzer and product-approval gate.
 
 # Delivery
 
 The approved dependency-ordered implementation frontier is issues 064–076.
 Issues 064–071 establish the live session, watcher/reconciliation, immutable
-revisions, analyzer-neutral queries, bounded source context, and delegated
-quality operations. Issues 072–075 add the local CLI/viewer bridge, MCP stdio
-and documentation, and optional authenticated HTTP transport. Issue 076 is the
-cross-analyzer conformance and final product-approval gate. The capability
-remains `specified` until this scoped delivery is verified and synchronized.
+revisions, analyzer-neutral queries, bounded source context, delegated quality
+operations, and explicit policy writes. Issues 072–075 implement and verify
+the local CLI/viewer bridge, MCP stdio and documentation, and optional
+authenticated HTTP transport. Automated conformance evidence for issue 076 is
+present; its final human product-approval gate remains open. The capability
+remains `specified` until that final gate and the scoped delivery are complete.

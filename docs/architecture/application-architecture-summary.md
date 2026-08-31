@@ -7,8 +7,9 @@ The Code quality and code intelligence capability is a pure structural-child
 roll-up with effective state `specified`, the minimum of its three children.
 Its Source facts and symbol index child is implemented through issues 048–052
 with final visual approval recorded; Deterministic quality checks is implemented
-through issues 053–063; and Live analysis/MCP remains specified and readiness-
-reviewed. The parent has no standalone PRD or implementation slice.
+through issues 053–063; and Live analysis/MCP has verified implementation
+issues 064–075 with issue 076 awaiting final product approval. The parent has
+no standalone PRD or implementation slice.
 
 ## Boundary summary
 
@@ -250,11 +251,12 @@ frontier still requires later issue slicing, implementation, and verification:
   Its Source facts and symbol index child is implemented through issues 048–052
   with final visual approval recorded; Deterministic quality checks is
   implemented through issues 053–063, including issue 063's visual review.
-  Live analysis and MCP remain specified and readiness-reviewed, with exact
-  records, provenance, scope isolation, analyzer-neutral capability coverage,
-  request-time freshness verification, versioned rules, immutable revisions,
-  bounded queries, quality-service delegation, and compatibility/permission
-  rules. The aggregate parent
+  Live analysis and MCP remain `specified` pending issue 076's final product
+  gate. Issues 064–075 implement and verify exact records, provenance, scope
+  isolation, analyzer-neutral capability coverage, request-time freshness
+  verification, versioned rules, immutable revisions, bounded queries,
+  quality-service delegation, shared CLI/viewer/MCP transports, and
+  compatibility/permission rules. The aggregate parent
   has no standalone implementation issues; delivery is owned by the children.
 
 The layout catalog, profile validation, option-handler registry, session state,
@@ -422,9 +424,9 @@ work register](explore-architecture/advanced-elk-renderer-support/future-work.md
 The source-facts/index contract, Go-first extractor, scope-safe projection,
 bounded query boundary, and module viewer are implemented through issues
 048–052; the final visual gate is approved. Deterministic quality issues
-053–063 are implemented and visually verified. The next future sequence is the
-live analysis snapshot/folder-watching/reconciliation/analyzer-neutral-search/
-quality-delegation/MCP boundary.
+053–063 are implemented and visually verified. Live analysis/MCP issues
+064–075 are implemented and verified; issue 076 remains for cross-analyzer
+conformance and final product approval.
 
 ## Residual implementation decisions
 
@@ -442,9 +444,11 @@ quality-delegation/MCP boundary.
 - Broader language coverage and metric-producing extensions for the implemented
   source-index module-inspection projection remain future work.
 - Broader language coverage for quality metrics and SOLID structural facts.
-- Implementation and packaging verification for live watcher/MCP snapshot,
-  request-time reconciliation, analyzer-neutral query, quality delegation,
-  policy-permission, and transport behavior remain future work.
+- Platform-specific tuning, long-term snapshot retention, and broader MCP
+  client packaging remain future work after the verified live watcher/MCP
+  snapshot, request-time reconciliation, analyzer-neutral query, quality
+  delegation, policy-permission, and transport behavior delivered by issues
+  064–075.
 - Conservative semantic resolution for calls/implements and confidence
   categories.
 

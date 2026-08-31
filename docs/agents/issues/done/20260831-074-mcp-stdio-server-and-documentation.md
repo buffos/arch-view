@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/analyze-source.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`, `/.okf/capabilities/export-and-automate.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-074-mcp-stdio-server-and-documentation.md`
+- Issue file: `docs/agents/issues/done/20260831-074-mcp-stdio-server-and-documentation.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -38,26 +38,26 @@ describe only behavior that the executable actually provides.
 
 ## Acceptance criteria
 
-- [ ] A documented `arch-view mcp` (or equivalent stable command) launches the
+- [x] A documented `arch-view mcp` (or equivalent stable command) launches the
   server over stdio and returns valid MCP initialization, tool, resource, and
   error responses without logging protocol noise to stdout.
-- [ ] Tools cover snapshot status/currentness, scopes, files, symbols,
+- [x] Tools cover snapshot status/currentness, scopes, files, symbols,
   documentation, module facts, callers/callees, exact text, source context,
   quality profiles/rules/findings/evidence/evaluation/comparison, and the
   explicitly permissioned profile/baseline operations.
-- [ ] Every response preserves the versioned query/quality envelope, revision
+- [x] Every response preserves the versioned query/quality envelope, revision
   and freshness context, capability coverage, deterministic ordering, cursor,
   omission, and byte/item budget semantics.
-- [ ] Default MCP configuration rejects shell execution, target execution,
+- [x] Default MCP configuration rejects shell execution, target execution,
   source edits, arbitrary paths, and quality-policy writes; separately granted
   policy permissions are validated and audited.
-- [ ] The server handles cancellation, malformed requests, unknown tools,
+- [x] The server handles cancellation, malformed requests, unknown tools,
   unavailable capabilities, no-ready snapshots, unstable input, and analyzer
   failures with structured errors while preserving the last-ready revision.
-- [ ] The English documentation site contains installation and connection
+- [x] The English documentation site contains installation and connection
   instructions with copyable examples, explains all configuration fields and
   tools in simple language, and includes the stdio safety/permission model.
-- [ ] MCP protocol, tool, budget, permission, documentation smoke, and
+- [x] MCP protocol, tool, budget, permission, documentation smoke, and
   existing CLI compatibility tests pass.
 
 ## Artifact sync required
@@ -120,3 +120,43 @@ need simple installation and connection instructions.
 Issue 075 adds the optional authenticated HTTP adapter over exactly the same
 operations. Issue 076 exercises the complete documented workflow across all
 registered analyzers.
+
+## Implementation completed
+
+`arch-view mcp` now launches the shared live session over newline-delimited
+JSON-RPC stdio without protocol noise on stdout. The server exposes the
+documented navigation, source, quality, evidence, comparison, and explicitly
+permissioned policy tools plus compact resources. Requests retain query
+envelopes, revisions, freshness, coverage, cursors, and budgets; malformed,
+unsupported, oversized, unavailable, and unsafe requests return structured
+errors. The English documentation site contains installation, configuration,
+tool, quality, HTTP, safety, freshness, and troubleshooting guidance.
+
+## Verification result
+
+- MCP protocol, tool, budget, permission, and malformed-request tests
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `node --check` for viewer/documentation JavaScript
+- `node --test` for viewer JavaScript tests
+- `npm run docs:check` from `website/`
+- `npm run docs:build` from `website/`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+The final review rejects unknown tool arguments, advertises closed input
+schemas with named properties, confirms cancellation unblocks a waiting stdio
+reader, and launches a real MCP initialization without stdout noise.
+
+## Artifact synchronization
+
+- The public English website now documents the executable MCP command,
+  configuration fields, tools, resources, freshness modes, permissions, and
+  failure handling.
+- The live capability, orchestration status, issue registry, and OKF log are
+  synchronized during batch closeout.
+- The application PRD and architecture summary have no product/ownership
+  impact; stdio remains the default adapter over shared services.

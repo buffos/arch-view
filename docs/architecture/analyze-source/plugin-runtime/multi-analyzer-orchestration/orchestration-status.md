@@ -93,8 +93,8 @@ gate owned by the assignment/view capability.
   root `when-supported` policy; the required issue 043 visual inspection was
   completed and approved by the user.
 - `go test ./... -count=1`, `go test -race ./... -count=1`, `go vet ./...`,
-  `go build ./...`, `go mod verify`, `staticcheck ./...`, JavaScript syntax and
-  viewer-module tests, Python syntax parsing, strict OKF validation, and
-  `git diff --check` pass on Windows amd64. The installed `golangci-lint`
-  2.12.2 binary was built with Go 1.26.2 and cannot load the Go 1.27.0 standard
-  library; it exits during package loading before repository lint analysis.
+  `go build ./...`, `go mod verify`, `staticcheck ./...`, `golangci-lint run
+  ./...`, JavaScript syntax and viewer-module tests, Python syntax parsing,
+  strict OKF validation, and `git diff --check` pass on Windows amd64. The
+  verification environment now uses Staticcheck 2026.2.1 and golangci-lint
+  2.13.2, both compatible with the Go 1.27.0 standard library.

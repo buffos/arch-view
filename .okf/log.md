@@ -2,6 +2,23 @@
 
 ## 2026-08-31
 
+### Live analysis and MCP implementation batch 071–076
+
+* **Completion:** Implemented and verified issues 071–075: permissioned
+  quality-policy operations, the local live CLI bridge, live viewer
+  integration, MCP stdio/documentation, and the optional authenticated HTTP
+  transport.
+* **Conformance:** Recorded automated mixed-analyzer, freshness,
+  revision-bound query, quality-policy, CLI, viewer, MCP, HTTP, and
+  documentation evidence in issue 076. Encoded opaque HTTP IDs and oversized
+  MCP messages now fail safely at the transport boundary.
+* **Delivery:** Issues 071–075 are archived and removed from the active issue
+  registry. Issue 076 remains `awaiting-human-review` with its final desktop,
+  responsive, MCP-usability, status-wording, and safety inspection checklist.
+* **State:** No topology or planning-state transition. The live capability
+  remains `specified` until the issue 076 product-approval gate is genuinely
+  completed.
+
 ### Live analysis and MCP implementation batch 064–070
 
 * **Implementation:** Completed issues 064–070: live-session configuration and

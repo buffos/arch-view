@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/export-and-automate.md`, `/.okf/capabilities/analyze-source.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-075-authenticated-http-mcp-transport.md`
+- Issue file: `docs/agents/issues/done/20260831-075-authenticated-http-mcp-transport.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `none`
-- Suggested state: `ready-for-agent`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -35,19 +35,19 @@ mutation.
 
 ## Acceptance criteria
 
-- [ ] The documented HTTP adapter exposes the contract's status, currentness,
+- [x] The documented HTTP adapter exposes the contract's status, currentness,
   scope, search, source-context, quality, evidence, and comparison operations
   with the same request/result semantics as stdio.
-- [ ] Equivalent stdio and HTTP requests over the same session/revision return
+- [x] Equivalent stdio and HTTP requests over the same session/revision return
   equivalent semantic data, ordering, coverage, diagnostics, and budgets.
-- [ ] Unauthenticated, wrong-origin, out-of-root, invalid-session, over-limit,
+- [x] Unauthenticated, wrong-origin, out-of-root, invalid-session, over-limit,
   and disallowed policy requests fail closed without mutating state.
-- [ ] Local HTTP is opt-in and has safe bind defaults; authenticated HTTP
+- [x] Local HTTP is opt-in and has safe bind defaults; authenticated HTTP
   requires explicit credentials/configuration and does not trust a client-
   supplied repository root or permission escalation.
-- [ ] Cancellation, timeouts, streaming/large-response limits, and server
+- [x] Cancellation, timeouts, streaming/large-response limits, and server
   shutdown do not leave a live session or in-flight policy operation orphaned.
-- [ ] Transport parity, authentication/origin, root safety, CORS/CSRF where
+- [x] Transport parity, authentication/origin, root safety, CORS/CSRF where
   applicable, budget, and permission tests pass.
 
 ## Artifact sync required
@@ -103,3 +103,40 @@ the local stdio safety default.
 
 Issue 076 runs the final multi-analyzer and agent-loop acceptance pass over
 stdio, viewer, and HTTP where enabled.
+
+## Implementation completed
+
+The opt-in HTTP adapter now maps live status, currentness, scopes, bounded
+search/source operations, quality operations, and policy operations onto the
+same shared session services as stdio. Local HTTP binds to loopback by default;
+authenticated mode requires a token and optional origin allowlist. Session
+paths, root-safe queries, request/response limits, encoded opaque IDs, policy
+permissions, cancellation, and structured errors are enforced at the transport
+boundary.
+
+## Verification result
+
+- HTTP/MCP semantic parity, authentication/origin, root-safety, request-limit,
+  encoded-ID, budget, and permission tests
+- `go test ./... -count=1`
+- `go test -race ./...`
+- `go vet ./...`
+- `go build ./...`
+- `npm run docs:check` from `website/`
+- `git diff --check`
+
+All checks pass. This issue has no human-review gate.
+
+The final review compares an actual bounded file query over HTTP and stdio,
+not only status metadata. Browser access is same-origin by default;
+cross-origin access requires an allowlisted origin, and authenticated CORS
+preflight does not require a bearer token before the actual request.
+
+## Artifact synchronization
+
+- The public English website now documents local and authenticated HTTP
+  startup, routes, credentials, origins, budgets, and safety behavior.
+- The live capability, orchestration status, issue registry, and OKF log are
+  synchronized during batch closeout.
+- The application PRD and architecture summary have no product/ownership
+  impact; HTTP remains an optional adapter over the stdio-equivalent services.
