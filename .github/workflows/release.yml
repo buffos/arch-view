@@ -111,7 +111,11 @@ jobs:
           set -euo pipefail
           archive="arch-view-${RELEASE_VERSION}-${{ matrix.platform }}.tar.gz"
           tar -czf "dist/$archive" -C dist/release .
-          (cd dist && sha256sum "$archive" > "$archive.sha256")
+          if command -v sha256sum >/dev/null 2>&1; then
+            (cd dist && sha256sum "$archive" > "$archive.sha256")
+          else
+            (cd dist && shasum -a 256 "$archive" > "$archive.sha256")
+          fi
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
