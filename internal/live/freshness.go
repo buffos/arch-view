@@ -42,7 +42,13 @@ func (session *LiveSession) EnsureCurrentSnapshot(ctx context.Context) (*Revisio
 			changed = changedFingerprintPaths(record.Input, current)
 		}
 		plan := InvalidationPlan{Mode: "full_rescan", AffectedPaths: changed, Reason: "authoritative_reconciliation_changed"}
-		if done := session.beginRebuild(plan, nil); done != nil {
+		var done chan struct{}
+		if hasRecord {
+			done = session.beginRebuildForCurrentInput(plan, current)
+		} else {
+			done = session.beginRebuild(plan, nil)
+		}
+		if done != nil {
 			select {
 			case <-ctx.Done():
 				return nil, newLiveError(ErrorAnalysisWaitTimeout, "waiting for the current live revision timed out", map[string]any{"error": ctx.Err().Error()})
@@ -82,12 +88,29 @@ func (session *LiveSession) EnsureCurrentSnapshot(ctx context.Context) (*Revisio
 }
 
 func (session *LiveSession) beginRebuild(plan InvalidationPlan, triggerErr error) chan struct{} {
+	return session.beginRebuildForInput(plan, triggerErr, nil)
+}
+
+// beginRebuildForCurrentInput joins or starts a rebuild only when the
+// published input is still different from the authoritative fingerprint that
+// the caller just observed. Without this check, a second strict request can
+// observe the same stale revision, reach this method after the first request
+// has published the target revision, and unnecessarily start a duplicate
+// scan.
+func (session *LiveSession) beginRebuildForCurrentInput(plan InvalidationPlan, current InputFingerprint) chan struct{} {
+	return session.beginRebuildForInput(plan, nil, &current)
+}
+
+func (session *LiveSession) beginRebuildForInput(plan InvalidationPlan, triggerErr error, expected *InputFingerprint) chan struct{} {
 	if session == nil {
 		return nil
 	}
 	session.mu.Lock()
 	defer session.mu.Unlock()
 	if session.closed {
+		return nil
+	}
+	if expected != nil && !session.building && inputEqual(session.lastInput, *expected) {
 		return nil
 	}
 	session.stale = true
