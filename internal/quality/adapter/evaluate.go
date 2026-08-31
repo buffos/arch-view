@@ -19,9 +19,16 @@ func EvaluateSourceIndex(profile quality.QualityProfile, index analysis.SourceIn
 // EvaluateModel adapts canonical model and source-index facts into the
 // language-neutral quality boundary.
 func EvaluateModel(profile quality.QualityProfile, value model.Model, catalog *quality.Catalog) (quality.QualityEvaluation, error) {
+	return EvaluateModelWithBaseline(profile, value, catalog, nil)
+}
+
+// EvaluateModelWithBaseline evaluates a canonical model with an optional
+// already validated baseline selected by the caller's policy boundary.
+func EvaluateModelWithBaseline(profile quality.QualityProfile, value model.Model, catalog *quality.Catalog, baseline *quality.Baseline) (quality.QualityEvaluation, error) {
 	input, err := EvaluationInputFromModel(value)
 	if err != nil {
 		return quality.QualityEvaluation{}, err
 	}
+	input.Baseline = baseline
 	return quality.EvaluateQualityProfile(profile, input, catalog)
 }

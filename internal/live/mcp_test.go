@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/buffo/arch-view/internal/quality"
+	qualitypolicy "github.com/buffo/arch-view/internal/quality/policy"
 )
 
 func TestMCPServeReturnsProtocolMessagesWithoutStdoutNoise(t *testing.T) {
@@ -153,4 +156,118 @@ func TestMCPServeClosesBlockingInputOnCancellation(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("MCP Serve remained blocked after cancellation")
 	}
+}
+
+func TestMCPQualityBaselinesCanBeReadSelectedAndAppended(t *testing.T) {
+	root := t.TempDir()
+	profile := policyThresholdProfile()
+	store, err := qualitypolicy.NewFileStore(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.SaveProfile(context.Background(), profile, "main.json", false); err != nil {
+		t.Fatalf("save profile: %v", err)
+	}
+	modelValue, report := policyModelAndReport(t, profile)
+	config := testLiveConfig("session:mcp-baselines")
+	config.SourceIndexRequest = SourceIndexRequest{Enabled: true}
+	config.QualityRequest = &QualityRequest{ProfileID: profile.ProfileID, ProfileVersion: profile.ProfileVersion}
+	config.PermissionPolicy.AllowedOperations = []Operation{OperationBaselineRead, OperationBaselineWrite, OperationQualityEvaluate, OperationQualityProfileRead}
+	session, err := StartLiveSession(context.Background(), config, root, SessionOptions{
+		Scanner: StaticScanner{Result: ScanResult{Model: modelValue, QualityReport: &report}}, Fingerprinter: StaticFingerprinter{Value: testInput("mcp-baselines")},
+		QualityCatalog: quality.NewDefaultCatalog(), Profiles: NewMemoryQualityProfileResolver(profile),
+		PolicyService:    NewFileQualityPolicyService(qualitypolicy.NewService(store, quality.NewDefaultCatalog())),
+		PolicyAuthorizer: PolicyAuthorizerFunc(func(context.Context, PolicyAuthorization) error { return nil }),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = session.Close() })
+	if err := session.Wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	server := NewMCPServer(NewLocalQueryAdapter(session))
+	before, err := server.executeTool(context.Background(), "get_quality_baselines", json.RawMessage(`{"max_items":10}`))
+	if err != nil {
+		t.Fatalf("list baselines before append: %v", err)
+	}
+	if result, ok := before.Result.(QualityBaselinesResult); !ok || result.Total != 0 {
+		t.Fatalf("baseline list before append = %#v", before.Result)
+	}
+	key := report.Findings[0].FindingKey
+	appended, err := server.executeTool(context.Background(), "append_baseline", mustJSON(t, map[string]any{
+		"profile_id": profile.ProfileID, "profile_version": profile.ProfileVersion, "file_name": "main.json", "finding_keys": []string{key}, "reason": "accepted after agent review", "authorization": "allow",
+	}))
+	if err != nil {
+		t.Fatalf("append baseline: %v", err)
+	}
+	appendResult, ok := appended.Result.(QualityPolicyResult)
+	if !ok || appendResult.Status != "updated" || appendResult.Baseline == nil || appendResult.Baseline.Revision != "1.0.0" || len(appendResult.AddedFindingKeys) != 1 || !appendResult.ReevaluationRequired {
+		t.Fatalf("append result = %#v", appended.Result)
+	}
+	read, err := server.executeTool(context.Background(), "get_quality_baselines", mustJSON(t, map[string]any{"file_names": []string{"main.json"}, "include_entries": true, "max_items": 1}))
+	if err != nil {
+		t.Fatalf("read baseline entries: %v", err)
+	}
+	readResult, ok := read.Result.(QualityBaselinesResult)
+	if !ok || readResult.Total != 1 || len(readResult.Items) != 1 || len(readResult.Items[0].Entries) != 1 || readResult.Items[0].Entries[0].FindingKey != key {
+		t.Fatalf("baseline entry result = %#v", read.Result)
+	}
+	if _, err := server.executeTool(context.Background(), "get_quality_baselines", mustJSON(t, map[string]any{"file_names": []string{"../main.json"}})); err == nil || !strings.Contains(err.Error(), "direct project-local JSON") {
+		t.Fatalf("unsafe baseline filename error = %v", err)
+	}
+	profileEvaluation, err := server.executeTool(context.Background(), "evaluate_quality", mustJSON(t, map[string]any{
+		"profile_id": profile.ProfileID, "profile_version": profile.ProfileVersion,
+	}))
+	if err != nil {
+		t.Fatalf("profile baseline evaluation: %v", err)
+	}
+	profileEvaluationResult, ok := profileEvaluation.Result.(QualityEvaluationResult)
+	if !ok || profileEvaluationResult.Report == nil || len(profileEvaluationResult.Report.Findings) != 1 || profileEvaluationResult.Report.Findings[0].Status != quality.StatusSuppressed {
+		t.Fatalf("profile baseline evaluation = %#v", profileEvaluation.Result)
+	}
+	evaluated, err := server.executeTool(context.Background(), "evaluate_quality", mustJSON(t, map[string]any{
+		"profile_id": profile.ProfileID, "profile_version": profile.ProfileVersion, "baseline_mode": string(BaselineModeSelected), "baseline_files": []string{"main.json"},
+	}))
+	if err != nil {
+		var liveErr *QueryError
+		if errors.As(err, &liveErr) {
+			t.Fatalf("selected baseline evaluation: %v details=%#v", err, liveErr.Details)
+		}
+		t.Fatalf("selected baseline evaluation: %v", err)
+	}
+	evaluationResult, ok := evaluated.Result.(QualityEvaluationResult)
+	if !ok || evaluationResult.Report == nil || len(evaluationResult.Report.Findings) != 1 || evaluationResult.Report.Findings[0].Status != quality.StatusSuppressed {
+		t.Fatalf("selected baseline evaluation = %#v", evaluated.Result)
+	}
+	cleanEvaluation, err := server.executeTool(context.Background(), "evaluate_quality", mustJSON(t, map[string]any{
+		"profile_id": profile.ProfileID, "profile_version": profile.ProfileVersion, "baseline_mode": string(BaselineModeNone),
+	}))
+	if err != nil {
+		t.Fatalf("clean evaluation: %v", err)
+	}
+	cleanResult, ok := cleanEvaluation.Result.(QualityEvaluationResult)
+	if !ok || cleanResult.Report == nil || len(cleanResult.Report.Findings) != 1 || cleanResult.Report.Findings[0].Status == quality.StatusSuppressed {
+		t.Fatalf("clean evaluation = %#v", cleanEvaluation.Result)
+	}
+	appendedAgain, err := server.executeTool(context.Background(), "append_baseline", mustJSON(t, map[string]any{
+		"profile_id": profile.ProfileID, "profile_version": profile.ProfileVersion, "report_id": cleanResult.Report.EvaluationID,
+		"file_name": "main.json", "finding_keys": []string{key}, "reason": "accepted after agent review", "authorization": "allow",
+	}))
+	if err != nil {
+		t.Fatalf("append baseline from clean evaluation: %v", err)
+	}
+	appendedAgainResult, ok := appendedAgain.Result.(QualityPolicyResult)
+	if !ok || appendedAgainResult.Status != "unchanged" || appendedAgainResult.ReevaluationRequired {
+		t.Fatalf("append from clean evaluation = %#v", appendedAgain.Result)
+	}
+}
+
+func mustJSON(t *testing.T, value any) json.RawMessage {
+	t.Helper()
+	data, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
 }

@@ -678,6 +678,9 @@ func queryContext(record *RevisionRecord, request any, kind string, maxBytes, ma
 	case QualityEvidenceRequest:
 		value.Cursor = ""
 		request = value
+	case QualityBaselinesRequest:
+		value.QueryRequest.Cursor = ""
+		request = value
 	}
 	value := struct {
 		Version  string

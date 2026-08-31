@@ -18,6 +18,7 @@ const (
 	PolicySaveProfileAs   = "save_quality_profile_as"
 	PolicyPreviewBaseline = "preview_baseline"
 	PolicyCreateBaseline  = "create_baseline"
+	PolicyAppendBaseline  = "append_baseline"
 )
 
 // ExecuteQualityPolicyCommand is the only live entry point for policy
@@ -61,7 +62,7 @@ func (gateway *QualityGateway) ExecuteQualityPolicyCommand(ctx context.Context, 
 		return gateway.validatePolicyProfile(ctx, command)
 	case PolicySaveProfile, PolicySaveProfileAs:
 		return gateway.savePolicyProfile(ctx, command)
-	case PolicyPreviewBaseline, PolicyCreateBaseline:
+	case PolicyPreviewBaseline, PolicyCreateBaseline, PolicyAppendBaseline:
 		return gateway.baselinePolicyCommand(ctx, command)
 	default:
 		return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "quality policy operation is unsupported", map[string]any{"operation": command.Operation})
@@ -76,7 +77,7 @@ func policyOperation(name string) (Operation, bool) {
 		return OperationQualityProfileWrite, true
 	case PolicyPreviewBaseline:
 		return OperationBaselineRead, false
-	case PolicyCreateBaseline:
+	case PolicyCreateBaseline, PolicyAppendBaseline:
 		return OperationBaselineWrite, true
 	default:
 		return "", false
@@ -165,7 +166,7 @@ func (gateway *QualityGateway) savePolicyProfile(ctx context.Context, command Qu
 }
 
 func (gateway *QualityGateway) baselinePolicyCommand(ctx context.Context, command QualityPolicyCommand) (QueryEnvelope, error) {
-	if gateway.policy == nil && command.Operation == PolicyCreateBaseline {
+	if gateway.policy == nil && (command.Operation == PolicyCreateBaseline || command.Operation == PolicyAppendBaseline) {
 		return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "quality policy persistence is unavailable for this live session", nil)
 	}
 	record, report, err := gateway.currentPolicyReport(ctx, command)
@@ -181,6 +182,72 @@ func (gateway *QualityGateway) baselinePolicyCommand(ctx context.Context, comman
 	}
 	identity.ReportRevision = record.Snapshot.Revision
 	baselineID := strings.TrimSpace(command.BaselineID)
+	if command.Operation == PolicyAppendBaseline {
+		profile, profileInfo, profileErr := gateway.policy.ProfileDocument(ctx, report.ProfileID, report.ProfileVersion)
+		if profileErr != nil {
+			return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "the quality profile used by the report could not be read from the policy store", map[string]any{"error": profileErr.Error()})
+		}
+		baselineID = strings.TrimSpace(command.BaselineID)
+		if baselineID == "" && profile.Baseline != nil {
+			baselineID = profile.Baseline.BaselineID
+		}
+		baselineFileName := strings.TrimSpace(command.FileName)
+		if baselineFileName == "" && profile.Baseline != nil {
+			_, baselineInfo, resolveErr := gateway.policy.ResolveBaseline(ctx, profile.Baseline.BaselineID, profile.Baseline.Revision)
+			if resolveErr == nil {
+				baselineFileName = baselineInfo.FileName
+			} else if liveErrorCode(resolveErr) != ErrorBaselineNotFound {
+				return QueryEnvelope{}, resolveErr
+			}
+		}
+		if baselineFileName == "" {
+			return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "append_baseline requires file_name when the profile has no resolvable canonical baseline", nil)
+		}
+		appendResult, appendErr := gateway.policy.AppendBaseline(ctx, QualityBaselineAppendRequest{
+			Profile: profile, ProfileFileName: profileInfo.FileName, BaselineFileName: baselineFileName,
+			BaselineID: baselineID, Entries: entries, Revision: strings.TrimSpace(command.BaselineRevision), ExpectedRevision: strings.TrimSpace(command.ExpectedBaselineRevision),
+		})
+		if appendErr != nil {
+			return QueryEnvelope{}, policyWriteError(appendErr)
+		}
+		updatedBaseline := appendResult.Baseline
+		updatedProfile := appendResult.Profile
+		var baselineWrite *QualityPolicyWriteResult
+		if appendResult.BaselineWrite.FileName != "" {
+			write := appendResult.BaselineWrite
+			baselineWrite = &write
+		}
+		var profileWrite *QualityPolicyWriteResult
+		if appendResult.ProfileWrite.FileName != "" {
+			write := appendResult.ProfileWrite
+			profileWrite = &write
+		}
+		status := "unchanged"
+		message := "No new baseline entries were added."
+		if appendResult.Changed {
+			status = "updated"
+			message = "Quality baseline updated; run quality evaluation again."
+		}
+		paths := make([]string, 0, 2)
+		if appendResult.BaselineWrite.RelativePath != "" {
+			paths = append(paths, appendResult.BaselineWrite.RelativePath)
+		}
+		if appendResult.ProfileWrite.RelativePath != "" {
+			paths = append(paths, appendResult.ProfileWrite.RelativePath)
+		}
+		auditDetails := "quality baseline append produced no changes"
+		if appendResult.Changed {
+			auditDetails = "quality baseline appended and profile reference updated"
+		}
+		recorded := gateway.recordPolicyAudit(command, strings.Join(paths, ","), auditDetails)
+		audit := &recorded
+		result := QualityPolicyResult{
+			Status: status, Operation: command.Operation, Message: message, Profile: &updatedProfile, Baseline: &updatedBaseline,
+			FindingKeys: keys, AddedFindingKeys: findingKeysForBaselineEntries(appendResult.Added), ExistingFindingKeys: findingKeysForBaselineEntries(appendResult.Existing),
+			PolicyIdentity: identity, Write: baselineWrite, ProfileWrite: profileWrite, Audit: audit, ReevaluationRequired: appendResult.Changed,
+		}
+		return gateway.policyEnvelope(ctx, result, audit)
+	}
 	if baselineID == "" {
 		return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "baseline_id is required", nil)
 	}
@@ -275,7 +342,13 @@ func (gateway *QualityGateway) currentPolicyReport(ctx context.Context, command 
 	if validateErr != nil {
 		return nil, quality.QualityEvaluation{}, policyQualityError(validateErr)
 	}
-	expectedProfileDigest := profileDigest(validatedProfile)
+	// A baseline is evaluation context, not part of the rule configuration
+	// being reviewed. Rebuild the current profile with the report's baseline
+	// reference before comparing digests so reports from baseline_mode=none or
+	// baseline_mode=selected can still be appended after review.
+	reportProfile := cloneQualityProfile(validatedProfile)
+	reportProfile.Baseline = report.Baseline
+	expectedProfileDigest := profileDigest(reportProfile)
 	if expectedProfileDigest == nil || report.ProfileDigest == nil || *expectedProfileDigest != *report.ProfileDigest {
 		details := map[string]any{"profile_id": report.ProfileID, "profile_version": report.ProfileVersion}
 		if expectedProfileDigest != nil {
@@ -292,11 +365,16 @@ func (gateway *QualityGateway) currentPolicyReport(ctx context.Context, command 
 	return record, report, nil
 }
 
-// profileForReport resolves the profile source that produced the live report
-// before consulting the persistence service. The resolver is authoritative for
-// the active session; the policy service is only a fallback for hosts that do
-// not expose a separate profile resolver.
+// profileForReport resolves the persisted profile first so a policy append is
+// visible to the next temporary evaluation. Hosts that use an external or
+// in-memory profile source fall back to that resolver when no persisted
+// document matches.
 func (gateway *QualityGateway) profileForReport(ctx context.Context, profileID, profileVersion string) (quality.QualityProfile, error) {
+	if gateway.policy != nil {
+		if profile, err := gateway.policy.ResolveProfile(ctx, profileID, profileVersion); err == nil {
+			return profile, nil
+		}
+	}
 	if gateway.profiles != nil {
 		return gateway.profiles.ResolveProfile(ctx, profileID, profileVersion)
 	}
@@ -362,6 +440,15 @@ func coverageObserved(report quality.QualityEvaluation, ruleID, version string) 
 		}
 	}
 	return found
+}
+
+func findingKeysForBaselineEntries(entries []quality.BaselineEntry) []string {
+	result := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		result = append(result, entry.FindingKey)
+	}
+	sort.Strings(result)
+	return result
 }
 
 func reportSnapshotsMatch(record *RevisionRecord, report quality.QualityEvaluation) bool {

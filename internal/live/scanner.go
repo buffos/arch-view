@@ -128,11 +128,27 @@ func (scanner *MultiAnalyzerScanner) Scan(ctx context.Context, request ScanReque
 		if profileErr != nil {
 			return ScanResult{}, newLiveError(ErrorSnapshotBuildFailed, "quality profile could not be resolved for the initial scan", map[string]any{"error": profileErr.Error()})
 		}
+		// Policy writes can update a profile while this long-lived session is
+		// running. Prefer the persisted document for every re-scan so a later
+		// startup or source-triggered rebuild observes an appended baseline or
+		// profile change instead of the resolver's startup copy.
+		if request.PolicyService != nil {
+			if persisted, persistedErr := request.PolicyService.ResolveProfile(ctx, request.Config.QualityRequest.ProfileID, request.Config.QualityRequest.ProfileVersion); persistedErr == nil {
+				profile = persisted
+			}
+		}
 		canonicalModel, ok = run.CombinedCanonicalModel()
 		if !ok {
 			return ScanResult{}, newLiveError(ErrorSnapshotBuildFailed, "quality evaluation has no canonical aggregate model", nil)
 		}
-		report, qualityErr := qualityadapter.EvaluateModel(profile, canonicalModel, scanner.QualityCatalog)
+		baselineResolution, baselineErr := resolveQualityBaseline(ctx, request.PolicyService, profile, BaselineModeProfile, nil)
+		if baselineErr != nil {
+			return ScanResult{}, newLiveError(ErrorSnapshotBuildFailed, "quality baseline could not be resolved during the initial scan", map[string]any{"error": baselineErr.Error()})
+		}
+		if baselineResolution.Warning != "" {
+			result.Diagnostics = append(result.Diagnostics, LiveDiagnostic{Code: ErrorBaselineNotFound, Message: baselineResolution.Warning, Severity: "warning", Recoverable: true})
+		}
+		report, qualityErr := qualityadapter.EvaluateModelWithBaseline(baselineResolution.Profile, canonicalModel, scanner.QualityCatalog, baselineResolution.Baseline)
 		if qualityErr != nil {
 			return ScanResult{}, newLiveError(ErrorSnapshotBuildFailed, "quality evaluation failed during the initial scan", map[string]any{"error": qualityErr.Error()})
 		}

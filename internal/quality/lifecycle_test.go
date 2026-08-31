@@ -78,6 +78,55 @@ func TestBaselineSuppressesExactFindingWithoutDeletingIt(t *testing.T) {
 	}
 }
 
+func TestMergeBaselineEntriesIsIdempotentAndRejectsMetadataConflicts(t *testing.T) {
+	profile := thresholdProfile("source:file.max-lines", "rule-config:source-file-size", "greater_than", 10, "unit:line")
+	report, err := quality.EvaluateQualityProfile(profile, fileLifecycleInput(), quality.NewDefaultCatalog())
+	if err != nil {
+		t.Fatalf("evaluate report: %v", err)
+	}
+	entry, err := quality.CreateBaselineEntry(report, report.Findings[0].ID, "accepted for this legacy fixture", "maintainer")
+	if err != nil {
+		t.Fatalf("create baseline entry: %v", err)
+	}
+	baseline := quality.Baseline{SchemaVersion: quality.BaselineSchemaVersion, BaselineID: "baseline:merge", Revision: "1.0.0", Entries: []quality.BaselineEntry{}, Extensions: []quality.ExtensionBlock{}}
+
+	first, err := quality.MergeBaselineEntries(baseline, []quality.BaselineEntry{entry})
+	if err != nil {
+		t.Fatalf("first merge: %v", err)
+	}
+	if len(first.Added) != 1 || len(first.Existing) != 0 || len(first.Baseline.Entries) != 1 {
+		t.Fatalf("first merge = %#v", first)
+	}
+	second, err := quality.MergeBaselineEntries(first.Baseline, []quality.BaselineEntry{entry})
+	if err != nil {
+		t.Fatalf("idempotent merge: %v", err)
+	}
+	if len(second.Added) != 0 || len(second.Existing) != 1 || len(second.Baseline.Entries) != 1 {
+		t.Fatalf("idempotent merge = %#v", second)
+	}
+	conflict := entry
+	conflict.Reason = "a different decision"
+	if _, err := quality.MergeBaselineEntries(first.Baseline, []quality.BaselineEntry{conflict}); err == nil {
+		t.Fatal("conflicting duplicate reason was accepted")
+	}
+}
+
+func TestNextBaselineRevisionUsesDeterministicNumericSuffixes(t *testing.T) {
+	tests := map[string]string{"": "1.0.0", "1.0.0": "1.0.1", "2026-08": "2026-08.1", "1": "2"}
+	for current, want := range tests {
+		got, err := quality.NextBaselineRevision(current)
+		if err != nil {
+			t.Fatalf("next revision for %q: %v", current, err)
+		}
+		if got != want {
+			t.Fatalf("next revision for %q = %q, want %q", current, got, want)
+		}
+	}
+	if _, err := quality.NextBaselineRevision("not a revision"); err == nil {
+		t.Fatal("invalid baseline revision was accepted")
+	}
+}
+
 func TestCompareQualityReportsDoesNotResolveFromIncompleteCoverage(t *testing.T) {
 	profile := thresholdProfile("source:file.max-lines", "rule-config:source-file-size", "greater_than", 10, "unit:line")
 	previous, err := quality.EvaluateQualityProfile(profile, fileLifecycleInput(), quality.NewDefaultCatalog())

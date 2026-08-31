@@ -461,7 +461,7 @@ func (session *LiveSession) buildStable(ctx context.Context, plan InvalidationPl
 		if err != nil {
 			return nil, err
 		}
-		request := ScanRequest{SessionID: session.validated.Config.SessionID, RepositoryRoot: session.validated.RepositoryRoot, Config: session.validated.Config, Invalidation: plan, InputFingerprint: before}
+		request := ScanRequest{SessionID: session.validated.Config.SessionID, RepositoryRoot: session.validated.RepositoryRoot, Config: session.validated.Config, Invalidation: plan, InputFingerprint: before, PolicyService: session.options.PolicyService}
 		scan, scanErr := session.scanner.Scan(ctx, request)
 		if scanErr != nil {
 			return nil, scanErr

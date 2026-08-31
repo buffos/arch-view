@@ -140,6 +140,14 @@ const (
 	OperationBaselineWrite       Operation = "baseline_write"
 )
 
+type BaselineMode string
+
+const (
+	BaselineModeProfile  BaselineMode = "profile"
+	BaselineModeNone     BaselineMode = "none"
+	BaselineModeSelected BaselineMode = "selected"
+)
+
 type PermissionPolicy struct {
 	DefaultMode          string      `json:"default_mode"`
 	AllowedOperations    []Operation `json:"allowed_operations"`
@@ -402,6 +410,7 @@ type ScanRequest struct {
 	Config           LiveSessionConfig
 	Invalidation     InvalidationPlan
 	InputFingerprint InputFingerprint
+	PolicyService    QualityPolicyService
 }
 
 type ScanResult struct {
@@ -430,6 +439,10 @@ type QualityPolicyService interface {
 	ProfileDocument(context.Context, string, string) (quality.QualityProfile, QualityPolicyProfileInfo, error)
 	SaveProfile(context.Context, quality.QualityProfile, string, bool) (QualityPolicyWriteResult, error)
 	SaveBaseline(context.Context, quality.Baseline, string, bool) (QualityPolicyWriteResult, error)
+	ListBaselines(context.Context) ([]QualityBaselineInfo, error)
+	ReadBaseline(context.Context, string) (quality.Baseline, QualityBaselineInfo, error)
+	ResolveBaseline(context.Context, string, string) (quality.Baseline, QualityBaselineInfo, error)
+	AppendBaseline(context.Context, QualityBaselineAppendRequest) (QualityBaselineAppendResult, error)
 }
 
 // QualityPolicyProfileInfo and QualityPolicyWriteResult are deliberately
@@ -448,6 +461,36 @@ type QualityPolicyWriteResult struct {
 	RelativePath string                `json:"relative_path"`
 	Digest       quality.ContentDigest `json:"digest"`
 	Overwritten  bool                  `json:"overwritten"`
+}
+
+type QualityBaselineInfo struct {
+	BaselineID string   `json:"baseline_id,omitempty"`
+	Revision   string   `json:"revision,omitempty"`
+	FileName   string   `json:"file_name"`
+	Status     string   `json:"status"`
+	EntryCount int      `json:"entry_count"`
+	Profiles   []string `json:"profiles"`
+	Reason     string   `json:"reason,omitempty"`
+}
+
+type QualityBaselineAppendRequest struct {
+	Profile          quality.QualityProfile
+	ProfileFileName  string
+	BaselineFileName string
+	BaselineID       string
+	Entries          []quality.BaselineEntry
+	Revision         string
+	ExpectedRevision string
+}
+
+type QualityBaselineAppendResult struct {
+	Profile       quality.QualityProfile
+	Baseline      quality.Baseline
+	Added         []quality.BaselineEntry
+	Existing      []quality.BaselineEntry
+	BaselineWrite QualityPolicyWriteResult
+	ProfileWrite  QualityPolicyWriteResult
+	Changed       bool
 }
 
 // PolicyAuthorization is passed to the host authorizer only for policy
@@ -473,24 +516,25 @@ func (authorizer PolicyAuthorizerFunc) Authorize(ctx context.Context, value Poli
 }
 
 type QualityPolicyCommand struct {
-	Operation            string                  `json:"operation"`
-	SessionID            string                  `json:"session_id"`
-	ReportID             string                  `json:"report_id,omitempty"`
-	ReportRevision       int                     `json:"report_revision,omitempty"`
-	ProfileID            string                  `json:"profile_id,omitempty"`
-	ProfileVersion       string                  `json:"profile_version,omitempty"`
-	SourceProfileID      string                  `json:"source_profile_id,omitempty"`
-	SourceProfileVersion string                  `json:"source_profile_version,omitempty"`
-	Profile              *quality.QualityProfile `json:"profile,omitempty"`
-	RuleBindings         []quality.RuleBinding   `json:"rule_bindings,omitempty"`
-	FileName             string                  `json:"file_name,omitempty"`
-	BaselineID           string                  `json:"baseline_id,omitempty"`
-	BaselineRevision     string                  `json:"baseline_revision,omitempty"`
-	FindingKeys          []string                `json:"finding_keys,omitempty"`
-	Reason               string                  `json:"reason,omitempty"`
-	Owner                string                  `json:"owner,omitempty"`
-	Authorization        string                  `json:"authorization,omitempty"`
-	Overwrite            bool                    `json:"overwrite"`
+	Operation                string                  `json:"operation"`
+	SessionID                string                  `json:"session_id"`
+	ReportID                 string                  `json:"report_id,omitempty"`
+	ReportRevision           int                     `json:"report_revision,omitempty"`
+	ProfileID                string                  `json:"profile_id,omitempty"`
+	ProfileVersion           string                  `json:"profile_version,omitempty"`
+	SourceProfileID          string                  `json:"source_profile_id,omitempty"`
+	SourceProfileVersion     string                  `json:"source_profile_version,omitempty"`
+	Profile                  *quality.QualityProfile `json:"profile,omitempty"`
+	RuleBindings             []quality.RuleBinding   `json:"rule_bindings,omitempty"`
+	FileName                 string                  `json:"file_name,omitempty"`
+	BaselineID               string                  `json:"baseline_id,omitempty"`
+	BaselineRevision         string                  `json:"baseline_revision,omitempty"`
+	ExpectedBaselineRevision string                  `json:"expected_baseline_revision,omitempty"`
+	FindingKeys              []string                `json:"finding_keys,omitempty"`
+	Reason                   string                  `json:"reason,omitempty"`
+	Owner                    string                  `json:"owner,omitempty"`
+	Authorization            string                  `json:"authorization,omitempty"`
+	Overwrite                bool                    `json:"overwrite"`
 }
 
 type QualityPolicyIdentity struct {
@@ -523,16 +567,20 @@ type QualityBaselinePreview struct {
 }
 
 type QualityPolicyResult struct {
-	Status         string                    `json:"status"`
-	Operation      string                    `json:"operation"`
-	Message        string                    `json:"message,omitempty"`
-	Profile        *quality.QualityProfile   `json:"profile,omitempty"`
-	Baseline       *quality.Baseline         `json:"baseline,omitempty"`
-	Preview        *QualityBaselinePreview   `json:"preview,omitempty"`
-	FindingKeys    []string                  `json:"finding_keys,omitempty"`
-	PolicyIdentity QualityPolicyIdentity     `json:"policy_identity"`
-	Write          *QualityPolicyWriteResult `json:"write,omitempty"`
-	Audit          *QualityPolicyAudit       `json:"audit,omitempty"`
+	Status               string                    `json:"status"`
+	Operation            string                    `json:"operation"`
+	Message              string                    `json:"message,omitempty"`
+	Profile              *quality.QualityProfile   `json:"profile,omitempty"`
+	Baseline             *quality.Baseline         `json:"baseline,omitempty"`
+	Preview              *QualityBaselinePreview   `json:"preview,omitempty"`
+	FindingKeys          []string                  `json:"finding_keys,omitempty"`
+	PolicyIdentity       QualityPolicyIdentity     `json:"policy_identity"`
+	Write                *QualityPolicyWriteResult `json:"write,omitempty"`
+	ProfileWrite         *QualityPolicyWriteResult `json:"profile_write,omitempty"`
+	Audit                *QualityPolicyAudit       `json:"audit,omitempty"`
+	AddedFindingKeys     []string                  `json:"added_finding_keys,omitempty"`
+	ExistingFindingKeys  []string                  `json:"existing_finding_keys,omitempty"`
+	ReevaluationRequired bool                      `json:"reevaluation_required,omitempty"`
 }
 
 type QualityProfileInfo struct {
@@ -550,6 +598,28 @@ type QualityCatalogRequest struct {
 	QueryRequest
 	ProfileID      string `json:"profile_id,omitempty"`
 	ProfileVersion string `json:"profile_version,omitempty"`
+}
+
+type QualityBaselinesRequest struct {
+	QueryRequest
+	FileNames        []string `json:"file_names,omitempty"`
+	BaselineID       string   `json:"baseline_id,omitempty"`
+	BaselineRevision string   `json:"baseline_revision,omitempty"`
+	IncludeEntries   bool     `json:"include_entries"`
+}
+
+type QualityBaselineDocument struct {
+	Info         QualityBaselineInfo     `json:"info"`
+	Entries      []quality.BaselineEntry `json:"entries,omitempty"`
+	TotalEntries int                     `json:"total_entries"`
+	NextCursor   string                  `json:"next_cursor,omitempty"`
+}
+
+type QualityBaselinesResult struct {
+	Status     string                    `json:"status"`
+	Items      []QualityBaselineDocument `json:"items"`
+	Total      int                       `json:"total"`
+	NextCursor string                    `json:"next_cursor,omitempty"`
 }
 
 type QualityRuleCatalogEntry struct {
@@ -582,6 +652,8 @@ type QualityEvaluationRequest struct {
 	ProfileID      string                `json:"profile_id"`
 	ProfileVersion string                `json:"profile_version"`
 	RuleBindings   []quality.RuleBinding `json:"rule_bindings,omitempty"`
+	BaselineMode   BaselineMode          `json:"baseline_mode,omitempty"`
+	BaselineFiles  []string              `json:"baseline_files,omitempty"`
 	Persist        bool                  `json:"persist"`
 	MaxBytes       int                   `json:"max_bytes,omitempty"`
 	MaxItems       int                   `json:"max_items,omitempty"`

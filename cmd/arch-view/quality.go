@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"sort"
@@ -13,20 +15,26 @@ import (
 	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/quality/adapter"
+	qualitypolicy "github.com/buffo/arch-view/internal/quality/policy"
 )
 
 type qualityCLIConfig struct {
-	Profile  quality.QualityProfile
-	Baseline *quality.Baseline
-	Policy   quality.ExitPolicy
-	Enabled  bool
+	Profile         quality.QualityProfile
+	Baseline        *quality.Baseline
+	Policy          quality.ExitPolicy
+	Enabled         bool
+	BaselineWarning string
 }
 
-func loadQualityCLIConfig(profilePath, baselinePath, exitOn string, exitStatuses []string) (qualityCLIConfig, error) {
+func loadQualityCLIConfig(project, profilePath, baselinePath string, disableBaseline bool, exitOn string, exitStatuses []string) (qualityCLIConfig, error) {
 	profilePath = strings.TrimSpace(profilePath)
 	baselinePath = strings.TrimSpace(baselinePath)
+	project = strings.TrimSpace(project)
 	if profilePath == "" && baselinePath != "" {
 		return qualityCLIConfig{}, analysis.NewHostError(analysis.ErrInvalidRequest, "--quality-baseline requires --quality-profile", nil)
+	}
+	if disableBaseline && baselinePath != "" {
+		return qualityCLIConfig{}, analysis.NewHostError(analysis.ErrInvalidRequest, "--no-quality-baseline cannot be combined with --quality-baseline", nil)
 	}
 	config := qualityCLIConfig{}
 	if profilePath != "" {
@@ -39,7 +47,9 @@ func loadQualityCLIConfig(profilePath, baselinePath, exitOn string, exitStatuses
 		}
 		config.Enabled = true
 	}
-	if baselinePath != "" {
+	if disableBaseline && config.Enabled {
+		config.Profile.Baseline = nil
+	} else if baselinePath != "" {
 		data, err := os.ReadFile(baselinePath)
 		if err != nil {
 			return config, analysis.WrapHostError(analysis.ErrInvalidOptions, "quality baseline could not be read", err, map[string]any{"input": baselinePath})
@@ -48,7 +58,27 @@ func loadQualityCLIConfig(profilePath, baselinePath, exitOn string, exitStatuses
 		if err := json.Unmarshal(data, &baseline); err != nil {
 			return config, analysis.WrapHostError(analysis.ErrInvalidOptions, "quality baseline JSON is invalid", err, map[string]any{"input": baselinePath})
 		}
+		if err := quality.ValidateBaseline(baseline); err != nil {
+			return config, analysis.WrapHostError(analysis.ErrInvalidOptions, "quality baseline is invalid", err, map[string]any{"input": baselinePath})
+		}
 		config.Baseline = &baseline
+		// An explicit baseline is a per-run override. Keep the profile and
+		// baseline identities coherent for the evaluator without writing the
+		// changed reference back to the profile document.
+		config.Profile.Baseline = &quality.BaselineRef{BaselineID: baseline.BaselineID, Revision: baseline.Revision}
+	} else if config.Enabled && config.Profile.Baseline != nil {
+		store, err := qualitypolicy.NewFileStore(project)
+		if err != nil {
+			return config, analysis.WrapHostError(analysis.ErrInvalidOptions, "quality baseline store could not be opened", err, map[string]any{"project": project})
+		}
+		baseline, _, resolveErr := store.ResolveBaseline(nil, config.Profile.Baseline.BaselineID, config.Profile.Baseline.Revision)
+		if resolveErr == nil {
+			config.Baseline = &baseline
+		} else if errors.Is(resolveErr, qualitypolicy.ErrBaselineNotFound) {
+			config.BaselineWarning = fmt.Sprintf("quality profile references %s@%s, but no matching baseline was found; findings remain unsuppressed", config.Profile.Baseline.BaselineID, config.Profile.Baseline.Revision)
+		} else {
+			return config, analysis.WrapHostError(analysis.ErrInvalidOptions, "quality baseline could not be resolved", resolveErr, map[string]any{"baseline_id": config.Profile.Baseline.BaselineID, "revision": config.Profile.Baseline.Revision})
+		}
 	}
 	policy, err := parseQualityExitPolicy(exitOn, exitStatuses)
 	if err != nil {

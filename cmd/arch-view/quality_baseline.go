@@ -20,6 +20,9 @@ func runQualityCommand(_ *analysis.Host, args []string, stdout, stderr io.Writer
 	}
 	switch args[0] {
 	case "baseline":
+		if len(args) > 1 && strings.EqualFold(args[1], "add") {
+			return runQualityBaselineAdd(args[2:], stdout, stderr)
+		}
 		return runQualityBaseline(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		printQualityUsage(stdout)
@@ -189,4 +192,5 @@ func writeQualityBaselineFile(path string, baseline quality.Baseline, overwrite 
 func printQualityUsage(writer io.Writer) {
 	_, _ = fmt.Fprintln(writer, "arch-view quality baseline --input <analysis|model|quality-report.json> --output <baseline.json|-> --baseline-id baseline:<name> --finding <finding-id-or-key> [--finding <...>] --reason <text> [--owner <name>] [--revision <version>] [--overwrite]")
 	_, _ = fmt.Fprintln(writer, "arch-view quality baseline --input <analysis|model|quality-report.json> --output <baseline.json|-> --baseline-id baseline:<name> --all-active --reason <text> [--owner <name>] [--revision <version>] [--overwrite]")
+	_, _ = fmt.Fprintln(writer, "arch-view quality baseline add --project <path> --profile <quality-profiles/profile.json> --baseline-file <name.json> --input <analysis|quality-report.json> (--finding <finding-id-or-key> ... | --all-active) --reason <text> [--owner <name>] [--revision <version>] [--expected-revision <version>]")
 }

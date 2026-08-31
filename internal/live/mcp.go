@@ -270,6 +270,15 @@ func (server *MCPServer) executeTool(ctx context.Context, name string, raw json.
 			value.SessionID = sessionID
 		}
 		return adapter.GetQualityCatalog(ctx, value)
+	case "get_quality_baselines":
+		var value QualityBaselinesRequest
+		if err := decodeTool(raw, &value); err != nil {
+			return QueryEnvelope{}, err
+		}
+		if value.SessionID == "" {
+			value.SessionID = sessionID
+		}
+		return adapter.GetQualityBaselines(ctx, value)
 	case "get_quality_findings":
 		var value QualityFindingsRequest
 		if err := decodeTool(raw, &value); err != nil {
@@ -306,7 +315,7 @@ func (server *MCPServer) executeTool(ctx context.Context, name string, raw json.
 			value.SessionID = sessionID
 		}
 		return adapter.CompareQualityReports(ctx, value)
-	case "validate_quality_profile", "preview_baseline", "save_quality_profile", "save_quality_profile_as", "create_baseline":
+	case "validate_quality_profile", "preview_baseline", "save_quality_profile", "save_quality_profile_as", "create_baseline", "append_baseline":
 		var value QualityPolicyCommand
 		if err := decodeTool(raw, &value); err != nil {
 			return QueryEnvelope{}, err
@@ -325,6 +334,8 @@ func (server *MCPServer) executeTool(ctx context.Context, name string, raw json.
 			value.Operation = PolicySaveProfileAs
 		case "create_baseline":
 			value.Operation = PolicyCreateBaseline
+		case "append_baseline":
+			value.Operation = PolicyAppendBaseline
 		}
 		return adapter.Quality.ExecuteQualityPolicyCommand(ctx, value)
 	default:
@@ -428,7 +439,7 @@ type mcpTool struct {
 }
 
 func mcpToolCatalog() []mcpTool {
-	names := []string{"get_snapshot_status", "ensure_current_snapshot", "list_scopes", "find_files", "find_symbols", "find_text", "get_documentation", "get_module_facts", "get_callers_callees", "get_source_context", "get_quality_profiles", "get_quality_rules", "get_quality_findings", "get_finding_evidence", "evaluate_quality", "compare_quality_reports", "validate_quality_profile", "preview_baseline", "save_quality_profile", "save_quality_profile_as", "create_baseline"}
+	names := []string{"get_snapshot_status", "ensure_current_snapshot", "list_scopes", "find_files", "find_symbols", "find_text", "get_documentation", "get_module_facts", "get_callers_callees", "get_source_context", "get_quality_profiles", "get_quality_rules", "get_quality_baselines", "get_quality_findings", "get_finding_evidence", "evaluate_quality", "compare_quality_reports", "validate_quality_profile", "preview_baseline", "save_quality_profile", "save_quality_profile_as", "create_baseline", "append_baseline"}
 	result := make([]mcpTool, 0, len(names))
 	for _, name := range names {
 		result = append(result, mcpTool{Name: name, Description: mcpToolDescription(name), InputSchema: mcpToolInputSchema(name)})
@@ -468,6 +479,8 @@ func mcpToolInputSchema(name string) map[string]any {
 	case "get_quality_profiles", "get_quality_rules":
 		properties["profile_id"] = stringValue
 		properties["profile_version"] = stringValue
+	case "get_quality_baselines":
+		properties = map[string]any{"session_id": stringValue, "consistency": stringValue, "revision": integerValue, "file_names": stringList, "baseline_id": stringValue, "baseline_revision": stringValue, "include_entries": booleanValue, "max_bytes": integerValue, "max_items": integerValue, "cursor": stringValue}
 	case "get_quality_findings":
 		properties["report_id"] = stringValue
 	case "get_finding_evidence":
@@ -478,15 +491,18 @@ func mcpToolInputSchema(name string) map[string]any {
 		properties["max_context_bytes"] = integerValue
 		required = []string{"finding_id"}
 	case "evaluate_quality":
-		properties = map[string]any{"session_id": stringValue, "consistency": stringValue, "revision": integerValue, "scope_ids": stringList, "profile_id": stringValue, "profile_version": stringValue, "rule_bindings": map[string]any{"type": "array", "items": objectValue}, "persist": booleanValue, "max_bytes": integerValue, "max_items": integerValue}
+		properties = map[string]any{"session_id": stringValue, "consistency": stringValue, "revision": integerValue, "scope_ids": stringList, "profile_id": stringValue, "profile_version": stringValue, "rule_bindings": map[string]any{"type": "array", "items": objectValue}, "baseline_mode": map[string]any{"type": "string", "enum": []string{string(BaselineModeProfile), string(BaselineModeNone), string(BaselineModeSelected)}}, "baseline_files": stringList, "persist": booleanValue, "max_bytes": integerValue, "max_items": integerValue}
 		required = []string{"profile_id", "profile_version"}
 	case "compare_quality_reports":
 		properties = map[string]any{"session_id": stringValue, "consistency": stringValue, "previous_revision": integerValue, "current_revision": integerValue, "previous_report_id": stringValue, "current_report_id": stringValue, "max_bytes": integerValue, "max_items": integerValue}
 		required = []string{"previous_revision"}
-	case "validate_quality_profile", "preview_baseline", "save_quality_profile", "save_quality_profile_as", "create_baseline":
-		properties = map[string]any{"operation": stringValue, "session_id": stringValue, "report_id": stringValue, "report_revision": integerValue, "profile_id": stringValue, "profile_version": stringValue, "source_profile_id": stringValue, "source_profile_version": stringValue, "profile": objectValue, "rule_bindings": map[string]any{"type": "array", "items": objectValue}, "file_name": stringValue, "baseline_id": stringValue, "baseline_revision": stringValue, "finding_keys": stringList, "reason": stringValue, "owner": stringValue, "authorization": stringValue, "overwrite": booleanValue}
-		if name == "preview_baseline" || name == "create_baseline" {
+	case "validate_quality_profile", "preview_baseline", "save_quality_profile", "save_quality_profile_as", "create_baseline", "append_baseline":
+		properties = map[string]any{"operation": stringValue, "session_id": stringValue, "report_id": stringValue, "report_revision": integerValue, "profile_id": stringValue, "profile_version": stringValue, "source_profile_id": stringValue, "source_profile_version": stringValue, "profile": objectValue, "rule_bindings": map[string]any{"type": "array", "items": objectValue}, "file_name": stringValue, "baseline_id": stringValue, "baseline_revision": stringValue, "expected_baseline_revision": stringValue, "finding_keys": stringList, "reason": stringValue, "owner": stringValue, "authorization": stringValue, "overwrite": booleanValue}
+		if name == "preview_baseline" || name == "create_baseline" || name == "append_baseline" {
 			required = []string{"baseline_id", "finding_keys", "reason"}
+		}
+		if name == "append_baseline" {
+			required = []string{"finding_keys", "reason"}
 		}
 	}
 	return map[string]any{"type": "object", "additionalProperties": false, "properties": properties, "required": required}

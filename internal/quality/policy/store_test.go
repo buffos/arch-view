@@ -81,6 +81,69 @@ func TestServiceValidatesBeforeWritingAndBaselineStoreIsBounded(t *testing.T) {
 	}
 }
 
+func TestFileStoreListsAndResolvesBaselinesWithoutGuessing(t *testing.T) {
+	root := t.TempDir()
+	store, err := NewFileStore(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := func(id, revision string) quality.Baseline {
+		return quality.Baseline{SchemaVersion: quality.BaselineSchemaVersion, BaselineID: id, Revision: revision, Entries: []quality.BaselineEntry{}, Extensions: []quality.ExtensionBlock{}}
+	}
+	if _, err := store.SaveBaseline(context.Background(), base("baseline:main", "1.0.1"), "z.json", false); err != nil {
+		t.Fatalf("save z baseline: %v", err)
+	}
+	if _, err := store.SaveBaseline(context.Background(), base("baseline:main", "1.0.0"), "a.json", false); err != nil {
+		t.Fatalf("save a baseline: %v", err)
+	}
+	if _, err := store.SaveBaseline(context.Background(), base("baseline:other", "1.0.0"), "other.json", false); err != nil {
+		t.Fatalf("save other baseline: %v", err)
+	}
+	invalid := base("baseline:broken", "1.0.0")
+	invalid.SchemaVersion = "arch-view.quality-baseline/v0"
+	if _, err := store.SaveBaseline(context.Background(), invalid, "broken.json", false); err != nil {
+		t.Fatalf("save invalid baseline fixture: %v", err)
+	}
+	infos, err := store.ListBaselines(context.Background())
+	if err != nil {
+		t.Fatalf("list baselines: %v", err)
+	}
+	if len(infos) != 4 || infos[0].FileName != "broken.json" || infos[1].FileName != "a.json" || infos[2].FileName != "z.json" {
+		t.Fatalf("baseline list = %#v", infos)
+	}
+	resolved, info, err := store.ResolveBaseline(context.Background(), "baseline:main", "1.0.0")
+	if err != nil || resolved.Revision != "1.0.0" || info.FileName != "a.json" {
+		t.Fatalf("resolved baseline = %#v, info = %#v, err = %v", resolved, info, err)
+	}
+	if _, _, err := store.ResolveBaseline(context.Background(), "baseline:main", ""); !errors.Is(err, ErrBaselineConflict) {
+		t.Fatalf("ambiguous baseline error = %v, want ErrBaselineConflict", err)
+	}
+	if _, _, err := store.ResolveBaseline(context.Background(), "baseline:missing", "1.0.0"); !errors.Is(err, ErrBaselineNotFound) {
+		t.Fatalf("missing baseline error = %v, want ErrBaselineNotFound", err)
+	}
+	if _, _, err := store.ResolveBaseline(context.Background(), "baseline:broken", "1.0.0"); !errors.Is(err, ErrBaselineInvalid) {
+		t.Fatalf("invalid baseline error = %v, want ErrBaselineInvalid", err)
+	}
+}
+
+func TestFileStoreTreatsMalformedManagedDocumentAsInvalid(t *testing.T) {
+	root := t.TempDir()
+	store, err := NewFileStore(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory := filepath.Join(root, BaselineDirectoryName)
+	if err := os.MkdirAll(directory, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(directory, "main.json"), []byte("{not-json\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := store.ResolveBaseline(context.Background(), "baseline:main", "1.0.0"); !errors.Is(err, ErrBaselineInvalid) {
+		t.Fatalf("malformed managed baseline error = %v, want ErrBaselineInvalid", err)
+	}
+}
+
 func testPolicyProfile(id, version string) quality.QualityProfile {
 	return quality.QualityProfile{
 		SchemaVersion:  quality.SchemaVersion,

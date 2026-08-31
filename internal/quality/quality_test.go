@@ -99,6 +99,19 @@ func TestProfileValidationReturnsStructuredDiagnostics(t *testing.T) {
 	}
 }
 
+func TestProfileValidationRejectsInvalidBaselineReference(t *testing.T) {
+	profile := thresholdProfile("source:file.max-lines", "rule-config:source-file-size", "greater_than", 500, "unit:line")
+	profile.Baseline = &quality.BaselineRef{BaselineID: "profile:not-a-baseline", Revision: "not-a-version"}
+	_, err := quality.ValidateQualityProfile(profile, quality.NewDefaultCatalog())
+	if err == nil {
+		t.Fatal("invalid baseline reference unexpectedly validated")
+	}
+	var validationErr *quality.ProfileValidationError
+	if !errors.As(err, &validationErr) || len(validationErr.Diagnostics) < 2 {
+		t.Fatalf("baseline validation error = %T %v, want ID and revision diagnostics", err, err)
+	}
+}
+
 func TestCallableSizeRequiresExtractorBodySpan(t *testing.T) {
 	profile := thresholdProfile("source:callable.max-lines", "rule-config:source-callable-size", "greater_or_equal", 3, "unit:line")
 	input := quality.EvaluationInput{SourceSnapshots: []quality.SourceSnapshot{{SnapshotID: "snapshot-callables", ScopeID: "scope-callables", Capabilities: []quality.CapabilityDescriptor{{ID: "source:declarations", Version: "v1"}}, Coverage: []quality.SourceCoverage{{Capability: "source:callable.metrics", SubjectKind: "symbol", Status: quality.CoverageObserved}}, Symbols: []quality.SourceSymbol{{ID: "with-body", Name: "WithBody", Category: "callable", StableKey: "WithBody", BodySpan: &quality.SourceSpan{FileID: "file.go", Start: quality.SpanPosition{ByteOffset: 0, Line: 2, Column: 1}, End: quality.SpanPosition{ByteOffset: 10, Line: 4, Column: 2}, CoordinateSystem: "utf8-byte", ContentHash: quality.ContentDigest{Algorithm: "hash:sha-256", Value: "0000000000000000000000000000000000000000000000000000000000000000"}}}, {ID: "without-body", Name: "WithoutBody", Category: "callable", StableKey: "WithoutBody"}}}}}

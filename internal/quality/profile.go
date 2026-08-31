@@ -182,8 +182,13 @@ func ValidateQualityProfile(profile QualityProfile, catalog *Catalog) (QualityPr
 			constraint.Provenance = FactProvenance{Status: "observed", Basis: "configuration", EvidenceIDs: []string{}, Provider: "quality:profile", ProviderVersion: "1.0.0"}
 		}
 	}
-	if validated.Baseline != nil && !validNamespacedID(validated.Baseline.BaselineID) {
-		diagnostics = append(diagnostics, profileDiagnostic(string(ErrorProfileInvalid), "baseline.baseline_id", "baseline reference requires a namespaced ID", map[string]any{"baseline_id": validated.Baseline.BaselineID}))
+	if validated.Baseline != nil {
+		if !validNamespacedID(validated.Baseline.BaselineID) || !strings.HasPrefix(validated.Baseline.BaselineID, "baseline:") {
+			diagnostics = append(diagnostics, profileDiagnostic(string(ErrorProfileInvalid), "baseline.baseline_id", "baseline reference requires a baseline namespaced ID", map[string]any{"baseline_id": validated.Baseline.BaselineID}))
+		}
+		if validated.Baseline.Revision != "" && !validVersion(validated.Baseline.Revision) {
+			diagnostics = append(diagnostics, profileDiagnostic(string(ErrorProfileInvalid), "baseline.revision", "baseline reference revision must be a stable version value", map[string]any{"revision": validated.Baseline.Revision}))
+		}
 	}
 	if len(diagnostics) > 0 {
 		return QualityProfile{}, &ProfileValidationError{Diagnostics: diagnostics}

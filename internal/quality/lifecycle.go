@@ -3,6 +3,7 @@ package quality
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -103,6 +104,22 @@ func CreateBaselineEntry(report QualityEvaluation, findingID, reason, owner stri
 	if selected == nil {
 		return BaselineEntry{}, newQualityError(ErrorBaselineInvalid, "the report does not contain the requested finding", map[string]any{"finding_id": findingID})
 	}
+	if selected.Status != StatusActive {
+		return BaselineEntry{}, newQualityError(ErrorBaselineInvalid, "only active findings may be added to a baseline", map[string]any{"finding_id": findingID, "status": selected.Status})
+	}
+	coverageFound := false
+	for _, coverage := range report.Coverage {
+		if coverage.RuleID != selected.RuleID || coverage.RuleVersion != selected.RuleVersion {
+			continue
+		}
+		coverageFound = true
+		if coverage.Status != CoverageObserved {
+			return BaselineEntry{}, newQualityError(ErrorBaselineInvalid, "baseline entries require observed rule coverage", map[string]any{"finding_id": findingID, "rule_id": selected.RuleID, "rule_version": selected.RuleVersion, "coverage": coverage.Status})
+		}
+	}
+	if !coverageFound {
+		return BaselineEntry{}, newQualityError(ErrorBaselineInvalid, "baseline entries require observed rule coverage", map[string]any{"finding_id": findingID, "rule_id": selected.RuleID, "rule_version": selected.RuleVersion})
+	}
 	return BaselineEntry{
 		FindingKey:      selected.FindingKey,
 		RuleID:          selected.RuleID,
@@ -128,6 +145,104 @@ func AddBaselineEntry(baseline Baseline, entry BaselineEntry) (Baseline, error) 
 		return Baseline{}, err
 	}
 	return baseline, nil
+}
+
+// BaselineMergeResult describes an idempotent append operation. Entries that
+// already exist with the same exact identity are reported as existing rather
+// than duplicated. A matching identity with different review metadata is an
+// error because silently changing the reason would hide a policy decision.
+type BaselineMergeResult struct {
+	Baseline Baseline
+	Added    []BaselineEntry
+	Existing []BaselineEntry
+}
+
+// MergeBaselineEntries appends reviewed entries to a baseline while keeping
+// canonical ordering and exact-version identity. It never mutates the input
+// baseline or entry slices.
+func MergeBaselineEntries(baseline Baseline, additions []BaselineEntry) (BaselineMergeResult, error) {
+	if err := ValidateBaseline(baseline); err != nil {
+		return BaselineMergeResult{}, err
+	}
+	result := BaselineMergeResult{Baseline: baseline, Added: []BaselineEntry{}, Existing: []BaselineEntry{}}
+	result.Baseline.Entries = append([]BaselineEntry(nil), baseline.Entries...)
+	byIdentity := make(map[string]BaselineEntry, len(baseline.Entries))
+	for _, entry := range baseline.Entries {
+		byIdentity[baselineEntryKey(entry)] = entry
+	}
+	seenAdditions := make(map[string]struct{}, len(additions))
+	for _, entry := range additions {
+		if err := validateBaselineEntry(entry); err != nil {
+			return BaselineMergeResult{}, err
+		}
+		identity := baselineEntryKey(entry)
+		if _, duplicate := seenAdditions[identity]; duplicate {
+			return BaselineMergeResult{}, newQualityError(ErrorBaselineInvalid, "baseline additions must be unique by finding and exact versions", map[string]any{"finding_key": entry.FindingKey})
+		}
+		seenAdditions[identity] = struct{}{}
+		if existing, ok := byIdentity[identity]; ok {
+			if existing.Reason != entry.Reason || existing.Owner != entry.Owner {
+				return BaselineMergeResult{}, newQualityError(ErrorBaselineInvalid, "baseline entry already exists with different review metadata", map[string]any{"finding_key": entry.FindingKey})
+			}
+			result.Existing = append(result.Existing, existing)
+			continue
+		}
+		byIdentity[identity] = entry
+		result.Baseline.Entries = append(result.Baseline.Entries, entry)
+		result.Added = append(result.Added, entry)
+	}
+	sort.Slice(result.Baseline.Entries, func(i, j int) bool {
+		return baselineEntryKey(result.Baseline.Entries[i]) < baselineEntryKey(result.Baseline.Entries[j])
+	})
+	if err := ValidateBaseline(result.Baseline); err != nil {
+		return BaselineMergeResult{}, err
+	}
+	return result, nil
+}
+
+func validateBaselineEntry(entry BaselineEntry) error {
+	probe := Baseline{
+		SchemaVersion: BaselineSchemaVersion,
+		BaselineID:    "baseline:entry-validation",
+		Entries:       []BaselineEntry{entry},
+		Extensions:    []ExtensionBlock{},
+	}
+	return ValidateBaseline(probe)
+}
+
+// NextBaselineRevision returns a deterministic next revision for a managed
+// baseline. Numeric trailing components are incremented, so 1.0.0 becomes
+// 1.0.1 and 2026-08 becomes 2026-08.1. A new baseline starts at 1.0.0.
+func NextBaselineRevision(current string) (string, error) {
+	current = strings.TrimSpace(current)
+	if current == "" {
+		return "1.0.0", nil
+	}
+	if !validVersion(current) {
+		return "", newQualityError(ErrorBaselineInvalid, "current baseline revision is invalid", map[string]any{"revision": current})
+	}
+	separator := strings.LastIndexByte(current, '.')
+	if separator < 0 {
+		if value, err := strconv.ParseUint(current, 10, 64); err == nil {
+			if value == ^uint64(0) {
+				return "", newQualityError(ErrorBaselineInvalid, "baseline revision cannot be incremented", map[string]any{"revision": current})
+			}
+			return strconv.FormatUint(value+1, 10), nil
+		}
+	}
+	prefix, suffix := current, ""
+	if separator >= 0 {
+		prefix, suffix = current[:separator], current[separator+1:]
+	}
+	if suffix != "" {
+		if value, err := strconv.ParseUint(suffix, 10, 64); err == nil {
+			if value == ^uint64(0) {
+				return "", newQualityError(ErrorBaselineInvalid, "baseline revision cannot be incremented", map[string]any{"revision": current})
+			}
+			return prefix + "." + strconv.FormatUint(value+1, 10), nil
+		}
+	}
+	return current + ".1", nil
 }
 
 // ResolveSuppression returns a finding with its detected payload intact and a

@@ -10,6 +10,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/quality"
+	qualitypolicy "github.com/buffo/arch-view/internal/quality/policy"
 )
 
 func TestAnalyzeQualityProfileEmitsReportAndExportProjections(t *testing.T) {
@@ -208,5 +209,126 @@ func TestQualityBaselineCommandHelpSucceeds(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "arch-view quality baseline") {
 		t.Fatalf("quality baseline help = %q", stdout.String())
+	}
+}
+
+func TestManagedBaselineAddIsLoadedAutomaticallyByAnalyze(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/managed-baseline\n\ngo 1.22\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte("package main\n\nfunc main() {\n\tprintln(\"managed baseline\")\n}\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "quality-profiles"), 0o755); err != nil {
+		t.Fatalf("create quality profile directory: %v", err)
+	}
+	profile := quality.QualityProfile{
+		SchemaVersion: quality.SchemaVersion, ProfileID: "profile:managed-baseline", ProfileVersion: "1.0.0",
+		EnabledRules: []quality.RuleBinding{{
+			RuleID: "source:file.max-lines", RuleVersion: "1.0.0", Enabled: true,
+			Parameters: quality.TypedConfigBlock{Namespace: "rule-config:source-file-size", SchemaVersion: "1.0.0", Payload: map[string]any{"operator": "greater_than", "limit": 1, "unit": "unit:line"}}, Severity: quality.SeverityWarning,
+		}},
+		SeverityPolicy: quality.TypedConfigBlock{Namespace: "severity:default", SchemaVersion: "1.0.0", Payload: map[string]any{}}, Constraints: []quality.ArchitectureConstraint{}, Extensions: []quality.ExtensionBlock{},
+	}
+	profileData, err := json.Marshal(profile)
+	if err != nil {
+		t.Fatalf("marshal managed profile: %v", err)
+	}
+	profilePath := filepath.Join(root, "quality-profiles", "main.json")
+	if err := os.WriteFile(profilePath, profileData, 0o644); err != nil {
+		t.Fatalf("write managed profile: %v", err)
+	}
+	firstPath := filepath.Join(t.TempDir(), "first.json")
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"analyze", "--project", root, "--language", "go", "--quality-profile", profilePath, "--format", "analysis-json", "--output", firstPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("first analyze exit code = %d, stderr=%s", code, stderr.String())
+	}
+	firstData, err := os.ReadFile(firstPath)
+	if err != nil {
+		t.Fatalf("read first report: %v", err)
+	}
+	var first analysis.AnalysisResult
+	if err := json.Unmarshal(firstData, &first); err != nil {
+		t.Fatalf("decode first report: %v", err)
+	}
+	if first.QualityReport == nil || len(first.QualityReport.Findings) != 1 || first.QualityReport.Findings[0].Status != quality.StatusActive {
+		t.Fatalf("first quality report = %#v", first.QualityReport)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"quality", "baseline", "add", "--project", root, "--profile", "quality-profiles/main.json", "--baseline-file", "main.json", "--input", firstPath, "--finding", first.QualityReport.Findings[0].FindingKey, "--reason", "accepted after review"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("managed baseline add exit code = %d, stdout=%s, stderr=%s", code, stdout.String(), stderr.String())
+	}
+	var appendResult managedBaselineCLIResult
+	if err := json.Unmarshal(stdout.Bytes(), &appendResult); err != nil {
+		t.Fatalf("decode managed baseline result: %v, output=%q", err, stdout.String())
+	}
+	if appendResult.Status != "updated" || appendResult.Revision != "1.0.0" || len(appendResult.AddedFindingKeys) != 1 {
+		t.Fatalf("managed baseline result = %#v", appendResult)
+	}
+	secondPath := filepath.Join(t.TempDir(), "second.json")
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"analyze", "--project", root, "--language", "go", "--quality-profile", profilePath, "--format", "analysis-json", "--output", secondPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("second analyze exit code = %d, stderr=%s", code, stderr.String())
+	}
+	secondData, err := os.ReadFile(secondPath)
+	if err != nil {
+		t.Fatalf("read second report: %v", err)
+	}
+	var second analysis.AnalysisResult
+	if err := json.Unmarshal(secondData, &second); err != nil {
+		t.Fatalf("decode second report: %v", err)
+	}
+	if second.QualityReport == nil || len(second.QualityReport.Findings) != 1 || second.QualityReport.Findings[0].Status != quality.StatusSuppressed {
+		t.Fatalf("automatic baseline report = %#v, want one suppressed finding", second.QualityReport)
+	}
+	baselineData, err := os.ReadFile(filepath.Join(root, qualitypolicy.BaselineDirectoryName, "main.json"))
+	if err != nil {
+		t.Fatalf("read managed baseline: %v", err)
+	}
+	var explicit quality.Baseline
+	if err := json.Unmarshal(baselineData, &explicit); err != nil {
+		t.Fatalf("decode managed baseline: %v", err)
+	}
+	explicit.BaselineID = "baseline:explicit"
+	explicitPath := filepath.Join(t.TempDir(), "explicit.json")
+	if err := writeQualityBaselineFile(explicitPath, explicit, false); err != nil {
+		t.Fatalf("write explicit baseline: %v", err)
+	}
+	explicitReportPath := filepath.Join(t.TempDir(), "explicit-report.json")
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"analyze", "--project", root, "--language", "go", "--quality-profile", profilePath, "--quality-baseline", explicitPath, "--format", "analysis-json", "--output", explicitReportPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("explicit baseline analyze exit code = %d, stderr=%s", code, stderr.String())
+	}
+	explicitData, err := os.ReadFile(explicitReportPath)
+	if err != nil {
+		t.Fatalf("read explicit baseline report: %v", err)
+	}
+	var explicitResult analysis.AnalysisResult
+	if err := json.Unmarshal(explicitData, &explicitResult); err != nil {
+		t.Fatalf("decode explicit baseline report: %v", err)
+	}
+	if explicitResult.QualityReport == nil || len(explicitResult.QualityReport.Findings) != 1 || explicitResult.QualityReport.Findings[0].Status != quality.StatusSuppressed || explicitResult.QualityReport.Baseline == nil || explicitResult.QualityReport.Baseline.BaselineID != "baseline:explicit" {
+		t.Fatalf("explicit baseline report = %#v", explicitResult.QualityReport)
+	}
+	thirdPath := filepath.Join(t.TempDir(), "third.json")
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"analyze", "--project", root, "--language", "go", "--quality-profile", profilePath, "--no-quality-baseline", "--format", "analysis-json", "--output", thirdPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("no-baseline analyze exit code = %d, stderr=%s", code, stderr.String())
+	}
+	thirdData, err := os.ReadFile(thirdPath)
+	if err != nil {
+		t.Fatalf("read third report: %v", err)
+	}
+	var third analysis.AnalysisResult
+	if err := json.Unmarshal(thirdData, &third); err != nil {
+		t.Fatalf("decode third report: %v", err)
+	}
+	if third.QualityReport == nil || len(third.QualityReport.Findings) != 1 || third.QualityReport.Findings[0].Status != quality.StatusActive {
+		t.Fatalf("no-baseline report = %#v, want one active finding", third.QualityReport)
 	}
 }

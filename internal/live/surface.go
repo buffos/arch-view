@@ -57,6 +57,10 @@ func (adapter *LocalQueryAdapter) GetQualityCatalog(ctx context.Context, request
 	return adapter.Quality.ReadQualityCatalog(ctx, request)
 }
 
+func (adapter *LocalQueryAdapter) GetQualityBaselines(ctx context.Context, request QualityBaselinesRequest) (QueryEnvelope, error) {
+	return adapter.Quality.GetQualityBaselines(ctx, request)
+}
+
 func (adapter *LocalQueryAdapter) EvaluateQuality(ctx context.Context, request QualityEvaluationRequest) (QueryEnvelope, error) {
 	return adapter.Quality.EvaluateQuality(ctx, request)
 }

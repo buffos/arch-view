@@ -41,6 +41,7 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 	output := fs.String("output", "", "output file, or - for stdout")
 	qualityProfilePath := fs.String("quality-profile", "", "versioned quality profile JSON file")
 	qualityBaselinePath := fs.String("quality-baseline", "", "exact-version quality baseline JSON file")
+	noQualityBaseline := fs.Bool("no-quality-baseline", false, "disable the profile's automatic baseline for this run")
 	qualityExitOn := fs.String("quality-exit-on", "", "exit 1 when a quality finding at or above this severity matches")
 	var qualityExitStatuses stringList
 	fs.Var(&qualityExitStatuses, "quality-exit-status", "quality finding status included by the exit policy; repeatable or comma-separated")
@@ -97,10 +98,13 @@ func runAnalyze(host *analysis.Host, args []string, stdout, stderr io.Writer) in
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
-	qualityConfig, err := loadQualityCLIConfig(*qualityProfilePath, *qualityBaselinePath, *qualityExitOn, []string(qualityExitStatuses))
+	qualityConfig, err := loadQualityCLIConfig(*project, *qualityProfilePath, *qualityBaselinePath, *noQualityBaseline, *qualityExitOn, []string(qualityExitStatuses))
 	if err != nil {
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
+	}
+	if qualityConfig.BaselineWarning != "" {
+		_, _ = io.WriteString(stderr, "Warning: "+qualityConfig.BaselineWarning+".\n")
 	}
 	if *scope != "" && (*analyzerID != "" || *language != "") {
 		err := analysis.NewHostError(analysis.ErrInvalidRequest, "--scope cannot be combined with an explicit analyzer or language selection", nil)

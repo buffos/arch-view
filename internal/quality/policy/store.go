@@ -32,6 +32,9 @@ const (
 var (
 	ErrDestinationConflict = errors.New("quality policy destination already exists")
 	ErrInvalidDestination  = errors.New("quality policy destination is invalid")
+	ErrBaselineNotFound    = errors.New("quality baseline was not found")
+	ErrBaselineConflict    = errors.New("quality baseline resolution is ambiguous")
+	ErrBaselineInvalid     = errors.New("quality baseline is invalid")
 )
 
 // ProfileInfo is the safe, project-relative identity returned by discovery.
@@ -50,6 +53,19 @@ type WriteResult struct {
 	RelativePath string                `json:"relative_path"`
 	Digest       quality.ContentDigest `json:"digest"`
 	Overwritten  bool                  `json:"overwritten"`
+}
+
+// BaselineInfo is the bounded, project-relative metadata returned by
+// baseline discovery. Invalid documents remain visible to read-only callers
+// without becoming candidates for suppression.
+type BaselineInfo struct {
+	BaselineID string   `json:"baseline_id,omitempty"`
+	Revision   string   `json:"revision,omitempty"`
+	FileName   string   `json:"file_name"`
+	Status     string   `json:"status"`
+	EntryCount int      `json:"entry_count"`
+	Profiles   []string `json:"profiles"`
+	Reason     string   `json:"reason,omitempty"`
 }
 
 // FileStore restricts policy documents to the two configured project
@@ -197,6 +213,24 @@ func (store *FileStore) SaveBaseline(ctx context.Context, baseline quality.Basel
 	return store.writeJSON(BaselineDirectoryName, fileName, baseline, overwrite, MaxBaselineBytes)
 }
 
+func (store *FileStore) ReadProfile(ctx context.Context, fileName string) (quality.QualityProfile, error) {
+	if err := contextError(ctx); err != nil {
+		return quality.QualityProfile{}, err
+	}
+	directory, err := store.directory(ProfileDirectoryName, false)
+	if err != nil {
+		return quality.QualityProfile{}, err
+	}
+	if directory == "" {
+		return quality.QualityProfile{}, fmt.Errorf("quality profile was not found: %s", fileName)
+	}
+	path, err := safeDocumentPath(directory, fileName)
+	if err != nil {
+		return quality.QualityProfile{}, err
+	}
+	return readJSONProfile(path)
+}
+
 func (store *FileStore) ReadBaseline(ctx context.Context, fileName string) (quality.Baseline, error) {
 	if err := contextError(ctx); err != nil {
 		return quality.Baseline{}, err
@@ -205,11 +239,146 @@ func (store *FileStore) ReadBaseline(ctx context.Context, fileName string) (qual
 	if err != nil {
 		return quality.Baseline{}, err
 	}
+	if directory == "" {
+		return quality.Baseline{}, fmt.Errorf("%w: %s", ErrBaselineNotFound, fileName)
+	}
 	path, err := safeDocumentPath(directory, fileName)
 	if err != nil {
 		return quality.Baseline{}, err
 	}
 	return readJSONBaseline(path)
+}
+
+// ListBaselines discovers project-local baseline documents without making any
+// of them active. Invalid documents are returned as metadata so an agent can
+// explain why a baseline was not usable.
+func (store *FileStore) ListBaselines(ctx context.Context) ([]BaselineInfo, error) {
+	if err := contextError(ctx); err != nil {
+		return nil, err
+	}
+	directory, err := store.directory(BaselineDirectoryName, false)
+	if err != nil {
+		return nil, err
+	}
+	if directory == "" {
+		return []BaselineInfo{}, nil
+	}
+	entries, err := os.ReadDir(directory)
+	if err != nil {
+		return nil, fmt.Errorf("quality baseline directory could not be read: %w", err)
+	}
+	result := make([]BaselineInfo, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() || !strings.EqualFold(filepath.Ext(entry.Name()), ".json") {
+			continue
+		}
+		info := BaselineInfo{FileName: entry.Name(), Status: "invalid", Profiles: []string{}}
+		baseline, readErr := store.ReadBaseline(ctx, entry.Name())
+		if readErr != nil {
+			info.Reason = readErr.Error()
+			result = append(result, info)
+			continue
+		}
+		if validateErr := quality.ValidateBaseline(baseline); validateErr != nil {
+			info.BaselineID = baseline.BaselineID
+			info.Revision = baseline.Revision
+			info.Reason = validateErr.Error()
+			result = append(result, info)
+			continue
+		}
+		info.BaselineID = baseline.BaselineID
+		info.Revision = baseline.Revision
+		info.Status = "available"
+		info.EntryCount = len(baseline.Entries)
+		seenProfiles := make(map[string]struct{})
+		for _, entry := range baseline.Entries {
+			profile := entry.ProfileID + "@" + entry.ProfileVersion
+			if _, ok := seenProfiles[profile]; ok {
+				continue
+			}
+			seenProfiles[profile] = struct{}{}
+			info.Profiles = append(info.Profiles, profile)
+		}
+		sort.Strings(info.Profiles)
+		result = append(result, info)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		if result[i].BaselineID != result[j].BaselineID {
+			return result[i].BaselineID < result[j].BaselineID
+		}
+		if result[i].Revision != result[j].Revision {
+			return result[i].Revision < result[j].Revision
+		}
+		return result[i].FileName < result[j].FileName
+	})
+	return result, nil
+}
+
+// ResolveBaseline returns the unique valid baseline matching an explicit
+// profile reference. Multiple matching files are rejected rather than
+// selecting one nondeterministically.
+func (store *FileStore) ResolveBaseline(ctx context.Context, baselineID, revision string) (quality.Baseline, BaselineInfo, error) {
+	baselineID = strings.TrimSpace(baselineID)
+	revision = strings.TrimSpace(revision)
+	if baselineID == "" {
+		return quality.Baseline{}, BaselineInfo{}, fmt.Errorf("%w: baseline ID is required", ErrBaselineNotFound)
+	}
+	infos, err := store.ListBaselines(ctx)
+	if err != nil {
+		return quality.Baseline{}, BaselineInfo{}, err
+	}
+	var matches []BaselineInfo
+	var invalidMatches []BaselineInfo
+	for _, info := range infos {
+		if info.BaselineID != baselineID || revision != "" && info.Revision != revision {
+			// A syntactically broken managed document cannot expose its own
+			// identity. When its filename carries the default managed identity,
+			// treat it as an invalid match rather than downgrading the profile
+			// reference to a misleading "missing" warning.
+			if info.Status != "available" && info.BaselineID == "" && DefaultBaselineID(info.FileName) == baselineID {
+				invalidMatches = append(invalidMatches, info)
+			}
+			continue
+		}
+		if info.Status != "available" {
+			invalidMatches = append(invalidMatches, info)
+			continue
+		}
+		matches = append(matches, info)
+	}
+	if len(matches) == 0 {
+		if len(invalidMatches) > 0 {
+			return quality.Baseline{}, BaselineInfo{}, fmt.Errorf("%w: %s", ErrBaselineInvalid, invalidBaselineFiles(invalidMatches))
+		}
+		return quality.Baseline{}, BaselineInfo{}, fmt.Errorf("%w: %s@%s", ErrBaselineNotFound, baselineID, revision)
+	}
+	if len(invalidMatches) > 0 {
+		return quality.Baseline{}, BaselineInfo{}, fmt.Errorf("%w: valid and invalid documents match %s@%s", ErrBaselineInvalid, baselineID, revision)
+	}
+	if len(matches) > 1 {
+		files := make([]string, 0, len(matches))
+		for _, match := range matches {
+			files = append(files, match.FileName)
+		}
+		return quality.Baseline{}, BaselineInfo{}, fmt.Errorf("%w: %s", ErrBaselineConflict, strings.Join(files, ", "))
+	}
+	baseline, err := store.ReadBaseline(ctx, matches[0].FileName)
+	if err != nil {
+		return quality.Baseline{}, BaselineInfo{}, err
+	}
+	if err := quality.ValidateBaseline(baseline); err != nil {
+		return quality.Baseline{}, BaselineInfo{}, err
+	}
+	return baseline, matches[0], nil
+}
+
+func invalidBaselineFiles(values []BaselineInfo) string {
+	files := make([]string, 0, len(values))
+	for _, value := range values {
+		files = append(files, value.FileName)
+	}
+	sort.Strings(files)
+	return strings.Join(files, ", ")
 }
 
 func (store *FileStore) writeJSON(directoryName, fileName string, value any, overwrite bool, maxBytes int) (WriteResult, error) {
@@ -352,6 +521,14 @@ func safeDocumentPath(directory, fileName string) (string, error) {
 	return filepath.Join(directory, fileName), nil
 }
 
+// ValidateManagedBaselineFileName checks the public filename boundary used by
+// live queries and managed baseline writes. Baseline callers may name one
+// direct JSON document, but may not escape the quality-baselines directory.
+func ValidateManagedBaselineFileName(fileName string) error {
+	_, err := safeDocumentPath(".", fileName)
+	return err
+}
+
 func readJSONProfile(path string) (quality.QualityProfile, error) {
 	data, err := readLimited(path, MaxProfileBytes)
 	if err != nil {
@@ -481,4 +658,18 @@ func (service *Service) SaveBaseline(ctx context.Context, baseline quality.Basel
 		return WriteResult{}, err
 	}
 	return service.Store.SaveBaseline(ctx, baseline, fileName, overwrite)
+}
+
+func (service *Service) ListBaselines(ctx context.Context) ([]BaselineInfo, error) {
+	if service == nil || service.Store == nil {
+		return nil, fmt.Errorf("quality policy store is unavailable")
+	}
+	return service.Store.ListBaselines(ctx)
+}
+
+func (service *Service) ResolveBaseline(ctx context.Context, baselineID, revision string) (quality.Baseline, BaselineInfo, error) {
+	if service == nil || service.Store == nil {
+		return quality.Baseline{}, BaselineInfo{}, fmt.Errorf("quality policy store is unavailable")
+	}
+	return service.Store.ResolveBaseline(ctx, baselineID, revision)
 }

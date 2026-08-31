@@ -33,6 +33,7 @@ const (
 	ErrorQualityPolicyPermissionDenied = "quality_policy_permission_denied"
 	ErrorQualityProfileConflict        = "quality_profile_conflict"
 	ErrorBaselineRevisionStale         = "baseline_revision_stale"
+	ErrorBaselineNotFound              = "quality_baseline_not_found"
 	ErrorQualityPolicyIncompatible     = "quality_policy_incompatible"
 )
 

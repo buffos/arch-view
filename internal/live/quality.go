@@ -11,8 +11,10 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/model"
+	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/quality"
 	qualityadapter "github.com/buffo/arch-view/internal/quality/adapter"
+	qualitypolicy "github.com/buffo/arch-view/internal/quality/policy"
 )
 
 // QualityGateway is the live boundary around the deterministic-quality
@@ -186,6 +188,121 @@ func (gateway *QualityGateway) GetQualityProfiles(ctx context.Context, request Q
 	return gateway.ReadQualityCatalog(ctx, request)
 }
 
+// GetQualityBaselines lists project-local baseline documents or reads bounded
+// entries from one explicitly selected document. It never changes which
+// baseline a later evaluation uses.
+func (gateway *QualityGateway) GetQualityBaselines(ctx context.Context, request QualityBaselinesRequest) (QueryEnvelope, error) {
+	if err := gateway.require(OperationBaselineRead); err != nil {
+		return QueryEnvelope{}, err
+	}
+	if gateway.policy == nil {
+		return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "quality baseline reading is unavailable for this live session", nil)
+	}
+	if request.SessionID == "" {
+		request.SessionID = gateway.session.validated.Config.SessionID
+	}
+	if request.Consistency == "" {
+		request.Consistency = ConsistencyLatestReady
+	}
+	record, freshness, returned, query, err := gateway.session.prepareQuery(ctx, request.QueryRequest)
+	if err != nil {
+		return QueryEnvelope{}, err
+	}
+	infos, err := gateway.policy.ListBaselines(ctx)
+	if err != nil {
+		return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "quality baselines could not be listed", map[string]any{"error": err.Error()})
+	}
+	selectedFiles := make(map[string]struct{}, len(request.FileNames))
+	for _, fileName := range request.FileNames {
+		fileName = strings.TrimSpace(fileName)
+		if fileName != "" {
+			if err := qualitypolicy.ValidateManagedBaselineFileName(fileName); err != nil {
+				return QueryEnvelope{}, newLiveError("QueryInvalid", "quality baseline file names must be direct project-local JSON files", map[string]any{"file_name": fileName})
+			}
+			selectedFiles[fileName] = struct{}{}
+		}
+	}
+	filtered := make([]QualityBaselineDocument, 0, len(infos))
+	for _, info := range infos {
+		if len(selectedFiles) > 0 {
+			if _, ok := selectedFiles[info.FileName]; !ok {
+				continue
+			}
+		}
+		if request.BaselineID != "" && info.BaselineID != strings.TrimSpace(request.BaselineID) {
+			continue
+		}
+		if request.BaselineRevision != "" && info.Revision != strings.TrimSpace(request.BaselineRevision) {
+			continue
+		}
+		filtered = append(filtered, QualityBaselineDocument{Info: info, Entries: []quality.BaselineEntry{}})
+	}
+	maxBytes, maxItems, err := gateway.session.normalizeBudget(query.MaxBytes, query.MaxItems)
+	if err != nil {
+		return QueryEnvelope{}, err
+	}
+	if request.IncludeEntries {
+		if len(filtered) != 1 {
+			return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "include_entries requires exactly one selected baseline document", map[string]any{"matches": len(filtered)})
+		}
+		baseline, info, readErr := gateway.policy.ReadBaseline(ctx, filtered[0].Info.FileName)
+		if readErr != nil {
+			return QueryEnvelope{}, newLiveError(ErrorQualityPolicyIncompatible, "quality baseline could not be read", map[string]any{"file_name": filtered[0].Info.FileName, "error": readErr.Error()})
+		}
+		filtered[0].Info = info
+		contextKey := queryContext(record, request, "quality-baselines", maxBytes, maxItems)
+		offset, cursorErr := decodeQueryCursor(query.Cursor, contextKey)
+		if cursorErr != nil {
+			return QueryEnvelope{}, cursorErr
+		}
+		page, total, next, budget, pageErr := pageSlice(baseline.Entries, offset, maxItems, maxBytes)
+		if pageErr != nil {
+			return QueryEnvelope{}, pageErr
+		}
+		if next != "" {
+			nextOffset, parseErr := strconv.Atoi(strings.TrimPrefix(next, "offset:"))
+			if parseErr != nil {
+				return QueryEnvelope{}, newLiveError(ErrorQueryCursor, "quality baseline pagination produced an invalid continuation", nil)
+			}
+			next = encodeQueryCursor(contextKey, nextOffset)
+		}
+		filtered[0].Entries = page
+		filtered[0].TotalEntries = total
+		filtered[0].NextCursor = next
+		result := QualityBaselinesResult{Status: "available", Items: filtered, Total: total, NextCursor: next}
+		budget.EmittedBytes = jsonSize(result)
+		budget.EmittedItems = len(page)
+		if budget.EmittedBytes > maxBytes {
+			return QueryEnvelope{}, newLiveError(ErrorQueryBudget, "quality baseline entries exceed the query byte budget", map[string]any{"max_bytes": maxBytes})
+		}
+		envelope := gateway.qualityEnvelope(record, freshness, returned, query.Consistency, result, []CapabilityCoverage{{Capability: "quality:baselines", Status: "observed"}}, []string{}, budget)
+		envelope.ResultCount = total
+		envelope.NextCursor = next
+		return envelope, nil
+	}
+	contextKey := queryContext(record, request, "quality-baselines", maxBytes, maxItems)
+	offset, cursorErr := decodeQueryCursor(query.Cursor, contextKey)
+	if cursorErr != nil {
+		return QueryEnvelope{}, cursorErr
+	}
+	page, total, next, budget, pageErr := pageSlice(filtered, offset, maxItems, maxBytes)
+	if pageErr != nil {
+		return QueryEnvelope{}, pageErr
+	}
+	if next != "" {
+		nextOffset, parseErr := strconv.Atoi(strings.TrimPrefix(next, "offset:"))
+		if parseErr != nil {
+			return QueryEnvelope{}, newLiveError(ErrorQueryCursor, "quality baseline pagination produced an invalid continuation", nil)
+		}
+		next = encodeQueryCursor(contextKey, nextOffset)
+	}
+	result := QualityBaselinesResult{Status: "available", Items: page, Total: total, NextCursor: next}
+	envelope := gateway.qualityEnvelope(record, freshness, returned, query.Consistency, result, []CapabilityCoverage{{Capability: "quality:baselines", Status: "observed"}}, []string{}, budget)
+	envelope.ResultCount = total
+	envelope.NextCursor = next
+	return envelope, nil
+}
+
 func (gateway *QualityGateway) EvaluateQuality(ctx context.Context, request QualityEvaluationRequest) (QueryEnvelope, error) {
 	if err := gateway.require(OperationQualityEvaluate); err != nil {
 		return QueryEnvelope{}, err
@@ -215,7 +332,7 @@ func (gateway *QualityGateway) EvaluateQuality(ctx context.Context, request Qual
 	if request.ProfileID == "" || request.ProfileVersion == "" {
 		return QueryEnvelope{}, newLiveError(ErrorQualityEvaluation, "quality evaluation requires profile_id and profile_version", nil)
 	}
-	profile, err := gateway.profiles.ResolveProfile(ctx, request.ProfileID, request.ProfileVersion)
+	profile, err := gateway.profileForReport(ctx, request.ProfileID, request.ProfileVersion)
 	if err != nil {
 		return QueryEnvelope{}, newLiveError(ErrorQualityEvaluation, "quality profile could not be resolved", map[string]any{"error": err.Error()})
 	}
@@ -223,7 +340,11 @@ func (gateway *QualityGateway) EvaluateQuality(ctx context.Context, request Qual
 	if request.RuleBindings != nil {
 		profile.EnabledRules = cloneRuleBindings(request.RuleBindings)
 	}
-	validated, err := quality.ValidateQualityProfile(profile, gateway.catalog)
+	baselineResolution, err := resolveQualityBaseline(ctx, gateway.policy, profile, request.BaselineMode, request.BaselineFiles)
+	if err != nil {
+		return QueryEnvelope{}, err
+	}
+	validated, err := quality.ValidateQualityProfile(baselineResolution.Profile, gateway.catalog)
 	if err != nil {
 		return QueryEnvelope{}, newLiveError(ErrorQualityEvaluation, "quality profile or temporary rule bindings are invalid", map[string]any{"error": err.Error()})
 	}
@@ -231,7 +352,14 @@ func (gateway *QualityGateway) EvaluateQuality(ctx context.Context, request Qual
 	if err != nil {
 		return QueryEnvelope{}, err
 	}
-	report, err := qualityadapter.EvaluateModel(validated, value, gateway.catalog)
+	// A live model may already carry the startup report. Quality evaluation is
+	// defined over source facts, so remove that derived projection before the
+	// adapter recomputes the model identity and report.
+	value, err = canonical.WithQualityReport(value, nil)
+	if err != nil {
+		return QueryEnvelope{}, newLiveError(ErrorQualityEvaluation, "quality evaluation could not detach the previous report", map[string]any{"error": err.Error()})
+	}
+	report, err := qualityadapter.EvaluateModelWithBaseline(validated, value, gateway.catalog, baselineResolution.Baseline)
 	if err != nil {
 		return QueryEnvelope{}, newLiveError(ErrorQualityEvaluation, "quality evaluation failed", map[string]any{"error": err.Error()})
 	}
