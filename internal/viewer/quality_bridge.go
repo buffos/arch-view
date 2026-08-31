@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/buffo/arch-view/internal/analysis"
+	"github.com/buffo/arch-view/internal/live"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/quality/adapter"
@@ -164,6 +165,9 @@ func (s *Server) handleQualityProfileSave(writer http.ResponseWriter, request *h
 		writeMethodNotAllowed(writer, http.MethodPut)
 		return
 	}
+	if s.rejectLivePolicyWrite(writer, "save_quality_profile") {
+		return
+	}
 	input, err := decodeQualityProfileSaveRequest(request, false)
 	if err != nil {
 		writeHTTPError(writer, http.StatusBadRequest, err)
@@ -213,6 +217,9 @@ func (s *Server) handleQualityProfileSave(writer http.ResponseWriter, request *h
 func (s *Server) handleQualityProfileSaveAs(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPut {
 		writeMethodNotAllowed(writer, http.MethodPut)
+		return
+	}
+	if s.rejectLivePolicyWrite(writer, "save_quality_profile_as") {
 		return
 	}
 	input, err := decodeQualityProfileSaveRequest(request, true)
@@ -279,6 +286,9 @@ func (s *Server) handleQualityProfileSaveAs(writer http.ResponseWriter, request 
 func (s *Server) handleQualityBaselineCreate(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		writeMethodNotAllowed(writer, http.MethodPost)
+		return
+	}
+	if s.rejectLivePolicyWrite(writer, "create_baseline") {
 		return
 	}
 	if s.getSourceRoot() == "" {
@@ -831,6 +841,10 @@ func (s *Server) handleQualityEvaluation(writer http.ResponseWriter, request *ht
 		}))
 		return
 	}
+	if s.liveSession != nil {
+		s.handleLiveQualityEvaluation(writer, request, input, selectedProfile)
+		return
+	}
 
 	scopeID, value, err := s.qualityEvaluationModel(input.Scope)
 	if err != nil {
@@ -871,6 +885,64 @@ func (s *Server) handleQualityEvaluation(writer http.ResponseWriter, request *ht
 		Report:        &report,
 		Message:       message,
 	})
+}
+
+// handleLiveQualityEvaluation adapts the historical viewer response to the
+// shared live quality gateway. The browser keeps its existing response shape,
+// while revision selection, currentness, temporary evaluation, and report
+// semantics remain owned by live and deterministic-quality services.
+func (s *Server) handleLiveQualityEvaluation(writer http.ResponseWriter, request *http.Request, input qualityEvaluationRequest, selected loadedQualityProfile) {
+	if s.liveSession == nil {
+		writeHTTPError(writer, http.StatusUnprocessableEntity, analysis.NewHostError(analysis.ErrInvalidRequest, "live quality evaluation is unavailable", nil))
+		return
+	}
+	requestValue := live.QualityEvaluationRequest{
+		SessionID:      s.liveSession.Config().SessionID,
+		Consistency:    live.ConsistencyRequireCurrent,
+		ProfileID:      input.ProfileID,
+		ProfileVersion: input.ProfileVersion,
+		RuleBindings:   cloneQualityRuleBindings(input.RuleBindings),
+		Persist:        false,
+	}
+	envelope, err := s.liveSession.QualityGateway().EvaluateQuality(request.Context(), requestValue)
+	if err != nil {
+		converted := liveViewerHostError(err)
+		writeHTTPError(writer, liveViewerHTTPStatus(converted), converted)
+		return
+	}
+	result, ok := envelope.Result.(live.QualityEvaluationResult)
+	if !ok || result.Report == nil {
+		writeHTTPError(writer, http.StatusUnprocessableEntity, analysis.NewHostError(analysis.ErrInvalidModel, "live quality evaluation returned no report", nil))
+		return
+	}
+	s.storeQualityReportAt("all", *result.Report, envelope.Revision)
+	message := ""
+	if input.RuleBindings != nil {
+		message = "Applied the selected rules for this session; the project profile was not modified."
+	}
+	writeJSON(writer, http.StatusOK, qualityEvaluationHTTPResponse{
+		SchemaVersion: qualityEvaluationSchemaVersion,
+		Status:        "available",
+		ScopeID:       "all",
+		Profile:       selected.descriptor,
+		Report:        result.Report,
+		Message:       message,
+	})
+}
+
+// rejectLivePolicyWrite closes the legacy viewer write routes when the viewer
+// is backed by a live session. Live policy writes belong to the explicit MCP
+// or CLI policy operation, where the session permission and authorization are
+// checked and an audit record is returned.
+func (s *Server) rejectLivePolicyWrite(writer http.ResponseWriter, operation string) bool {
+	if s == nil || s.liveSession == nil {
+		return false
+	}
+	writeHTTPError(writer, http.StatusForbidden, analysis.NewHostError(analysis.ErrorCode(live.ErrorQualityPolicyPermissionDenied), "quality policy writes are disabled in the live viewer; use an explicitly authorized live policy operation", map[string]any{
+		"operation":  operation,
+		"session_id": s.liveSession.Config().SessionID,
+	}))
+	return true
 }
 
 func cloneQualityRuleBindings(bindings []quality.RuleBinding) []quality.RuleBinding {
@@ -1154,12 +1226,20 @@ func qualityReportKey(scope string) string {
 }
 
 func (s *Server) storeQualityReport(scope string, report quality.QualityEvaluation) {
+	s.storeQualityReportAt(scope, report, 0)
+}
+
+func (s *Server) storeQualityReportAt(scope string, report quality.QualityEvaluation, revision int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.qualityReports == nil {
 		s.qualityReports = make(map[string]quality.QualityEvaluation)
 	}
+	if s.qualityReportRevisions == nil {
+		s.qualityReportRevisions = make(map[string]int)
+	}
 	s.qualityReports[qualityReportKey(scope)] = report
+	s.qualityReportRevisions[qualityReportKey(scope)] = revision
 }
 
 func (s *Server) qualityReportForScope(scope string, fallback *quality.QualityEvaluation) *quality.QualityEvaluation {
@@ -1167,6 +1247,38 @@ func (s *Server) qualityReportForScope(scope string, fallback *quality.QualityEv
 	report, ok := s.qualityReports[qualityReportKey(scope)]
 	s.mu.RUnlock()
 	if ok {
+		copyReport := report
+		return &copyReport
+	}
+	if fallback == nil {
+		return nil
+	}
+	copyReport := *fallback
+	return &copyReport
+}
+
+// qualityReportForRequest keeps temporary live evaluations tied to the same
+// revision as the model request. A temporary report must never leak into a
+// later revision after a watcher rebuild.
+func (s *Server) qualityReportForRequest(scope string, fallback *quality.QualityEvaluation, request *http.Request) *quality.QualityEvaluation {
+	if s == nil || s.liveSession == nil {
+		return s.qualityReportForScope(scope, fallback)
+	}
+	revision, supplied, err := requestedLiveRevision(request)
+	if err != nil {
+		return fallback
+	}
+	if !supplied {
+		if record, queryErr := s.liveSession.QueryLatestReady(request.Context()); queryErr == nil && record != nil {
+			revision = record.Snapshot.Revision
+		}
+	}
+	key := qualityReportKey(scope)
+	s.mu.RLock()
+	report, ok := s.qualityReports[key]
+	reportRevision := s.qualityReportRevisions[key]
+	s.mu.RUnlock()
+	if ok && reportRevision == revision {
 		copyReport := report
 		return &copyReport
 	}

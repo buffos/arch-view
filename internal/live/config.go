@@ -16,20 +16,24 @@ import (
 )
 
 const (
-	ErrorLiveConfigInvalid       = "LiveConfigInvalid"
-	ErrorWatchRootInvalid        = "WatchRootInvalid"
-	ErrorWatchBackendUnavailable = "WatchBackendUnavailable"
-	ErrorSourceReconciliation    = "SourceReconciliationFailed"
-	ErrorInputUnstable           = "InputUnstable"
-	ErrorSnapshotBuildFailed     = "SnapshotBuildFailed"
-	ErrorSnapshotValidation      = "SnapshotValidationFailed"
-	ErrorNoReadySnapshot         = "NoReadySnapshot"
-	ErrorRevisionUnavailable     = "RevisionUnavailable"
-	ErrorAnalysisWaitTimeout     = "AnalysisWaitTimeout"
-	ErrorQueryBudget             = "QueryBudgetExceeded"
-	ErrorQueryCursor             = "QueryCursorInvalid"
-	ErrorSourceContextOutOfScope = "SourceContextOutOfScope"
-	ErrorQualityEvaluation       = "QualityEvaluationInvalid"
+	ErrorLiveConfigInvalid             = "LiveConfigInvalid"
+	ErrorWatchRootInvalid              = "WatchRootInvalid"
+	ErrorWatchBackendUnavailable       = "WatchBackendUnavailable"
+	ErrorSourceReconciliation          = "SourceReconciliationFailed"
+	ErrorInputUnstable                 = "InputUnstable"
+	ErrorSnapshotBuildFailed           = "SnapshotBuildFailed"
+	ErrorSnapshotValidation            = "SnapshotValidationFailed"
+	ErrorNoReadySnapshot               = "NoReadySnapshot"
+	ErrorRevisionUnavailable           = "RevisionUnavailable"
+	ErrorAnalysisWaitTimeout           = "AnalysisWaitTimeout"
+	ErrorQueryBudget                   = "QueryBudgetExceeded"
+	ErrorQueryCursor                   = "QueryCursorInvalid"
+	ErrorSourceContextOutOfScope       = "SourceContextOutOfScope"
+	ErrorQualityEvaluation             = "QualityEvaluationInvalid"
+	ErrorQualityPolicyPermissionDenied = "quality_policy_permission_denied"
+	ErrorQualityProfileConflict        = "quality_profile_conflict"
+	ErrorBaselineRevisionStale         = "baseline_revision_stale"
+	ErrorQualityPolicyIncompatible     = "quality_policy_incompatible"
 )
 
 type ValidationDependencies struct {
@@ -400,7 +404,7 @@ func validateExtensions(values []ExtensionBlock) error {
 
 func safeIdentifier(value string) bool {
 	value = strings.TrimSpace(value)
-	return value != "" && value == strings.TrimSpace(value) && !strings.ContainsAny(value, "\x00\r\n")
+	return value != "" && value == strings.TrimSpace(value) && !strings.ContainsAny(value, "\x00\r\n/\\")
 }
 
 func safeNamespaced(value string) bool {

@@ -420,6 +420,121 @@ type QualityProfileResolver interface {
 	ListProfiles(context.Context) ([]QualityProfileInfo, error)
 }
 
+// QualityPolicyService is the transport-neutral write seam for quality
+// profiles and baselines. The live package performs permission, revision, and
+// audit checks; the service performs typed document validation and safe file
+// persistence.
+type QualityPolicyService interface {
+	ValidateProfile(quality.QualityProfile) (quality.QualityProfile, error)
+	ResolveProfile(context.Context, string, string) (quality.QualityProfile, error)
+	ProfileDocument(context.Context, string, string) (quality.QualityProfile, QualityPolicyProfileInfo, error)
+	SaveProfile(context.Context, quality.QualityProfile, string, bool) (QualityPolicyWriteResult, error)
+	SaveBaseline(context.Context, quality.Baseline, string, bool) (QualityPolicyWriteResult, error)
+}
+
+// QualityPolicyProfileInfo and QualityPolicyWriteResult are deliberately
+// declared in live so an adapter need not expose the policy package's file
+// implementation to callers or transports.
+type QualityPolicyProfileInfo struct {
+	ProfileID      string `json:"profile_id"`
+	ProfileVersion string `json:"profile_version"`
+	FileName       string `json:"file_name"`
+	Status         string `json:"status"`
+	Reason         string `json:"reason,omitempty"`
+}
+
+type QualityPolicyWriteResult struct {
+	FileName     string                `json:"file_name"`
+	RelativePath string                `json:"relative_path"`
+	Digest       quality.ContentDigest `json:"digest"`
+	Overwritten  bool                  `json:"overwritten"`
+}
+
+// PolicyAuthorization is passed to the host authorizer only for policy
+// writes. An authorization string is opaque to live and is never interpreted
+// as a filesystem path or command.
+type PolicyAuthorization struct {
+	SessionID     string    `json:"session_id"`
+	Operation     Operation `json:"operation"`
+	Authorization string    `json:"authorization"`
+}
+
+type PolicyAuthorizer interface {
+	Authorize(context.Context, PolicyAuthorization) error
+}
+
+type PolicyAuthorizerFunc func(context.Context, PolicyAuthorization) error
+
+func (authorizer PolicyAuthorizerFunc) Authorize(ctx context.Context, value PolicyAuthorization) error {
+	if authorizer == nil {
+		return newLiveError(ErrorQualityPolicyPermissionDenied, "quality policy authorization is unavailable", nil)
+	}
+	return authorizer(ctx, value)
+}
+
+type QualityPolicyCommand struct {
+	Operation            string                  `json:"operation"`
+	SessionID            string                  `json:"session_id"`
+	ReportID             string                  `json:"report_id,omitempty"`
+	ReportRevision       int                     `json:"report_revision,omitempty"`
+	ProfileID            string                  `json:"profile_id,omitempty"`
+	ProfileVersion       string                  `json:"profile_version,omitempty"`
+	SourceProfileID      string                  `json:"source_profile_id,omitempty"`
+	SourceProfileVersion string                  `json:"source_profile_version,omitempty"`
+	Profile              *quality.QualityProfile `json:"profile,omitempty"`
+	RuleBindings         []quality.RuleBinding   `json:"rule_bindings,omitempty"`
+	FileName             string                  `json:"file_name,omitempty"`
+	BaselineID           string                  `json:"baseline_id,omitempty"`
+	BaselineRevision     string                  `json:"baseline_revision,omitempty"`
+	FindingKeys          []string                `json:"finding_keys,omitempty"`
+	Reason               string                  `json:"reason,omitempty"`
+	Owner                string                  `json:"owner,omitempty"`
+	Authorization        string                  `json:"authorization,omitempty"`
+	Overwrite            bool                    `json:"overwrite"`
+}
+
+type QualityPolicyIdentity struct {
+	ProfileID       string                 `json:"profile_id"`
+	ProfileVersion  string                 `json:"profile_version"`
+	ProfileDigest   *quality.ContentDigest `json:"profile_digest,omitempty"`
+	ReportID        string                 `json:"report_id,omitempty"`
+	ReportRevision  int                    `json:"report_revision,omitempty"`
+	ReportDigest    quality.ContentDigest  `json:"report_digest,omitempty"`
+	RuleVersions    []string               `json:"rule_versions"`
+	FormulaVersions []string               `json:"formula_versions"`
+}
+
+type QualityPolicyAudit struct {
+	AuditID      string `json:"audit_id"`
+	Operation    string `json:"operation"`
+	SessionID    string `json:"session_id"`
+	Authorized   bool   `json:"authorized"`
+	At           string `json:"at"`
+	RelativePath string `json:"relative_path,omitempty"`
+	Details      string `json:"details,omitempty"`
+}
+
+type QualityBaselinePreview struct {
+	BaselineID     string                  `json:"baseline_id"`
+	Revision       string                  `json:"revision,omitempty"`
+	FindingKeys    []string                `json:"finding_keys"`
+	Entries        []quality.BaselineEntry `json:"entries"`
+	PolicyIdentity QualityPolicyIdentity   `json:"policy_identity"`
+}
+
+type QualityPolicyResult struct {
+	Status         string                    `json:"status"`
+	Operation      string                    `json:"operation"`
+	Message        string                    `json:"message,omitempty"`
+	Profile        *quality.QualityProfile   `json:"profile,omitempty"`
+	Baseline       *quality.Baseline         `json:"baseline,omitempty"`
+	Preview        *QualityBaselinePreview   `json:"preview,omitempty"`
+	FindingKeys    []string                  `json:"finding_keys,omitempty"`
+	PolicyIdentity QualityPolicyIdentity     `json:"policy_identity"`
+	Write          *QualityPolicyWriteResult `json:"write,omitempty"`
+	Audit          *QualityPolicyAudit       `json:"audit,omitempty"`
+}
+
 type QualityProfileInfo struct {
 	ProfileID      string `json:"profile_id"`
 	ProfileVersion string `json:"profile_version"`
@@ -530,13 +645,19 @@ type QualityComparisonResult struct {
 
 type SessionOptions struct {
 	AnalyzerRegistry *analysis.Registry
-	Scanner          Scanner
-	QualityCatalog   *quality.Catalog
-	Profiles         QualityProfileResolver
-	Watcher          WatchBackend
-	Fingerprinter    Fingerprinter
-	SnapshotStore    SnapshotStore
-	StartWatcher     bool
+	// AnalyzerOptionsByID carries already parsed CLI/session options to the
+	// shared planner. The map is keyed by logical analyzer ID so options for
+	// one language can never leak into another analyzer.
+	AnalyzerOptionsByID map[string]map[string]any
+	Scanner             Scanner
+	QualityCatalog      *quality.Catalog
+	Profiles            QualityProfileResolver
+	PolicyService       QualityPolicyService
+	PolicyAuthorizer    PolicyAuthorizer
+	Watcher             WatchBackend
+	Fingerprinter       Fingerprinter
+	SnapshotStore       SnapshotStore
+	StartWatcher        bool
 }
 
 type Fingerprinter interface {

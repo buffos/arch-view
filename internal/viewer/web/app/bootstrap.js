@@ -9,6 +9,7 @@ import { renderAccessibleList, renderDetails, renderSupportLists, openSource, op
 import { createInspectionController, parseInspectionRoute } from "./inspection.js";
 import { createQualityBaseline as persistQualityBaseline, evaluateQualityProfile as runQualityProfile, initializeQualityRuleDraft, loadQualityProfiles as fetchQualityProfiles, loadQualityReport as fetchQualityReport, loadQualityRuleCatalog as fetchQualityRuleCatalog, loadQualitySource as fetchQualitySource, openQualityEvidence as fetchQualityEvidence, qualityBaselineCandidates, qualityRuleBindings, renderQualityBaselineSelection, renderQualityProfileControl, renderQualityRuleCatalog, saveQualityProfile as persistQualityProfile, saveQualityProfileAs as persistQualityProfileAs, setQualityRuleEnabled } from "./quality.js";
 import { hideError, renderAll, renderBreadcrumbs, renderSceneState, renderScopeSelector, sceneLayoutKey, showError, showNotice } from "./view.js";
+import { createLiveController } from "./live_status.js";
 
 export function loadInitialState(navigation, context, initialPath) {
   const modelLoad = navigation.loadModel();
@@ -34,11 +35,12 @@ function updateQualityProfileSaveAsAvailability(context) {
   const elements = context.elements;
   const state = context.state;
   const busy = state.qualityProfileSaveStatus === "loading";
-  if (elements.qualityProfileSave) elements.qualityProfileSave.disabled = busy || !state.activeQualityProfile || !Array.isArray(state.qualityRuleCatalog) || !state.qualityRuleCatalog.length;
-  if (elements.qualityProfileSaveAs) elements.qualityProfileSaveAs.disabled = busy || !state.activeQualityProfile || !Array.isArray(state.qualityRuleCatalog) || !state.qualityRuleCatalog.length;
+  const readOnly = Boolean(context.liveEnabled);
+  if (elements.qualityProfileSave) elements.qualityProfileSave.disabled = readOnly || busy || !state.activeQualityProfile || !Array.isArray(state.qualityRuleCatalog) || !state.qualityRuleCatalog.length;
+  if (elements.qualityProfileSaveAs) elements.qualityProfileSaveAs.disabled = readOnly || busy || !state.activeQualityProfile || !Array.isArray(state.qualityRuleCatalog) || !state.qualityRuleCatalog.length;
   if (elements.qualityProfileSaveAsSubmit) {
     const complete = elements.qualityProfileSaveAsFile && elements.qualityProfileSaveAsFile.value.trim() && elements.qualityProfileSaveAsID && elements.qualityProfileSaveAsID.value.trim() && elements.qualityProfileSaveAsVersion && elements.qualityProfileSaveAsVersion.value.trim() && elements.qualityProfileSaveAsConfirm && elements.qualityProfileSaveAsConfirm.checked;
-    elements.qualityProfileSaveAsSubmit.disabled = busy || !complete;
+    elements.qualityProfileSaveAsSubmit.disabled = readOnly || busy || !complete;
   }
 }
 
@@ -49,6 +51,7 @@ function selectedQualityRuleBindings(context) {
 export function bootstrap() {
   const context = createContext();
   const api = createAPI(context);
+  const live = createLiveController(context, api);
   const initialRoute = parseInspectionRoute(window.location.search);
   if (initialRoute && !initialRoute.invalid) {
     if (initialRoute.scope && context.aggregateEnabled) context.state.activeScope = initialRoute.scope;
@@ -113,6 +116,18 @@ export function bootstrap() {
   const navigation = createNavigation(context, api, services);
   services.navigationTo = navigation.navigationTo;
   inspection.bindNavigation(navigation);
+  live.bindRevisionHandler(async function () {
+    const pathValue = context.state.scene ? context.state.scene.hierarchy_path.slice() : [];
+    await navigation.loadModel();
+    const loaded = await navigation.loadScene(pathValue);
+    if (!loaded && pathValue.length) await navigation.loadScene([]);
+    context.state.qualityReportCache = {};
+    context.state.qualityFindingsCache = {};
+    context.state.qualityReport = null;
+    context.state.qualityReportStatus = "loading";
+    if (context.state.viewMode === "inspection") services.renderInspection();
+    await services.loadQualityReport();
+  });
 
   function closeQualityProfileDialog(restoreDraft) {
     if (restoreDraft && Array.isArray(context.state.qualityRuleDialogOriginal)) context.state.qualityRuleDraft = context.state.qualityRuleDialogOriginal;
@@ -148,7 +163,7 @@ export function bootstrap() {
     const allActive = state.qualityBaselineAllActive !== false;
     const selected = Array.isArray(state.qualityBaselineSelectedFindings) ? state.qualityBaselineSelectedFindings : [];
     const complete = Boolean(profile && elements.qualityBaselineFile && elements.qualityBaselineFile.value.trim() && elements.qualityBaselineID && elements.qualityBaselineID.value.trim() && elements.qualityBaselineRevision && elements.qualityBaselineRevision.value.trim() && elements.qualityBaselineReason && elements.qualityBaselineReason.value.trim() && (allActive || selected.length));
-    if (elements.qualityBaselineSubmit) elements.qualityBaselineSubmit.disabled = state.qualityBaselineStatus === "loading" || !complete;
+    if (elements.qualityBaselineSubmit) elements.qualityBaselineSubmit.disabled = context.liveEnabled || state.qualityBaselineStatus === "loading" || !complete;
     if (elements.qualityBaselineStatus) {
       elements.qualityBaselineStatus.textContent = state.qualityBaselineStatus === "error" ? state.qualityBaselineError : state.qualityBaselineStatus === "loading" ? "Creating baseline…" : "";
     }
@@ -166,6 +181,10 @@ export function bootstrap() {
     const elements = context.elements;
     const profile = context.state.activeQualityProfile;
     if (!profile || !elements.qualityBaselineDialog || context.embeddedExport) return;
+    if (context.liveEnabled) {
+      showError(context, "Baseline writes are disabled in the live viewer. Use an explicitly authorized CLI or MCP policy operation.");
+      return;
+    }
     const candidates = qualityBaselineCandidates(context);
     if (!candidates.length) {
       showError(context, "There are no active quality findings to add to a baseline.");
@@ -273,7 +292,9 @@ export function bootstrap() {
       context.state.qualityProfileSaveAsOpen = false;
       if (context.elements.qualityProfileSaveAsPanel) context.elements.qualityProfileSaveAsPanel.hidden = true;
       renderQualityRuleEditor(context);
-      if (context.elements.qualityProfileEditorStatus) context.elements.qualityProfileEditorStatus.textContent = "Switch rules on or off, then apply the temporary selection.";
+      if (context.elements.qualityProfileEditorStatus) context.elements.qualityProfileEditorStatus.textContent = context.liveEnabled
+        ? "Switch rules on or off, then apply the temporary selection. Live viewer policy files are read-only."
+        : "Switch rules on or off, then apply the temporary selection.";
       if (typeof context.elements.qualityProfileDialog.showModal === "function") context.elements.qualityProfileDialog.showModal();
       else context.elements.qualityProfileDialog.hidden = false;
     };
@@ -511,11 +532,17 @@ export function bootstrap() {
   document.addEventListener("fullscreenchange", function () { syncFocusButton(context); });
   context.elements.reanalysisButton.addEventListener("click", navigation.reanalyze);
   if (context.embeddedExport && context.embeddedExport.initial_reference_visibility && !initialRoute) context.state.referenceVisibility = context.embeddedExport.initial_reference_visibility;
-  void loadInitialState(navigation, context, initialRoute && !initialRoute.invalid ? initialRoute.path : null).then(function () {
+  const initialLoad = context.liveEnabled ? live.waitForReady() : Promise.resolve();
+  void initialLoad.then(function () {
+    return loadInitialState(navigation, context, initialRoute && !initialRoute.invalid ? initialRoute.path : null);
+  }).then(function () {
     inspection.initialize();
+    live.start();
     return services.loadQualityProfiles();
   }).then(function () {
     void services.loadQualityReport();
+  }).catch(function (error) {
+    showError(context, error && error.message ? error.message : "The viewer could not load the live session.");
   });
   void loadLayoutConfig(context, api, services);
 }

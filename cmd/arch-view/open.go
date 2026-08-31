@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/buffo/arch-view/internal/analysis"
@@ -21,10 +22,14 @@ import (
 )
 
 func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
+	if openLiveRequested(args) {
+		return runOpenLive(host, args, stdout, stderr)
+	}
 	fs := flag.NewFlagSet("arch-view open", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	modelInput := fs.String("model", "", "canonical model JSON input file")
 	project := fs.String("project", "", "project root to analyze before opening")
+	liveMode := fs.Bool("live", false, "keep a watched live session current while the viewer is open")
 	analyzerRuntime := fs.String("analyzer-runtime", analyzerRuntimeAuto, "analyzer runtime: auto, packaged, in-process, or explicit")
 	allowUntrustedPlugin := fs.Bool("allow-untrusted-plugin", false, "allow an explicitly supplied local descriptor")
 	language := fs.String("language", "", "explicit analyzer language")
@@ -77,6 +82,14 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 		err := analysis.NewHostError(analysis.ErrInvalidRequest, "open --plugin requires --project", nil)
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
+	}
+	if *liveMode {
+		if *modelInput != "" {
+			err := analysis.NewHostError(analysis.ErrInvalidRequest, "open --live requires --project", nil)
+			writeError(stderr, err)
+			return analysis.ExitCodeForError(err)
+		}
+		return runOpenLive(host, args, stdout, stderr)
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -180,6 +193,24 @@ func runOpen(host *analysis.Host, args []string, stdout, stderr io.Writer) int {
 		return analysis.ExitCodeForError(hostErr)
 	}
 	return 0
+}
+
+func openLiveRequested(args []string) bool {
+	for _, argument := range args {
+		if !strings.HasPrefix(argument, "-") {
+			continue
+		}
+		name, value, hasValue := strings.Cut(strings.TrimLeft(argument, "-"), "=")
+		if name != "live" {
+			continue
+		}
+		if !hasValue {
+			return true
+		}
+		enabled, err := strconv.ParseBool(value)
+		return err == nil && enabled
+	}
+	return false
 }
 
 func projectViewerOptions(host *analysis.Host, project, language, analyzerID string, cliOptions map[string]any) viewer.ServerOptions {

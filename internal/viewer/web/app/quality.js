@@ -644,7 +644,7 @@ function findingRows(context, findings) {
       ? '<button type="button" class="button tertiary" data-quality-evidence="' + escapeHTML(finding.id) + '">View evidence</button>'
       : "";
     const baselineValue = finding.id || finding.finding_key || "";
-    const baselineButton = finding.status === "active" && baselineValue
+    const baselineButton = !context.liveEnabled && finding.status === "active" && baselineValue
       ? '<button type="button" class="button tertiary" data-quality-baseline-open="' + escapeHTML(baselineValue) + '">Baseline this</button>'
       : "";
     return '<li class="quality-finding-row"><div class="quality-finding-main"><div class="quality-finding-heading"><strong>' + escapeHTML(ruleLabel(finding.rule_id)) + '</strong>' + qualityPill(finding.status, limitation) + '</div><span>' + escapeHTML(findingSubjectLabel(finding)) + " · " + escapeHTML(finding.severity || "info") + '</span><p>' + escapeHTML(message) + '</p>' + (finding.limitations && finding.limitations.length ? '<small>' + escapeHTML(finding.limitations[0]) + '</small>' : '<small>' + escapeHTML(limitation) + '</small>') + '</div><div class="quality-finding-actions">' + evidenceButton + baselineButton + '</div></li>';
@@ -708,7 +708,7 @@ export function renderQualityOverview(context) {
   const hasMore = page ? Boolean(page.next_cursor) : total > findings.length;
   const pager = qualityFindingsPagerMarkup(context, findings.length, total, hasMore);
   const rows = findings.length ? '<ul class="quality-findings-list">' + findingRows(context, findings) + '</ul>' + pager : summary.partialCoverage || !coverage.length ? '<div class="quality-empty"><span class="state-pill warning">Coverage incomplete</span><p>No clean result can be inferred because the active scope does not have complete quality coverage.</p></div>' : '<div class="quality-empty"><span class="state-pill ok">Clear</span><p>No quality findings were reported for the active scope.</p></div>';
-  const baselineAction = !context.embeddedExport && summary.active
+  const baselineAction = !context.embeddedExport && !context.liveEnabled && summary.active
     ? '<button type="button" class="button secondary" data-quality-baseline-open="all">Create baseline</button>'
     : "";
   return '<div class="quality-overview"><div class="quality-overview-lede"><p>These checks describe reported code facts. Exact checks are configurable; SOLID entries are advisory signals, not proof of a violation.</p>' + qualityCoverageSummaryMarkup(summary.coverageStates, coverage.length) + '<p class="quality-coverage-explanation">Coverage is counted per rule and source scope. Observed means the check received the facts it needs and ran; it does not mean that no finding was found.</p>' + qualityCoverageDetailsMarkup(coverage) + '</div><div class="quality-count-grid">' + qualityCount(summary.active, "active findings", summary.active ? "quality-count-attention" : "") + qualityCount(summary.exact, "exact") + qualityCount(summary.signal, "advisory signals") + qualityCount(summary.suppressed + summary.baseline + summary.resolved, "lifecycle states") + '</div><div class="quality-findings-heading"><div><h4>Reported findings</h4><span class="muted">' + escapeHTML(String(total)) + " shown" + (qualityFindingRuleFilter(context) ? " · filtered" : "") + '</span></div><div class="quality-findings-tools">' + qualityFindingFilterMarkup(context) + baselineAction + '</div></div>' + rows + renderQualityEvidence(context) + "</div>";

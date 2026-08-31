@@ -13,6 +13,7 @@ import (
 
 	"github.com/buffo/arch-view/internal/analysis"
 	"github.com/buffo/arch-view/internal/analysis/orchestration"
+	"github.com/buffo/arch-view/internal/live"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
 	"github.com/buffo/arch-view/internal/quality"
@@ -59,20 +60,24 @@ type ServerOptions struct {
 	Reanalyze         ReanalyzeFunc
 	AnalyzeCombined   CombinedAnalyzeFunc
 	ReanalyzeCombined CombinedAnalyzeFunc
+	LiveSession       *live.LiveSession
 }
 
 type Server struct {
-	mu                sync.RWMutex
-	model             model.Model
-	aggregate         *orchestration.AnalysisRun
-	runs              map[string]*orchestration.AnalysisRun
-	sourceRoot        string
-	reanalyze         ReanalyzeFunc
-	analyzeCombined   CombinedAnalyzeFunc
-	reanalyzeCombined CombinedAnalyzeFunc
-	qualityReports    map[string]quality.QualityEvaluation
-	layout            layout.Session
-	handler           http.Handler
+	mu                     sync.RWMutex
+	model                  model.Model
+	aggregate              *orchestration.AnalysisRun
+	runs                   map[string]*orchestration.AnalysisRun
+	sourceRoot             string
+	reanalyze              ReanalyzeFunc
+	analyzeCombined        CombinedAnalyzeFunc
+	reanalyzeCombined      CombinedAnalyzeFunc
+	liveSession            *live.LiveSession
+	liveHTTP               *live.HTTPServer
+	qualityReports         map[string]quality.QualityEvaluation
+	qualityReportRevisions map[string]int
+	layout                 layout.Session
+	handler                http.Handler
 }
 
 func NewServer(value model.Model, options ...ServerOptions) (*Server, error) {
@@ -96,25 +101,47 @@ func NewAggregateServer(run orchestration.AnalysisRun, options ...ServerOptions)
 	return newServer(value, &run, options...)
 }
 
+// NewLiveServer creates a viewer over the latest ready revision of a live
+// session. One-shot viewer constructors retain their historical behavior.
+func NewLiveServer(session *live.LiveSession, options ...ServerOptions) (*Server, error) {
+	if session == nil {
+		return nil, analysis.NewHostError(analysis.ErrInvalidRequest, "live viewer requires a live session", nil)
+	}
+	option := ServerOptions{SourceRoot: session.RepositoryRoot(), LiveSession: session}
+	if len(options) > 0 {
+		option = options[0]
+		option.LiveSession = session
+		if option.SourceRoot == "" {
+			option.SourceRoot = session.RepositoryRoot()
+		}
+	}
+	return newServer(model.Model{}, nil, option)
+}
+
 func newServer(value model.Model, aggregate *orchestration.AnalysisRun, options ...ServerOptions) (*Server, error) {
 	var option ServerOptions
 	if len(options) > 0 {
 		option = options[0]
+	}
+	if option.LiveSession != nil && option.SourceRoot == "" {
+		option.SourceRoot = option.LiveSession.RepositoryRoot()
 	}
 	sourceRoot, err := normalizeSourceRoot(option.SourceRoot)
 	if err != nil {
 		return nil, err
 	}
 	server := &Server{
-		model:             value,
-		aggregate:         aggregate,
-		runs:              make(map[string]*orchestration.AnalysisRun),
-		sourceRoot:        sourceRoot,
-		reanalyze:         option.Reanalyze,
-		analyzeCombined:   option.AnalyzeCombined,
-		reanalyzeCombined: option.ReanalyzeCombined,
-		qualityReports:    make(map[string]quality.QualityEvaluation),
-		layout:            layout.NewSession(sourceRoot),
+		model:                  value,
+		aggregate:              aggregate,
+		runs:                   make(map[string]*orchestration.AnalysisRun),
+		sourceRoot:             sourceRoot,
+		reanalyze:              option.Reanalyze,
+		analyzeCombined:        option.AnalyzeCombined,
+		reanalyzeCombined:      option.ReanalyzeCombined,
+		liveSession:            option.LiveSession,
+		qualityReports:         make(map[string]quality.QualityEvaluation),
+		qualityReportRevisions: make(map[string]int),
+		layout:                 layout.NewSession(sourceRoot),
 	}
 	if aggregate != nil {
 		server.runs[aggregate.RunID] = aggregate
@@ -138,6 +165,10 @@ func newServer(value model.Model, aggregate *orchestration.AnalysisRun, options 
 	mux.HandleFunc("/v1/quality/rules", server.handleQualityRules)
 	mux.HandleFunc("/v1/quality/evaluate", server.handleQualityEvaluation)
 	mux.HandleFunc("/v1/models/", server.handleModel)
+	if server.liveSession != nil {
+		server.liveHTTP = live.NewHTTPServer(live.NewLocalQueryAdapter(server.liveSession), live.HTTPServerOptions{Transport: live.TransportLocalHTTP, SessionID: server.liveSession.Config().SessionID})
+		mux.Handle("/v1/live/", server.liveHTTP.Handler())
+	}
 	server.handler = mux
 	return server, nil
 }
@@ -148,6 +179,11 @@ func (s *Server) Handler() http.Handler {
 }
 
 func (s *Server) snapshot() model.Model {
+	if s != nil && s.liveSession != nil {
+		if record, err := s.liveSession.QueryLatestReady(context.Background()); err == nil && record != nil {
+			return record.Model
+		}
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.model
@@ -160,6 +196,12 @@ func (s *Server) aggregateSnapshot() *orchestration.AnalysisRun {
 }
 
 func (s *Server) modelID() string {
+	if s != nil && s.liveSession != nil {
+		if record, err := s.liveSession.QueryLatestReady(context.Background()); err == nil && record != nil && record.Model.ModelID != "" {
+			return record.Model.ModelID
+		}
+		return s.liveSession.Config().SessionID
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.aggregate != nil && s.aggregate.Model != nil {
@@ -172,6 +214,9 @@ func (s *Server) modelID() string {
 }
 
 func (s *Server) sourceEnabled() bool {
+	if s != nil && s.liveSession != nil {
+		return s.liveSession.Config().SourceIndexRequest.Enabled && s.liveSession.RepositoryRoot() != ""
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.sourceRoot != ""
@@ -184,6 +229,9 @@ func (s *Server) getSourceRoot() string {
 }
 
 func (s *Server) reanalysisEnabled() bool {
+	if s != nil && s.liveSession != nil {
+		return false
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return (s.reanalyze != nil || s.reanalyzeCombined != nil) && s.sourceRoot != ""
@@ -210,6 +258,12 @@ func (s *Server) handleRoot(writer http.ResponseWriter, request *http.Request) {
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_WORKER_URL__", "/assets/vendor/elk-worker.min.js")
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_ANALYSIS_RUN_ID__", html.EscapeString(s.analysisRunID()))
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_AGGREGATE__", strconv.FormatBool(s.isAggregate()))
+	content = strings.ReplaceAll(content, "__ARCH_VIEW_LIVE_ENABLED__", strconv.FormatBool(s.liveSession != nil))
+	liveSessionID := ""
+	if s.liveSession != nil {
+		liveSessionID = s.liveSession.Config().SessionID
+	}
+	content = strings.ReplaceAll(content, "__ARCH_VIEW_LIVE_SESSION_ID__", html.EscapeString(liveSessionID))
 	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	writer.Header().Set("Cache-Control", "no-store")
 	_, _ = io.WriteString(writer, content)

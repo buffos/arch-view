@@ -21,6 +21,7 @@ export default defineConfig({
       { text: 'Viewer', link: '/viewer/overview' },
       { text: 'Quality', link: '/quality/overview' },
       { text: 'CLI', link: '/cli/overview' },
+      { text: 'Live & MCP', link: '/mcp/installation' },
       { text: 'Reference', link: '/reference/settings' },
       { text: 'Demo', link: '/demo' }
     ],
@@ -69,6 +70,17 @@ export default defineConfig({
             { text: 'quality baseline', link: '/cli/quality-baseline' },
             { text: 'model commands', link: '/cli/model' },
             { text: 'analyzers', link: '/cli/analyzers' }
+          ]
+        }
+      ],
+      '/mcp/': [
+        {
+          text: 'Live analysis and MCP',
+          items: [
+            { text: 'MCP installation', link: '/mcp/installation' },
+            { text: 'MCP tools', link: '/mcp/tools' },
+            { text: 'HTTP transport', link: '/mcp/http' },
+            { text: 'Safety and freshness', link: '/mcp/security' }
           ]
         }
       ],

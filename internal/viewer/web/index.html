@@ -9,6 +9,8 @@
     <meta name="worker-url" content="__ARCH_VIEW_WORKER_URL__">
     <meta name="analysis-run-id" content="__ARCH_VIEW_ANALYSIS_RUN_ID__">
     <meta name="aggregate-enabled" content="__ARCH_VIEW_AGGREGATE__">
+    <meta name="live-enabled" content="__ARCH_VIEW_LIVE_ENABLED__">
+    <meta name="live-session-id" content="__ARCH_VIEW_LIVE_SESSION_ID__">
     <title>Arch View</title>
     <link rel="stylesheet" href="/assets/styles.css">
   </head>
@@ -23,6 +25,7 @@
         <span id="project-label">Loading model…</span>
         <span class="meta-divider" aria-hidden="true">·</span>
         <span id="model-status">Loading</span>
+        <span id="live-status" class="live-status" aria-live="polite" hidden></span>
       </div>
     </header>
 

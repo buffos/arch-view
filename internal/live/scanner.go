@@ -16,10 +16,11 @@ import (
 // existing planner, bounded scheduler, and aggregate normalizer; it contains
 // no language-specific branch.
 type MultiAnalyzerScanner struct {
-	Host           *analysis.Host
-	QualityCatalog *quality.Catalog
-	Profiles       QualityProfileResolver
-	Cache          *orchestration.SessionCache
+	Host                *analysis.Host
+	QualityCatalog      *quality.Catalog
+	Profiles            QualityProfileResolver
+	Cache               *orchestration.SessionCache
+	AnalyzerOptionsByID map[string]map[string]any
 }
 
 func NewMultiAnalyzerScanner(host *analysis.Host, catalog *quality.Catalog, profiles QualityProfileResolver) *MultiAnalyzerScanner {
@@ -43,6 +44,7 @@ func (scanner *MultiAnalyzerScanner) Scan(ctx context.Context, request ScanReque
 		RepositoryRoot:    request.RepositoryRoot,
 		InvocationRoot:    ".",
 		SourceScopePolicy: policy,
+		CLIOptionsByID:    cloneAnalyzerOptions(scanner.AnalyzerOptionsByID),
 		Runtime:           scanner.Host.Runtime(),
 	})
 	if err != nil {
@@ -149,6 +151,24 @@ func (scanner *MultiAnalyzerScanner) Scan(ctx context.Context, request ScanReque
 		result.Model.QualityReport = result.QualityReport
 	}
 	return result, nil
+}
+
+func cloneAnalyzerOptions(values map[string]map[string]any) map[string]map[string]any {
+	if len(values) == 0 {
+		return nil
+	}
+	result := make(map[string]map[string]any, len(values))
+	for analyzerID, options := range values {
+		if options == nil {
+			result[analyzerID] = nil
+			continue
+		}
+		result[analyzerID] = make(map[string]any, len(options))
+		for name, value := range options {
+			result[analyzerID][name] = value
+		}
+	}
+	return result
 }
 
 func liveSourceScopePolicy(config LiveSessionConfig, registry *analysis.Registry, input InputFingerprint) orchestration.SourceScopePolicy {

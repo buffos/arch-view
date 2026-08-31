@@ -20,7 +20,11 @@ func (s *Server) handleSource(writer http.ResponseWriter, request *http.Request)
 	query := request.URL.Query()
 	requestedModelID := query.Get("model_id")
 	aggregate := s.aggregateSnapshot()
-	value := s.snapshot()
+	value, snapshotErr := s.snapshotForRequest(request)
+	if snapshotErr != nil {
+		writeHTTPError(writer, liveViewerHTTPStatus(snapshotErr), snapshotErr)
+		return
+	}
 	responseModelID := value.ModelID
 	if aggregate != nil {
 		responseModelID = s.modelID()
@@ -34,7 +38,7 @@ func (s *Server) handleSource(writer http.ResponseWriter, request *http.Request)
 			writeHTTPError(writer, sourceErrorStatus(err), err)
 			return
 		}
-	} else if requestedModelID == "" || requestedModelID != value.ModelID {
+	} else if requestedModelID == "" || requestedModelID != value.ModelID && (s.liveSession == nil || requestedModelID != s.liveSession.Config().SessionID) {
 		writeHTTPError(writer, http.StatusNotFound, analysis.NewHostError(analysis.ErrInvalidModel, "source evidence belongs to a different model revision", map[string]any{"model_id": requestedModelID}))
 		return
 	}

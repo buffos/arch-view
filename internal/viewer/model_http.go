@@ -33,9 +33,21 @@ func (s *Server) handleModel(writer http.ResponseWriter, request *http.Request) 
 		s.handleAggregateModel(writer, request, parts, modelID, aggregate)
 		return
 	}
-	value := s.snapshot()
-	if modelID != value.ModelID {
+	value, snapshotErr := s.snapshotForRequest(request)
+	if snapshotErr != nil {
+		writeHTTPError(writer, liveViewerHTTPStatus(snapshotErr), snapshotErr)
+		return
+	}
+	if s.liveSession == nil && modelID != value.ModelID {
 		writeHTTPError(writer, http.StatusNotFound, analysis.NewHostError(analysis.ErrInvalidModel, "requested model was not found", map[string]any{"model_id": modelID}))
+		return
+	}
+	if s.liveSession != nil && value.ModelID == "" {
+		writeHTTPError(writer, http.StatusConflict, analysis.NewHostError(analysis.ErrInvalidModel, "the live session has no ready model yet", map[string]any{"session_id": s.liveSession.Config().SessionID}))
+		return
+	}
+	if s.liveSession != nil && modelID != s.liveSession.Config().SessionID && modelID != value.ModelID {
+		writeHTTPError(writer, http.StatusNotFound, analysis.NewHostError(analysis.ErrInvalidModel, "requested live model was not found", map[string]any{"model_id": modelID}))
 		return
 	}
 	if len(parts) == 1 {
@@ -52,7 +64,7 @@ func (s *Server) handleModel(writer http.ResponseWriter, request *http.Request) 
 		return
 	}
 	if parts[1] == "quality" {
-		s.handleQuality(writer, request, parts, modelID, s.qualityReportForScope("all", value.QualityReport), &value, nil)
+		s.handleQuality(writer, request, parts, modelID, s.qualityReportForRequest("all", value.QualityReport, request), &value, nil)
 		return
 	}
 	if len(parts) != 2 || parts[1] != "projection" {
@@ -121,9 +133,9 @@ func (s *Server) handleAggregateModel(writer http.ResponseWriter, request *http.
 				return
 			}
 			report = scopeResult.QualityReport
-			report = s.qualityReportForScope(scope, report)
+			report = s.qualityReportForRequest(scope, report, request)
 		} else {
-			report = s.qualityReportForScope("all", report)
+			report = s.qualityReportForRequest("all", report, request)
 		}
 		s.handleQuality(writer, request, parts, modelID, report, nil, aggregate)
 		return

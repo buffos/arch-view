@@ -19,9 +19,11 @@ import (
 // services. It owns revision selection and response envelopes; it does not
 // implement rule matching, metric calculation, suppression, or comparison.
 type QualityGateway struct {
-	session  *LiveSession
-	catalog  *quality.Catalog
-	profiles QualityProfileResolver
+	session    *LiveSession
+	catalog    *quality.Catalog
+	profiles   QualityProfileResolver
+	policy     QualityPolicyService
+	authorizer PolicyAuthorizer
 }
 
 func NewQualityGateway(session *LiveSession, catalog *quality.Catalog, profiles QualityProfileResolver) *QualityGateway {
@@ -33,7 +35,13 @@ func NewQualityGateway(session *LiveSession, catalog *quality.Catalog, profiles 
 			profiles = session.options.Profiles
 		}
 	}
-	return &QualityGateway{session: session, catalog: catalog, profiles: profiles}
+	var policy QualityPolicyService
+	var authorizer PolicyAuthorizer
+	if session != nil {
+		policy = session.options.PolicyService
+		authorizer = session.options.PolicyAuthorizer
+	}
+	return &QualityGateway{session: session, catalog: catalog, profiles: profiles, policy: policy, authorizer: authorizer}
 }
 
 // QualityGateway returns the shared gateway configured for this session.

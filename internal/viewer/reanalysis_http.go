@@ -106,6 +106,7 @@ func (s *Server) handleReanalysis(writer http.ResponseWriter, request *http.Requ
 	s.mu.Lock()
 	s.model = next
 	s.qualityReports = make(map[string]quality.QualityEvaluation)
+	s.qualityReportRevisions = make(map[string]int)
 	s.mu.Unlock()
 	writeJSON(writer, http.StatusOK, struct {
 		ModelID       string       `json:"model_id"`

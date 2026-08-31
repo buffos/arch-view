@@ -146,6 +146,14 @@ func Evaluate(profile QualityProfile, input EvaluationInput, catalog *Catalog) (
 	return EvaluateQualityProfile(profile, input, catalog)
 }
 
+// ProfileDigest returns the canonical content identity used in quality
+// reports. Callers that compare a stored profile with a report must use this
+// helper after validation so JSON-decoded configuration values and normalized
+// defaults produce the same identity as the evaluator.
+func ProfileDigest(profile QualityProfile) ContentDigest {
+	return digestJSON(profile)
+}
+
 // NormalizeQualityEvaluation canonicalizes ordering and computes the
 // reproducibility fingerprint and report digest. Operational timestamps are
 // intentionally not part of the contract.

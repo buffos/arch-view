@@ -75,7 +75,9 @@ func StartLiveSession(ctx context.Context, config LiveSessionConfig, openedRepos
 		if options.AnalyzerRegistry == nil {
 			return nil, newLiveError(ErrorSnapshotBuildFailed, "a scanner or analyzer registry is required", nil)
 		}
-		options.Scanner = NewMultiAnalyzerScanner(analysis.NewHost(options.AnalyzerRegistry), options.QualityCatalog, options.Profiles)
+		configuredScanner := NewMultiAnalyzerScanner(analysis.NewHost(options.AnalyzerRegistry), options.QualityCatalog, options.Profiles)
+		configuredScanner.AnalyzerOptionsByID = cloneAnalyzerOptions(options.AnalyzerOptionsByID)
+		options.Scanner = configuredScanner
 	}
 	if options.Watcher == nil && options.StartWatcher {
 		options.Watcher = NewLocalWatchBackend(options.Fingerprinter)

@@ -256,6 +256,7 @@ func (s *Server) storeAggregateRun(run *orchestration.AnalysisRun) {
 	s.runs[run.RunID] = run
 	s.aggregate = run
 	s.qualityReports = make(map[string]quality.QualityEvaluation)
+	s.qualityReportRevisions = make(map[string]int)
 	if combined, ok := run.CombinedCanonicalModel(); ok {
 		s.model = combined
 	} else {

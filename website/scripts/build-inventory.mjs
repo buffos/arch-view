@@ -44,6 +44,7 @@ console.log(`Wrote ${path.relative(repositoryRoot, outputPath)} (${cliFlags.leng
 
 function flagDocsPath(command, name, defaultPath) {
   if (command !== 'open') return defaultPath
+  if (name === 'live') return '/cli/live'
   if (name === 'model' || name === 'project' || name === 'port') return defaultPath
   return '/cli/analyze'
 }
@@ -54,7 +55,12 @@ function flagDocsAnchor(command, name) {
   if (command === 'model normalize') return '#normalize'
   if (command === 'model validate') return '#validate'
   if (command === 'model projection') return '#projection'
+  if (command === 'live start') return '#start-options'
+  if (command === 'live status') return '#status'
+  if (command === 'live wait' || command === 'live ensure-current') return '#wait-for-a-verified-revision'
+  if (command === 'mcp') return name === 'project' ? '#required-options' : '#options'
   if (command === 'open') {
+    if (name === 'live') return '#open-the-live-viewer'
     if (name === 'project' || name === 'model') return '#input-options'
     if (name === 'port') return '#server-option'
     return analyzeFlagAnchor(name)

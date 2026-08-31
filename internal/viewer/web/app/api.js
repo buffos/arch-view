@@ -1,7 +1,15 @@
 export function createAPI(context) {
+  function liveRevisionPath(path) {
+    if (!context.liveEnabled || context.embeddedExport || !context.state.liveRevision || String(path).indexOf("/v1/live/") === 0) return path;
+    const url = new URL(path, window.location.href);
+    if (url.pathname.indexOf("/v1/") !== 0 || url.searchParams.has("revision")) return path;
+    url.searchParams.set("revision", String(context.state.liveRevision));
+    return url.pathname + (url.search ? url.search : "") + (url.hash || "");
+  }
+
   async function getJSON(path) {
     if (context.embeddedExport) return embeddedJSON(path);
-    const response = await fetch(path, { headers: { Accept: "application/json" } });
+    const response = await fetch(liveRevisionPath(path), { headers: { Accept: "application/json" } });
     const body = await response.json();
     if (!response.ok) throw new Error(body && body.error && body.error.message ? body.error.message : "The viewer request failed.");
     return body;
@@ -40,14 +48,14 @@ export function createAPI(context) {
   }
 
   async function postJSON(path, value) {
-    const response = await fetch(path, { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" }, body: JSON.stringify(value) });
+    const response = await fetch(liveRevisionPath(path), { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" }, body: JSON.stringify(value) });
     const body = await response.json();
     if (!response.ok) throw new Error(body && body.error && body.error.message ? body.error.message : "The viewer request failed.");
     return body;
   }
 
   async function putJSON(path, value) {
-    const response = await fetch(path, { method: "PUT", headers: { Accept: "application/json", "Content-Type": "application/json" }, body: JSON.stringify(value) });
+    const response = await fetch(liveRevisionPath(path), { method: "PUT", headers: { Accept: "application/json", "Content-Type": "application/json" }, body: JSON.stringify(value) });
     const body = await response.json();
     if (!response.ok) throw new Error(body && body.error && body.error.message ? body.error.message : "The viewer request failed.");
     return body;

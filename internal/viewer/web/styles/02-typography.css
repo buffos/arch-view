@@ -52,7 +52,9 @@ p {
 .session-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.65rem;
+  min-width: 0;
   color: var(--muted-strong);
   font-size: 0.84rem;
   text-align: right;
@@ -60,4 +62,39 @@ p {
 
 .meta-divider {
   color: var(--line);
+}
+
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.35rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgba(110, 231, 183, 0.34);
+  border-radius: 999px;
+  color: var(--green);
+  background: rgba(110, 231, 183, 0.1);
+  font-size: 0.7rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.live-status[data-status="stale"],
+.live-status[data-status="updating"],
+.live-status[data-status="input_unstable"],
+.live-status[data-status="degraded"] {
+  color: var(--amber);
+  border-color: rgba(251, 191, 116, 0.36);
+  background: rgba(251, 191, 116, 0.1);
+}
+
+.live-status[data-status="failed"] {
+  color: var(--red);
+  border-color: rgba(251, 113, 133, 0.36);
+  background: rgba(251, 113, 133, 0.1);
+}
+
+@media (max-width: 680px) {
+  .live-status {
+    white-space: normal;
+  }
 }

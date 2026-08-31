@@ -21,6 +21,8 @@ export function createContext() {
   const modelID = document.querySelector('meta[name="model-id"]').content;
   const analysisRunID = document.querySelector('meta[name="analysis-run-id"]').content;
   const aggregateEnabled = document.querySelector('meta[name="aggregate-enabled"]').content === "true";
+  const liveEnabled = document.querySelector('meta[name="live-enabled"]').content === "true";
+  const liveSessionID = document.querySelector('meta[name="live-session-id"]').content || "";
   const embeddedExport = window.__ARCH_VIEW_EXPORT__ || null;
   const sourceEnabled = document.querySelector('meta[name="source-enabled"]').content === "true";
   const reanalysisEnabled = document.querySelector('meta[name="reanalysis-enabled"]').content === "true";
@@ -107,6 +109,7 @@ export function createContext() {
     qualityFindingsLoading: false,
     qualityFindingsError: "",
     qualityFindingRuleFilter: "",
+    liveRevision: 0,
     qualityEvidence: null,
     qualityAffectedOnly: false,
     suppressClickUntil: 0,
@@ -212,7 +215,8 @@ export function createContext() {
     layoutResetDefaults: document.getElementById("layout-reset-defaults"),
     layoutSettingsApply: document.getElementById("layout-settings-apply"),
     layoutSettingsSave: document.getElementById("layout-settings-save"),
-    layoutSettingsSaveAs: document.getElementById("layout-settings-save-as")
+    layoutSettingsSaveAs: document.getElementById("layout-settings-save-as"),
+    liveStatus: document.getElementById("live-status")
   };
-  return { modelID, analysisRunID, aggregateEnabled, embeddedExport, sourceEnabled, reanalysisEnabled, workerURL, state, elements, constants };
+  return { modelID, analysisRunID, aggregateEnabled, liveEnabled, liveSessionID, embeddedExport, sourceEnabled, reanalysisEnabled, workerURL, state, elements, constants };
 }
