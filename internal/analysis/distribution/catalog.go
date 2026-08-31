@@ -272,7 +272,14 @@ func (a *PackagedAnalyzer) verifiedAnalyzer() (*processanalyzer.Analyzer, error)
 }
 
 func newProcessAnalyzer(packageValue VerifiedPackage, config processanalyzer.Config) (*processanalyzer.Analyzer, error) {
-	return processanalyzer.NewWithBaseDirectory(packageValue.Descriptor, filepath.Dir(packageValue.DescriptorPath), config)
+	// The descriptor stores the platform executable name for portability. A
+	// bare Unix name such as "analyzer" would otherwise be resolved through
+	// PATH by the generic process adapter instead of the verified package file.
+	// Replace it with the already verified absolute path at this boundary so a
+	// packaged analyzer always launches the indexed executable.
+	descriptor := packageValue.Descriptor
+	descriptor.Command = packageValue.ExecutablePath
+	return processanalyzer.NewWithBaseDirectory(descriptor, filepath.Dir(packageValue.DescriptorPath), config)
 }
 
 func (a *PackagedAnalyzer) mapRuntimeError(err error) error {
