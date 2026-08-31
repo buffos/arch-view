@@ -81,10 +81,11 @@ engine.
   and quality-policy operations. It does not own language semantics, quality
   rules, or baseline matching.
 - A model can request a temporary quality evaluation without persisting it. It
-  can save an existing or new profile, preview a baseline, or create a
-  baseline only through explicit allowlisted operations. Baseline creation is
-  tied to an exact current report and selected finding keys; it is never an
-  implicit “ignore all” operation.
+  can save an existing or new profile, preview a baseline, create a standalone
+  baseline, or append reviewed findings to the canonical profile baseline only
+  through explicit allowlisted operations. Baseline changes are tied to an
+  exact current report and selected finding keys; they are never an implicit
+  “ignore all” operation.
 - Every response carries session, snapshot, revision, requested/returned
   consistency, freshness, capabilities/coverage, omissions, budgets, and
   continuation information. Default projections are compact; IDs/hashes and
@@ -113,11 +114,11 @@ follows:
   `get_documentation`, `get_module_facts`, `get_callers_callees`,
   `get_source_context`;
 - quality: `get_quality_profiles`, `get_quality_rules`,
-  `get_quality_findings`, `get_finding_evidence`, `evaluate_quality`,
-  `compare_quality_reports`;
+  `get_quality_baselines`, `get_quality_findings`, `get_finding_evidence`,
+  `evaluate_quality`, `compare_quality_reports`;
 - explicitly permissioned policy: `validate_quality_profile`,
   `save_quality_profile`, `save_quality_profile_as`, `preview_baseline`,
-  `create_baseline`.
+  `create_baseline`, `append_baseline`.
 
 All operations return explicit unsupported/unknown/partial coverage and never
 turn missing analyzer capability into an empty successful result.

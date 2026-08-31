@@ -53,6 +53,9 @@ source context only on demand.
     execution permissions.
 12. Make the external source-edit/fix loop explicit and observable through
    revision comparison.
+13. Let callers inspect saved baselines, select a baseline for one temporary
+   evaluation, and append reviewed findings to the profile's canonical
+   baseline without duplicating quality-policy semantics.
 
 ## Non-goals
 
@@ -63,6 +66,8 @@ source context only on demand.
 - Fuzzy/embedding search, semantic ranking, or unbounded source retrieval.
 - Automatic source edits, commits, refactors, or autonomous source fixes.
 - Automatic baselining of all findings or silently changing quality policy.
+  A managed append is explicit, authorized, audited, and limited to eligible
+  findings from a current report.
 - Treating one watcher event as proof of semantic freshness.
 - Claiming current data while the source remains unstable during a scan.
 
@@ -86,6 +91,10 @@ source context only on demand.
 | LAM-FR-014 | Keep shell, target execution, and source mutation outside the MCP surface. |
 | LAM-FR-015 | Make watcher, store, query, quality delegation, and transport adapters replaceable strategies. |
 | LAM-FR-016 | Provide bounded status/wait and quality-report comparison needed for an external `find → inspect → edit → reanalyze → compare` loop. |
+| LAM-FR-017 | Provide read-only baseline listing and bounded entry reading using only safe direct project-relative filenames; do not select a baseline implicitly from an arbitrary JSON file. |
+| LAM-FR-018 | Let `evaluate_quality` choose `profile`, `none`, or temporary `selected` baseline mode, with selected files scoped to that request and required to share one baseline identity/revision. |
+| LAM-FR-019 | Expose an authorized `append_baseline` operation that delegates to the deterministic-quality merge lifecycle, updates the canonical profile reference, returns added/existing keys and audit data, and tells the caller to evaluate again. |
+| LAM-FR-020 | Keep baseline writes disabled by default and reject stale, partial, unsupported, not-evaluable, invalid, ambiguous, or non-active baseline inputs without changing files. |
 
 ## MCP operation groups
 
@@ -110,9 +119,11 @@ source context only on demand.
 
 - `get_quality_profiles`
 - `get_quality_rules`
+- `get_quality_baselines`
 - `get_quality_findings`
 - `get_finding_evidence`
-- `evaluate_quality` with a profile and optional non-persisted rule bindings
+- `evaluate_quality` with a profile, optional non-persisted rule bindings, and
+  an explicit baseline mode
 - `compare_quality_reports`
 
 ### Explicit quality-policy operations
@@ -122,9 +133,11 @@ source context only on demand.
 - `save_quality_profile_as`
 - `preview_baseline`
 - `create_baseline`
+- `append_baseline`
 
 Profile and baseline commands delegate to the deterministic-quality services;
-they do not create a second policy implementation in the live layer.
+they do not create a second policy implementation in the live layer. Startup
+quality evaluation and temporary MCP evaluation use the same baseline loader.
 
 ## Non-functional requirements
 
@@ -151,7 +164,8 @@ they do not create a second policy implementation in the live layer.
 The scenarios in [acceptance-scenarios.md](acceptance-scenarios.md) pass for
 multi-analyzer capability negotiation, event storms, request-time
 reconciliation, stable-input verification, atomic revisions, partial failures,
-structural/exact-text search, quality evaluation and policy permissions,
+structural/exact-text search, quality evaluation, automatic/temporary baseline
+selection, append policy permissions,
 finding comparison, budgets, root safety, MCP parity, and no source mutation.
 The application synthesis records this child as a shared consumer of the
 source-index and deterministic-quality contracts.

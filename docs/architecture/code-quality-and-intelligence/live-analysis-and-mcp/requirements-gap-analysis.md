@@ -34,8 +34,9 @@ consumers.
 | The original surface was easy to read as Go-specific | Other registered analyzers would be second-class MCP providers | Capabilities, scopes, languages, symbols, metrics, and coverage are negotiated and projected generically; no analyzer-specific branch belongs in MCP. |
 | Structural search did not cover cheap literal navigation | Agents still needed large file reads for TODOs, strings, and config keys | Add bounded root-safe literal/regex text search with line locations; fuzzy/embedding ranking remains deferred. |
 | The agent fix loop stopped at evidence | There was no specified way to observe the result after an external edit | Add bounded wait/revision status and quality-report comparison between revisions. |
-| Quality profiles and baselines were only described as read-only MCP | The model could not request a one-off evaluation or perform an authorized policy action | Delegate catalog, evaluation, profile save, baseline preview, and baseline creation to existing quality services with separate permissions and audit data. |
+| Quality profiles and baselines were only described as read-only MCP | The model could not request a one-off evaluation or perform an authorized policy action | Delegate catalog, evaluation, profile save, baseline preview, baseline creation, canonical baseline reads, request-scoped selection, and managed append to existing quality services with separate permissions and audit data. |
 | Baselines could be created from stale reports | A baseline might suppress a finding that no longer describes the source | Require an exact current report/profile/rule version and reject stale or incompatible baseline requests. |
+| Saved baselines could not be inspected or applied consistently | Agents had to pass paths manually and startup/live evaluation could diverge from temporary evaluation | Add `get_quality_baselines`, `profile`/`none`/`selected` evaluation modes, and one shared profile-reference loader; append only eligible current findings and return reevaluation/audit data. |
 | Token budgets were global rather than agent-shaped | A safe 64 KiB response can still pollute an agent context | Use compact operation-specific projections and explicit include fields; byte/item ceilings remain authoritative. |
 
 ## Deferrable implementation details
@@ -80,13 +81,16 @@ consumers.
   allowlisted operation; profile and baseline writes require explicit policy
   permissions. MCP never edits source, runs shell commands, or executes the
   target application.
+- The default quality baseline mode is `profile`: it resolves only the exact
+  baseline ID/revision stored by the profile. Missing baselines warn without
+  suppression; invalid or ambiguous matches fail. `selected` baseline files
+  are safe direct JSON names and affect one evaluation only.
 
 ## Readiness conclusion
 
 No High or Medium specification gaps remain for the refreshed live/MCP
-contract. The remaining work is implementation of watcher/reconciliation,
-revision storage, analyzer-neutral query projections, quality-service
-delegation, permissions, and transport packaging.
+contract. The baseline read/select/append delegation, full-repository
+verification, issue closeout, and final product review are complete.
 
 ## Artifact impact
 
@@ -97,4 +101,6 @@ delegation, permissions, and transport packaging.
   explicitly-not-current data across all registered analyzers.
 - **Architecture:** the live coordinator, analyzers, source index, quality
   services, MCP adapter, and coding-agent edit workflow have separate owners.
-- **Delivery:** no implementation issues are created in this planning pass.
+- **Delivery:** managed baseline work is tracked by the dependency-ordered
+  issues recorded under this live/MCP child and the deterministic-quality
+  child.

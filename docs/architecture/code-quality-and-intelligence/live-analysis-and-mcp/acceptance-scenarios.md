@@ -267,3 +267,61 @@ reports
 **Then** the result identifies added, unchanged, suppressed, and resolved
 findings by stable finding key, and partial/unsupported coverage is not treated
 as resolution.
+
+## LAM-AC-027 — Baseline listing is bounded and read-only
+
+**Given** a project with several direct `quality-baselines/*.json` documents
+
+**When** an MCP client calls `get_quality_baselines`
+
+**Then** it receives deterministic IDs, revisions, statuses, entry counts, and
+pagination metadata. Entries are returned only when one safe filename is
+selected with an explicit bounded request. The call does not change the
+session's effective baseline or project files, and traversal/nested filenames
+are rejected.
+
+## LAM-AC-028 — Evaluation baseline mode is request-scoped
+
+**Given** a profile that references `baseline:main@1.0.0`
+
+**When** one `evaluate_quality` request uses `baseline_mode=none` and another
+uses `baseline_mode=selected` with explicit baseline files
+
+**Then** the first report has no suppression, the second uses only the
+selected compatible documents, and the saved profile and later default
+evaluation still use the original profile reference.
+
+## LAM-AC-029 — Authorized append updates the canonical profile baseline
+
+**Given** a current compatible report with reviewed active findings and a live
+session that grants baseline-write permission
+
+**When** the client calls `append_baseline` with authorization and a reason
+
+**Then** the operation creates or merges the profile's canonical baseline,
+increments its revision, updates the profile reference, returns added and
+already-existing finding keys, records an audit result, and sets
+`reevaluation_required` when policy changed. It never edits source files.
+
+## LAM-AC-030 — Append is protected by eligibility and conflicts
+
+**Given** a report containing unsupported, not-evaluable, partial, stale, or
+non-active findings, or a baseline whose same exact identity has another reason
+
+**When** `append_baseline` is requested
+
+**Then** the request is rejected without changing either policy document. A
+caller with an outdated expected baseline revision receives a conflict instead
+of overwriting a newer append.
+
+## LAM-AC-031 — Startup evaluation uses the saved baseline loader
+
+**Given** a live session whose selected profile points to a valid canonical
+baseline
+
+**When** the session publishes its startup quality report and an MCP client
+later performs a default `evaluate_quality`
+
+**Then** both reports apply the same exact baseline reference and suppression
+semantics. A missing reference produces an explicit warning and leaves findings
+unsuppressed; an invalid or ambiguous reference prevents an incoherent report.

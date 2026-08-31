@@ -2,9 +2,10 @@
 
 ## State
 
-- Planning state: `specified` after the bounded-to-specified transition.
-- Issues 064–075 are implemented and verified in the shared live boundary; it
-  does not create a topology change or advance the capability state.
+- Planning state: `implemented` after completion of issue 076's final
+  product-approval gate.
+- Issues 064–079 are implemented and verified in the shared live boundary;
+  issue 076 records the final cross-analyzer and human product approval.
 - The refreshed exact-spec pipeline covers analyzer-neutral live queries,
   request-time freshness reconciliation, stable-input verification, quality
   evaluation, explicit quality-policy permissions, and the external agent fix
@@ -61,13 +62,20 @@ explicit remediation boundaries.
 - **075:** The opt-in local/authenticated HTTP adapter maps the same query and
   quality services, enforces loopback/authentication/origin/request limits,
   supports encoded opaque IDs, and returns structured transport errors.
+- **077–079:** Managed quality baselines now have canonical profile references,
+  automatic discovery, deterministic revisions, idempotent append and atomic
+  profile/baseline publication. The CLI and MCP expose the same lifecycle;
+  MCP can list/read baselines, select one for a temporary evaluation, and
+  append reviewed findings only through authorized audited policy writes.
 - **076:** Automated mixed-analyzer, freshness, transport, viewer, CLI, and
-  documentation evidence is complete. The final desktop/responsive viewer,
-  MCP usability, and product-behavior inspection remains a human gate.
+  documentation evidence is complete. The user approved the final desktop/
+  responsive viewer, MCP usability, status wording, and safety-boundary review
+  on 2026-08-31; the issue records the approval and is closed.
 
 ## Artifact impact
 
-- **Topology:** no topology or state transition; the node remains `specified`.
+- **Topology:** no topology change; the node advanced from `specified` to
+  `implemented` after its scoped delivery was exhausted.
 - **Capability:** the live/MCP exact contract now includes freshness assurance,
   analyzer-neutral navigation, temporary quality evaluation, and permissioned
   profile/baseline operations.
@@ -76,15 +84,13 @@ explicit remediation boundaries.
 - **Architecture:** the coordinator owns reconciliation and snapshot truth;
   analyzers own language facts; deterministic quality owns profiles/rules/
   baselines; MCP delegates through one shared service boundary.
-- **Delivery:** issues 064–075 are archived as complete. Issue 076 remains in
-  `awaiting-human-review` with no unresolved implementation blocker; its
-  owning-node reference and final inspection checklist are synchronized. The
-  node remains `specified` because the product-approval frontier is not
-  exhausted.
+- **Delivery:** issues 064–079 are archived as complete. Issue 076's owning-
+  node reference, approval record, and final inspection evidence are
+  synchronized.
 
 ## Approved delivery frontier
 
-The approved dependency-ordered implementation batch is issues 064–076:
+The approved dependency-ordered implementation batch is issues 064–079:
 
 - 064–067: live session configuration, watcher events, coherent revisions,
   request-time reconciliation, stable-input verification, and single-flight
@@ -93,33 +99,35 @@ The approved dependency-ordered implementation batch is issues 064–076:
   gateway/evaluation, and separately permissioned profile/baseline operations.
 - 072–075: local CLI/viewer consumers, MCP stdio plus installation
   documentation, and optional authenticated HTTP transport.
+- 077–079: managed baseline storage and merge, the automatic CLI lifecycle,
+  and live/MCP baseline read, selection, and append operations.
 - 076: cross-analyzer conformance, external agent fix-loop verification, and
   final product approval.
 
-All slices are `feature`/`AFK`; only issue 076 has the `product-approval`
-review gate. Issues 064–075 are verified and archived in dependency order;
-issue 076 is `awaiting-human-review`.
+All slices are `feature`/`AFK`; only issue 076 had the `product-approval`
+review gate. Issues 064–079 are verified and archived in dependency order.
 
 ## Artifact impact assessment for implementation batch
 
 - **Topology:** no impact. The existing specified node owns this batch; no node
   is added, split, promoted, or advanced.
 - **Capability:** implementation progress is recorded here and in the owning
-  node; the state remains `specified` until issues 071–076 are completed.
+  node; issue 076 completed the final scoped product review and advanced the
+  node to `implemented`.
 - **Product:** no impact at slicing. The application PRD already describes the
   live developer/agent journeys and quality-policy boundary.
 - **Architecture:** no impact at slicing. The application architecture summary
   already defines the coordinator, query, quality-delegation, transport, and
   source-safety boundaries.
-- **Delivery:** issue files 064–075, registry rows, remaining blockers, and
-  node references are synchronized. Issue 076 records the automated evidence
-  and the remaining human inspection. No product or architecture change was
-  needed because the implementation preserves the approved boundaries.
+- **Delivery:** issue files 064–079, registry rows, blockers, and node
+  references are synchronized. No product or architecture change was needed
+  because the implementation and final review preserve the approved
+  boundaries.
 
 ## Readiness decision
 
-AUTOMATED IMPLEMENTATION COMPLETE. Issues 064–075 are complete and verified.
-Issue 076 is awaiting the final human product inspection for cross-analyzer
-conformance, viewer/MCP usability, status wording, and safety boundaries.
+IMPLEMENTATION AND PRODUCT REVIEW COMPLETE. Issues 064–079 are complete and
+verified. The user-approved final review covered cross-analyzer conformance,
+viewer/MCP usability, status wording, and safety boundaries.
 Source-edit/remediation remains a separate future capability and is not
 implemented here.

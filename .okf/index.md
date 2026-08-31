@@ -13,7 +13,7 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 0 `foggy`, 0 `bounded`, 3 `specified`, 15 `implemented`.
+- State totals: 0 `foggy`, 0 `bounded`, 1 `specified`, 17 `implemented`.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their
@@ -29,14 +29,13 @@
   whose child implementation is complete; their own PRDs and scopes remain
   authoritative. The new [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
   capability is a pure structural-child roll-up with effective state
-`specified`, the minimum of its three children. All three code-quality child
-  capabilities are readiness-reviewed; the source-facts child has
-  delivered issues 048–052 and is implemented after its approved final
-  visual-review gate. Deterministic quality has delivered and archived issues
-  053–063 and is implemented after its desktop and responsive visual review.
-  Live-analysis/MCP issues 064–075 are delivered and verified; issue 076 is
-  awaiting final human product approval, so the parent roll-up remains
-  specified.
+`implemented`, the minimum of its three children. All three code-quality child
+  capabilities are readiness-reviewed; the source-facts child has delivered
+  issues 048–052 and is implemented after its approved final visual-review
+  gate. Deterministic quality has delivered and archived issues 053–063 and
+  077–078 and is implemented after its desktop and responsive visual review.
+  Live-analysis/MCP issues 064–079 are delivered, verified, and product-
+  approved. The parent roll-up is now implemented.
 
 ## Application synthesis
 

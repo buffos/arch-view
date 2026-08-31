@@ -12,7 +12,8 @@ contracts.
 No High or Medium specification findings remain. The watcher lifecycle,
 request-time reconciliation, edit-storm handling, stable-input verification,
 atomic snapshot publication, freshness states, analyzer-neutral queries,
-quality evaluation/policy delegation, MCP operations, budgets, root safety,
+  quality evaluation/policy delegation, managed baseline discovery and append,
+  MCP operations, budgets, root safety,
 transport policy, and remediation boundary are explicit.
 
 ## Cross-document consistency
@@ -35,8 +36,9 @@ transport policy, and remediation boundary are explicit.
   shell/target-execution operations.
 - The scenarios cover event storms, missed watcher events, concurrent strict
   requests, changes during analysis, unstable inputs, analyzer capability
-  coverage, temporary quality settings, policy authorization, current baseline
-  creation, revision comparison, and no mutation.
+  coverage, temporary quality settings, automatic and request-scoped baseline
+  selection, managed append authorization, current baseline creation, revision
+  comparison, and no mutation.
 - The application PRD and architecture summary identify this child as a
   downstream consumer of source-index and quality services while preserving
   their ownership boundaries.
@@ -57,8 +59,8 @@ transport policy, and remediation boundary are explicit.
   integration concerns. The CLI currently binds HTTP transports to loopback.
 - Profile/baseline writes use explicit operation permissions, an opaque host
   authorization callback, safe project-relative destinations, atomic writes,
-  and audit results. They remain unavailable under the default read-only
-  session policy.
+  conflict detection, and audit results. They remain unavailable under the
+  default read-only session policy.
 - Incremental reanalysis remains conservative until dependency-impact
   benchmarks prove a narrower invalidation safe.
 
@@ -80,10 +82,9 @@ permissions, and the no-autonomous-source-fix rule.
 - **Architecture truth:** watcher, coordinator, store, analyzers, quality
   services, query provider, MCP adapter, viewer, CLI, and transports have
   focused ownership and share one revision/query boundary.
-- **Delivery truth:** issues 064–075 are implemented and verified. Issue 076
-  has automated conformance evidence and is waiting only for its final human
-  product-approval inspection.
+- **Delivery truth:** issues 064–079 are implemented and verified. Issue 076's
+  final human product-approval inspection is approved and recorded.
 
 ## Readiness
 
-AUTOMATED IMPLEMENTATION COMPLETE. HUMAN PRODUCT REVIEW PENDING.
+IMPLEMENTATION COMPLETE. HUMAN PRODUCT REVIEW COMPLETE.

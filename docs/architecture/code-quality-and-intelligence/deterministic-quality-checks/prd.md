@@ -19,10 +19,9 @@ signal requiring human review.
   quality engine's central dispatch.
 - **Viewer/CLI/export client:** decorates graph/source subjects and exports the
   same report.
-- **Future MCP client:** requests current findings with compact evidence,
-  asks for source context separately, and delegates temporary evaluations or
-  explicitly authorized profile/baseline operations to this capability's
-  services.
+- **MCP client:** requests current findings with compact evidence, asks for
+  source context separately, and delegates temporary evaluations or explicitly
+  authorized profile/baseline operations to this capability's services.
 
 ## Goals
 
@@ -42,6 +41,8 @@ signal requiring human review.
     duplicating rule evaluation.
 11. Let live/MCP clients reuse the catalog, evaluation, comparison, and policy
     services without creating a second quality implementation.
+12. Make one canonical baseline per profile discoverable, appendable, and safe
+    to apply without requiring callers to pass a path on every evaluation.
 
 ## Non-goals
 
@@ -51,8 +52,10 @@ signal requiring human review.
 - Runtime performance, production telemetry, dynamic dispatch certainty, or
   unpinned VCS-history claims.
 - Automatic source edits, refactoring, or LLM-generated remediation.
-- Implicit profile changes or automatic baselining without an explicit
-  permissioned policy operation.
+- Automatic baselining or profile changes without an explicit permissioned
+  policy operation. Automatic loading is allowed only through the exact
+  baseline reference stored by the selected profile; the engine never scans
+  every JSON file and guesses which one to use.
 - Inferring intended layer/dependency policy from directory or type names.
 - Treating unsupported/unknown analysis as a clean result.
 
@@ -90,6 +93,12 @@ signal requiring human review.
 | DQC-FR-012 | Canonically order and digest reports so equal inputs/configuration produce equal semantic output. |
 | DQC-FR-013 | Allow registered rule and metric strategies to add capabilities without modifying the core evaluator. |
 | DQC-FR-014 | Expose scope-safe `source:file.max-lines` findings to human-facing consumers as a count of affected files and an explicit filter; preserve partial/unknown/unsupported coverage and do not re-evaluate raw source facts in the consumer. |
+| DQC-FR-015 | Resolve a profile's exact `baseline_id` and `revision` from the direct project-local `quality-baselines/` documents; a missing reference warns without suppression, while an invalid or ambiguous match fails clearly. |
+| DQC-FR-016 | Merge accepted findings into one canonical baseline per profile idempotently, reject conflicting duplicate review metadata, increment the numeric baseline revision, and update the profile reference. |
+| DQC-FR-017 | Publish managed baseline and profile updates with destination validation, expected-revision conflict detection, atomic per-document writes, and rollback when the pair cannot be completed. |
+| DQC-FR-018 | Permit baseline append only for active findings with observed rule coverage from the exact current compatible report; reject unsupported, not-evaluable, stale, partial, or already non-active findings. |
+| DQC-FR-019 | Keep the legacy standalone baseline command available while exposing explicit managed CLI controls for automatic loading, one-run baseline override, and `--no-quality-baseline`. |
+| DQC-FR-020 | Expose the same baseline read, selection, merge, and validation semantics to live/MCP callers without changing the saved session/profile when a temporary baseline selection is evaluated. |
 
 ## Non-functional requirements
 
@@ -107,9 +116,9 @@ signal requiring human review.
 
 The scenarios in [acceptance-scenarios.md](acceptance-scenarios.md) pass for
 threshold boundaries, metric formulas, docs coverage, graph rules, scope
-isolation, baseline/revision behavior, open/closed registries, and SOLID signal
-labeling. The implemented Go analyzer publishes the structural facts required
-by the SOLID rules, and the application consumes the quality report through
-viewer, CLI, and export projections. Live/MCP is a future consumer of the same
-catalog, report, comparison, and policy services; it must not duplicate their
-semantics.
+isolation, automatic baseline discovery, append/revision behavior, open/closed
+registries, and SOLID signal labeling. The implemented Go analyzer publishes
+the structural facts required by the SOLID rules, and the application consumes
+the quality report through viewer, CLI, export, live, and MCP projections. All
+of those consumers use the same catalog, report, comparison, baseline loader,
+and policy services; none duplicates their semantics.

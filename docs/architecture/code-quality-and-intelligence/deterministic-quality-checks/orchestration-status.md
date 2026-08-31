@@ -48,8 +48,8 @@ IMPLEMENTED. Issues 053–063 are complete through
 the profile/catalog, exact rule families, report lifecycle and baseline
 workflow, signals, bounded queries, evidence, and headless/export projections.
 Issue 063 passed its required visual review for the human-facing viewer. The
-live analysis/MCP child remains specified and will consume this report contract
-later.
+live analysis/MCP child is now implemented through issues 064–079 and consumes
+this report contract through the shared quality gateway.
 
 ## Artifact impact assessment
 
@@ -64,6 +64,6 @@ later.
   delivery references to record issues 053–063.
 - **Delivery:** archived the complete dependency-ordered issue batch after
   automated and visual verification; the registry max issue ID remains 063.
-- **Topology/state:** no topology change. The deterministic-quality child
-  advances to `implemented`; the code-quality roll-up remains `specified`
-  because live analysis/MCP remains specified.
+- **Topology/state:** no topology change. The deterministic-quality child is
+  `implemented`; after issue 076, the live analysis/MCP child and the
+  code-quality roll-up are also `implemented`.

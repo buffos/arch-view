@@ -2,6 +2,44 @@
 
 ## 2026-08-31
 
+### Issue 076 closeout and live-analysis/MCP roll-up
+
+* **Approval:** The user approved issue 076's final cross-analyzer and human
+  product-review gate. The issue records approval of the viewer, MCP
+  usability, status wording, quality-policy safety, and bounded remediation
+  boundaries.
+* **Delivery:** Archived issue 076, removed its active registry row, and
+  updated the owning node reference to the dated `done/` path. The command
+  review also clarified that `open --no-watch` requires `--live`; the normal
+  non-live viewer omits that flag.
+* **State:** Advanced [Live analysis and MCP](capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md)
+  from `specified` to `implemented`. Recomputed its pure roll-up parent
+  [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
+  from `specified` to `implemented`. Effective totals are now 0 `foggy`,
+  0 `bounded`, 1 `specified`, and 17 `implemented` nodes.
+* **Synchronization:** Refreshed the live orchestration status, capability
+  node, application PRD, application architecture summary, project/index
+  records, issue registry, and issue closeout evidence. No product or
+  architecture boundary changed.
+
+### Baseline workflow redesign implementation 077–079
+
+* **Implementation:** Added canonical profile-linked baseline discovery,
+  deterministic revisions, idempotent append/merge, conflict detection, and
+  atomic profile/baseline publication.
+* **Consumers:** Added CLI automatic loading, explicit override and clean-run
+  controls; added the managed `quality baseline add` command; and extended the
+  live/MCP boundary with baseline listing, bounded reads, temporary selection,
+  and authorized audited append.
+* **Synchronization:** Updated the deterministic-quality and live/MCP
+  contracts, application PRD and architecture summary, website, agent skill
+  references, issue registry, and OKF graph. Issues 077–079 are archived;
+  issue 076 remains the final human product gate.
+* **Verification:** `go test ./... -count=1`, `go test -race ./...`,
+  `go vet ./...`, `go build ./...`, `npm run docs:check`,
+  `npm run docs:build`, source-only `node --check`, and `git diff --check`
+  pass.
+
 ### Live analysis and MCP implementation batch 071–076
 
 * **Completion:** Implemented and verified issues 071–075: permissioned
@@ -1167,3 +1205,21 @@
 * **Completion**: Archived issue 002, [Go package/import analysis and canonical model pipeline](../docs/agents/issues/done/20260825-002-go-package-import-model-pipeline.md), after implementing deterministic Go observations, canonical model normalization/validation, graph derivations, hierarchy projection, and headless CLI access.
 * **Artifact sync**: Updated the analyze-source and generate-models capability issue references, implementation/orchestration status, active issue blockers, and acceptance traceability. Product and application-architecture truth remain unchanged because the analyzer-to-model boundary is unchanged.
 * **Verification**: Backend and end-to-end obligations passed where supported; frontend integration is not applicable to this backend/model issue. The external reference folder remains untouched.
+## 2026-08-31
+
+* **Baseline lifecycle:** Implemented the managed canonical baseline workflow
+  behind `arch-view.quality-baseline/v1`. Profiles now resolve one exact
+  `baseline_id`/revision from `quality-baselines/`; missing references warn
+  without suppression and invalid or ambiguous references fail.
+* **Delivery:** Added dependency-ordered issues 077–079 for the policy store,
+  CLI automatic loading/append, and live/MCP baseline read/selection/append.
+  The issues are implemented, verified, and linked from the deterministic
+  quality and live/MCP capability nodes. Issue 076 remains awaiting its final
+  human product review.
+* **Policy safety:** Managed appends merge idempotently, reject conflicting
+  review metadata and ineligible findings, advance revisions, update the
+  profile reference, detect expected-revision conflicts, and audit authorized
+  live/MCP writes. Temporary baseline selection never changes session state.
+* **Artifact sync:** Updated application PRD/architecture, deterministic and
+  live/MCP contracts/scenarios, CLI/MCP/skill/website documentation, issue
+  registry, and OKF capability references.

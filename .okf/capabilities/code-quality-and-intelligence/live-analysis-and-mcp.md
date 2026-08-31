@@ -3,9 +3,9 @@ type: capability
 title: Live analysis and MCP
 description: Keep a configured multi-analyzer source view current and expose compact, analyzer-neutral search, quality evaluation, and controlled quality-policy operations to tools and LLMs.
 tags: [mcp, watcher, live-analysis, multi-analyzer, code-search, quality-policy]
-timestamp: 2026-08-31T00:00:00Z
-state: specified
-state_changed: 2026-08-29T00:00:00Z
+timestamp: 2026-08-31T14:00:49Z
+state: implemented
+state_changed: 2026-08-31T14:00:49Z
 project: /project.md
 parent: /capabilities/code-quality-and-intelligence.md
 artifact_root: docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp
@@ -32,7 +32,8 @@ issues:
   - docs/agents/issues/done/20260831-073-live-viewer-integration.md
   - docs/agents/issues/done/20260831-074-mcp-stdio-server-and-documentation.md
   - docs/agents/issues/done/20260831-075-authenticated-http-mcp-transport.md
-  - docs/agents/issues/pending/20260831-076-cross-analyzer-agent-workflow-and-final-review.md
+  - docs/agents/issues/done/20260831-076-cross-analyzer-agent-workflow-and-final-review.md
+  - docs/agents/issues/done/20260831-079-live-mcp-baseline-read-selection-and-append.md
 ---
 
 # Intent
@@ -83,7 +84,9 @@ Observed code facts:
 - Quality profile and baseline writes are separate allowlisted operations.
   They are denied by default, require explicit authorization, validate exact
   report/profile identity, use safe project-relative destinations, and return
-  audit data. No live/MCP operation edits source code or runs the target.
+  audit data. Baseline reads are bounded; temporary baseline selection does not
+  change session state. No live/MCP operation edits source code or runs the
+  target.
 - The source-index capability provides analyzer-reported files, declarations,
   documentation, spans, relations, provenance, coverage, and deterministic
   snapshot digests. The quality capability remains the owner of versioned
@@ -99,8 +102,9 @@ User-confirmed target behavior:
 - A request that requires current information should verify the source state
   and wait for a coherent revision instead of trusting watcher events alone.
 - A model may request a temporary quality configuration, inspect available
-  rules/profiles, and—only when explicitly authorized—save a profile or create
-  a baseline through the deterministic-quality services.
+  rules/profiles/baselines, choose profile/none/selected baseline evaluation,
+  and—only when explicitly authorized—save a profile or append a reviewed
+  finding to a canonical baseline through the deterministic-quality services.
 - Findings are evidence for an explicit downstream source edit. The live
   watcher and MCP surface do not silently edit code or baseline findings.
 
@@ -113,6 +117,11 @@ Implemented boundary:
   quality catalog/evaluation/policy delegation, MCP tools/resources, budgets,
   root-safe permissions, stdio-first packaging, and explicit remediation
   handoff.
+- The baseline policy extension adds bounded `get_quality_baselines`,
+  request-scoped `baseline_mode` selection, and authorized `append_baseline`.
+  The live startup path and temporary MCP evaluation use the same profile-
+  reference baseline loader as the CLI; a missing reference warns without
+  suppression, while invalid or ambiguous references fail.
 - Watchers produce change hints. A strict `require_current` query may use a
   cheap dirty/manifest check as a fast path, but must use an authoritative
   content/input fingerprint whenever the watcher or manifest cannot prove the
@@ -120,16 +129,17 @@ Implemented boundary:
   no response is labeled current until the candidate input is verified stable.
 - Watchers do not parse; MCP does not own analyzer semantics, source facts,
   graph semantics, quality rules, profile/baseline meaning, or source edits.
-  Issues 064–075 implement this boundary. Issue 076 remains the final
-  cross-analyzer and product-approval gate.
+  Issues 064–079 implement and verify this boundary, including the final
+  cross-analyzer and product-approval review recorded by issue 076.
 
 # Delivery
 
-The approved dependency-ordered implementation frontier is issues 064–076.
+The approved dependency-ordered implementation frontier is issues 064–079.
 Issues 064–071 establish the live session, watcher/reconciliation, immutable
 revisions, analyzer-neutral queries, bounded source context, delegated quality
 operations, and explicit policy writes. Issues 072–075 implement and verify
 the local CLI/viewer bridge, MCP stdio and documentation, and optional
-authenticated HTTP transport. Automated conformance evidence for issue 076 is
-present; its final human product-approval gate remains open. The capability
-remains `specified` until that final gate and the scoped delivery are complete.
+authenticated HTTP transport. Issue 079 adds bounded baseline reads,
+request-scoped selection, shared automatic loading, and authorized canonical
+append. Issue 076 records the completed automated conformance and final human
+product approval. The capability is `implemented` for its scoped delivery.

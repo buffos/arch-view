@@ -31,6 +31,8 @@ issues:
   - docs/agents/issues/done/20260830-061-quality-report-query-and-evidence.md
   - docs/agents/issues/done/20260830-062-quality-cli-and-export-projections.md
   - docs/agents/issues/done/20260830-063-quality-viewer-and-affected-file-filter.md
+  - docs/agents/issues/done/20260831-077-managed-quality-baseline-store-and-merge.md
+  - docs/agents/issues/done/20260831-078-managed-quality-baseline-cli.md
 ---
 
 # Intent
@@ -81,10 +83,17 @@ Specified boundary:
   selection to an existing quality profile or save it as a new direct JSON
   profile; temporary viewer selections remain session-owned.
 - The live-analysis/MCP child may delegate profile/rule discovery, temporary
-  evaluations, profile saves, baseline previews, and baseline creation to the
-  quality catalog/evaluation/policy services. This child remains the owner of
+  evaluations, baseline listing/selection, profile saves, baseline previews,
+  baseline creation, and managed baseline appends to the quality
+  catalog/evaluation/policy services. This child remains the owner of
   rule, profile, finding, suppression, and baseline semantics; live/MCP owns
   freshness, transport, and operation authorization.
+- A profile may reference one canonical baseline by exact ID/revision. The
+  normal CLI/live/MCP evaluation path loads only that reference. Managed append
+  accepts active findings with observed coverage from the current compatible
+  report, merges them idempotently, advances the baseline revision, updates
+  the profile reference, and rejects missing/invalid/ambiguous/conflicting
+  policy state.
 - File line-threshold semantics belong to this capability; viewer, CLI, export,
   and MCP surfaces consume the resulting findings and do not own threshold
   evaluation.
@@ -94,13 +103,20 @@ Specified boundary:
 
 # Delivery
 
-The readiness-reviewed implementation frontier is sliced into issues 053–063.
-Issues 053–063 are implemented, verified, and archived: they establish the
-versioned profile/catalog, source and graph providers, exact size/complexity/
-documentation/coupling/cycle/constraint rules, report lifecycle and baselines,
-conservative SOLID signals, bounded queries/evidence, and headless/export
-projections. The Go source-index path publishes the structural facts consumed
-by the SOLID signals, and the local CLI exposes validated baseline creation.
-Issue 063 is verified and archived after desktop and responsive visual review
-of the viewer projection. All scoped issues and acceptance criteria are now
-implemented, so this capability is `implemented`.
+The readiness-reviewed implementation frontier was initially sliced into
+issues 053–063. Issues 053–063 are implemented, verified, and archived: they
+establish the versioned profile/catalog, source and graph providers, exact
+size/complexity/documentation/coupling/cycle/constraint rules, report lifecycle
+and standalone baselines, conservative SOLID signals, bounded
+queries/evidence, and headless/export projections. The Go source-index path
+publishes the structural facts consumed by the SOLID signals, and issue 063 is
+verified and archived after desktop and responsive visual review of the viewer
+projection.
+
+The managed-baseline extension was temporarily returned to the `specified`
+frontier so its automatic loading, append/merge, revision, conflict, and live
+delegation requirements could be sliced into issues 077–078. Those issues are
+now implemented and verified: profiles resolve one canonical baseline, the
+CLI supports automatic/explicit/disabled selection and managed append, and
+policy writes remain safe and source-read-only. All scoped issues and
+acceptance criteria are implemented, so this capability is `implemented`.

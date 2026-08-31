@@ -212,6 +212,19 @@ An entry matches only the specified rule/profile/formula versions. Changed
 versions remain visible until explicitly baselined; an old entry cannot hide a
 new rule meaning.
 
+## Managed baseline lifecycle
+
+A quality profile may reference one canonical baseline by exact ID and
+revision. The file is resolved only from the direct project-local
+`quality-baselines/` directory. Missing references produce a warning and no
+suppression; invalid or ambiguous matches fail. A managed append accepts only
+active findings with observed coverage from the exact current compatible report.
+It merges entries idempotently, rejects conflicting review metadata, starts a
+new document at `1.0.0`, increments later numeric revisions, updates the
+profile reference, and publishes the policy documents with conflict detection
+and rollback. Explicit `none`/file overrides are per-evaluation and do not
+change the saved profile.
+
 ## Strategies and registries
 
 ```text

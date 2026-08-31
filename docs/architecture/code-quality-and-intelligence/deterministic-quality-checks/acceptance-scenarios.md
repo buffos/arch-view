@@ -168,3 +168,66 @@ scope/report; it does not recalculate the result from raw file facts.
 **And** if the report has partial, unknown, or unsupported coverage, the
 consumer labels that coverage instead of presenting an incomplete count as
 zero.
+
+## DQC-AC-017 — Profile resolves only its canonical baseline
+
+**Given** a profile that references `baseline:main@1.0.1` and a project with
+zero, one, or several baseline JSON files
+
+**When** the profile is evaluated without an explicit baseline override
+
+**Then** only the direct file containing that exact ID and revision can affect
+suppression. A missing match produces a clear warning and no suppression;
+multiple matching files or an invalid matching file produce a clear error.
+
+## DQC-AC-018 — Managed append is idempotent and advances revision
+
+**Given** a current report with active findings and a profile with no baseline
+
+**When** an accepted finding is appended to `main.json`, then the same finding
+is appended again, then a second accepted finding is appended
+
+**Then** the first operation creates `baseline:main@1.0.0`, the repeated
+operation adds no duplicate and does not change policy, and the second distinct
+operation writes `1.0.1` with both entries and updates the profile reference.
+
+## DQC-AC-019 — Conflicting review metadata is not silently replaced
+
+**Given** a canonical baseline entry already has a reason and owner
+
+**When** an append requests the same exact finding identity with a different
+reason or owner
+
+**Then** the operation fails with a conflict and leaves both the baseline and
+profile documents unchanged.
+
+## DQC-AC-020 — Only observed active findings can be baselined
+
+**Given** a report containing active observed, unsupported, not-evaluable,
+partial, stale, suppressed, and resolved findings
+
+**When** managed append is requested
+
+**Then** only the active finding with observed coverage is eligible. The
+operation rejects the other states and never uses them to suppress a future
+report.
+
+## DQC-AC-021 — Explicit baseline controls are per-run
+
+**Given** a profile that references a saved baseline
+
+**When** one CLI evaluation uses `--quality-baseline other.json` and another
+uses `--no-quality-baseline`
+
+**Then** the first run applies only the explicit file, the second run applies
+no baseline, and neither command changes the saved profile reference.
+
+## DQC-AC-022 — Managed pair publication detects policy races
+
+**Given** a caller read baseline revision `1.0.0` and another writer publishes
+revision `1.0.1` first
+
+**When** the original caller appends with `expected_revision=1.0.0`
+
+**Then** the append fails with a conflict and does not overwrite the newer
+baseline or profile reference.

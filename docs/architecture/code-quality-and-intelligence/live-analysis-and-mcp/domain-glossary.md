@@ -29,7 +29,7 @@
 | Stable input | freshness result | Source state that did not change during the bounded scan and fingerprint verification. | An unstable edit stream cannot be published as current. |
 | Input unstable | freshness state | The source changed during repeated scan attempts or did not settle within policy. | It is different from analyzer failure and from an empty result. |
 | Quality evaluation request | quality command | Request to evaluate a profile or temporary rule bindings against a verified source/model snapshot. | It may be non-persisted and must carry profile/options identity. |
-| Quality-policy write | permissioned command | Explicit save of a profile or creation of a baseline through deterministic-quality services. | It is not source mutation and is not enabled by default. |
+| Quality-policy write | permissioned command | Explicit save of a profile or creation/append of a baseline through deterministic-quality services. | It is not source mutation and is not enabled by default. |
 | Baseline preview | quality command | Dry-run list of finding keys and exact policy identities that a baseline would suppress. | It does not change the profile or report. |
 | Finding delta | quality query | Added, unchanged, suppressed, or resolved findings between compatible reports. | Partial or incompatible reports cannot imply resolution. |
 | Detail budget | safety value | Maximum bytes/lines/items permitted in a response/context request. | Byte budget is deterministic; token estimates are advisory. |

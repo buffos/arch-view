@@ -65,28 +65,29 @@ root, analyzer ID, and local ID; failures yield partial results; and the viewer
   `.archview.json` for persisted assignments and source scope remains owned by
   the implemented project-assignment child capability.
 
-### Code quality and code intelligence (specified roll-up, source-facts delivery implemented)
+### Code quality and code intelligence (implemented roll-up)
 
 The [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md)
 capability is a pure structural-child roll-up with materialized state
-`specified`, derived as the minimum of its three structural children. The parent
+`implemented`, derived as the minimum of its three structural children. The parent
 is an aggregate/navigation boundary with no standalone PRD or implementation
 slice; it extends the product through three child territories:
 
 - The [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) is implemented through issues 048–052 as an optional, scope-first attachment with first-class files, physical line counts, hashes, documentation, named declarations, visibility, containment, provenance, typed extension points, bounded queries, and human-oriented module inspection. The graph presents a compact summary card; a same-tab inspection route progressively loads bounded Files, Symbols, and evidence views, while technical identifiers remain secondary. Its required final visual-review gate is approved.
-- The [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063: configurable size, complexity, documentation, coupling, cycle, dependency-direction, and layer rules; deterministic report lifecycle/baselines; conservative SOLID signals; bounded queries; headless/export projections; and the report-backed viewer. Metrics/rules are versioned registry strategies; unsupported inputs are not passes, and SOLID output is explicitly a signal rather than a provable violation. Issue 063 passed its desktop and responsive visual review.
-- The [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) child is implemented through verified issues 064–075 for configured-folder watching across all registered analyzers, request-time freshness reconciliation, revision-aware immutable snapshots, compact structural and exact-text search, quality reports for LLM tools, the local CLI/viewer bridge, MCP stdio, and optional authenticated HTTP. It delegates temporary quality evaluations and explicitly authorized profile/baseline policy operations to the deterministic-quality services. Issue 076 remains the final cross-analyzer and human product-approval gate. Source changes remain an explicit downstream action.
+- The [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063 and the managed-baseline extension tracked by issues 077–078: configurable size, complexity, documentation, coupling, cycle, dependency-direction, and layer rules; deterministic report lifecycle/baselines; conservative SOLID signals; bounded queries; headless/export projections; automatic canonical-baseline loading; and the report-backed viewer. Metrics/rules are versioned registry strategies; unsupported inputs are not passes, and SOLID output is explicitly a signal rather than a provable violation. Issue 063 passed its desktop and responsive visual review.
+- The [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) child is implemented through verified issues 064–079 for configured-folder watching across all registered analyzers, request-time freshness reconciliation, revision-aware immutable snapshots, compact structural and exact-text search, quality reports for LLM tools, the local CLI/viewer bridge, MCP stdio, optional authenticated HTTP, and the managed baseline lifecycle. It delegates temporary quality evaluations, baseline reads, request-scoped selection, and explicitly authorized baseline appends to the deterministic-quality services. Issue 076's final cross-analyzer and human product-approval gate is complete. Source changes remain an explicit downstream action.
 
 The source-facts child is implemented through its approved visual review. The
-deterministic-quality child is `implemented`; issues 053–063 have delivered the quality profile and
-catalog, source/graph providers, exact rules, report lifecycle and baseline
-workflow, SOLID signals, bounded queries, and headless/export projections. The
-live/MCP child remains `specified` only because issue 076's final product gate
-is open; issues 064–075 have delivered and verified its live session, query,
-quality-policy, CLI/viewer, MCP stdio, documentation, and HTTP transport
-implementation. Their exact contracts keep source facts, quality policy,
-snapshot lifecycle, structural search, and transport permissions separately
-owned.
+deterministic-quality child is `implemented`; issues 053–063 and 077–078 have
+delivered the quality profile and catalog, source/graph providers, exact rules,
+report lifecycle, canonical baseline loading/append workflow, SOLID signals,
+bounded queries, and headless/export projections. The live/MCP child is
+`implemented`; issues 064–079 have delivered and verified its live session,
+query, quality-policy, baseline read/select/append delegation, CLI/viewer, MCP
+stdio, documentation,
+and HTTP transport implementation. Their exact contracts keep source facts,
+quality policy, snapshot lifecycle, structural search, and transport
+permissions separately owned.
 
 ## Primary user journeys
 
@@ -123,10 +124,11 @@ owned.
     analyzer-neutral symbols, exact text matches, callers/callees where
     available, documentation, and bounded source context; it edits through its
     own tools and compares the next verified revision.
-15. A coding assistant or developer lists available quality rules/profiles,
-    requests a temporary evaluation with explicit settings, and—when the
-    session grants policy-write permission—previews and creates a baseline from
-    selected findings without changing source code.
+15. A coding assistant or developer lists available quality rules/profiles and
+    saved baselines, requests a temporary evaluation with explicit settings or
+    baseline selection, and—when the session grants policy-write permission—
+    appends reviewed findings to the profile's canonical baseline without
+    changing source code, then evaluates again.
 
 ## Non-goals
 
@@ -136,8 +138,10 @@ owned.
 - Presenting subjective or LLM-generated judgments as deterministic findings;
   SOLID labels and comment usefulness remain signals or coverage checks.
 - Implicit source mutation from analysis, watching, or MCP reporting.
-- Unreviewed quality-policy mutation: profile saves and baselines require
-  explicit operation permission and authorization.
+- Unreviewed quality-policy mutation: profile saves and baseline appends
+  require explicit operation permission and authorization. Automatic loading
+  uses only the exact baseline reference stored by a selected profile; it does
+  not guess among project JSON files.
 - Perfect resolution of dynamic imports, generated code, or runtime dispatch.
 - Treating `.archview.json` as a container for canonical model data, viewport
   state, or manual diagram positions. Its separately owned `analysis` section
@@ -164,7 +168,7 @@ owned.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `implemented`, including the v1 canonical model and graph-projection contract.
 - [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) is `specified` for future extensions.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `implemented`, including JSON v1 and deterministic HTML/SVG/CI behavior.
-- [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md): `specified` as a structural roll-up; its [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) child is implemented through issues 048–052 with final visual approval, its [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063, and [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) has verified implementation issues 064–075 with issue 076 awaiting product approval. The parent has no standalone implementation slice.
+- [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md): `implemented` as a structural roll-up; its [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) child is implemented through issues 048–052 with final visual approval, its [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063 and 077–078, and [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) is implemented through issues 064–079 with final cross-analyzer and product approval recorded in issue 076. The parent has no standalone implementation slice.
 
 ## Cross-capability dependencies
 
@@ -185,12 +189,15 @@ language semantics, while the core owns validation, opaque IDs, coverage,
 canonical ordering, and digest assembly. The specified quality child evaluates
 versioned metrics and rules through registries, emits exact findings or
 explicitly labeled SOLID signals, and keeps baselines/coverage separate from
-source facts. The specified live child owns watcher hints, request-time
-reconciliation, conservative invalidation, stable-input verification, atomic
-coherent revisions, analyzer-neutral compact queries, budgets, and operation
+source facts. Its managed baseline lifecycle resolves only the selected
+profile's exact reference, merges reviewed active observed findings, detects
+conflicts, advances revisions, and preserves the profile/baseline pair safely.
+The implemented live child owns watcher hints, request-time reconciliation,
+conservative invalidation, stable-input verification, atomic coherent
+revisions, analyzer-neutral compact queries, budgets, and operation
 permissions. MCP remains its transport/query adapter and delegates quality
-evaluation/profile/baseline semantics to the quality child rather than owning
-them.
+evaluation, baseline reading/selection/appending, and other policy semantics
+to the quality child rather than owning them.
 
 ## Implementation sequence
 
@@ -217,12 +224,13 @@ them.
     source-index contract and issues 048–052 are implemented; final visual
     approval of the module-inspection projection is recorded.
 12. Specify and then implement configurable deterministic quality rules,
-    findings, architecture constraints, and machine-readable quality reports.
-    The quality contract and issues 053–063 are implemented and verified.
+    findings, architecture constraints, machine-readable quality reports, and
+    the canonical profile-baseline lifecycle. The quality contract and issues
+    053–063, 077–078 are implemented and verified.
 13. Implement live analysis snapshots, folder watching, request-time freshness
     reconciliation, analyzer-neutral search, quality-service delegation, and
     MCP reporting with explicit source-safety and policy-permission rules.
-    Issues 064–075 are verified; issue 076 is the remaining final product gate.
+    Issues 064–079 are verified, including issue 076's final product gate.
 
 The specification set is complete and readiness-reviewed. A 2026-08-28
 brownfield audit confirmed that the Go analyzer, canonical model, and export
@@ -249,12 +257,12 @@ assignment/view selection and its source-scope policy are implemented through
 verified issues 044–047, including the approved configured-viewer visual
 review. Advanced ELK renderer support remains the specified renderer-only
 extension of the implemented viewer. The code-quality and code-intelligence
-  roll-up remains `specified`; its source-facts child is implemented with its
+  roll-up is `implemented`; its source-facts child is implemented with its
   approved final visual gate, deterministic-quality is implemented through
-  issues 053–063, and live-analysis/MCP has verified implementation issues
-  064–075 with issue 076 awaiting product approval. Further implementation work
-  starts at the least-mature remaining child rather than at the aggregate
-  parent.
+  issues 053–063 and 077–078, and live-analysis/MCP has verified implementation
+  issues 064–079 with issue 076's product approval complete. Further
+  implementation work starts at the least-mature remaining capability rather
+  than at the aggregate parent.
 
 ## Verification strategy
 
@@ -287,13 +295,15 @@ No high or medium blocker prevents the specified planning baseline. The followin
   scope-safe projection, bounded queries, and viewer projection. The final
   visual-review gate is approved.
 - The deterministic quality contract is implemented and readiness-reviewed. Its
-  implementation is delivered through issues 053–063, including the real Go
-  structural-fact producer for SOLID signals and the `quality baseline` CLI
-  workflow and the visually reviewed report-backed viewer.
+  implementation is delivered through issues 053–063 and 077–078, including
+  the real Go structural-fact producer for SOLID signals, the managed automatic
+  baseline load/append workflow, and the visually reviewed report-backed
+  viewer.
 - Live watcher/MCP snapshot behavior, request-time freshness reconciliation,
-  analyzer-neutral queries, quality-service delegation, permissions, and
-  transport are implemented and verified through issues 064–075. The remaining
-  issue 076 is the cross-analyzer and human product-approval gate.
+  analyzer-neutral queries, quality-service delegation, baseline
+  read/selection/append, permissions, transport, and final cross-analyzer
+  conformance are implemented and verified through issues 064–079. Issue 076's
+  human product-approval gate is complete.
 
 ## Specification sources
 

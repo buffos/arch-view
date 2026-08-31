@@ -9,8 +9,8 @@
   048–052 are verified, archived, and approved, including issue 052's required
   final visual inspection.
 - The capability's scoped implementation and artifact synchronization are
-  complete. The parent roll-up remains `specified` because its other children
-  remain specified.
+  complete. The parent roll-up is now `implemented`; its deterministic-quality
+  and live-analysis/MCP children are also implemented.
 
 ## Evidence and ownership
 
@@ -76,5 +76,5 @@ provider facts used by issues 054–055. This does not move quality policy into
 the source-index child: thresholds and findings remain owned by deterministic
 quality checks.
 
-The deterministic quality and live/MCP child nodes remain specified and are not
-included in this delivery batch.
+The deterministic quality and live/MCP child nodes are implemented in their
+own delivery batches and are not part of this source-index delivery scope.

@@ -4,7 +4,7 @@
 
 This pass covers the bounded deterministic-quality child, the specified source
 index, canonical modules/relationships/cycles/layers, existing diagnostics and
-provenance, and the future viewer/export/live consumers.
+provenance, and the viewer/export/live/MCP consumers.
 
 ## Confirmed strong areas
 
@@ -18,6 +18,9 @@ provenance, and the future viewer/export/live consumers.
   viewer to decorate subjects without mutating module facts.
 - **User-confirmed target behavior:** configurable size/complexity/documentation
   and structural architecture findings must be reproducible and evidence-backed.
+- **Observed in the current implementation:** profiles can point to one
+  canonical baseline, the CLI can load it automatically or append reviewed
+  findings, and live/MCP delegates the same selection and merge semantics.
 
 ## Blocking gaps resolved by this specification
 
@@ -28,6 +31,7 @@ provenance, and the future viewer/export/live consumers.
 | Threshold edge behavior was unspecified | High: CI and viewer could disagree at the boundary | Each threshold carries an explicit operator, typed value, unit, and inclusive/exclusive semantics. |
 | Findings had no stable lifecycle identity | High: every run would create noisy new violations | Use opaque report-local IDs plus stable matching keys derived from rule/version/profile/subject identity. |
 | Baselines could hide changed rules | High: a new formula might be silently suppressed | Baseline entries match exact rule and formula versions; changed versions require explicit migration. |
+| Baseline files could be guessed or overwritten | High: an unrelated JSON file or concurrent review could change suppression policy | Resolve only the profile's exact ID/revision, merge into one canonical file, reject ambiguity/conflicts, and publish the profile reference with atomic/rollback behavior. |
 | Missing data could look like a pass or violation | High: unsupported language features would create false claims | Use `observed`, `absent`, `unknown`, `unsupported`, `partial`, and `not_evaluable` coverage. |
 | SOLID could be presented as fact | High: static indicators do not prove design intent or substitutability | Mark SOLID output as `signal`, expose evidence/limitations, and prohibit exact-violation wording. |
 | Findings could be conflated with analyzer errors | Medium: consumers could not distinguish bad code from analysis failure | Keep quality findings and diagnostics as separate collections with links where relevant. |
@@ -54,6 +58,7 @@ the shipped behavior. Both are now resolved:
 |---|---|---|
 | The five SOLID rules were registered, but the real Go analyzer did not publish `source:solid.structure`, so a full-profile report classified them as unsupported. | The Go source extractor now derives syntax-observable structural counts and the Go observation builder requests the capability. | Extractor, Go analyzer end-to-end, and real repository report checks show all five SOLID rules with `observed` coverage for valid Go source. |
 | Baseline lifecycle functions existed, but users had no command to create a baseline from a report; only `--quality-baseline` consumption was exposed. | Added `arch-view quality baseline` with finding/stable-key selection, `--all-active`, validation, and overwrite protection. | CLI test covers analysis-envelope input, baseline output, and the overwrite guard. |
+| Managed baselines required explicit paths and could not be appended or applied by live/MCP. | Added profile-reference discovery, missing/invalid/ambiguous handling, idempotent merge, revision/CAS checks, CLI append, MCP read/selected/append operations, and shared startup evaluation loading. | Policy, CLI, live, MCP, and automatic-suppression tests cover creation, merge, conflict, pagination, request-scoped selection, and no-baseline evaluation. |
 
 ## Exact assumptions
 
@@ -88,8 +93,9 @@ the shipped behavior. Both are now resolved:
 ## Readiness conclusion
 
 No High or Medium specification gaps remain for deterministic quality checks.
-The remaining work is implementation of providers/rules and language-specific
-fixtures, not a missing product or contract decision.
+The managed baseline lifecycle is now implemented behind the documented
+contracts; the remaining work is full-repository verification, issue closeout,
+and any product review, not a missing product decision.
 
 ## Artifact impact
 
@@ -99,4 +105,5 @@ fixtures, not a missing product or contract decision.
   subjective architectural review.
 - **Architecture:** quality is a sibling consumer of source index/model facts;
   the live/MCP child consumes reports without owning their semantics.
-- **Delivery:** no implementation issues are created in this planning pass.
+- **Delivery:** managed baseline work is tracked by the dependency-ordered
+  issues recorded under this capability and its live/MCP child.

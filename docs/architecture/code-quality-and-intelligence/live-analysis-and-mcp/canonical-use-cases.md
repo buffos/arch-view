@@ -31,6 +31,7 @@
 ### QualityGateway
 
 - `ReadQualityCatalog`
+- `ReadQualityBaselines`
 - `EvaluateQualityRequest`
 - `ExecuteQualityPolicyCommand`
 
@@ -45,6 +46,7 @@ semantics a second time.
 - `ServeExactTextSearch`
 - `ServeQualityReport`
 - `ServeQualityEvaluation`
+- `ServeQualityBaselines`
 - `ServeQualityPolicyCommand`
 - `ServeEvidence`
 - `ServeCapabilityAwareSemanticQuery`
@@ -189,14 +191,18 @@ coverage diagnostics.
 
 ## `ExecuteQualityPolicyCommand` — command
 
-**Input:** validated profile save/profile save-as or baseline preview/create
-request, explicit permission, selected report revision, and audit context.
+**Input:** validated profile save/profile save-as or baseline preview/create/
+append request, explicit permission, selected report revision, and audit
+context.
 
 **Rules:** delegate to deterministic-quality policy services. Profile changes
 validate complete rule bindings and preserve versioned identity. A baseline
 preview is read-only. Baseline creation requires an exact compatible current
 report, selected finding keys, exact rule/profile/formula versions, a reason,
-and a non-conflicting destination. No command changes source code.
+and a non-conflicting destination. Managed append merges eligible reviewed
+entries into the canonical profile baseline, updates its revision and profile
+reference, and reports that a new evaluation is required. No command changes
+source code.
 
 **Outcome:** immutable policy document/preview and audit result, or a structured
 permission/staleness/conflict/validation failure.
@@ -223,12 +229,14 @@ incompatible reports cannot imply that a finding was resolved.
 | `get_documentation` | source-index query | documentation candidates/status/spans | read/search |
 | `get_module_facts` | `QueryLatestReady` | containment-linked files/symbols/docs and architecture links | read/search |
 | `get_quality_profiles` / `get_quality_rules` | `ReadQualityCatalog` | profiles, rule catalog, capability/parameter status | quality read |
+| `get_quality_baselines` | `ReadQualityBaselines` | baseline identities/status/counts and optional paged entries | baseline read |
 | `get_quality_findings` / `get_finding_evidence` | quality query | findings, coverage, metrics, evidence summary | read/evidence |
 | `evaluate_quality` | `EvaluateQualityRequest` | immutable report or explicit coverage/configuration result | quality evaluate |
 | `compare_quality_reports` | `CompareQualityRevisions` | added/unchanged/suppressed/resolved transitions | quality read |
 | `validate_quality_profile` / `preview_baseline` | quality policy service | validation or dry-run result | quality policy read |
 | `save_quality_profile` / `save_quality_profile_as` | quality policy service | persisted profile identity and audit result | quality policy write |
 | `create_baseline` | quality policy service | persisted baseline identity and audit result | baseline write |
+| `append_baseline` | quality policy service | merged baseline/profile identity, added/existing keys, audit, reevaluation-needed result | baseline write |
 | `get_source_context` | `GetBoundedSourceContext` | bounded source lines/bytes and matching hash | read/source-context |
 
 MCP remains a transport adapter over shared services. Viewer and CLI can use

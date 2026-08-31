@@ -201,6 +201,8 @@ maps to its existing catalog, evaluation, comparison, and policy services.
   "scope_ids": ["opaque-scope-id"],
   "profile_id": "profile:full",
   "profile_version": "1.0.0",
+  "baseline_mode": "profile",
+  "baseline_files": [],
   "rule_bindings": [
     {
       "rule_id": "source:file.max-lines",
@@ -218,7 +220,18 @@ maps to its existing catalog, evaluation, comparison, and policy services.
 ```
 
 Temporary `rule_bindings` are validated and evaluated without changing the
-project profile. A profile save or baseline command is a different operation:
+project profile. `baseline_mode` controls how suppression is selected for this
+evaluation:
+
+- `profile` (default) loads the exact baseline referenced by the profile;
+  missing references warn and leave findings active, while invalid or
+  ambiguous references fail.
+- `none` evaluates without a baseline.
+- `selected` reads the explicitly listed safe project-local baseline filenames
+  for this request only. Selected documents must share one baseline identity
+  and revision. The selection is not saved in the session or profile.
+
+A profile save or baseline command is a different operation:
 
 ```json
 {
@@ -233,6 +246,30 @@ project profile. A profile save or baseline command is a different operation:
   "authorization": "opaque-authorization"
 }
 ```
+
+The managed append operation keeps one canonical baseline per profile:
+
+```json
+{
+  "operation": "append_baseline",
+  "session_id": "opaque-session-id",
+  "report_revision": 12,
+  "profile_id": "profile:full",
+  "profile_version": "1.0.0",
+  "file_name": "main.json",
+  "finding_keys": ["opaque-stable-finding-key"],
+  "reason": "Reviewed and accepted legacy coupling",
+  "expected_baseline_revision": "1.0.0",
+  "authorization": "opaque-authorization"
+}
+```
+
+`append_baseline` creates or merges the canonical document, rejects anything
+that is not an active finding with observed coverage from the exact current
+report, increments the baseline revision, updates the profile reference, and
+returns `reevaluation_required: true` when policy changed. Repeating the same
+request is idempotent. A different reason/owner for the same exact identity or
+an unexpected revision is a conflict. The operation never edits source files.
 
 Policy commands require an exact compatible current report, complete profile/
 rule/formula identity, explicit operation permission, validated destination, a
@@ -257,15 +294,17 @@ enforce the same root/operation policy. Tool names and input semantics are:
 | `get_module_facts` | module ref, scope/revision, budget | containment-linked files/symbols/docs | search |
 | `get_quality_profiles` | optional scope/revision | profile identities and validation status | quality_profile_read |
 | `get_quality_rules` | optional profile and revision | complete catalog, parameters, capability status | quality_profile_read |
+| `get_quality_baselines` | optional safe filenames/ID/revision, bounded entry request | baseline identities/status/counts and optional paged entries | baseline_read |
 | `get_quality_findings` | rule/severity/status/scope filters, consistency, budget | findings, coverage, evidence summaries | search/evidence |
 | `get_finding_evidence` | finding ref, context budget | metrics, spans, relations, optional context | evidence |
 | `get_callers_callees` | symbol ref, direction, scope/revision | occurrences/relations or explicit unsupported status | search |
-| `evaluate_quality` | profile, optional temporary bindings, consistency | immutable quality report or explicit coverage/configuration result | quality_evaluate |
+| `evaluate_quality` | profile, optional temporary bindings, `baseline_mode`, selected safe files, consistency | immutable quality report or explicit coverage/configuration result | quality_evaluate |
 | `compare_quality_reports` | two compatible report revisions | added/unchanged/suppressed/resolved transitions | search/evidence |
 | `validate_quality_profile` | profile or bindings | validation result | quality_profile_read |
 | `preview_baseline` | report, selected finding keys, reason | dry-run baseline entries | baseline_read |
 | `save_quality_profile` / `save_quality_profile_as` | validated profile, destination, authorization | persisted profile identity/audit result | quality_profile_write |
 | `create_baseline` | current report, finding keys, destination, authorization | persisted baseline identity/audit result | baseline_write |
+| `append_baseline` | current report, finding keys, reason, canonical filename, optional expected revision, authorization | merged baseline/profile identity, added/existing keys, audit, reevaluation-needed result | baseline_write |
 | `get_source_context` | indexed entity/span, line/byte budget | bounded text with matching hash | source_context |
 
 No v1 tool writes source files, runs shell commands, executes the target
@@ -291,7 +330,9 @@ If an HTTP adapter is enabled, it may map the same operations to:
 - `POST /v1/live/{session_id}/search/text`
 - `POST /v1/live/{session_id}/search/documentation`
 - `GET /v1/live/{session_id}/quality`
+- `GET /v1/live/{session_id}/quality/baselines`
 - `POST /v1/live/{session_id}/quality/evaluate`
+- `POST /v1/live/{session_id}/quality/baselines/append`
 - `POST /v1/live/{session_id}/quality/compare`
 - `POST /v1/live/{session_id}/evidence`
 - `POST /v1/live/{session_id}/source-context`
@@ -355,6 +396,7 @@ Stable live/query error codes include `live_config_invalid`,
 `query_cursor_invalid`, `source_context_out_of_scope`,
 `quality_evaluation_invalid`, `quality_policy_permission_denied`,
 `quality_profile_conflict`, `baseline_revision_stale`,
+`quality_baseline_not_found`, `quality_baseline_invalid`,
 `mcp_operation_unsupported`, and `mcp_permission_denied`.
 
 ## Determinism and token policy

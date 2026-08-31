@@ -4,12 +4,12 @@
 
 This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043, project analyzer assignment issues 044–047, and source-index issues 048–052 are verified, archived, and visually approved; the advanced ELK renderer child remains the specified plugin/viewer frontier.
 The Code quality and code intelligence capability is a pure structural-child
-roll-up with effective state `specified`, the minimum of its three children.
+roll-up with effective state `implemented`, the minimum of its three children.
 Its Source facts and symbol index child is implemented through issues 048–052
 with final visual approval recorded; Deterministic quality checks is implemented
-through issues 053–063; and Live analysis/MCP has verified implementation
-issues 064–075 with issue 076 awaiting final product approval. The parent has
-no standalone PRD or implementation slice.
+through issues 053–063 and 077–078; and Live analysis/MCP is implemented through
+verified issues 064–079, including issue 076's final cross-analyzer and human
+product approval. The parent has no standalone PRD or implementation slice.
 
 ## Boundary summary
 
@@ -187,22 +187,24 @@ Human-facing consumers may summarize scope-safe file line-threshold findings and
 filter to affected files, while the quality report remains the sole source of
 threshold truth. The Go analyzer publishes the syntax-observable structural
 facts required by the SOLID signal rules. Baselines are separate validated
-quality documents. They can be created from a report with the local
-`arch-view quality baseline` command or from the project-backed viewer's
-`Create baseline` action, which can explicitly attach the new document to the
-selected profile and re-evaluate the report.
+quality documents. The managed CLI workflow and live/MCP policy service resolve
+one canonical baseline from the selected profile's exact ID/revision, merge
+reviewed active observed findings, advance the revision, update the profile
+reference, and reject missing/invalid/ambiguous or conflicting policy states.
+The legacy standalone `arch-view quality baseline` command remains for
+compatibility; it does not silently become a profile reference.
 
-The specified live-analysis child owns folder watching, event coalescing,
+The implemented live-analysis child owns folder watching, event coalescing,
 request-time freshness reconciliation, conservative invalidation, stable-input
 verification, cache identity, and atomic revision replacement. Viewer,
 CLI/export, and MCP clients consume the same immutable snapshot/query envelope.
 MCP is an analyzer-neutral transport/query adapter over shared services; it
-delegates quality evaluation, profile, and baseline semantics to the quality
-child. Read operations are the default, while analysis and quality-policy
-operations require separate permissions. Stdio is the default local transport
-and network transport is explicit. The design must not execute target
-applications or present subjective architectural approval, semantic comment
-quality, or SOLID heuristics as proven facts.
+delegates quality evaluation, profile, baseline read/selection/append, and
+baseline semantics to the quality child. Read operations are the default,
+while analysis and quality-policy operations require separate permissions.
+Stdio is the default local transport and network transport is explicit. The
+design must not execute target applications or present subjective architectural
+approval, semantic comment quality, or SOLID heuristics as proven facts.
 
 The local viewer treats the source index as a progressive-disclosure read model.
 Graph startup requests the model with `include_source_index=false`, so the
@@ -247,15 +249,18 @@ frontier still requires later issue slicing, implementation, and verification:
   with concrete renderer support. Browser, embedded HTML, and browser SVG share
   the renderer-neutral geometry; Go static SVG remains deterministic
   orthogonal unless separately specified.
-- The Code quality and code intelligence roll-up remains a specified extension.
+- The Code quality and code intelligence roll-up is implemented.
   Its Source facts and symbol index child is implemented through issues 048–052
   with final visual approval recorded; Deterministic quality checks is
-  implemented through issues 053–063, including issue 063's visual review.
-  Live analysis and MCP remain `specified` pending issue 076's final product
-  gate. Issues 064–075 implement and verify exact records, provenance, scope
+  implemented through issues 053–063 and 077–078, including issue 063's
+  visual review and the managed baseline lifecycle.
+  The Live analysis and MCP capability is `implemented` after issue 076's
+  final product gate.
+  Issues 064–079 implement and verify exact records, provenance, scope
   isolation, analyzer-neutral capability coverage, request-time freshness
   verification, versioned rules, immutable revisions, bounded queries,
-  quality-service delegation, shared CLI/viewer/MCP transports, and
+  quality-service delegation, canonical baseline read/selection/append,
+  shared CLI/viewer/MCP transports, and
   compatibility/permission rules. The aggregate parent
   has no standalone implementation issues; delivery is owned by the children.
 
@@ -300,11 +305,14 @@ escapes the exported artifact.
 12. Language adapters and the source index provide source facts, symbols,
     documentation, and metrics to quality and query consumers.
 13. The quality engine evaluates configured deterministic rules and stores
-    revision-aware findings with source evidence.
+    revision-aware findings with source evidence. Its profile reference loads
+    one exact canonical baseline, and the managed append path merges reviewed
+    active observed findings with revision/conflict checks.
 14. The live snapshot service watches configured folders, reconciles source
     state for strict requests, updates affected multi-analyzer analysis state,
     and exposes the same compact facts to viewer, CLI/export, and MCP. Quality
-    requests delegate to the shared quality catalog/evaluation/policy services.
+    requests delegate to the shared quality catalog/evaluation/policy services,
+    including bounded baseline reads and request-scoped selection.
 
 ## Shared policies
 
@@ -334,15 +342,17 @@ escapes the exported artifact.
   or newly named profile. Quality evaluation remains in-process and does not
   rerun an analyzer. Successful evaluations are cached by scope so the
   same-session inspection route retains the report.
-- The viewer's quality report exposes `Create baseline` and per-finding
-  `Baseline this` actions. Baselines are written as separate
-  `quality-baselines/*.json` documents; attaching one updates only the
-  selected profile reference and re-runs the in-process quality evaluation.
+- The viewer's quality report may create a separate baseline for its existing
+  project-backed flow. The managed CLI and MCP append workflow is the canonical
+  repeatable path: it keeps one baseline per profile, merges reviewed active
+  observed findings, advances the revision, updates the profile reference, and
+  re-evaluates only when the caller requests the next run.
 - Live/MCP may use the same profile/rule catalog and evaluation services with
-  temporary non-persisted rule bindings. Profile saves and baseline creation
-  are separate allowlisted policy operations, require explicit authorization,
-  and are rejected for stale or incompatible reports; MCP never implements a
-  second quality evaluator or baseline matcher.
+  temporary non-persisted rule bindings and request-scoped baseline selection.
+  Baseline reads are bounded; profile saves and baseline appends are separate
+  allowlisted policy operations, require explicit authorization, and are
+  rejected for stale or incompatible reports. MCP never implements a second
+  quality evaluator or baseline matcher.
 - Source-index IDs are opaque and snapshot-local; canonical spans use
   hash-linked UTF-8 byte coordinates. Registered extractors own language
   semantics, while the core owns validation and deterministic assembly.
@@ -424,9 +434,9 @@ work register](explore-architecture/advanced-elk-renderer-support/future-work.md
 The source-facts/index contract, Go-first extractor, scope-safe projection,
 bounded query boundary, and module viewer are implemented through issues
 048–052; the final visual gate is approved. Deterministic quality issues
-053–063 are implemented and visually verified. Live analysis/MCP issues
-064–075 are implemented and verified; issue 076 remains for cross-analyzer
-conformance and final product approval.
+053–063 and managed baseline issues 077–078 are implemented and verified.
+Live analysis/MCP issues 064–079 are implemented and verified, including issue
+076's cross-analyzer conformance and final product approval.
 
 ## Residual implementation decisions
 
@@ -447,8 +457,8 @@ conformance and final product approval.
 - Platform-specific tuning, long-term snapshot retention, and broader MCP
   client packaging remain future work after the verified live watcher/MCP
   snapshot, request-time reconciliation, analyzer-neutral query, quality
-  delegation, policy-permission, and transport behavior delivered by issues
-  064–075.
+  delegation, canonical baseline read/selection/append, policy-permission,
+  and transport behavior delivered by issues 064–075 and 079.
 - Conservative semantic resolution for calls/implements and confidence
   categories.
 

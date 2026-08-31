@@ -64,6 +64,32 @@ JSON documents discovered from the direct project-relative
 presentation metadata; profile identity remains the versioned `profile_id` and
 `profile_version` in the document and report.
 
+## Managed baseline reference and document
+
+A profile may point to one canonical baseline document:
+
+```json
+{
+  "baseline": {
+    "baseline_id": "baseline:main",
+    "revision": "1.0.1"
+  }
+}
+```
+
+The baseline itself is a separate `arch-view.quality-baseline/v1` JSON file in
+the direct project-relative `quality-baselines/` directory. The loader resolves
+only the exact `baseline_id` and `revision` named by the selected profile. It
+does not scan all JSON files and guess. A missing baseline is a warning and
+leaves findings unsuppressed; an invalid or ambiguous match is an error.
+
+Managed baseline updates keep all accepted entries in that one file. A new
+file starts at revision `1.0.0`; later appends increment the numeric patch (for
+example, `1.0.0` to `1.0.1`). A duplicate with the same exact finding/rule/
+profile/formula identity and the same review metadata is idempotent. A duplicate
+with a different reason or owner is a conflict. The profile version does not
+change, but its digest changes when its baseline reference changes.
+
 ## Exact finding example
 
 ```json
@@ -143,13 +169,16 @@ without a separately specified, observable rule.
 
 ## Catalog and report queries
 
-The local HTTP adapter and future transport adapters, including the live/MCP
-gateway, expose equivalent catalog, report, comparison, and explicitly
+The local HTTP adapter and the live/MCP gateway expose equivalent catalog,
+report, comparison, and explicitly
 permissioned policy semantics. The adapter delegates to the quality services;
 it does not re-evaluate rules or implement a second baseline matcher:
 
 - `GET /v1/quality/profiles` — discover project-local profile documents and
   report invalid entries without making them selectable.
+- `GET /v1/quality/baselines` — list direct project-local baseline documents by
+  ID/revision/status and read one bounded page of entries when a single safe
+  filename is selected. It never selects a baseline for a later evaluation.
 - `GET /v1/quality/rules` — return the complete registered rule catalog. With
   `profile_id` and `profile_version`, each entry also reports whether the
   selected profile explicitly binds it and whether it is enabled. Catalog
@@ -182,6 +211,13 @@ it does not re-evaluate rules or implement a second baseline matcher:
   owner, and direct JSON filename. The request may attach the new baseline to
   the selected profile; the file is written under the separate
   `quality-baselines/` directory and an existing destination is rejected.
+- `POST /v1/quality/baselines/append` — merge selected active findings from a
+  current compatible report into the profile's canonical baseline, or create
+  its first document. It rejects unsupported, not-evaluable, stale, partial,
+  and non-active findings; accepts an expected revision for conflict
+  detection; increments the baseline revision; updates the profile reference;
+  and publishes the policy pair with atomic writes/rollback behavior. This is
+  an explicitly permissioned policy operation.
 
 Unknown rules/configuration return structured `422` diagnostics; a missing
 report is represented explicitly, and partial provider coverage returns a valid
@@ -199,15 +235,40 @@ coverage must remain visible.
 ## CLI/export behavior
 
 Headless analysis may accept `--quality-profile`, `--quality-baseline`,
+`--no-quality-baseline`,
 `--quality-exit-on`, and repeatable `--quality-exit-status` flags and emits the
-same `quality_report` JSON used by the viewer and future MCP adapters. Exit
+same `quality_report` JSON used by the viewer and live/MCP adapters. Exit
 policy is a caller-owned projection over finding severity/status; the report
 itself remains complete and does not hide baselined findings. Omitting the exit
 policy is a no-op. HTML/SVG may color or annotate subjects from the report, but
 quality findings do not mutate architecture semantics. No source edits are
 performed.
 
-The local CLI also provides a baseline creation workflow for automation:
+With `--quality-profile`, the CLI automatically resolves the exact baseline
+referenced by that profile from `quality-baselines/`. `--quality-baseline`
+overrides that selection for one run. `--no-quality-baseline` disables
+suppression for one run. A missing automatic baseline prints a warning and
+evaluates without suppression; invalid or ambiguous baseline documents stop
+the command.
+
+The local CLI provides a managed baseline append workflow for automation:
+
+```text
+arch-view quality baseline add --project . \
+  --profile quality-profiles/full.json \
+  --baseline-file main.json \
+  --input quality-report.json \
+  --finding <finding-key> --reason "Accepted because ..."
+```
+
+The command creates `quality-baselines/main.json` when needed, derives
+`baseline:main` when no ID is supplied, merges without duplicates, updates the
+profile's baseline reference, and reports that a fresh evaluation is needed.
+It does not edit source code. `--expected-revision` detects a concurrent
+policy update, and `--revision` is an explicit override for a controlled
+revision.
+
+The legacy standalone baseline creation workflow remains available:
 
 ```text
 arch-view quality baseline --input <analysis|model|quality-report.json> \
@@ -215,21 +276,21 @@ arch-view quality baseline --input <analysis|model|quality-report.json> \
   (--finding <finding-id-or-key> ... | --all-active) --reason <text>
 ```
 
-The command resolves report-local finding IDs or stable finding keys, copies
+The standalone command resolves report-local finding IDs or stable finding keys, copies
 the exact rule/profile/formula identity required by the baseline contract,
 validates the result, and writes a separate
 `arch-view.quality-baseline/v1` document. `--all-active` selects every active
 finding in the input report. Existing files are protected unless
 `--overwrite` is supplied. The resulting file is consumed by a later analysis
 run with `--quality-baseline`; baseline creation never changes the source,
-profile, or original report. The viewer's create action performs the same
-exact-version construction and may explicitly update the selected profile's
-baseline reference before re-evaluating it.
+profile, or original report. The managed `quality baseline add` command is the
+workflow for appending to, and automatically attaching, the canonical profile
+baseline.
 
 ## Determinism and safety
 
 - Profile/options/baseline digests, rule/provider versions, source/model
-  snapshot IDs, and formula versions are part of the evaluation fingerprint.
+snapshot IDs, and formula versions are part of the evaluation fingerprint.
 - Findings and metrics are canonically ordered and digested; operational times
   are excluded from semantic equality.
 - Unknown/unsupported/not-evaluable coverage is never converted to pass or

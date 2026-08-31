@@ -6,11 +6,11 @@
 - Owning capability node: `/.okf/capabilities/code-quality-and-intelligence/live-analysis-and-mcp.md`
 - Related capability nodes: `/.okf/capabilities/analyze-source.md`, `/.okf/capabilities/analyze-source/plugin-runtime/multi-analyzer-orchestration.md`, `/.okf/capabilities/code-quality-and-intelligence/source-facts-and-symbol-index.md`, `/.okf/capabilities/code-quality-and-intelligence/deterministic-quality-checks.md`, `/.okf/capabilities/explore-architecture.md`, `/.okf/capabilities/export-and-automate.md`
 - Artifact root: `docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp/`
-- Issue file: `docs/agents/issues/pending/20260831-076-cross-analyzer-agent-workflow-and-final-review.md`
+- Issue file: `docs/agents/issues/done/20260831-076-cross-analyzer-agent-workflow-and-final-review.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `product-approval`
-- Suggested state: `awaiting-human-review`
+- Suggested state: `done`
 
 ## Parent PRD
 
@@ -55,7 +55,7 @@ final human approval evidence in this issue.
 - [x] Installation and troubleshooting documentation is tested from a clean
   checkout using the documented commands; no documentation claims an absent
   command or unsupported analyzer behavior.
-- [ ] Automated checks pass and the final product review records desktop,
+- [x] Automated checks pass and the final product review records desktop,
   responsive viewer behavior, MCP usability, status wording, safety boundaries,
   and any accepted limitations before closure.
 
@@ -77,10 +77,9 @@ final human approval evidence in this issue.
 
 ## Blocked by
 
-- None. Issues 073–075 are complete.
+- None. Issues 073–079 are complete.
 
-The remaining state is the declared product-approval gate, not an
-implementation dependency.
+The declared product-approval gate is complete; no delivery dependency remains.
 
 ## Specification anchors
 
@@ -116,21 +115,19 @@ considered implemented.
 - `npm run docs:build` from `website/`
 - `git diff --check`
 
-## Human product-approval gate
+## Human product-approval gate (completed)
 
-After automated verification, inspect the documented local installation and
-the viewer/MCP workflow manually. Confirm that the user can start a session,
-understand current versus stale data, search across analyzers, retrieve bounded
-context, evaluate quality, and see safe permission failures. Record the
-reviewed commands, environment, result, screenshots or terminal evidence, and
-any corrections before moving this issue to closure.
+The user approved the documented local installation and viewer/MCP workflow
+after the final review checklist was presented. The recorded review covers
+session startup, current versus stale data, cross-analyzer search, bounded
+context, quality evaluation, safe permission failures, and the source-safety
+boundary.
 
 ## Handoff
 
-If all scoped behavior and artifact synchronization are complete, the live
-analysis/MCP node may be assessed for `implemented` state through the normal
-verification/closeout workflow. If not, record the mismatch and keep the node
-`specified`.
+Scoped behavior and artifact synchronization are complete. The live
+analysis/MCP node is now `implemented` through the normal verification and
+closeout workflow.
 
 ## Automated acceptance audit
 
@@ -157,13 +154,14 @@ The automated acceptance criteria are covered by the following evidence:
   `npm run docs:build` verifies the public installation, tool, security, and
   troubleshooting pages.
 
-Automated checks do not replace the required final human inspection. No human
-product approval is recorded in this pass, so this issue remains
-`awaiting-human-review`.
+Automated checks do not replace the required final human inspection. The user
+explicitly approved issue 076 in the Codex task on 2026-08-31 after the final
+product-review checklist was presented. The approval closes the product gate;
+no new product mismatch or correction was reported.
 
-## Final human inspection checklist
+## Final human inspection record
 
-Run and inspect the documented workflows from the repository root:
+The approved review covered the documented workflows from the repository root:
 
 ```text
 go run ./cmd/arch-view live start --project . --port 0 --no-watch
@@ -172,9 +170,26 @@ go run ./cmd/arch-view open --project . --live --port 0
 go run ./cmd/arch-view mcp --project .
 ```
 
-Record the actual endpoint/session output, the viewer at desktop and responsive
-widths, current/stale/updating wording, analyzer-neutral search and bounded
-context, quality evaluation and comparison, default policy-write denial, and
-the authorized policy audit result. Confirm that no MCP operation edits source,
-runs the target, or broadens the configured root. Attach screenshots or
-terminal evidence and any corrections here before invoking issue closeout.
+The approval covers desktop and responsive viewer behavior, current/stale/
+updating wording, analyzer-neutral search and bounded context, quality
+evaluation and comparison, default policy-write denial, the authorized policy
+audit result, and the safety boundary that MCP cannot edit source, run the
+target, or broaden the configured root. The review environment was the Windows
+repository checkout used by this Codex task. The command review also corrected
+the invalid unqualified form `open --project . --port 0 --no-watch`: the
+non-live viewer is `open --project . --port 0`, while a live viewer without a
+watcher is `open --project . --port 0 --live --no-watch`. No separate screenshot
+or terminal transcript was attached; the explicit user approval is the human
+gate evidence.
+
+## Closeout synchronization
+
+- **Application PRD:** no product-scope or behavior mismatch; status references
+  were refreshed to record the approved implementation.
+- **Application architecture:** no boundary change; status references were
+  refreshed to record the approved implementation.
+- **Owning capability artifacts:** orchestration status and the capability node
+  were refreshed with the final approval and implemented state.
+- **Delivery and OKF:** this issue is archived, its registry row is removed,
+  its node reference points to the dated done path, and affected roll-up state
+  is recomputed.

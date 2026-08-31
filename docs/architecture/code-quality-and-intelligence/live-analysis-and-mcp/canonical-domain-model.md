@@ -300,18 +300,21 @@ QualityEvaluationRequest {
   scope_ids?: OpaqueId[]
   profile_id: NamespacedId
   profile_version: string
+  baseline_mode: "profile" | "none" | "selected"
+  baseline_files?: RelativeFileName[]
   rule_bindings?: RuleBinding[]
   persist: false
 }
 
 QualityPolicyCommand {
   operation: "validate_profile" | "save_profile" | "save_profile_as" |
-    "preview_baseline" | "create_baseline"
+    "preview_baseline" | "create_baseline" | "append_baseline"
   report_revision?: integer
   profile_id?: NamespacedId
   profile_version?: string
   finding_keys?: StableFindingKey[]
   reason?: string
+  expected_baseline_revision?: string
   destination?: RelativePath
   authorization: OpaqueAuthorization
 }
@@ -320,13 +323,16 @@ StableFindingKey = opaque stable key from `arch-view.quality/v1`
 OpaqueAuthorization = host-issued authorization record
 ```
 
-Temporary rule bindings are evaluated through the deterministic-quality
-`QualityEvaluationService` and do not change the project profile. Profile
-saves and baseline creation use the existing quality policy services, validate
-exact rule/profile/formula versions, require the appropriate operation
-permission, and produce auditable command results. A baseline command must use
-an exact current compatible report and selected finding keys; it cannot mean
-“suppress everything”.
+Temporary rule bindings and selected baseline files are evaluated through the
+deterministic-quality `QualityEvaluationService` and do not change the project
+profile or session. `profile` baseline mode loads the exact profile reference;
+`none` disables suppression; `selected` is a request-scoped list of safe files
+that must share one baseline identity/revision. Profile saves and baseline
+commands use the existing quality policy services, validate exact
+rule/profile/formula versions, require the appropriate operation permission,
+and produce auditable command results. A baseline command must use an exact
+current compatible report and selected finding keys; it cannot mean “suppress
+everything”.
 
 ## MCP adapter boundary
 
@@ -359,6 +365,7 @@ QueryProvider {
 
 QualityGateway {
   ReadCatalog(snapshot, Budget) -> QueryResult
+  ReadBaselines(snapshot, BaselineSelector, Budget) -> QueryResult
   Evaluate(snapshot, QualityEvaluationRequest) -> QualityEvaluation
   Compare(revision_a, revision_b, Budget) -> QueryResult
   ExecutePolicyCommand(snapshot, QualityPolicyCommand) -> CommandResult
@@ -383,10 +390,11 @@ V1 exposes the following operation groups:
   `get_documentation`, `get_module_facts`, `get_callers_callees`,
   `get_source_context`.
 - **Quality:** `get_quality_profiles`, `get_quality_rules`,
-  `get_quality_findings`, `get_finding_evidence`, `evaluate_quality`,
-  `compare_quality_reports`.
+  `get_quality_baselines`, `get_quality_findings`, `get_finding_evidence`,
+  `evaluate_quality`, `compare_quality_reports`.
 - **Quality policy:** `validate_quality_profile`, `save_quality_profile`,
-  `save_quality_profile_as`, `preview_baseline`, `create_baseline`.
+  `save_quality_profile_as`, `preview_baseline`, `create_baseline`,
+  `append_baseline`.
 
 Each operation declares required analyzer/source/quality capabilities and
 permission class. Missing capabilities return explicit coverage status rather
@@ -410,6 +418,11 @@ quality services and are disabled unless explicitly allowed.
   effective profile/options digest in their report identity.
 - Profile/baseline policy writes never mutate an existing report; the next
   evaluation observes the new policy and produces a new report identity.
+- A managed baseline append merges into one canonical document, is idempotent
+  for identical review metadata, rejects conflicting duplicates, increments
+  the numeric revision, updates the profile reference, and returns an explicit
+  reevaluation-needed result. Missing automatic baselines warn without
+  suppressing; invalid or ambiguous references fail.
 - Diagnostics and freshness may report a failed event group without replacing
   valid data.
 - Query results identify the exact revision and do not silently move to a newer
