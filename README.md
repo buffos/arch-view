@@ -1,12 +1,19 @@
 # Arch View
 
 Arch View analyzes supported source repositories and presents a navigable,
-language-neutral architecture view. The first implementation targets Go and
-keeps the analyzer boundary open for Python, TypeScript, Rust, and Clojure.
+language-neutral architecture and code-quality view. The built-in analyzers
+currently support Go, Python, TypeScript/JavaScript, Rust, and Clojure. The
+analyzer boundary remains open for additional languages and external plugins.
 
-The original reference implementation is available in the upstream
-[unclebob/arch-view repository](https://github.com/unclebob/arch-view). It is
-outside this repository and is not modified as part of Arch View work.
+The architectural view was inspired by the original
+[unclebob/arch-view repository](https://github.com/unclebob/arch-view). That
+upstream project is separate from this implementation and is not modified as
+part of Arch View work.
+
+## Links
+
+- [Documentation](https://buffos.github.io/arch-view/)
+- [MIT License](LICENSE)
 
 ## Public documentation site
 

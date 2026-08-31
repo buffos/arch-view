@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress'
 
-const base = process.env.DOCS_BASE ?? (process.env.CI ? '/arch-view-golang/' : '/')
+const base = process.env.DOCS_BASE ?? (process.env.CI ? '/arch-view/' : '/')
 
 export default defineConfig({
   lang: 'en-US',
@@ -56,7 +56,8 @@ export default defineConfig({
             { text: 'Profiles', link: '/quality/profiles' },
             { text: 'Findings and coverage', link: '/quality/findings' },
             { text: 'Baselines', link: '/quality/baselines' },
-            { text: 'Rule reference', link: '/quality/rules' }
+            { text: 'Rule reference', link: '/quality/rules' },
+            { text: 'Technical SOLID rules', link: '/quality/solid-signals' }
           ]
         }
       ],

@@ -150,6 +150,9 @@ Technical key: architecture:layer-direction
 
 SOLID signals are advisory. They report a structural shape that may deserve review. They do not prove a SOLID violation.
 
+For the exact metrics, formulas, default thresholds, and analyzer limitations,
+see [Technical SOLID signal rules](/quality/solid-signals).
+
 ### Single responsibility signal
 
 Reports a type with both many members and many dependencies. Review whether it has several unrelated jobs.
