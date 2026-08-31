@@ -159,6 +159,7 @@ type BuildRequest struct {
 	GOOS           string
 	GOARCH         string
 	CGOEnabled     string
+	LinkerFlags    string
 }
 
 // BuildFunc allows assembly tests and release tooling to supply a controlled
@@ -184,6 +185,9 @@ type ReleaseOptions struct {
 	RepositoryRoot string
 	OutputRoot     string
 	Platform       string
+	Version        string
+	Commit         string
+	BuildDate      string
 	BuildID        string
 	GoCommand      string
 	CCCommand      string

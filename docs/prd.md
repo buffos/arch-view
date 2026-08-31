@@ -12,6 +12,11 @@ The reference implementation is available in the upstream
 [unclebob/arch-view repository](https://github.com/unclebob/arch-view) for
 reading only. It is not part of the product source tree.
 
+Application releases use semantic version tags such as `v0.1.0`. A release
+tag identifies one exact host-and-analyzer distribution and is published only
+after the tagged build passes verification. Release metadata is kept separate
+from model, analyzer, protocol, configuration, and quality contract versions.
+
 ## Actors
 
 - Developers learning an unfamiliar repository.

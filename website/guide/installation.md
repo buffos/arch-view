@@ -15,6 +15,24 @@ The single-binary installation is the simplest choice for most users. The
 packaged installation is useful when process isolation, independent analyzer
 packages, or third-party analyzers matter.
 
+## Check the installed version
+
+Use either form to display the application release identity:
+
+~~~text
+arch-view version
+arch-view --version
+~~~
+
+For scripts, request JSON metadata:
+
+~~~text
+arch-view version --json
+~~~
+
+The output includes the semantic application version and, for a published
+build, its source commit, build timestamp, and build ID.
+
 ## Option 1: run from a source checkout
 
 This is useful when you are developing Arch View itself.
@@ -141,6 +159,7 @@ already-compiled analyzer packages. A simplified installation looks like this:
 
 ~~~text
 arch-view.exe                  # the host on Windows
+release.json                   # application version and artifact provenance
 analyzers/
   index.json                   # the package catalog
   org.archview.go/
@@ -178,8 +197,9 @@ make release
 ~~~
 
 `make release` compiles the host, compiles all enabled analyzer entrypoints,
-creates the analyzer packages and `index.json`, and writes the complete result
-under `dist/release/`. You do not need to run another command first.
+creates the analyzer packages and `index.json`, writes `release.json`, and
+writes the complete result under `dist/release/`. You do not need to run
+another command first.
 
 For a package-only build, without the host application, use:
 

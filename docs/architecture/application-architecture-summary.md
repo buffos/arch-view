@@ -97,6 +97,15 @@ a shell, reserves stdout for versioned NDJSON, treats stderr as bounded logs,
 and owns cancellation, timeout, bounded concurrency, and child cleanup. One
 detect or analyze job uses one external process.
 
+The distribution boundary also owns application release identity. Release
+builds inject the semantic application version, source commit, build timestamp,
+and build ID into the host executable and publish a root `release.json` beside
+the trusted `analyzers/index.json`. The release manifest binds the host and
+analyzer index to their digests and target platform; analyzer versions and
+protocol/schema versions remain independently versioned. A `vMAJOR.MINOR.PATCH`
+tag is the release trigger, while successful artifact publication is the
+release completion point.
+
 ### Language analyzers
 
 Each analyzer owns source discovery, syntax parsing, import or dependency resolution, language-specific classification, source locations, and diagnostics. An analyzer returns data, not UI elements or layout coordinates.

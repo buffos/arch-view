@@ -44,11 +44,15 @@ func BuildEntrypoint(ctx context.Context, request BuildRequest) error {
 		return fmt.Errorf("create build output directory: %w", err)
 	}
 
+	ldflags := "-buildid="
+	if strings.TrimSpace(request.LinkerFlags) != "" {
+		ldflags += " " + request.LinkerFlags
+	}
 	command := exec.CommandContext(ctx, request.GoCommand,
 		"build",
 		"-trimpath",
 		"-buildvcs=false",
-		"-ldflags=-buildid=",
+		"-ldflags="+ldflags,
 		"-o", request.OutputPath,
 		request.Entrypoint,
 	)

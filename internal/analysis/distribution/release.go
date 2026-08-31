@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	appversion "github.com/buffo/arch-view/internal/version"
 )
 
 // AssembleRelease builds the host and analyzer tree in one staging directory,
@@ -32,6 +34,10 @@ func AssembleRelease(ctx context.Context, options ReleaseOptions) error {
 		return err
 	}
 	target, err := PlatformTargetFor(options.Platform)
+	if err != nil {
+		return err
+	}
+	metadata, err := releaseMetadata(options)
 	if err != nil {
 		return err
 	}
@@ -67,6 +73,7 @@ func AssembleRelease(ctx context.Context, options ReleaseOptions) error {
 		GOOS:           target.GOOS,
 		GOARCH:         target.GOARCH,
 		CGOEnabled:     "1",
+		LinkerFlags:    metadata.LinkerFlags(),
 	}); err != nil {
 		return fmt.Errorf("build host application: %w", err)
 	}
@@ -86,6 +93,9 @@ func AssembleRelease(ctx context.Context, options ReleaseOptions) error {
 	}); err != nil {
 		return fmt.Errorf("assemble release analyzers: %w", err)
 	}
+	if err := writeReleaseManifest(stagingRoot, target, metadata, hostPath); err != nil {
+		return fmt.Errorf("write release manifest: %w", err)
+	}
 	if err := PublishDirectory(stagingRoot, outputRoot); err != nil {
 		return fmt.Errorf("publish release: %w", err)
 	}
@@ -98,6 +108,13 @@ func validateReplaceableRelease(outputRoot string) error {
 		return nil
 	} else if err != nil {
 		return fmt.Errorf("stat existing release: %w", err)
+	}
+	manifest, err := ReadReleaseManifest(outputRoot)
+	if err != nil {
+		return fmt.Errorf("refuse to replace unrecognized release root %s: %w", outputRoot, err)
+	}
+	if err := ValidateReleaseManifest(outputRoot, manifest); err != nil {
+		return fmt.Errorf("refuse to replace invalid release root %s: %w", outputRoot, err)
 	}
 	hostCount := 0
 	for _, name := range []string{"arch-view", "arch-view.exe"} {
@@ -114,6 +131,65 @@ func validateReplaceableRelease(outputRoot string) error {
 		return fmt.Errorf("refuse to replace invalid release root %s: %w", outputRoot, err)
 	}
 	return nil
+}
+
+func releaseMetadata(options ReleaseOptions) (appversion.Info, error) {
+	if strings.TrimSpace(options.BuildID) == "" || strings.TrimSpace(options.BuildID) != options.BuildID {
+		return appversion.Info{}, fmt.Errorf("build ID must be non-empty normalized text")
+	}
+	metadata := appversion.Current()
+	if options.Version != "" {
+		metadata.Version = options.Version
+	}
+	if options.Commit != "" {
+		metadata.Commit = options.Commit
+	}
+	if options.BuildDate != "" {
+		metadata.BuildDate = options.BuildDate
+	}
+	metadata.BuildID = options.BuildID
+	if err := metadata.Validate(); err != nil {
+		return appversion.Info{}, err
+	}
+	return metadata, nil
+}
+
+func writeReleaseManifest(stagingRoot string, target PlatformTarget, metadata appversion.Info, hostPath string) error {
+	hostDigest, err := fileSHA256(hostPath)
+	if err != nil {
+		return fmt.Errorf("hash host executable: %w", err)
+	}
+	indexPath := filepath.Join(stagingRoot, "analyzers", "index.json")
+	indexDigest, err := fileSHA256(indexPath)
+	if err != nil {
+		return fmt.Errorf("hash analyzer index: %w", err)
+	}
+	manifest := ReleaseManifest{
+		SchemaVersion:       ReleaseManifestSchemaVersion,
+		Application:         metadata.Application,
+		Version:             metadata.Version,
+		Commit:              metadata.Commit,
+		BuildDate:           metadata.BuildDate,
+		BuildID:             metadata.BuildID,
+		Platform:            target.Name,
+		HostExecutable:      filepath.Base(hostPath),
+		HostSHA256:          hostDigest,
+		AnalyzerIndexPath:   filepath.ToSlash(filepath.Join("analyzers", "index.json")),
+		AnalyzerIndexSHA256: indexDigest,
+	}
+	data, err := MarshalReleaseManifest(manifest)
+	if err != nil {
+		return err
+	}
+	manifestPath := filepath.Join(stagingRoot, releaseManifestFileName)
+	if err := os.WriteFile(manifestPath, data, 0o644); err != nil {
+		return fmt.Errorf("write %s: %w", releaseManifestFileName, err)
+	}
+	decoded, err := ReadReleaseManifest(stagingRoot)
+	if err != nil {
+		return err
+	}
+	return ValidateReleaseManifest(stagingRoot, decoded)
 }
 
 func hostExecutableSuffix(target PlatformTarget) string {

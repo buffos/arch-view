@@ -29,41 +29,62 @@ func main() {
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
-func run(args []string, stdout, stderr io.Writer) int {
-	host, err := newBuiltInHost()
-	if err != nil {
-		writeError(stderr, err)
-		return analysis.ExitCodeForError(err)
+type commandHandler func(*analysis.Host, []string, io.Writer, io.Writer) int
+
+type commandDefinition struct {
+	handler      commandHandler
+	requiresHost bool
+}
+
+var commandDefinitions = map[string]commandDefinition{
+	"analyzers": {handler: runAnalyzersCommand, requiresHost: true},
+	"analyze":   {handler: runAnalyze, requiresHost: true},
+	"quality":   {handler: runQualityCommand, requiresHost: true},
+	"open":      {handler: runOpen, requiresHost: true},
+	"live":      {handler: runLiveCommand, requiresHost: true},
+	"mcp":       {handler: runMCPCommand, requiresHost: true},
+	"model":     {handler: adaptHostlessCommand(runModel)},
+	"export":    {handler: adaptHostlessCommand(runExport)},
+	"version":   {handler: runVersionCommand},
+	"--version": {handler: runVersionCommand},
+	"-v":        {handler: runVersionCommand},
+	"help":      {handler: printHelpCommand},
+	"-h":        {handler: printHelpCommand},
+	"--help":    {handler: printHelpCommand},
+}
+
+func adaptHostlessCommand(handler func([]string, io.Writer, io.Writer) int) commandHandler {
+	return func(_ *analysis.Host, args []string, stdout, stderr io.Writer) int {
+		return handler(args, stdout, stderr)
 	}
+}
+
+func printHelpCommand(_ *analysis.Host, _ []string, stdout, _ io.Writer) int {
+	printUsage(stdout)
+	return 0
+}
+
+func run(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
 		printUsage(stderr)
 		return 2
 	}
-	switch args[0] {
-	case "analyzers":
-		return runAnalyzersCommand(host, args[1:], stdout, stderr)
-	case "analyze":
-		return runAnalyze(host, args[1:], stdout, stderr)
-	case "quality":
-		return runQualityCommand(host, args[1:], stdout, stderr)
-	case "open":
-		return runOpen(host, args[1:], stdout, stderr)
-	case "live":
-		return runLiveCommand(host, args[1:], stdout, stderr)
-	case "mcp":
-		return runMCPCommand(host, args[1:], stdout, stderr)
-	case "model":
-		return runModel(args[1:], stdout, stderr)
-	case "export":
-		return runExport(args[1:], stdout, stderr)
-	case "help", "-h", "--help":
-		printUsage(stdout)
-		return 0
-	default:
+	definition, ok := commandDefinitions[args[0]]
+	if !ok {
 		err := analysis.NewHostError(analysis.ErrInvalidRequest, "unknown command", map[string]any{"command": args[0]})
 		writeError(stderr, err)
 		return analysis.ExitCodeForError(err)
 	}
+	var host *analysis.Host
+	if definition.requiresHost {
+		var err error
+		host, err = newBuiltInHost()
+		if err != nil {
+			writeError(stderr, err)
+			return analysis.ExitCodeForError(err)
+		}
+	}
+	return definition.handler(host, args[1:], stdout, stderr)
 }
 
 func newBuiltInHost() (*analysis.Host, error) {
@@ -91,6 +112,7 @@ func printUsage(writer io.Writer) {
 	_, _ = fmt.Fprintln(writer, "arch-view open --project <path> [--analyzer-runtime auto|packaged|in-process|explicit] [--plugin <descriptor>] [--allow-untrusted-plugin] [--language <id>] [--analyzer <id>] [--module <path>] [--crate <name-or-path>] [--feature <name>] [--target <triple>] [--config <tsconfig path>] [--source-root <path>] [--platform <clj|cljs|both>] [--python-version <3.x>] [--include-stubs] [--include-js] [--include-tests] [--include-examples] [--runtime auto|esm|cjs] [--exclude <glob>] [--port <n>]")
 	_, _ = fmt.Fprintln(writer, "arch-view live start|status|wait|ensure-current ...")
 	_, _ = fmt.Fprintln(writer, "arch-view mcp --project <path> [--transport stdio|local_http|authenticated_http]")
+	_, _ = fmt.Fprintln(writer, "arch-view version [--json]")
 	_, _ = fmt.Fprintln(writer, "arch-view model normalize --input <analysis-json> --output <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model validate --input <model-json>")
 	_, _ = fmt.Fprintln(writer, "arch-view model projection --input <model-json> [--path <segment>] --output <projection-json>")
