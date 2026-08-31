@@ -1,0 +1,161 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate release tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release_version.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve and validate version
+        id: release_version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          if [[ ! "$tag" == v* ]] || [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Tag must use vMAJOR.MINOR.PATCH with optional prerelease/build metadata: $tag" >&2
+            exit 1
+          fi
+          tagged_commit="$(git rev-list -n 1 "$tag")"
+          if [[ "$tagged_commit" != "$GITHUB_SHA" ]]; then
+            echo "Tag $tag does not point at $GITHUB_SHA" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run Go verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test ./... -count=1
+          go vet ./...
+          go build ./...
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: validate
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-amd64
+            runner: windows-latest
+            cc: gcc
+            cxx: g++
+          - platform: linux-amd64
+            runner: ubuntu-latest
+            cc: gcc
+            cxx: g++
+          - platform: darwin-arm64
+            runner: macos-14
+            cc: clang
+            cxx: clang++
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build release tree
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          RELEASE_COMMIT: ${{ github.sha }}
+          RELEASE_DATE: ${{ github.run_started_at }}
+          RELEASE_BUILD_ID: github-${{ github.run_id }}-${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          go run ./cmd/release-assembly \
+            -repository-root "$GITHUB_WORKSPACE" \
+            -release-root "$GITHUB_WORKSPACE/dist/release" \
+            -platform "${{ matrix.platform }}" \
+            -version "$RELEASE_VERSION" \
+            -commit "$RELEASE_COMMIT" \
+            -build-date "$RELEASE_DATE" \
+            -build-id "$RELEASE_BUILD_ID" \
+            -go-command go \
+            -cc-command "${{ matrix.cc }}" \
+            -cxx-command "${{ matrix.cxx }}"
+
+      - name: Archive release tree
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          archive="arch-view-${RELEASE_VERSION}-${{ matrix.platform }}.tar.gz"
+          tar -czf "dist/$archive" -C dist/release .
+          (cd dist && sha256sum "$archive" > "$archive.sha256")
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-view-${{ needs.validate.outputs.version }}-${{ matrix.platform }}
+          path: |
+            dist/arch-view-${{ needs.validate.outputs.version }}-${{ matrix.platform }}.tar.gz
+            dist/arch-view-${{ needs.validate.outputs.version }}-${{ matrix.platform }}.tar.gz.sha256
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub release
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download release archives
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/artifacts
+          merge-multiple: true
+
+      - name: Create aggregate checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd dist/artifacts && sha256sum *.tar.gz > SHA256SUMS)
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_args=(
+            --verify-tag
+            --title "Arch View $GITHUB_REF_NAME"
+            --generate-notes
+          )
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            release_args+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            "${release_args[@]}" \
+            dist/artifacts/*

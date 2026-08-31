@@ -125,6 +125,9 @@ func TestAssembleReleasePublishesHostAndAnalyzerTree(t *testing.T) {
 		RepositoryRoot: repositoryRoot,
 		OutputRoot:     outputRoot,
 		Platform:       "windows-amd64",
+		Version:        "0.1.0",
+		Commit:         "abc123",
+		BuildDate:      "2026-09-01T12:00:00Z",
 		BuildID:        "release-test",
 		GoCommand:      "explicit-go",
 		CCCommand:      "explicit-cc",
@@ -152,6 +155,90 @@ func TestAssembleReleasePublishesHostAndAnalyzerTree(t *testing.T) {
 		if request.GoCommand != "explicit-go" || request.CCCommand != "explicit-cc" || request.CXXCommand != "explicit-cxx" {
 			t.Fatalf("toolchain = %q/%q/%q", request.GoCommand, request.CCCommand, request.CXXCommand)
 		}
+	}
+}
+
+func TestAssembleReleasePublishesVersionedManifestAndHostMetadata(t *testing.T) {
+	repositoryRoot := t.TempDir()
+	outputRoot := filepath.Join(repositoryRoot, "dist", "release")
+	requests := make([]BuildRequest, 0, 2)
+	build := func(_ context.Context, request BuildRequest) error {
+		requests = append(requests, request)
+		if err := os.MkdirAll(filepath.Dir(request.OutputPath), 0o755); err != nil {
+			return err
+		}
+		return os.WriteFile(request.OutputPath, []byte("compiled:"+request.Entrypoint), 0o755)
+	}
+
+	if err := AssembleRelease(context.Background(), ReleaseOptions{
+		RepositoryRoot: repositoryRoot,
+		OutputRoot:     outputRoot,
+		Platform:       "windows-amd64",
+		Version:        "0.1.0",
+		Commit:         "abc123",
+		BuildDate:      "2026-09-01T12:00:00Z",
+		BuildID:        "ci-42",
+		GoCommand:      "explicit-go",
+		CCCommand:      "explicit-cc",
+		CXXCommand:     "explicit-cxx",
+		AnalyzerIDs:    []string{"org.archview.go"},
+		Build:          build,
+	}); err != nil {
+		t.Fatalf("assemble release: %v", err)
+	}
+
+	manifest, err := ReadReleaseManifest(outputRoot)
+	if err != nil {
+		t.Fatalf("read release manifest: %v", err)
+	}
+	if manifest.SchemaVersion != ReleaseManifestSchemaVersion || manifest.Application != "arch-view" || manifest.Version != "0.1.0" || manifest.Commit != "abc123" || manifest.BuildDate != "2026-09-01T12:00:00Z" || manifest.BuildID != "ci-42" || manifest.Platform != "windows-amd64" {
+		t.Fatalf("release manifest = %#v", manifest)
+	}
+	if manifest.HostExecutable != "arch-view.exe" || manifest.AnalyzerIndexPath != "analyzers/index.json" {
+		t.Fatalf("release manifest paths = %#v", manifest)
+	}
+	if err := ValidateReleaseManifest(outputRoot, manifest); err != nil {
+		t.Fatalf("validate release manifest: %v", err)
+	}
+	if len(requests) != 2 {
+		t.Fatalf("build requests = %d, want 2", len(requests))
+	}
+	if requests[0].Entrypoint != "./cmd/arch-view" {
+		t.Fatalf("host entrypoint = %q", requests[0].Entrypoint)
+	}
+	if got, want := requests[0].LinkerFlags, "-X=github.com/buffo/arch-view/internal/version.Version=0.1.0 -X=github.com/buffo/arch-view/internal/version.Commit=abc123 -X=github.com/buffo/arch-view/internal/version.BuildDate=2026-09-01T12:00:00Z -X=github.com/buffo/arch-view/internal/version.BuildID=ci-42"; got != want {
+		t.Fatalf("host linker flags = %q, want %q", got, want)
+	}
+	if requests[1].LinkerFlags != "" {
+		t.Fatalf("analyzer linker flags = %q, want empty", requests[1].LinkerFlags)
+	}
+}
+
+func TestAssembleReleaseRejectsInvalidVersionBeforeBuilding(t *testing.T) {
+	repositoryRoot := t.TempDir()
+	built := false
+	err := AssembleRelease(context.Background(), ReleaseOptions{
+		RepositoryRoot: repositoryRoot,
+		OutputRoot:     filepath.Join(t.TempDir(), "release"),
+		Platform:       "windows-amd64",
+		Version:        "not-a-version",
+		Commit:         "abc123",
+		BuildDate:      "2026-09-01T12:00:00Z",
+		BuildID:        "ci-42",
+		GoCommand:      "explicit-go",
+		CCCommand:      "explicit-cc",
+		CXXCommand:     "explicit-cxx",
+		AnalyzerIDs:    []string{"org.archview.go"},
+		Build: func(context.Context, BuildRequest) error {
+			built = true
+			return nil
+		},
+	})
+	if err == nil || !strings.Contains(err.Error(), "semantic-version") {
+		t.Fatalf("invalid version error = %v", err)
+	}
+	if built {
+		t.Fatal("invalid version started a build")
 	}
 }
 

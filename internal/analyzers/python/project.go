@@ -139,7 +139,11 @@ func normalizeSourceRoot(root, value string) (SourceRoot, error) {
 	if trimmed == "" {
 		return SourceRoot{}, fmt.Errorf("source root is empty")
 	}
-	absolute := trimmed
+	// Python packaging metadata is commonly shared across Windows and Unix
+	// environments. Treat backslashes in configured roots as path separators;
+	// after TOML decoding, an escaped trailing separator is a single `\\`.
+	normalized := filepath.FromSlash(strings.ReplaceAll(trimmed, "\\", "/"))
+	absolute := normalized
 	if !filepath.IsAbs(absolute) {
 		absolute = filepath.Join(root, absolute)
 	}

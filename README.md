@@ -15,6 +15,13 @@ part of Arch View work.
 - [Documentation](https://buffos.github.io/arch-view/)
 - [MIT License](LICENSE)
 
+## Application version
+
+The current application release identity is `0.1.0`. Installed or built
+executables report it with `arch-view version` or `arch-view --version`; use
+`arch-view version --json` for scripts. Release tags and the tagged build
+workflow are documented in [docs/releasing.md](docs/releasing.md).
+
 ## Public documentation site
 
 The human-facing documentation lives in `website/`. It is written in simple
