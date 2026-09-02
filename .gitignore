@@ -2,6 +2,15 @@
 /bin
 /dist
 
+# Website dependencies and generated output
+/website/node_modules/
+/website/.vitepress/cache/
+/website/.vitepress/dist/
+/website/.generated/
+/website/public/demo/
+/website/public/interactive-demo/
+/website/reference/layout-options.generated.md
+
 # Temp folder
 /tmp
 
