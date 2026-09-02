@@ -33,6 +33,11 @@ headless export. The confirmed future direction also includes deterministic
 code-quality checks, a searchable code-intelligence index, and a live MCP
 surface for compact, evidence-backed repository queries.
 
+The product also includes first-class consumption of arbitrary OKF knowledge
+bundles through configurable projections and the shared ELK-backed viewer.
+This capability may cover planning maps, workflows, queries, and other
+knowledge structures without requiring them to become architecture models.
+
 The upstream [reference implementation](https://github.com/unclebob/arch-view)
 is read-only input to the design. It is not product source.
 
@@ -41,6 +46,7 @@ is read-only input to the design. It is not product source.
 - Child: [Analyze source code](/capabilities/analyze-source.md)
 - Child: [Generate architecture models](/capabilities/generate-models.md)
 - Child: [Explore and inspect architecture](/capabilities/explore-architecture.md)
+- Child: [Configurable OKF knowledge views](/capabilities/okf-knowledge-views.md)
 - Child: [Export and automate](/capabilities/export-and-automate.md)
 - Child: [Code quality and code intelligence](/capabilities/code-quality-and-intelligence.md)
 - Application PRD: [Arch View product requirements](../docs/prd.md)
@@ -53,6 +59,11 @@ and a future deterministic code-quality/code-intelligence extension. Manual
 diagram authoring, cloud collaboration, runtime tracing, and subjective or
 LLM-generated architectural judgment remain outside the deterministic product
 scope.
+
+Configurable OKF knowledge views are a first-class product capability under the
+same Arch View roof. Their source bundles and view semantics are distinct from
+the architecture model, while the viewer and renderer infrastructure may be
+shared.
 
 # Current delivery frontier
 
@@ -71,6 +82,9 @@ user-approved issues 039–043, including its mixed-language viewer review. The
 project analyzer assignments/view selection leaf is implemented through
 issues 044–047, including its approved visual review. The advanced ELK renderer
 support leaf remains specified and ready for later delivery issue slicing.
+The configurable OKF knowledge views capability is newly added at the root
+level and now has a bounded discovery baseline covering source discovery,
+profiles, projection, inspection, and safety behavior.
 The [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
 capability is a pure structural-child roll-up with effective state `implemented`,
 the minimum of its three children. Its three children are readiness-reviewed

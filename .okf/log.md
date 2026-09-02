@@ -110,6 +110,121 @@
 * **Artifact sync:** Updated the live capability node and exact-spec set, the deterministic-quality consumer boundary, the application PRD, and the application architecture summary. No issue references or delivery claims were added.
 * **State:** No planning-state transition. Effective totals remain 0 `foggy`, 0 `bounded`, 3 `specified`, and 15 `implemented` nodes.
 
+## 2026-09-02
+
+### Configurable OKF knowledge views enters discovery
+
+* **Topology:** Added Configurable OKF knowledge views as a first-class
+  root-level capability under the Arch View project.
+* **Boundary:** Recorded the working lossless-index, profile-driven projection,
+  renderer-neutral scene, shared ELK layout, and progressive inspection
+  direction. The capability remains separate from the architecture model.
+* **Discovery:** Created the linked pre-PRD notes for bundle selection,
+  profile configuration, relationship mapping, roll-up policy, scale limits,
+  and node-detail behavior. These decisions remain open for the ongoing
+  one-question-at-a-time interview.
+* **State:** The new capability starts in `foggy`; no implementation or issue
+  slicing is claimed.
+* **Source selection:** User confirmed that discovered OKF bundles must never
+  be merged; the separate OKF viewer will show them in a graph dropdown and
+  render only the selected bundle.
+* **Persistence:** User confirmed an optional okf section in the nearest
+  .archview.json containing graph/profile bindings and reusable project-local
+  profile definitions.
+* **Discovery:** User confirmed recursive project-tree discovery of valid
+  .okf bundles with standard dependency/generated-output exclusions and
+  deterministic graph-selector ordering.
+* **Profiles:** User described profiles as rendering costumes: reusable
+  presentation/projection settings that do not alter source graph data.
+* **Relationships:** User confirmed that structural hierarchy drives
+  navigation and subtree drill-down, while Markdown links remain a separate
+  semantic edge layer with independent profile visibility and styling.
+* **Hierarchy precedence:** Profiles may select explicit parent/children
+  metadata; filesystem nesting is the fallback, and conflicting claims remain
+  visible as diagnostics.
+* **Roll-ups:** User confirmed that roll-up status must be explicit through
+  source metadata or profile policy; having children alone is insufficient.
+* **Mapping language:** User confirmed declarative profile mappings from
+  preserved/derived facts to named presentation tokens, without arbitrary
+  executable code.
+* **State mapping:** User confirmed that state is optional and conventional;
+  unknown or missing values remain neutral/unknown, with declared and
+  effective roll-up state separately displayable.
+* **Visual tokens:** User confirmed named, validated style tokens with a
+  finite shape/color vocabulary and optional viewer legend.
+* **Rule architecture:** User required a rich declarative rule set designed
+  around Open-Closed Principle extension: rule implementations are registered
+  strategies, not branches added to a central switch.
+* **Rule composition:** User agreed that all matching rules run, compatible
+  outputs merge, explicit priority resolves scalar conflicts, and equal
+  priority conflicts are diagnosed.
+* **Rule families:** User agreed that the initial registry should cover
+  metadata, collections/tags, strings/paths, numeric comparisons,
+  relationships, hierarchy/depth, and derived facts, with planning-specific
+  behavior as extensions.
+* **Code boundary:** User agreed that profiles remain data-only and executable
+  rule implementations come from in-process Go implementations registered by
+  Arch View; target OKF repositories cannot inject rule code. External plugin
+  loading is out of scope for now.
+* **Extension contract:** User agreed that registered extensions need
+  namespaced stable IDs, versioned schemas, declared capabilities, and
+  human-readable metadata for compatibility and diagnostics.
+* **Extensibility:** User required the design to scale from a few built-ins to
+  thousands of rules/properties/styles without fixed-count assumptions or
+  sacrificing flexibility for short-term simplicity.
+* **Renderer boundary:** User agreed that rule extensions emit
+  renderer-neutral annotations and style patches; scene/rendering layers own
+  ELK/SVG translation.
+* **Profile composition:** User agreed that named profiles may extend or
+  compose other profiles with explicit deterministic base and override
+  precedence.
+* **Multiple bases:** User agreed that profiles may extend multiple ordered
+  bases, with cycle detection and explicit diagnostics for ambiguous conflicts.
+* **Save As:** User agreed that Save As preserves composition and creates a
+  new named variant with the same base references and current overrides.
+* **Built-ins:** User agreed that the viewer should include a neutral default
+  profile and an optional editable fog-of-war example profile.
+* **Built-in persistence:** User agreed that built-in profiles are immutable;
+  editing one requires Save As to create a project-local profile, while Save
+  updates project-local profiles only.
+* **Profile lifecycle:** User agreed that project-local profile rename/delete
+  must update or reassign graph bindings safely; built-ins cannot be changed.
+* **Scale protection:** User agreed to profile-configurable node limits plus
+  an application hard cap, with visible truncation diagnostics/hidden counts
+  and depth/subtree recovery paths.
+* **Inspection:** User confirmed that single-click details should lead with
+  human-readable overview, rendered Markdown, and mapped metadata, with
+  hierarchy, relationships, frontmatter, and technical diagnostics expandable.
+* **Markdown safety:** User confirmed a sanitized CommonMark subset for the
+  human-readable panel; raw HTML, scripts, and unsafe URL schemes are removed,
+  with raw Markdown secondary.
+* **Profile editing:** User confirmed that Save updates the active profile and
+  Save As creates a new profile entry in the project JSON.
+* **Depth:** User confirmed that depth is any integer at least 1 with "at most"
+  semantics; values beyond the tree show all available levels, with explicit
+  full/unbounded mode still available.
+
+### Configurable OKF knowledge views bounded discovery baseline
+
+* **Recommendations:** Resolved the remaining discovery choices with a
+  recursive, safety-bounded design: stable bundle IDs, validation-before-
+  selection, explicit hierarchy precedence, lossless frontmatter, registered
+  declarative rule families, compositional priority/conflict behavior, and
+  sanitized progressive inspection.
+* **Scale defaults:** Recommended depth 2 by default, `max_nodes` 1000 with a
+  3000 application hard cap, `max_relationships` 10000 with a 30000 hard cap,
+  and a five-second layout budget per projection request. These are tunable
+  safety defaults, not closed extension vocabularies.
+* **Boundary:** The first slice includes one-graph-at-a-time OKF navigation,
+  project-local rendering-costume persistence/editing, neutral and fog-of-war
+  profiles, renderer-neutral rule output, subtree drill-down, diagnostics, and
+  the existing ELK/SVG path. Graph merging, source mutation, arbitrary
+  executable profile code, external rule plugins, and export-specific OKF
+  projections remain out of scope.
+* **State transition:** Advanced [Configurable OKF knowledge views](capabilities/okf-knowledge-views.md)
+  from `foggy` to `bounded`. No implementation or exact-spec artifacts are
+  claimed yet; the next phase is structured specification.
+
 ## 2026-08-30
 
 ### Deterministic quality visual review and capability closeout
