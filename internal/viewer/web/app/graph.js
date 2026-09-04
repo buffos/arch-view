@@ -1,4 +1,6 @@
 import { edgeGeometry } from "../graph_route.js";
+import { activeGeometryJunctions, geometryJunctionMarkup, geometryLabelMarkup } from "./edge_presentation.js";
+import { geometryEdge } from "./geometry_snapshot.js";
 import { nodeShapeMarkup } from "./node_shape.js";
 import { fallbackLayout } from "./layout.js";
 import { sceneLayoutKey } from "./view.js";
@@ -33,10 +35,15 @@ export function renderGraph(context, services) {
     const className = "edge-line " + classForState(relationship.cycle_state) + (selected ? " selected" : "") + (!matches ? " dimmed" : "");
     const hasManualEndpoint = manualPositions[relationship.from_visible_id] || manualPositions[relationship.to_visible_id];
     const geometry = edgeGeometry(relationship, from, to, hasManualEndpoint ? null : activeLayout.edges[relationship.id]);
+    const advanced = !hasManualEndpoint && geometryEdge(activeLayout.geometry, relationship.id);
+    const label = advanced?.labels?.length
+      ? geometryLabelMarkup(advanced.labels, classForState(relationship.cycle_state) + (!matches ? " dimmed" : ""))
+      : '<text class="edge-label ' + classForState(relationship.cycle_state) + (!matches ? " dimmed" : "") + '" x="' + geometry.labelX + '" y="' + geometry.labelY + '" text-anchor="middle">' + escapeHTML(relationship.count) + "</text>";
     return '<g class="edge-group" data-edge-id="' + escapeHTML(relationship.id) + '" tabindex="0" role="button" aria-label="' + escapeHTML(relationship.accessible_label) + '">' +
       '<path class="edge-hit" d="' + geometry.path + '"></path><path class="' + className + '" d="' + geometry.path + '" marker-end="url(#arrow)"></path>' +
-      '<text class="edge-label ' + classForState(relationship.cycle_state) + (!matches ? " dimmed" : "") + '" x="' + geometry.labelX + '" y="' + geometry.labelY + '" text-anchor="middle">' + escapeHTML(relationship.count) + "</text></g>";
+      label + "</g>";
   }).join("");
+  const junctionMarkup = geometryJunctionMarkup(activeGeometryJunctions(activeLayout.geometry, manualPositions));
 
   const nodeMarkup = nodes.map(function (node) {
     const position = positions[node.id];
@@ -68,7 +75,7 @@ export function renderGraph(context, services) {
   }).join("");
 
   const empty = nodes.length === 0 ? '<p class="muted">No visible nodes in this projection.</p>' : "";
-  context.elements.graph.innerHTML = empty + '<svg viewBox="0 0 ' + activeLayout.width + ' ' + activeLayout.height + '" role="img" aria-labelledby="graph-title graph-desc" xmlns="http://www.w3.org/2000/svg"><title id="graph-title">Architecture graph</title><desc id="graph-desc">' + escapeHTML(scene.accessibility.reading_order.length + " semantic items in the current scene") + '</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M 0 0 L 9 4.5 L 0 9 z" fill="#7483a9"></path></marker></defs><g class="viewport-content" transform="' + transform + '"><g class="edges">' + edgeMarkup + '</g><g class="nodes">' + nodeMarkup + "</g></g></svg>";
+  context.elements.graph.innerHTML = empty + '<svg viewBox="0 0 ' + activeLayout.width + ' ' + activeLayout.height + '" role="img" aria-labelledby="graph-title graph-desc" xmlns="http://www.w3.org/2000/svg"><title id="graph-title">Architecture graph</title><desc id="graph-desc">' + escapeHTML(scene.accessibility.reading_order.length + " semantic items in the current scene") + '</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M 0 0 L 9 4.5 L 0 9 z" fill="#7483a9"></path></marker></defs><g class="viewport-content" transform="' + transform + '"><g class="edges">' + edgeMarkup + junctionMarkup + '</g><g class="nodes">' + nodeMarkup + "</g></g></svg>";
   const svg = context.elements.graph.querySelector("svg");
   if (!svg) return;
   context.elements.graph.insertAdjacentHTML("beforeend", '<span class="viewport-hint graph-viewport-hint">Drag the canvas to pan; Shift-drag a node to adjust this session.</span>');

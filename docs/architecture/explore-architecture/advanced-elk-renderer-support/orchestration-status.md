@@ -11,6 +11,8 @@ ELK execution. Its AER-R rules and scenario mapping are authoritative.
 - Current route: the staged candidate workstreams are exact-specified and the application synthesis gate is current and passed; this is the next eligible delivery node for issue slicing.
 - Delivery issues: 080 settings/registry, 081 edges, 082 ports, 083 containers.
   These approved stages have dependency-ordered visual gates.
+- Delivery progress: 080 is archived after approval; 081 is implemented and
+  automatically verified at its human visual-review gate; 082–083 are blocked.
 
 ## Boundary
 

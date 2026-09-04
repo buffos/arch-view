@@ -23,6 +23,12 @@ import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.j
     return left && right && left.x === right.x && left.y === right.y;
   }
 
+  function sectionsConnect(previous, current) {
+    if (!previous) return true;
+    const last = previous.segments[previous.segments.length - 1];
+    return Boolean(last && samePoint(last.to, current.start));
+  }
+
   function appendUnique(points, value) {
     const point = pointValue(value);
     if (!point) return false;
@@ -83,7 +89,7 @@ import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.j
       }
       if (!appendUnique(points, normalizedPoint(section.endPoint, offset))) return null;
       const line = lineSection(points);
-      if (!line) return null;
+      if (!line || !sectionsConnect(normalizedSections[normalizedSections.length - 1], line)) return null;
       normalizedSections.push(line);
       for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
         if (!appendUnique(flattened, points[pointIndex])) return null;
@@ -164,7 +170,9 @@ import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.j
     for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
       const spline = splineSection(sections[sectionIndex], offset);
       if (!spline) return null;
-      normalizedSections.push({ start: spline.start, segments: spline.segments });
+      const normalized = { start: spline.start, segments: spline.segments };
+      if (!sectionsConnect(normalizedSections[normalizedSections.length - 1], normalized)) return null;
+      normalizedSections.push(normalized);
       spline.anchors.forEach(function (point) { appendUnique(flattened, point); });
     }
     if (!normalizedSections.length) return null;

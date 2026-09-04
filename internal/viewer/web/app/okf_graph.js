@@ -5,6 +5,9 @@ import { escapeOKF } from "./okf_markup.js";
 import { cloneOKFLayoutProfile } from "./okf_layout.js";
 import { adaptELKLayout } from "./layout.js";
 import { runFeatureLayout } from "./elk_runtime.js";
+import { activeGeometryJunctions, geometryJunctionMarkup, geometryLabelMarkup } from "./edge_presentation.js";
+import { geometryEdge } from "./geometry_snapshot.js";
+import { okfGeometrySource } from "./geometry_source.js";
 import { bindViewportGestures, createViewportState, viewportTransform } from "./viewport_runtime.js";
 
 const DEFAULT_PAN_LIMIT = 100000;
@@ -26,7 +29,7 @@ export async function renderOKFGraph(container, snapshot, selectedID, handlers, 
         visible_nodes: nodes.map((node) => Object.assign({ id: node.id || node.concept_id }, node)),
         visible_relationships: relationships.map((relationship) => Object.assign({ id: relationship.id, from_visible_id: relationship.from, to_visible_id: relationship.to }, relationship))
       };
-      const result = await runFeatureLayout(scene, profile, options.layoutCatalog, workerURL);
+      const result = await runFeatureLayout(scene, profile, options.layoutCatalog, workerURL, globalThis.ELK, okfGeometrySource(snapshot));
       layout = adaptELKLayout(scene, result, "okf:" + (snapshot.projection_revision || "projection"), profile.algorithm, profile);
     } catch (error) {
       if (options.isCurrent && !options.isCurrent()) return null;
@@ -41,9 +44,10 @@ export async function renderOKFGraph(container, snapshot, selectedID, handlers, 
   const positions = withManualPositions(layout.positions, viewport && viewport.positions, nodes);
   container.classList.add("okf-graph-wrap");
   const edges = relationships.map((relationship) => edgeMarkup(relationship, positions, layout, viewport)).join("");
+  const junctions = geometryJunctionMarkup(activeGeometryJunctions(layout.geometry, viewport?.positions));
   const nodeMarkup = nodes.map((node) => nodeMarkupFor(node, positions[node.id || node.concept_id], selectedID)).join("");
   container.innerHTML = nodes.length
-    ? "<svg class=\"okf-graph-svg\" viewBox=\"0 0 " + layout.width + " " + layout.height + "\" preserveAspectRatio=\"xMidYMid meet\" role=\"img\" aria-label=\"OKF knowledge graph\"><defs><marker id=\"okf-arrow\" markerWidth=\"9\" markerHeight=\"9\" refX=\"8\" refY=\"4.5\" orient=\"auto\"><path d=\"M 0 0 L 9 4.5 L 0 9 z\" fill=\"#7483a9\"></path></marker></defs><g class=\"okf-viewport-content\" transform=\"" + viewportTransform(viewport) + "\"><g class=\"okf-edges\">" + edges + "</g><g class=\"okf-nodes\">" + nodeMarkup + "</g></g></svg>"
+    ? "<svg class=\"okf-graph-svg\" viewBox=\"0 0 " + layout.width + " " + layout.height + "\" preserveAspectRatio=\"xMidYMid meet\" role=\"img\" aria-label=\"OKF knowledge graph\"><defs><marker id=\"okf-arrow\" markerWidth=\"9\" markerHeight=\"9\" refX=\"8\" refY=\"4.5\" orient=\"auto\"><path d=\"M 0 0 L 9 4.5 L 0 9 z\" fill=\"#7483a9\"></path></marker></defs><g class=\"okf-viewport-content\" transform=\"" + viewportTransform(viewport) + "\"><g class=\"okf-edges\">" + edges + junctions + "</g><g class=\"okf-nodes\">" + nodeMarkup + "</g></g></svg>"
     : "<p class=\"muted\">No concepts are visible in the selected OKF projection.</p>";
   if (options.onLayoutReady) options.onLayoutReady(layout);
   const svg = container.querySelector("svg");
@@ -85,9 +89,10 @@ export function updateOKFSemanticLinks(container, snapshot, selectedID, layout, 
   const selectedSemantic = selectedID
     ? relationships.filter((relationship) => relationship.kind === "semantic_link" && ((relationship.from_visible_id || relationship.from) === selectedID || (relationship.to_visible_id || relationship.to) === selectedID))
     : [];
-  edgeLayer.innerHTML = containment.concat(selectedSemantic).map((relationship) => {
+  const edges = containment.concat(selectedSemantic).map((relationship) => {
     return edgeMarkup(relationship, positions, layout || {}, viewport);
   }).join("");
+  edgeLayer.innerHTML = edges + geometryJunctionMarkup(activeGeometryJunctions(layout?.geometry, viewport?.positions));
 }
 
 function withManualPositions(base, manual, nodes) {
@@ -115,7 +120,10 @@ function edgeMarkup(relationship, positions, layout, viewport) {
   const geometry = edgeGeometry(routedRelationship, from, to, routeForEdge(relationship, layout, viewport, fromID, toID, from, to));
   if (!geometry) return "";
   const arrow = relationship.kind === "semantic_link" ? "" : " marker-end=\"url(#okf-arrow)\"";
-  return "<path class=\"okf-edge-line " + edgeClass + "\" data-okf-edge=\"" + escapeOKF(relationship.id) + "\" d=\"" + geometry.path + "\"" + arrow + "><title>" + escapeOKF(relationship.accessible_label || relationship.kind || "relationship") + "</title></path>";
+  const hasManualEndpoint = viewport?.positions?.[fromID] || viewport?.positions?.[toID];
+  const advanced = relationship.kind !== "semantic_link" && !hasManualEndpoint ? geometryEdge(layout?.geometry, relationship.id) : null;
+  const labels = advanced?.labels?.length ? geometryLabelMarkup(advanced.labels) : "";
+  return "<g class=\"okf-edge-group\"><path class=\"okf-edge-line " + edgeClass + "\" data-okf-edge=\"" + escapeOKF(relationship.id) + "\" d=\"" + geometry.path + "\"" + arrow + "><title>" + escapeOKF(relationship.accessible_label || relationship.kind || "relationship") + "</title></path>" + labels + "</g>";
 }
 
 function nodeMarkupFor(node, position, selectedID) {

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -65,17 +66,9 @@ func Catalog() LayoutOptionsResponse {
 	algorithms := append([]LayoutAlgorithmDefinition(nil), pinnedELKAlgorithms...)
 	categories := append([]LayoutCategoryDefinition(nil), pinnedELKCategories...)
 	options := make([]LayoutOptionDefinition, len(pinnedELKOptions))
-	features := FeatureCatalog()
 	copy(options, pinnedELKOptions)
 	for index := range options {
 		options[index] = enrichLayoutOption(options[index])
-		for _, feature := range features {
-			for _, id := range feature.OptionIDs {
-				if options[index].ID == id {
-					options[index].RequiredFeatures = append(options[index].RequiredFeatures, feature.ID)
-				}
-			}
-		}
 	}
 	return LayoutOptionsResponse{
 		SchemaVersion: layoutConfigSchemaVersion,
@@ -156,6 +149,11 @@ func validateProfile(profile LayoutProfile, allowUnavailable bool) (LayoutProfil
 				continue
 			}
 			return LayoutProfile{}, analysis.NewHostError(analysis.ErrUnsupportedOption, "layout option is cataloged but not supported by the viewer renderer", map[string]any{"option": key})
+		}
+		for _, requiredFeature := range option.RequiredFeatures {
+			if !slices.Contains(profile.Features, requiredFeature) {
+				return LayoutProfile{}, analysis.NewHostError("renderer_feature_dependency", "layout option requires an enabled renderer feature", map[string]any{"option": key, "feature": requiredFeature})
+			}
 		}
 		if !layoutOptionApplies(option, profile.Algorithm) {
 			return LayoutProfile{}, analysis.NewHostError(analysis.ErrInvalidOptions, "layout option does not apply to the selected algorithm", map[string]any{"option": key, "algorithm": profile.Algorithm})

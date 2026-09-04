@@ -27,7 +27,12 @@ func renderSVG(value model.Model, request Request) ([]byte, map[string]any, erro
 		return nil, nil, err
 	}
 	layout := buildDeterministicLayout(sceneSnapshot)
-	return renderSVGDocument(value, sceneSnapshot, layout), layoutProvenance(), nil
+	provenance := layoutProvenance()
+	if request.LayoutProfile != nil && len(request.LayoutProfile.Features) > 0 {
+		provenance["requested_features"] = append([]string(nil), request.LayoutProfile.Features...)
+		provenance["diagnostic"] = "advanced_features_not_applied"
+	}
+	return renderSVGDocument(value, sceneSnapshot, layout), provenance, nil
 }
 
 func renderSVGDocument(value model.Model, scene scene.SceneSnapshot, layout deterministicLayout) []byte {

@@ -55,5 +55,6 @@ self-contained HTML, and browser SVG share `arch-view.geometry/v1`; Go static
 SVG remains deterministic orthogonal and reports when advanced geometry is not
 applied. The linked contract defines geometry identity, option gating,
 accessibility, validation, fallback, and visual scenarios. Approved stages are tracked by issues
-080–083. Stage 1 is verified, visually approved, and archived. Stages 2–4
-remain active and each requires automated verification and human visual approval.
+080–083. Stage 1 is verified, visually approved, and archived. Stage 2 is
+implemented and automatically verified; issue 081 remains open at its human
+visual-review gate. Stages 3–4 remain blocked by the preceding approvals.

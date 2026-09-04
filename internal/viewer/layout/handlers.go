@@ -8,7 +8,7 @@ type optionHandler struct {
 	algorithmApplies func(LayoutOptionDefinition, string) bool
 }
 
-var layoutOptionHandlers = registerOptionHandlers(map[string]optionHandler{
+var layoutOptionHandlers = registerOptionHandlers(registerOptionHandlers(map[string]optionHandler{
 	"org.eclipse.elk.direction":                                        genericOptionHandler("RIGHT", enumValues("RIGHT", "LEFT", "DOWN", "UP")),
 	"org.eclipse.elk.edgeRouting":                                      genericOptionHandler("ORTHOGONAL", enumValues("NONE", "POLYLINE", "ORTHOGONAL", "SPLINES")),
 	"org.eclipse.elk.aspectRatio":                                      genericOptionHandlerWithBounds("engine default", nil, numberPointer(0), nil, true, false),
@@ -37,7 +37,7 @@ var layoutOptionHandlers = registerOptionHandlers(map[string]optionHandler{
 	"org.eclipse.elk.interactive":                                      genericOptionHandler(false, nil),
 	"org.eclipse.elk.interactiveLayout":                                genericOptionHandler(false, nil),
 	"org.eclipse.elk.randomSeed":                                       genericOptionHandlerWithBounds(1.0, nil, numberPointer(0), nil, false, false),
-}, usefulSettingsHandlers())
+}, usefulSettingsHandlers()), advancedEdgeSettingsHandlers())
 
 func genericOptionHandler(defaultValue any, allowedValues []string) optionHandler {
 	return genericOptionHandlerForTargets([]string{"PARENTS"}, defaultValue, allowedValues)
@@ -100,6 +100,13 @@ func enrichLayoutOption(option LayoutOptionDefinition) LayoutOptionDefinition {
 	option.RendererSupport = "unsupported"
 	if handler, ok := layoutOptionHandlers[option.ID]; ok && handler.enrich != nil {
 		handler.enrich(&option)
+	}
+	for _, feature := range FeatureCatalog() {
+		for _, id := range feature.OptionIDs {
+			if option.ID == id {
+				option.RequiredFeatures = append(option.RequiredFeatures, feature.ID)
+			}
+		}
 	}
 	return option
 }

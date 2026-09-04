@@ -93,7 +93,9 @@ export function createFeatureRegistry(definitions = [], handlers = []) {
   };
 }
 
-// Later delivery stages register their verified implementations here.
 export function sharedFeatureRegistry(catalog) {
-  return createFeatureRegistry(catalog?.features || [], []);
+  const definitions = catalog?.features || [];
+  const ids = new Set(definitions.map((item) => item.id));
+  return createFeatureRegistry(definitions, implementedFeatureHandlers().filter((handler) => ids.has(handler.id)));
 }
+import { implementedFeatureHandlers } from "./feature_handlers.js";
