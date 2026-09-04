@@ -20,8 +20,9 @@
   reference set is maintained under
   `../docs/architecture/okf-knowledge-views/` and its readiness review
   is complete.
-- Delivery issues 064–071 are verified and archived after the user's explicit
-  visual approval on 2026-09-04.
+- OKF delivery records 064–071 (`20260903-064` through `20260903-071`) are
+  verified and archived after the user's explicit visual approval on
+  2026-09-04.
 - Next implementation transition: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
   is the next eligible specified node. Its exact renderer contract is ready,
   existing viewer/ELK prerequisites are implemented, and no delivery issues

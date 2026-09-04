@@ -133,8 +133,8 @@
 * **Roadmap refresh**: Re-audited the implemented OKF node, archived delivery
   evidence, active queue, and remaining specified frontiers. No OKF state or
   topology change was needed in this refresh; the next eligible implementation
-  transition is Advanced ELK renderer support, followed separately by the
-  specified Live analysis and MCP child.
+  transition is Advanced ELK renderer support; the Live analysis and MCP child
+  is already implemented in the combined graph.
 
 ## 2026-09-03
 
