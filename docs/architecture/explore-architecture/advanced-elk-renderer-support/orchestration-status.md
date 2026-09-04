@@ -4,7 +4,7 @@
 
 - Planning state: `specified`.
 - Parent: the implemented [Explore and inspect architecture](../../../../.okf/capabilities/explore-architecture.md) capability.
-- Current route: the staged candidate workstreams are exact-specified; issue slicing can begin after the application synthesis gate is checked.
+- Current route: the staged candidate workstreams are exact-specified and the application synthesis gate is current and passed; this is the next eligible delivery node for issue slicing.
 - Delivery issues: none yet. Creating issues before the supported renderer subset and acceptance behavior are decided would create speculative work.
 
 ## Boundary

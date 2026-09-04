@@ -6,7 +6,8 @@
 - State evaluation: own-state; no state_policy is declared
 - Current state: implemented
 - Transition completed: bounded to specified after readiness review and
-  application-synthesis synchronization
+  application-synthesis synchronization, then specified to implemented after
+  issues 064–071 and the required visual-review gates were completed
 
 ## Artifact inventory
 
@@ -67,16 +68,16 @@ surfaces, with deferred reasons required.
 
 ## Artifact-impact assessment
 
-- Topology: affected by the eventual state transition and new artifact
-  references; node/index/log synchronization is required at closeout.
-- Capability truth: affected; all node-scoped exact-spec artifacts listed above
-  were created in this run.
-- Product truth: affected; the application PRD must link the node PRD and
-  reflect the now-specified first-slice behavior.
-- Architecture truth: affected; the application architecture summary must link
-  the exact artifact set and preserve the shared ELK/configuration boundaries.
-- Delivery truth: affected; approved implementation issues 064–071 and their
-  dependency order are now recorded in the issue registry and owning node.
+- Topology: synchronized; the implemented state, artifact references, and
+  delivery log are current.
+- Capability truth: synchronized; all node-scoped exact-spec artifacts remain
+  authoritative for the implemented scope.
+- Product truth: synchronized; the application PRD reflects the implemented
+  first-slice behavior.
+- Architecture truth: synchronized; the application architecture summary links
+  the exact artifact set and preserves the shared ELK/configuration boundaries.
+- Delivery truth: synchronized; issues 064–071 are archived and the active
+  queue is empty.
 
 ## Completion state
 
@@ -97,3 +98,11 @@ selection-only arrowless semantic links, uncapped Fit, shared dialog/form CSS,
 and current-canvas SVG download through the existing viewer exporter. Public
 OKF CLI, headless export contracts, remote access, and source editing remain
 outside this delivery.
+
+## Next implementation frontier
+
+The next eligible specified node is [Advanced ELK renderer support](../../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md).
+Its exact renderer-only contract is complete, the application synthesis gate
+is current, and the existing viewer/ELK/browser/HTML/SVG foundations are
+implemented. Issue slicing is the next bounded action; no issue files are
+created by this roadmap refresh.

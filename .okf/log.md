@@ -130,6 +130,11 @@
 * **Evidence**: See `docs/agents/reviews/20260904-okf-scenario-evidence.md` and
   `docs/agents/reviews/20260904-shared-css-svg-followup.md`. Repository tests,
   race checks, vet/build, browser tests/syntax, and OKF validation pass.
+* **Roadmap refresh**: Re-audited the implemented OKF node, archived delivery
+  evidence, active queue, and remaining specified frontiers. No OKF state or
+  topology change was needed in this refresh; the next eligible implementation
+  transition is Advanced ELK renderer support, followed separately by the
+  specified Live analysis and MCP child.
 
 ## 2026-09-03
 

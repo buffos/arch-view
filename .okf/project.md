@@ -86,6 +86,9 @@ The configurable OKF knowledge views capability is an implemented root-level
 capability with a complete node-scoped reference set covering source discovery,
 profiles, projection, inspection, safety behavior, and readiness. Issues 064–071
 are verified and archived after the user's final approval on 2026-09-04.
+The next eligible specified implementation node is Advanced ELK renderer
+support, whose existing viewer/ELK prerequisites and exact renderer contract
+are ready for issue slicing.
 The [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
 capability is a pure structural-child roll-up with effective state `implemented`,
 the minimum of its three children. Its three children are readiness-reviewed
