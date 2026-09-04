@@ -505,10 +505,10 @@ protocol fields to the canonical model.
 The compiled external analyzer distribution is implemented through issues
 034–038 after application synthesis. The project analyzer assignments and view
 selection child is implemented through verified, archived, and visually
-approved issues 044–047. The remaining specified frontiers are [advanced ELK
-renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md)
-and Live analysis/MCP; Advanced ELK is the next eligible visible delivery
-frontier.
+approved issues 044–047. The remaining specified frontier is [advanced ELK
+renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md);
+Live analysis/MCP is implemented. Advanced ELK is the next eligible visible
+delivery frontier.
 The multi-analyzer child is implemented through issues 039–043.
 The 2026-08-28 brownfield audit also confirmed that the existing Go analyzer,
 canonical model generation, and export/automation boundaries exhaust their

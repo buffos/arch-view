@@ -76,8 +76,8 @@ surfaces, with deferred reasons required.
   first-slice behavior.
 - Architecture truth: synchronized; the application architecture summary links
   the exact artifact set and preserves the shared ELK/configuration boundaries.
-- Delivery truth: synchronized; issues 064–071 are archived and the active
-  queue is empty.
+- Delivery truth: synchronized; the dated OKF records `20260903-064` through
+  `20260903-071` are archived and the active queue is empty.
 
 ## Completion state
 
