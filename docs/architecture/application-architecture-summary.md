@@ -2,9 +2,9 @@
 
 ## Status
 
-The configurable OKF knowledge-view capability is newly tracked as a
-first-class root-level, bounded capability; its discovery baseline is recorded
-below while its detailed contract remains future specification work.
+The configurable OKF knowledge-view capability is a first-class root-level,
+specified capability; its exact node-scoped reference set is linked below and
+its shared boundaries are summarized here.
 
 This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043, project analyzer assignment issues 044–047, and source-index issues 048–052 are verified, archived, and visually approved; the advanced ELK renderer child remains the specified plugin/viewer frontier.
 The Code quality and code intelligence capability is a pure structural-child
@@ -63,74 +63,39 @@ The upstream [unclebob/arch-view reference implementation](https://github.com/un
 ### OKF knowledge-view boundary
 
 The configurable OKF knowledge-view capability is a first-class root-level
-boundary alongside the architecture capabilities. It consumes one or more
-OKF directory bundles without converting them into the canonical architecture
-model. A lossless OKF index preserves concept paths, frontmatter, Markdown
-body, links, and unknown metadata; a selected view profile derives the
-structural projection, relationship visibility, facets, roles, roll-up state,
-and styles.
+boundary alongside the architecture capabilities. It consumes one validated
+OKF directory bundle at a time without converting it into the canonical
+architecture model. The exact source and behavior are defined in the
+[node-scoped PRD](okf-knowledge-views/prd.md), [domain model](okf-knowledge-views/canonical-domain-model.md),
+[use-case model](okf-knowledge-views/canonical-use-cases.md),
+[canonical contract](okf-knowledge-views/canonical-api-cli-contract.md), and
+[acceptance scenarios](okf-knowledge-views/acceptance-scenarios.md).
 
-The profile produces a renderer-neutral graph scene that can reuse the existing
-viewer interaction and ELK layout infrastructure. Structural containment and
-semantic Markdown links remain separate relationship classes; containment
-drives navigation and subtree drill-down, while link visibility and styling
-are profile-controlled. A profile may select explicit parent/children metadata
-for containment, use filesystem nesting as fallback, and preserve conflicts as
-diagnostics. Profile mappings are declarative, bounded, and portable; they map
-preserved or derived facts to named presentation tokens without executing
-custom code. Single-click inspection leads with human-readable overview,
-rendered Markdown, and mapped metadata, with structural, relationship,
-frontmatter, and technical diagnostics as secondary expandable details.
-Profiles are editable in the viewer; Save updates the active definition and
-Save As creates a new project-local profile entry. Integer depth values are
-at-least-1 maximum-depth settings, while explicit full mode remains subject to
-the safety node limit. Roll-up status is explicit through source metadata or
-profile policy and is not inferred from child count. State is conventional but
-optional; missing or unknown values remain neutral, and roll-ups may display
-declared and effective state separately. Visual mappings target named,
-validated style tokens with finite shapes and
-colors; a viewer legend may explain the active mappings.
-The rich declarative rule language uses a registry/strategy extension
-boundary: each rule owns its schema, validation, evaluation, and explanation
-metadata, so new rules do not require a central switch.
-All applicable rules compose their outputs; non-conflicting values merge,
-explicit priority resolves scalar conflicts, and equal-priority conflicts
-produce diagnostics. The same registry/contract approach applies to
-predicates, relationship adapters, style properties, shapes, detail renderers,
-and other open-ended profile vocabularies.
-Rule extensions emit renderer-neutral annotations, visibility decisions, and
-style patches; scene construction and renderer adapters translate them to
-ELK/SVG rather than allowing rules to target a concrete renderer.
-Named profiles may extend or compose multiple ordered base profiles with
-explicit deterministic override precedence, cycle detection, and conflict
-diagnostics. Save As preserves those base references and creates a new named
-variant rather than flattening the profile.
-The initial domain-neutral rule families cover metadata, collections/tags,
-strings/paths, numeric comparisons, relationships, hierarchy/depth, and
-derived facts; planning-specific rules remain extensions.
-Profiles are data-only: executable rule implementations come from in-process
-Go implementations registered by Arch View, and target OKF repositories
-cannot inject rule code. External plugin loading is outside this capability's
-current scope. The viewer provides a neutral built-in profile for every bundle
-and may provide an editable fog-of-war example without requiring planning
-semantics. Built-in profiles are immutable; editing one requires Save As,
-while Save updates project-local profiles. Project-local profiles may be
-renamed or deleted with atomic binding updates or explicit neutral fallback;
-built-ins cannot be changed.
-Registered extensions expose namespaced stable IDs, versioned schemas, declared
-capabilities, and human-readable metadata for compatibility, discovery, and
-diagnostics.
-Large graphs use a profile-configurable node limit and an application hard cap;
-reaching either produces visible truncation diagnostics and hidden-node counts,
-never silent omission. Users can reduce depth or drill into a subtree.
-Markdown inspection uses a sanitized CommonMark subset; raw HTML, scripts, and
-unsafe URL schemes are removed, with raw Markdown remaining secondary. The
-default interaction model is depth-bounded or full projection with subtree
-drill-down,
-single-click inspection, and safe progressive display of concept metadata and
-Markdown content. The bounded source-discovery and profile baseline is owned by
-the capability's pre-PRD discovery notes; exact external contracts remain
-future specification work.
+The architecture boundary is:
+
+1. project discovery/validation and lossless indexing preserve paths,
+   frontmatter, Markdown, links, unknown metadata, and provenance;
+2. profile resolution and in-process registry strategies interpret the index
+   into separate containment and semantic-link layers;
+3. projection produces a renderer-neutral scene with presentation decisions,
+   legend data, and diagnostics;
+4. the existing viewer and ELK layout/rendering path consume that scene.
+
+The optional OKF section of the nearest project configuration owns graph/profile
+bindings and project-local profiles while preserving unrelated layout and
+analysis settings. Configuration writes validate before atomic replacement.
+Source bundles are read-only; local link resolution, Markdown rendering, rule
+execution, and application hard caps are security/safety boundaries. Existing
+architecture-view behavior remains unchanged when the OKF surface is unused.
+
+The local OKF application boundary composes focused catalog, session/navigation,
+inspection, profile-lifecycle, and diagnostic/extension services. The exported
+`application.Service` supplies their existing API to the viewer; it does not
+implement those use cases itself. The services retain one synchronized
+publication state so refresh and configuration writes invalidate sessions
+atomically. Profile validation, projection construction, concept inspection,
+configuration writing, and report assembly keep their existing focused helpers.
+The shared state is internal and does not expose new transport operations.
 
 ### Confirmed analyzer boundary
 
@@ -337,14 +302,14 @@ frontier still requires later issue slicing, implementation, and verification:
   The application exposes `All` and individual project/analyzer scopes from
   cached results without re-running analysis when only the active scope changes.
 - Configurable OKF knowledge views are a separate first-class root-level
-  boundary. Its bounded discovery baseline is a lossless bundle index,
-  profile-driven projection, renderer-neutral scene, shared ELK layout, and
-  progressive node inspection. Separate graph selection and recursive
-  project-tree discovery are confirmed, with recommended validation,
-  hierarchy, mapping, roll-up, inspection, and scale defaults recorded in the
-  linked discovery notes. Project-local persistence in an optional okf section
-  of the nearest .archview.json is confirmed. Exact contracts and delivery
-  sequencing are future specification work, not unresolved product decisions.
+  implemented boundary, verified through issues 064–071 and user-approved on
+  2026-09-04. Its exact node-scoped PRD, domain/use-case models,
+  canonical contract, acceptance scenarios, and readiness review define a
+  lossless bundle index, profile-driven projection, renderer-neutral scene,
+  shared ELK layout, progressive inspection, and project-local persistence.
+  OKF source/profile state remains separate from the architecture model.
+  Dialog/form styles and current-canvas SVG serialization are shared; the SVG
+  serializer captures rendered presentation instead of copying scene CSS.
 - Advanced ELK support is a renderer-only, staged extension: route/output
   features first, structural scene features second, and broader options only
   with concrete renderer support. Browser, embedded HTML, and browser SVG share
@@ -561,9 +526,9 @@ bounded query boundary, and module viewer are implemented through issues
 053–063 and managed baseline issues 077–078 are implemented and verified.
 Live analysis/MCP issues 064–079 are implemented and verified, including issue
 076's cross-analyzer conformance and final product approval.
-The Configurable OKF knowledge-view capability has a bounded discovery baseline;
-its implementation sequence follows the exact-specification phase for the
-profile, source-discovery, and external interaction contracts.
+The Configurable OKF knowledge-view capability is implemented through the dated
+`20260903-064` through `20260903-071` delivery records and its verified visual
+review.
 
 ## Residual implementation decisions
 
@@ -597,7 +562,8 @@ These are implementation and extension risks, not blockers to the specified v1 s
 - [Canonical model specification](generate-models/prd.md) and [model contract](generate-models/canonical-api-cli-contract.md).
 - [Viewer specification](explore-architecture/prd.md) and [renderer-neutral scene contract](explore-architecture/canonical-api-cli-contract.md).
 - [Export specification](export-and-automate/prd.md) and [JSON/HTML/SVG contract](export-and-automate/canonical-api-cli-contract.md).
-- [Configurable OKF knowledge views discovery notes](okf-knowledge-views/discovery-notes.md).
+- [OKF knowledge-view discovery notes](okf-knowledge-views/discovery-notes.md), [gap analysis](okf-knowledge-views/requirements-gap-analysis.md), and [glossary](okf-knowledge-views/domain-glossary.md).
+- [OKF knowledge-view PRD](okf-knowledge-views/prd.md), [domain model](okf-knowledge-views/canonical-domain-model.md), [use-case model](okf-knowledge-views/canonical-use-cases.md), [canonical contract](okf-knowledge-views/canonical-api-cli-contract.md), [acceptance scenarios](okf-knowledge-views/acceptance-scenarios.md), and [readiness review](okf-knowledge-views/readiness-review.md).
 
 ## Traceability
 
@@ -609,6 +575,16 @@ These are implementation and extension risks, not blockers to the specified v1 s
 - [Generate architecture models](../../.okf/capabilities/generate-models.md)
 - [Explore and inspect architecture](../../.okf/capabilities/explore-architecture.md)
 - [Configurable OKF knowledge views](../../.okf/capabilities/okf-knowledge-views.md)
+- [OKF knowledge-view orchestration status](okf-knowledge-views/orchestration-status.md)
+- [OKF knowledge-view discovery notes](okf-knowledge-views/discovery-notes.md)
+- [OKF knowledge-view requirements gap analysis](okf-knowledge-views/requirements-gap-analysis.md)
+- [OKF knowledge-view glossary](okf-knowledge-views/domain-glossary.md)
+- [OKF knowledge-view PRD](okf-knowledge-views/prd.md)
+- [OKF knowledge-view domain model](okf-knowledge-views/canonical-domain-model.md)
+- [OKF knowledge-view use cases](okf-knowledge-views/canonical-use-cases.md)
+- [OKF knowledge-view contract](okf-knowledge-views/canonical-api-cli-contract.md)
+- [OKF knowledge-view acceptance scenarios](okf-knowledge-views/acceptance-scenarios.md)
+- [OKF knowledge-view readiness review](okf-knowledge-views/readiness-review.md)
 - [Advanced ELK renderer support](explore-architecture/advanced-elk-renderer-support/future-work.md)
 - [Export and automate](../../.okf/capabilities/export-and-automate.md)
 - [Code quality and code intelligence](../../.okf/capabilities/code-quality-and-intelligence.md)

@@ -95,3 +95,21 @@ These are implementation refinements of the existing viewport and visual-review 
 - Latest interaction adjustment: static JavaScript syntax, Go tests, vet, and build checks pass; the user approved the `40,000%` ceiling, normalized pan speed, double-click navigation, graph hint overlay, dedicated breadcrumb row, and final full-canvas spacing.
 - Review loop: the strict code-review loop found and resolved stale reanalysis scene loading, invalid failed-revision replacement, invalid explicit source line ranges, and an unchecked source-file close; the final pass reported no actionable P0–P2 findings.
 - Artifact impact: product PRD and application architecture summary are unchanged by this delivery slice; capability and delivery records below carry the implementation truth.
+
+## Follow-up: Fit behavior during OKF integration
+
+The historical acceptance and visual smoke-test evidence above describe issue
+004 as delivered. The later user-approved OKF integration removes the expanded
+canvas 100% Fit cap in both viewers. Architecture Fit now uses its existing
+windowed ceiling in expanded mode; OKF expanded Fit uses the available canvas.
+The explicit 100% reset remains separate.
+
+Automated evidence: `internal/viewer/web/app/viewport_fit_test.js` exercises
+both expanded Fit paths above 100%, and `viewport_math_test.js` covers shared
+fit geometry. These tests passed during the September 4 review. They do not
+replace a new human visual review or retroactively change the smoke test above.
+
+The user subsequently approved the complete updated viewer on 2026-09-04.
+Both modes now use the available canvas for Fit, subject to their existing
+zoom safety bounds rather than a 100% cap. This approval supersedes the
+follow-up's pending human review without rewriting historical issue-004 evidence.

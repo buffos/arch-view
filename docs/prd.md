@@ -75,21 +75,36 @@ root, analyzer ID, and local ID; failures yield partial results; and the viewer
   `.archview.json` for persisted assignments and source scope remains owned by
   the implemented project-assignment child capability.
 
-### Configurable OKF knowledge views (bounded discovery baseline)
+### Configurable OKF knowledge views (implemented)
 
-Arch View is intended to open one or more arbitrary OKF bundles as a
+Arch View opens one or more arbitrary OKF bundles as a
 first-class knowledge-view experience under the same product roof. The
-capability will preserve OKF source structure and content, let a view profile
-choose hierarchy and relationship projections, and reuse the ELK-backed viewer
+capability preserves OKF source structure and content, lets a view profile
+choose hierarchy and relationship projections, and reuses the ELK-backed viewer
 for depth-bounded navigation, subtree drill-down, and node inspection.
 
 The separate-graph dropdown behavior and recursive project-tree discovery are
-confirmed. The bounded discovery baseline resolves discovery exclusions,
-fog-of-war state mapping, parent roll-up semantics, profile composition,
-detail presentation, and scale safety with recommended defaults recorded in
-the linked discovery notes. Project-local persistence is confirmed through an
-optional okf section in the nearest .archview.json; it stores graph/profile
-bindings and reusable rendering-costume definitions, not graph contents.
+confirmed. The capability's exact specification set defines discovery
+exclusions, fog-of-war state mapping, parent roll-up semantics, profile
+composition, detail presentation, failure outcomes, and scale safety.
+Project-local persistence is confirmed through an optional okf section in the
+nearest .archview.json; it stores graph/profile bindings and reusable
+rendering-costume definitions, not graph contents.
+
+Issues 064–071 are verified and user-approved. Architecture remains the default
+entry point, with an optional OKF mode for selectable bundles. Both viewers
+share layout settings controls, graph interactions, Fit, and current-canvas SVG
+download. OKF layout settings remain profile-local. Containment determines node
+placement; semantic links appear only for the selected concept, without arrows
+or relayout. Profiles also configure node and detail presentation.
+
+The node-scoped reference set is the source of detailed truth:
+[capability PRD](architecture/okf-knowledge-views/prd.md),
+[domain model](architecture/okf-knowledge-views/canonical-domain-model.md),
+[use-case model](architecture/okf-knowledge-views/canonical-use-cases.md),
+[API/CLI contract](architecture/okf-knowledge-views/canonical-api-cli-contract.md),
+[acceptance scenarios](architecture/okf-knowledge-views/acceptance-scenarios.md),
+and [readiness review](architecture/okf-knowledge-views/readiness-review.md).
 
 ### Code quality and code intelligence (implemented roll-up)
 
@@ -194,7 +209,7 @@ permissions separately owned.
   approved configured-viewer visual review.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `implemented`, including the v1 canonical model and graph-projection contract.
 - [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) is `specified` for future extensions.
-- [Configurable OKF knowledge views](/.okf/capabilities/okf-knowledge-views.md): `bounded`; its product boundary and first coherent slice are defined, while exact external contracts remain future specification work.
+- [Configurable OKF knowledge views](/.okf/capabilities/okf-knowledge-views.md): `specified`; its node-scoped PRD, glossary, domain/use-case models, contract, acceptance scenarios, and readiness review are complete.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `implemented`, including JSON v1 and deterministic HTML/SVG/CI behavior.
 - [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md): `implemented` as a structural roll-up; its [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) child is implemented through issues 048–052 with final visual approval, its [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063 and 077–078, and [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) is implemented through issues 064–079 with final cross-analyzer and product approval recorded in issue 076. The parent has no standalone implementation slice.
 
@@ -202,64 +217,29 @@ permissions separately owned.
 
 Source analyzers produce evidence for the language-neutral model. The model owns stable identity, structured hierarchy, typed relationships, provenance, cycles, and derived layers. Structural containment remains separate from semantic dependency edges. The viewer consumes the model through a renderer-neutral view contract and a presentation-only layout profile. The local host resolves nearest-ancestor `.archview.json` settings and safely persists explicit project preferences, while exporters produce versioned JSON, HTML, and SVG without knowing source syntax. The implemented analyzer runtime plans a set of project/analyzer jobs and applies the validated invocation-root source-scope policy, while configuration keeps persisted analyzer assignments and source filters distinct from viewer layout settings and the plugin runtime remains the only boundary that knows how a language is detected or parsed.
 
-The configurable OKF knowledge-view capability consumes OKF bundles through a
-lossless source index and a profile-driven projection boundary. Its structural
-hierarchy drives navigation while semantic Markdown-link relationships remain
-distinct and independently configurable. Its derived facets,
-roles, roll-up state, styles, and detail presentation belong to the selected
-profile rather than to the OKF parser. The projected scene can reuse the
-renderer-neutral viewer and ELK layout infrastructure without changing the
-architecture model contract. Profiles may select explicit parent/children
-metadata for containment, use filesystem nesting as a fallback, and surface
-conflicts as diagnostics. Their mappings are declarative and map preserved or
-derived facts to named presentation tokens without executing custom code.
-Single-click inspection leads with human-readable overview, rendered Markdown,
-and mapped metadata; structural, relationship, frontmatter, and technical
-diagnostics are secondary expandable details. Profiles are editable in the
-viewer: Save updates the active profile and Save As creates a new project-local
-profile entry. Integer depth values are at-least-1 maximum-depth settings; a
-value deeper than the graph reaches the available hierarchy, while full mode
-remains explicit and safety-limited. Roll-up status is explicit through source
-metadata or profile policy and is not inferred from child count. The state
-field is conventional but optional; profiles may map arbitrary frontmatter,
-and missing or unknown values remain neutral rather than being guessed. Visual
-rules target named, validated style tokens with finite shapes and colors, and
-the viewer may expose a legend. The rule language is rich and declarative;
-rule types are independently registered extensions with their own validation
-and evaluation, rather than cases added to a central switch. Markdown uses a
-sanitized CommonMark subset;
-unsafe HTML, scripts, and URL schemes are removed.
-All matching rules compose: compatible outputs merge, explicit priority resolves
-scalar conflicts, and equal-priority conflicts are diagnosed. The extension
-model applies to rules, predicates, relationship adapters, style properties,
-shapes, detail renderers, and other open-ended profile vocabularies so the
-capability can grow from a few built-ins to thousands without a fixed-count
-assumption.
-Rule extensions emit renderer-neutral annotations, visibility decisions, and
-style patches; scene construction and renderer adapters translate those outputs
-to ELK/SVG rather than rules targeting a concrete renderer.
-Named profiles may extend or compose multiple ordered base profiles with
-explicit deterministic override precedence, cycle detection, and conflict
-diagnostics. Save As preserves those base references and creates a new named
-variant rather than flattening the profile.
-The initial domain-neutral rule families cover metadata, collections/tags,
-strings/paths, numeric comparisons, relationships, hierarchy/depth, and
-derived facts; planning-specific rules remain extensions.
-Profiles are data-only: executable rule implementations come from in-process
-Go implementations registered by Arch View, and target OKF repositories
-cannot inject rule code. External plugin loading is outside this capability's
-current scope. The viewer provides a neutral built-in profile for every bundle
-and may provide an editable fog-of-war example without requiring planning
-semantics. Built-in profiles are immutable; editing one requires Save As,
-while Save updates project-local profiles. Project-local profiles may be
-renamed or deleted with atomic binding updates or explicit neutral fallback;
-built-ins cannot be changed.
-Registered extensions expose namespaced stable IDs, versioned schemas, declared
-capabilities, and human-readable metadata for compatibility, discovery, and
-diagnostics.
-Large graphs use a profile-configurable node limit and an application hard cap;
-reaching either produces visible truncation diagnostics and hidden-node counts,
-never silent omission. Users can reduce depth or drill into a subtree.
+The configurable OKF knowledge-view capability is a separate first-class
+consumer of the local project and viewer. It reads one validated bundle at a
+time into a lossless source index, applies the selected profile, and emits a
+renderer-neutral projection for the existing ELK-backed viewer. It does not
+consume or alter the architecture model's source, identity, or relationship
+semantics.
+
+The detailed product and architecture behavior is owned by the linked
+node-scoped reference set: the
+[OKF capability PRD](architecture/okf-knowledge-views/prd.md),
+[domain model](architecture/okf-knowledge-views/canonical-domain-model.md),
+[use-case model](architecture/okf-knowledge-views/canonical-use-cases.md),
+[canonical contract](architecture/okf-knowledge-views/canonical-api-cli-contract.md),
+[acceptance scenarios](architecture/okf-knowledge-views/acceptance-scenarios.md),
+and [readiness review](architecture/okf-knowledge-views/readiness-review.md).
+
+The application dependency is intentionally narrow: the local host provides
+project discovery, nearest-ancestor configuration, profile persistence, and
+viewer data; the shared renderer consumes the neutral scene and delegates
+geometry to ELK. Registry strategies remain in-process Arch View
+implementations, while profiles remain data-only and OKF source consumption is
+read-only. The existing architecture viewer remains unchanged when the OKF
+surface is not selected.
 
 The code-quality/code-intelligence extension consumes analyzer and model facts
 without changing the module graph's default granularity. Its roll-up parent
@@ -352,11 +332,10 @@ extension of the implemented viewer. The code-quality and code-intelligence
   than at the aggregate parent.
 
 The configurable OKF knowledge-view capability is a separate first-class
-root-level capability with a bounded discovery baseline. It may share the
-viewer and renderer capabilities, including future advanced ELK support, but
-it does not inherit the architecture model's source or relationship semantics.
-The next phase is exact specification of the already-bounded source,
-projection, profile, and interaction contracts.
+root-level specified capability. Its exact node-scoped reference set is
+complete and ready for delivery planning. It may share the viewer and renderer
+capabilities, including future advanced ELK support, but it does not inherit
+the architecture model's source or relationship semantics.
 
 ## Verification strategy
 
@@ -409,6 +388,8 @@ product decisions:
 - [Model specification](architecture/generate-models/prd.md) and [canonical contract](architecture/generate-models/canonical-api-cli-contract.md).
 - [Viewer specification](architecture/explore-architecture/prd.md) and [scene contract](architecture/explore-architecture/canonical-api-cli-contract.md).
 - [Export specification](architecture/export-and-automate/prd.md) and [export contract](architecture/export-and-automate/canonical-api-cli-contract.md).
+- [OKF knowledge-view discovery notes](architecture/okf-knowledge-views/discovery-notes.md), [gap analysis](architecture/okf-knowledge-views/requirements-gap-analysis.md), and [glossary](architecture/okf-knowledge-views/domain-glossary.md).
+- [OKF knowledge-view PRD](architecture/okf-knowledge-views/prd.md), [domain model](architecture/okf-knowledge-views/canonical-domain-model.md), [use-case model](architecture/okf-knowledge-views/canonical-use-cases.md), [canonical contract](architecture/okf-knowledge-views/canonical-api-cli-contract.md), [acceptance scenarios](architecture/okf-knowledge-views/acceptance-scenarios.md), and [readiness review](architecture/okf-knowledge-views/readiness-review.md).
 
 ## Source references
 

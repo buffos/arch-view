@@ -13,6 +13,12 @@ approval is recorded in its archived issue file. Product and architecture
 semantics remain aligned with the readiness-reviewed reference set. Advanced
 ELK renderer support remains a separate specified frontier.
 
+The Configurable OKF knowledge-view delivery records are also verified and
+archived under the dated `20260903-064` through `20260903-071` paths after
+explicit user approval on 2026-09-04. Their numeric labels overlap the earlier
+parallel Live analysis batch; the dated paths and owning capability references
+are authoritative for the OKF records.
+
 # Current Max Issue ID
 
 079

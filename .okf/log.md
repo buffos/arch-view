@@ -109,6 +109,83 @@
 * **Freshness contract:** Watcher events remain hints. Strict queries reconcile the source, coalesce edit storms, join single-flight work, verify input before/after analysis, and return `input_unstable` rather than claiming current data when edits do not settle.
 * **Artifact sync:** Updated the live capability node and exact-spec set, the deterministic-quality consumer boundary, the application PRD, and the application architecture summary. No issue references or delivery claims were added.
 * **State:** No planning-state transition. Effective totals remain 0 `foggy`, 0 `bounded`, 3 `specified`, and 15 `implemented` nodes.
+## 2026-09-04
+
+* **Completion**: Archived the OKF delivery records 064–071 (dated
+  `20260903-064` through `20260903-071`) after the recorded automated/browser
+  acceptance evidence and the user's explicit final visual approval: "Everything
+  is fine now. I approve. proceed to commits (one or more )".
+* **State**: Configurable OKF knowledge views changed from `specified` to
+  `implemented`. Its project parent has no roll-up policy; unrelated capability
+  states are unchanged. Combined totals are 0 `foggy`, 0 `bounded`, 1
+  `specified`, and 18 `implemented` capabilities.
+* **Artifact sync**: Updated the dated OKF done issue paths, cleared the active
+  registry while preserving the existing maximum ID 079, and synchronized
+  application PRD/architecture,
+  orchestration status, capability, project/index, and review disposition.
+* **Approved follow-ups**: Shared graph/settings infrastructure, selection-only
+  arrowless semantic links, Fit without a 100% cap, reusable dialog/form styles,
+  and current-canvas SVG download through the shared exporter. Bundles remain
+  read-only; OKF profile persistence stays separate from architecture layout.
+* **Evidence**: See `docs/agents/reviews/20260904-okf-scenario-evidence.md` and
+  `docs/agents/reviews/20260904-shared-css-svg-followup.md`. Repository tests,
+  race checks, vet/build, browser tests/syntax, and OKF validation pass.
+
+## 2026-09-03
+
+* **Architecture-first integration**: Restored the architecture viewer as the
+  default page and made `?view=okf` the explicit secondary mode. The optional
+  OKF navigation link is discovered from selectable catalog entries and stays
+  isolated from architecture startup failures.
+* **Shared viewer behavior**: Reused the architecture viewport, ELK catalog,
+  layout form, pan/zoom, Fit, Full canvas, Shift-drag, click-without-relayout,
+  and double-click focus contract. OKF layout settings remain scoped to
+  `profile.layout` and never write the architecture layout section.
+* **Profile-driven presentation**: Neutral remains vocabulary-agnostic and
+  name-only; profiles configure node fields, mappings, rules, layout options,
+  and structural root/roll-up decorations. The form editor is the primary
+  path, Advanced JSON is secondary, and unknown profile fields round-trip.
+* **Verification sync**: Focused Go/browser checks and the OKF v0.1 validator
+  pass. Issues 065–071 remain `awaiting-human-review`; no issue closeout or
+  capability-state transition is claimed.
+
+* **Delivery slicing**: After explicit approval, created issues 064–071 for Configurable OKF knowledge views under the pending issue queue.
+* **Dependency order**: Issue 064 is implemented; issue 065 establishes the neutral viewer path; issues 066–067 add relationship and profile semantics; issues 068–070 cover navigation, inspection, and persistence; issue 071 hardens failure isolation and acceptance verification. Issues 065–071 await their required human review gates.
+* **Scope**: The slices remain inside the readiness-reviewed local viewer boundary: one selected bundle, read-only OKF sources, renderer-neutral projection, existing ELK integration, and no first-slice CLI or export surface.
+* **Artifact sync**: Added the issue references to the owning capability node, registry, root map, and orchestration status. Repaired the stale `.okf/capabilities/index.md` entry without changing topology or the `specified` state.
+* **No impact**: Product and application-architecture semantics remain unchanged; delivery truth is now represented by the approved issue set.
+* **Implementation:** Issues 064–071 were implemented in dependency order under
+  `internal/okf/`, with isolated viewer HTTP/browser adapters, shared layout
+  primitives, project-document-safe configuration persistence, and one
+  token-based OKF stylesheet. OKF source bundles remain read-only and existing
+  documentation changes were preserved.
+* **Verification:** Focused tests, `go test ./... -count=1`, `go test -race
+  ./...`, `go vet ./...`, `go build ./...`, JavaScript syntax checks for 41
+  modules, 17 browser test files, the OKF validator, the line-count audit, and
+  `git diff --check` pass. The validator reports 20 concepts, 3 indexes, and 1
+  log with no errors or warnings.
+* **Review status:** Agent inspection covered desktop and 375px responsive OKF
+  entry, graph, navigation, detail, diagnostics, and profile editing, and
+  resolved the findings discovered there. Human visual-review gates for issues
+  065–071 remain open; the complete `SC-001`–`SC-020` end-to-end evidence
+  criterion also remains open in issue 071. No issue closeout, archive, or
+  capability-state transition was claimed.
+* **UX follow-up:** Replaced repeated diagnostic rows with an aggregated report,
+  collapsed the secondary concept list, made node fields profile-configured
+  (Neutral is name-only; Fog exposes optional `frontmatter.state`), reused the
+  shared architecture viewport gestures, kept selection in-place without
+  relayout, and constrained the focus border to the node rectangle.
+* **UX verification:** Browser review confirmed graph pan/zoom, Fit and Full
+  canvas controls, responsive stacking, profile-driven fields, aggregated
+  diagnostics, stable selection transforms, and a node-sized selected border.
+* **UX correction:** Profile-provided SVG colors now override fallback graph
+  styles, measured text is constrained to each node box, and the OKF default
+  layout is ELK Mr. Tree (`mrtree`). Solid edges remain explicit/filesystem
+  containment; dashed edges remain Markdown semantic links.
+* **Session layout:** An unsaved OKF layout choice now survives focus, Back,
+  and breadcrumb navigation while remaining separate from persisted profile
+  and architecture layout settings. Structural roll-ups declared by
+  `state_policy.mode: rollup` receive profile roll-up decorations.
 
 ## 2026-09-02
 
@@ -224,6 +301,27 @@
 * **State transition:** Advanced [Configurable OKF knowledge views](capabilities/okf-knowledge-views.md)
   from `foggy` to `bounded`. No implementation or exact-spec artifacts are
   claimed yet; the next phase is structured specification.
+
+### Configurable OKF knowledge views reaches specification
+
+* **Reference set:** Completed the node-scoped requirements gap analysis,
+  domain glossary, capability PRD, canonical domain model, canonical use-case
+  model, API/CLI contract, acceptance scenarios, orchestration status, and
+  architecture readiness review.
+* **Readiness:** The review found no material High, Medium, or Low findings.
+  The artifacts agree on source/profile boundaries, one-bundle selection,
+  containment versus semantic links, rule composition, profile lifecycle,
+  safety limits, diagnostics, and user-visible reachability.
+* **Application synthesis:** Refreshed the application PRD and architecture
+  summary to link the exact OKF artifacts, record the specified capability,
+  and preserve the shared renderer/ELK and nearest-configuration boundaries.
+* **Artifact impact:** Topology, capability, product, and architecture truth
+  were synchronized. Delivery truth has no impact because no implementation
+  issues were created or sliced.
+* **State transition:** Advanced [Configurable OKF knowledge views](capabilities/okf-knowledge-views.md)
+  from `bounded` to `specified` after the architecture readiness
+  review and application-synthesis gate completed.
+* **Progress:** State totals are now 0 `foggy`, 0 `bounded`, 4 `specified`, and 15 `implemented`.
 
 ## 2026-08-30
 
