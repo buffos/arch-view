@@ -1455,3 +1455,11 @@
   Pinned-runtime NONE routing and BFS search failures are documented and those
   unsafe values remain unavailable. No runtime upgrade.
 - Capability state remains specified; no issue closure or state transition.
+
+### Advanced ELK Stage 1 approved
+
+- The user explicitly approved the shared settings and feature-registry visual
+  review on 2026-09-04.
+- Archived issue 080 and unblocked issue 081 for advanced edge geometry.
+- Advanced ELK renderer support remains specified because issues 081–083 are
+  still active. No capability or roll-up state changed.

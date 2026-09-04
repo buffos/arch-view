@@ -2,8 +2,7 @@
 
 | # | Title | Category | Owning Capability | Artifact Root | Issue File | State | Blocked by |
 |---|---|---|---|---|---|---|---|
-| 080 | Shared ELK settings and feature registry | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/080-shared-elk-settings-and-feature-registry.md | awaiting-human-review | — |
-| 081 | Shared ELK advanced edge geometry | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/081-shared-elk-advanced-edge-geometry.md | ready-for-agent | 080 |
+| 081 | Shared ELK advanced edge geometry | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/081-shared-elk-advanced-edge-geometry.md | ready-for-agent | — |
 | 082 | Shared ELK presentation ports | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/082-shared-elk-presentation-ports.md | ready-for-agent | 081 |
 | 083 | Shared ELK nested containers | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/083-shared-elk-nested-containers.md | ready-for-agent | 082 |
 | 077 | Implement the managed quality-baseline store and merge lifecycle | feature | Deterministic quality checks | docs/architecture/code-quality-and-intelligence/deterministic-quality-checks | docs/agents/issues/done/20260831-077-managed-quality-baseline-store-and-merge.md | done | — |
