@@ -3,13 +3,14 @@ import { fallbackLayout } from "./layout.js";
 import { sceneLayoutKey } from "./view.js";
 import { clampNumber } from "./utils.js";
 import { fitViewportTransform, visibleGraphArea } from "./viewport_math.js";
+import { applyViewportFit, createViewportState, resetViewportZoom, updateViewportZoom } from "./viewport_runtime.js";
 
 export function viewportKey(scene) {
   return "arch-view:viewport:" + [scene.model_revision || scene.model_id, (scene.hierarchy_path || []).join("/"), scene.reference_visibility].join("|");
 }
 
 export function defaultViewport() {
-  return { zoom: 1, panX: 0, panY: 0, positions: {} };
+  return createViewportState();
 }
 
 export function loadViewport(context, scene) {
@@ -109,16 +110,16 @@ export function renderViewportControls(context) {
 }
 
 export function changeZoom(context, delta, services) {
-  if (!context.state.viewport) context.state.viewport = defaultViewport();
-  context.state.viewport.zoom = clampNumber(context.state.viewport.zoom + delta, context.constants.minZoom, context.constants.maxZoom, 1);
+	if (!context.state.viewport) context.state.viewport = defaultViewport();
+	updateViewportZoom(context.state.viewport, delta, context.constants.minZoom, context.constants.maxZoom);
   persistViewport(context);
   renderViewportControls(context);
   services.renderGraph();
 }
 
 export function resetZoom(context, services) {
-  if (!context.state.viewport) context.state.viewport = defaultViewport();
-  context.state.viewport.zoom = 1;
+	if (!context.state.viewport) context.state.viewport = defaultViewport();
+	resetViewportZoom(context.state.viewport);
   persistViewport(context);
   renderViewportControls(context);
   services.renderGraph();
@@ -157,7 +158,6 @@ export function fitViewport(context, services) {
   const positions = currentGraphPositions(context, scene);
   const bounds = layoutBounds(context, scene, active, positions);
   if (!context.state.viewport) context.state.viewport = defaultViewport();
-  const maximumFitZoom = isExpandedCanvas() ? context.constants.expandedFitZoom : context.constants.windowedFitZoom;
   const fitted = fitViewportTransform({
     availableWidth: availableWidth,
     availableHeight: availableHeight,
@@ -167,12 +167,10 @@ export function fitViewport(context, services) {
     layoutHeight: active.height,
     bounds: bounds,
     minimumZoom: context.constants.minZoom,
-    maximumZoom: maximumFitZoom,
+    maximumZoom: context.constants.maxZoom,
     panLimit: context.constants.panLimit
   });
-  context.state.viewport.zoom = fitted.zoom;
-  context.state.viewport.panX = fitted.panX;
-  context.state.viewport.panY = fitted.panY;
+	applyViewportFit(context.state.viewport, fitted);
   persistViewport(context);
   renderViewportControls(context);
   services.renderGraph();

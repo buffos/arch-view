@@ -10,6 +10,7 @@
 @import url("styles/02-typography.css");
 @import url("styles/03-layout.css");
 @import url("styles/04-controls.css");
+@import url("styles/04-form-dialog.css");
 @import url("styles/05-components.css");
 @import url("styles/06-graph.css");
 @import url("styles/07-details.css");
@@ -19,3 +20,4 @@
 @import url("styles/11-inspection.css");
 @import url("styles/12-quality.css");
 @import url("styles/13-quality-profile.css");
+@import url("styles/14-okf.css");

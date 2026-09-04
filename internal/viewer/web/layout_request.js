@@ -1,3 +1,5 @@
+import { shapeDimensions } from "./app/node_shape.js";
+
   function optionAppliesToAlgorithm(option, algorithm) {
     const algorithms = option && Array.isArray(option.algorithms) ? option.algorithms : [];
     return !algorithms.length || algorithms.includes("all") || algorithms.includes(algorithm);
@@ -76,16 +78,20 @@
     return rootLayoutOptions;
   }
 
+  function nodeDimensions(node) {
+    if (!Array.isArray(node && node.presentation_fields)) return { width: 190, height: 82 };
+    return shapeDimensions(node.shape_definition || node.shape || node.presentation_style?.shape, { width: 210, height: 58 + Math.min(node.presentation_fields.length, 3) * 18 });
+  }
+
   function buildELKGraph(scene, profile, catalog) {
-    const nodeWidth = 190;
-    const nodeHeight = 82;
     const nodeLayoutOptions = buildTargetLayoutOptions(profile, catalog, "NODES");
     const edgeLayoutOptions = buildTargetLayoutOptions(profile, catalog, "EDGES");
     return {
       id: "root",
       layoutOptions: buildRootLayoutOptions(profile, catalog),
       children: scene.visible_nodes.map(function (node) {
-        return copyLayoutOptions({ id: node.id, width: nodeWidth, height: nodeHeight }, nodeLayoutOptions);
+        const dimensions = nodeDimensions(node);
+        return copyLayoutOptions({ id: node.id, width: dimensions.width, height: dimensions.height }, nodeLayoutOptions);
       }),
       edges: scene.visible_relationships.map(function (relationship) {
         return copyLayoutOptions({ id: relationship.id, sources: [relationship.from_visible_id], targets: [relationship.to_visible_id] }, edgeLayoutOptions);
@@ -93,4 +99,4 @@
     };
   }
 
-export { buildELKGraph, buildRootLayoutOptions, buildTargetLayoutOptions };
+export { buildELKGraph, buildRootLayoutOptions, buildTargetLayoutOptions, nodeDimensions };

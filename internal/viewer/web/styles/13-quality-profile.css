@@ -1,19 +1,6 @@
 .quality-profile-dialog,
 .quality-baseline-dialog {
   width: min(66rem, calc(100vw - 2rem));
-  max-height: min(90vh, 58rem);
-  padding: 0;
-  color: var(--text);
-  background: var(--card-strong);
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
-}
-
-.quality-profile-dialog::backdrop,
-.quality-baseline-dialog::backdrop {
-  background: rgba(3, 6, 16, 0.78);
-  backdrop-filter: blur(3px);
 }
 
 .quality-baseline-dialog {
@@ -22,10 +9,6 @@
 
 .quality-profile-shell,
 .quality-baseline-shell {
-  display: flex;
-  flex-direction: column;
-  max-height: min(90vh, 58rem);
-  padding: 1.25rem;
   overflow: auto;
 }
 
@@ -118,31 +101,6 @@
 
 .quality-baseline-note {
   margin: -0.25rem 0 0;
-  line-height: 1.45;
-}
-
-.quality-profile-header,
-.quality-profile-footer,
-.quality-profile-toolbar,
-.quality-rule-group-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.quality-profile-header {
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.quality-profile-header h3 {
-  margin-bottom: 0.35rem;
-}
-
-.quality-profile-header .muted {
-  max-width: 48rem;
-  margin-bottom: 0;
   line-height: 1.45;
 }
 
@@ -321,28 +279,7 @@
   gap: 0.5rem;
 }
 
-.quality-profile-footer {
-  align-items: center;
-  margin-top: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line-soft);
-}
-
-.quality-profile-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: end;
-  gap: 0.5rem;
-}
-
 @media (max-width: 680px) {
-  .quality-profile-header,
-  .quality-profile-toolbar,
-  .quality-profile-footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .quality-profile-toolbar .settings-field {
     flex-basis: auto;
   }
@@ -357,10 +294,6 @@
 
   .quality-baseline-reason-field {
     grid-column: auto;
-  }
-
-  .quality-profile-actions {
-    justify-content: start;
   }
 
   .quality-profile-save-as-actions {

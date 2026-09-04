@@ -1,0 +1,324 @@
+.okf-mode .hero-row,
+.okf-mode .bottom-grid,
+  .okf-mode .scene-list-card,
+  .okf-mode .canvas-meta-bar,
+  .okf-mode #summary,
+  .okf-mode #scene-state,
+.okf-mode #reference-summary,
+.okf-mode #layer-legend {
+  display: none;
+}
+
+.okf-mode .layout-save-as,
+.okf-mode .layout-settings-actions > #layout-settings-save,
+.okf-mode .layout-settings-actions > #layout-settings-save-as {
+  display: none;
+}
+
+.okf-shell {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.okf-toolbar,
+.okf-status-card,
+.okf-editor-shell {
+  border: 1px solid var(--line-soft);
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.okf-toolbar {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.3fr) minmax(11rem, 1fr) 7rem auto auto auto;
+  gap: .75rem;
+  align-items: end;
+  padding: 1rem;
+}
+
+.okf-toolbar select,
+.okf-toolbar input,
+.okf-editor-field select,
+.okf-editor-field input,
+.okf-editor-field textarea {
+  border-radius: .65rem;
+  padding: .65rem .7rem;
+}
+
+.okf-toolbar .okf-depth-control {
+  width: 7rem;
+}
+
+.okf-status-card {
+  display: grid;
+  gap: .35rem;
+  padding: .65rem .8rem;
+}
+
+.okf-status-card[data-tone="error"] {
+  border-color: var(--red);
+  background: rgba(251, 113, 133, .1);
+}
+
+.okf-status-card[data-tone="warning"] {
+  border-color: var(--amber);
+  background: rgba(251, 191, 116, .1);
+}
+
+.okf-status-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.okf-diagnostic-list {
+  display: grid;
+  gap: .45rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.okf-diagnostic-list li {
+  color: var(--muted, #5c6985);
+  font-size: .85rem;
+}
+
+.okf-diagnostic-report {
+  margin-top: .1rem;
+}
+
+.okf-diagnostic-report > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+  cursor: pointer;
+  color: var(--text);
+  font-size: .82rem;
+}
+
+.okf-diagnostic-group {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: .45rem;
+  color: var(--muted, #5c6985);
+  font-size: .85rem;
+}
+
+.okf-diagnostic-count {
+  min-width: 2.2rem;
+  color: var(--amber);
+  font-weight: 800;
+  text-align: right;
+}
+
+.okf-diagnostic-list code {
+  color: var(--text);
+}
+
+.okf-diagnostic-context {
+  grid-column: 3;
+  overflow: hidden;
+  color: var(--muted, #5c6985);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.okf-graph-wrap {
+  position: relative;
+  min-height: 28rem;
+  height: min(62vh, 44rem);
+  max-height: 44rem;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+
+.okf-graph-wrap.is-panning {
+  cursor: grabbing;
+}
+
+.okf-graph-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 32rem;
+  background: linear-gradient(145deg, rgba(32, 45, 78, .95), rgba(8, 13, 27, .95));
+  user-select: none;
+}
+
+.okf-node-shape.selected { filter: drop-shadow(0 0 4px var(--cyan)); }
+
+.okf-node { cursor: pointer; }
+.okf-node:active { cursor: grabbing; }
+
+.okf-mode .okf-node,
+.okf-mode .okf-node:focus,
+.okf-mode .okf-node:focus-visible {
+  outline: none;
+}
+
+.okf-mode .okf-node:focus-visible .okf-node-shape {
+  stroke: var(--cyan);
+  stroke-width: 3;
+}
+
+.okf-node-label,
+.okf-node-field {
+  pointer-events: none;
+}
+
+.okf-node-label { font-size: 14px; }
+.okf-node-field { font-size: 11px; }
+
+.okf-edge-line {
+  fill: none;
+  stroke: #7483a9;
+  stroke-width: 2;
+}
+
+.okf-edge-line.semantic-link {
+  stroke: #b46a36;
+  stroke-dasharray: 7 5;
+}
+
+.okf-list-disclosure {
+  border: 1px solid var(--line-soft);
+  border-radius: .85rem;
+  background: var(--card);
+}
+
+.okf-list-disclosure > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  padding: .65rem .8rem;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.okf-accessible-list {
+  display: grid;
+  gap: .35rem;
+  max-height: 16rem;
+  overflow: auto;
+  padding: .65rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.okf-accessible-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: .65rem;
+  background: var(--card-strong);
+  color: var(--text);
+  padding: .45rem .6rem;
+  text-align: left;
+}
+
+.okf-accessible-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.okf-accessible-fields {
+  max-width: 46%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.okf-accessible-item:hover,
+.okf-accessible-item:focus-visible { border-color: #8ba8ef; }
+
+.okf-editor-shell {
+  display: grid;
+  gap: 1rem;
+  max-width: 52rem;
+  padding: 1.1rem;
+}
+
+#okf-profile-editor {
+  max-width: min(56rem, calc(100vw - 2rem));
+  background: var(--bg-soft);
+  box-shadow: var(--shadow);
+}
+
+#okf-profile-editor::backdrop { background: rgba(3, 7, 18, .78); }
+
+.okf-mode .summary-card {
+  display: grid;
+  gap: .25rem;
+}
+
+.okf-editor-grid,
+.okf-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.okf-editor-field.full,
+.okf-form-grid .full { grid-column: 1 / -1; }
+.okf-editor-field textarea { min-height: 15rem; }
+.okf-advanced-json { display: grid; gap: .5rem; }
+.okf-advanced-json > summary { cursor: pointer; font-weight: 800; }
+.okf-advanced-json textarea { min-height: 12rem; width: 100%; }
+.okf-form-section { display: grid; gap: .65rem; padding-top: .85rem; border-top: 1px solid var(--line-soft); }
+.okf-form-section h4 { margin: 0; color: var(--text); }
+.okf-form-section-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.okf-form-section label,
+.okf-decoration label { gap: .3rem; font-size: .75rem; letter-spacing: .03em; }
+.okf-form-section input,
+.okf-form-section select,
+.okf-form-section textarea { border-radius: .55rem; padding: .5rem .6rem; }
+.okf-form-check-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+.okf-check { display: flex !important; grid-template-columns: auto 1fr; align-items: center; gap: .45rem !important; text-transform: none !important; }
+.okf-repeat-list { display: grid; gap: .55rem; }
+.okf-repeat-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(6rem, .6fr) auto; gap: .5rem; align-items: end; padding: .55rem; border: 1px solid var(--line-soft); border-radius: .65rem; background: var(--card-strong); }
+.okf-repeat-row.full { grid-column: 1 / -1; }
+.okf-repeat-row .full { grid-column: 1 / -1; }
+.okf-token-row { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
+.okf-rule-row { grid-template-columns: minmax(0, 1.4fr) minmax(4rem, .5fr) minmax(5rem, .5fr) auto; }
+.okf-decoration { display: grid; gap: .55rem; margin: 0; padding: .65rem; border: 1px solid var(--line-soft); border-radius: .65rem; }
+.okf-decoration legend { padding: 0 .35rem; color: var(--text); font-weight: 800; }
+.okf-layout-summary { overflow: hidden; padding: .55rem; border: 1px solid var(--line-soft); border-radius: .55rem; background: var(--control-surface); text-overflow: ellipsis; white-space: nowrap; }
+.okf-markdown { display: grid; gap: .55rem; margin-top: 1rem; line-height: 1.55; }
+.okf-markdown h1,
+.okf-markdown h2,
+.okf-markdown h3,
+.okf-markdown h4,
+.okf-markdown h5,
+.okf-markdown h6 { margin: .4rem 0 0; }
+.okf-markdown pre,
+.okf-detail-overview pre { overflow: auto; border-radius: .65rem; background: #1f2a44; color: #f7f9ff; padding: .75rem; }
+.okf-detail-overview { display: grid; gap: .35rem; }
+.okf-detail-overview h4 { margin: 0; font-size: 1.25rem; }
+.okf-editor-actions { gap: .6rem; }
+.okf-external-link::after { content: " ↗"; }
+
+@media (max-width: 900px) {
+  .okf-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .okf-toolbar .button { width: 100%; }
+}
+
+@media (max-width: 600px) {
+  .okf-toolbar,
+  .okf-editor-grid,
+  .okf-form-grid,
+  .okf-form-check-grid,
+  .okf-repeat-row,
+  .okf-token-row,
+  .okf-rule-row { grid-template-columns: 1fr; }
+  .okf-editor-field.full,
+  .okf-form-grid .full,
+  .okf-repeat-row .full { grid-column: auto; }
+}

@@ -1,0 +1,56 @@
+const assert = require("node:assert/strict");
+const path = require("node:path");
+const { pathToFileURL } = require("node:url");
+
+import(pathToFileURL(path.join(__dirname, "okf_profile_preview.js")).href).then(async ({ refreshEditorPreview, updateEditorFromJSON }) => {
+  const state = { editorProfile: { profile_id: "project:child", bases: ["project:first"] } };
+  const root = { innerHTML: "", querySelector: () => null, querySelectorAll: () => [] };
+  const elements = { editorForm: root, editorStatus: { textContent: "" } };
+  let resolveOld;
+  const old = refreshEditorPreview(state, { validateProfile: () => new Promise((resolve) => { resolveOld = resolve; }) }, elements);
+  assert.equal(root.inert, true);
+  assert.equal(state.editorPreviewPending, true);
+  state.editorProfile = { ...state.editorProfile, bases: ["project:second"] };
+  const declaration = JSON.stringify(state.editorProfile);
+  await refreshEditorPreview(state, { validateProfile: async () => ({ valid: true, effective_profile: { ...state.editorProfile, navigation: { default_depth: 9 } } }) }, elements);
+  const markup = root.innerHTML;
+  assert.match(markup, /navigation.default_depth[^>]+value="9"/);
+  assert.equal(state.editorPreviewPending, false);
+  assert.equal(root.inert, false);
+  assert.equal(JSON.stringify(state.editorProfile), declaration);
+  resolveOld({ valid: true, effective_profile: { navigation: { default_depth: 2 } } });
+  await old;
+  assert.equal(root.innerHTML, markup, "stale base resolution replaced current form");
+  await refreshEditorPreview(state, { validateProfile: async () => { throw new Error("offline"); } }, elements);
+  assert.equal(root.inert, true);
+  assert.equal(state.editorPreviewPending, true);
+  assert.match(elements.editorStatus.textContent, /offline/);
+  elements.editorJSON = { value: "{" };
+  root.inert = false;
+  state.editorPreviewPending = false;
+  let previews = 0;
+  const preview = () => { previews++; return refreshEditorPreview(state, { validateProfile: async () => ({ valid: true, effective_profile: state.editorProfile }) }, elements); };
+  for (const invalid of ["{", "null", "[]", "42"]) {
+    elements.editorJSON.value = invalid;
+    updateEditorFromJSON(state, elements, preview);
+    assert.equal(root.inert, true, "stale form must not overwrite unfinished JSON");
+    assert.equal(state.editorPreviewPending, true);
+    assert.equal(JSON.stringify(state.editorProfile), declaration);
+    assert.equal(elements.editorJSON.value, invalid);
+  }
+  assert.equal(previews, 0);
+  elements.editorJSON.value = '{"profile_id":"project:repaired"}';
+  await updateEditorFromJSON(state, elements, preview);
+  assert.equal(previews, 1);
+  assert.equal(root.inert, false);
+  assert.equal(state.editorPreviewPending, false);
+  assert.equal(state.editorProfile.profile_id, "project:repaired");
+  let finishPending;
+  const pending = refreshEditorPreview(state, { validateProfile: () => new Promise((resolve) => { finishPending = resolve; }) }, elements);
+  elements.editorJSON.value = "{";
+  updateEditorFromJSON(state, elements, preview);
+  finishPending({ valid: true, effective_profile: state.editorProfile });
+  await pending;
+  assert.equal(root.inert, true, "superseded preview must not unlock the stale form");
+  assert.match(elements.editorStatus.textContent, /not a valid profile/);
+}).catch((error) => { console.error(error); process.exitCode = 1; });

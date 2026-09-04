@@ -78,10 +78,6 @@ func (session *Session) SaveActive(profile LayoutProfile) error {
 	if err != nil {
 		return err
 	}
-	data, err := encodeLayoutConfigWithAnalysis(profile, session.analysisRaw)
-	if err != nil {
-		return err
-	}
 	activePath := session.activePath
 	if activePath == "" || !session.canSave {
 		if activePath == "" {
@@ -89,7 +85,8 @@ func (session *Session) SaveActive(profile LayoutProfile) error {
 		}
 		return analysis.NewHostError(analysis.ErrInvalidOptions, "the nearest .archview.json is invalid; use Save As after correcting the profile", map[string]any{"path": activePath})
 	}
-	if err := writeLayoutConfigAtomically(activePath, data); err != nil {
+	data, err := saveLayoutDocument(activePath, profile, nil)
+	if err != nil {
 		return err
 	}
 	session.profile = profile
@@ -97,6 +94,7 @@ func (session *Session) SaveActive(profile LayoutProfile) error {
 	session.status = "valid"
 	session.canSave = true
 	session.diagnostics = sessionLayoutDiagnostics(session.sourceRoot)
+	session.rawDocument = append(session.rawDocument[:0], data...)
 	return nil
 }
 
@@ -115,7 +113,7 @@ func (session *Session) SaveAs(profile LayoutProfile, destinationDir string, con
 		return err
 	}
 	configPath := filepath.Join(directory, layoutConfigFileName)
-	data, err := encodeLayoutConfigWithAnalysis(profile, session.analysisRaw)
+	data, err := encodeLayoutConfigPreserving(profile, session.analysisRaw, session.rawDocument)
 	if err != nil {
 		return err
 	}
@@ -123,7 +121,8 @@ func (session *Session) SaveAs(profile LayoutProfile, destinationDir string, con
 		return analysis.NewHostError(analysis.ErrPersistenceUnavailable, "Save As is unavailable for a model-only session", nil)
 	}
 	origin := activeLayoutOrigin(session.sourceRoot, configPath)
-	if err := writeLayoutConfigAtomically(configPath, data); err != nil {
+	data, err = saveLayoutDocument(configPath, profile, data)
+	if err != nil {
 		return err
 	}
 	session.profile = profile
@@ -134,6 +133,7 @@ func (session *Session) SaveAs(profile LayoutProfile, destinationDir string, con
 	session.canSave = true
 	session.canSaveAs = true
 	session.diagnostics = nil
+	session.rawDocument = append(session.rawDocument[:0], data...)
 	return nil
 }
 

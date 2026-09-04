@@ -1,48 +1,5 @@
 .layout-settings-dialog {
   width: min(78rem, calc(100vw - 2rem));
-  max-height: min(90vh, 58rem);
-  padding: 0;
-  color: var(--text);
-  background: var(--card-strong);
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
-}
-
-.layout-settings-dialog::backdrop {
-  background: rgba(3, 6, 16, 0.78);
-  backdrop-filter: blur(3px);
-}
-
-.layout-settings-shell {
-  display: flex;
-  flex-direction: column;
-  max-height: min(90vh, 58rem);
-  padding: 1.25rem;
-}
-
-.layout-settings-header,
-.layout-settings-footer,
-.layout-save-as {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.layout-settings-header {
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.layout-settings-header h3 {
-  margin-bottom: 0.35rem;
-}
-
-.layout-settings-header .muted {
-  max-width: 48rem;
-  margin-bottom: 0;
-  line-height: 1.45;
 }
 
 .layout-settings-origin {
@@ -98,10 +55,6 @@
 .layout-option-input {
   width: 100%;
   padding: 0.58rem 0.68rem;
-  color: var(--text);
-  background: var(--control-surface);
-  border: 1px solid var(--line);
-  border-radius: 0.55rem;
 }
 
 .settings-field textarea {
@@ -208,6 +161,11 @@
   border-top: 1px solid var(--line-soft);
 }
 
+.layout-save-as[hidden],
+.layout-settings-actions > [hidden] {
+  display: none;
+}
+
 .confirm-field {
   display: flex;
   align-items: center;
@@ -223,13 +181,6 @@
   accent-color: var(--cyan);
 }
 
-.layout-settings-footer {
-  align-items: center;
-  margin-top: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line-soft);
-}
-
 .layout-settings-status-error {
   display: inline-block;
   padding: 0.35rem 0.55rem;
@@ -237,13 +188,6 @@
   background: rgba(127, 29, 52, 0.28);
   border: 1px solid rgba(251, 113, 133, 0.38);
   border-radius: 0.45rem;
-}
-
-.layout-settings-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: end;
-  gap: 0.5rem;
 }
 
 @media (max-width: 1080px) {
@@ -323,12 +267,6 @@
     justify-content: start;
     flex-direction: column;
   }
-  .layout-settings-controls,
-  .layout-save-as,
-  .layout-settings-footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
   .layout-settings-controls {
     grid-template-columns: 1fr;
   }
@@ -337,8 +275,5 @@
   }
   .layout-option-state {
     text-align: left;
-  }
-  .layout-settings-actions {
-    justify-content: start;
   }
 }

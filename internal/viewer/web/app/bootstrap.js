@@ -7,6 +7,7 @@ import { createNavigation } from "./navigation.js";
 import { changeZoom, fitViewport, persistViewport, renderViewportControls, resetLayout, resetZoom, syncFocusButton, toggleFocusMode } from "./viewport.js";
 import { renderAccessibleList, renderDetails, renderSupportLists, openSource, openSourceFact, selectEntity } from "./details.js";
 import { createInspectionController, parseInspectionRoute } from "./inspection.js";
+import { configureModeNavigation, discoverSelectableOKF } from "./mode_navigation.js";
 import { createQualityBaseline as persistQualityBaseline, evaluateQualityProfile as runQualityProfile, initializeQualityRuleDraft, loadQualityProfiles as fetchQualityProfiles, loadQualityReport as fetchQualityReport, loadQualityRuleCatalog as fetchQualityRuleCatalog, loadQualitySource as fetchQualitySource, openQualityEvidence as fetchQualityEvidence, qualityBaselineCandidates, qualityRuleBindings, renderQualityBaselineSelection, renderQualityProfileControl, renderQualityRuleCatalog, saveQualityProfile as persistQualityProfile, saveQualityProfileAs as persistQualityProfileAs, setQualityRuleEnabled } from "./quality.js";
 import { hideError, renderAll, renderBreadcrumbs, renderSceneState, renderScopeSelector, sceneLayoutKey, showError, showNotice } from "./view.js";
 import { createLiveController } from "./live_status.js";
@@ -52,6 +53,11 @@ export function bootstrap() {
   const context = createContext();
   const api = createAPI(context);
   const live = createLiveController(context, api);
+  configureModeNavigation("architecture", false);
+  const okfMeta = document.querySelector('meta[name="okf-enabled"]');
+  if (okfMeta && okfMeta.content === "true") {
+    void discoverSelectableOKF().then(function (available) { configureModeNavigation("architecture", available); });
+  }
   const initialRoute = parseInspectionRoute(window.location.search);
   if (initialRoute && !initialRoute.invalid) {
     if (initialRoute.scope && context.aggregateEnabled) context.state.activeScope = initialRoute.scope;

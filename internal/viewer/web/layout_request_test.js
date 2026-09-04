@@ -1,10 +1,11 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
 const path = require("node:path");
 
-const source = fs.readFileSync(path.join(__dirname, "layout_request.js"), "utf8");
-import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(function (request) {
+const { pathToFileURL } = require("node:url");
+import(pathToFileURL(path.join(__dirname, "layout_request.js")).href).then(function (request) {
 assert.ok(request.buildELKGraph, "ELK request helper should be exposed");
+assert.deepEqual(request.nodeDimensions({ id: "a" }), { width: 190, height: 82 });
+assert.deepEqual(request.nodeDimensions({ id: "a", presentation_fields: [{}, {}] }), { width: 210, height: 94 });
 
 const catalog = {
   options: [

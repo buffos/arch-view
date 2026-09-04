@@ -6,6 +6,28 @@ body.list-mode .graph-wrap svg {
   opacity: 0.45;
 }
 
+.mode-navigation {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  margin-left: .8rem;
+  padding-left: .8rem;
+  border-left: 1px solid var(--line-soft);
+}
+
+.mode-navigation a {
+  color: var(--cyan);
+  font-size: .78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mode-navigation a:hover,
+.mode-navigation a:focus-visible {
+  color: var(--text);
+  text-decoration: underline;
+}
+
 html.canvas-focus,
 html.canvas-fullscreen,
 body.canvas-focus,

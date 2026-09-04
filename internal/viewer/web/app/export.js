@@ -1,28 +1,13 @@
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const EXPORT_PADDING = 32;
 
-const SVG_EXPORT_STYLES = `
-svg {
-  background: #090e1d;
-  color: #f3f6ff;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-.edge-line { fill: none; stroke: #7483a9; stroke-width: 2; opacity: 0.72; }
-.edge-line.cycle { stroke: #fb7185; stroke-width: 3; opacity: 0.95; }
-.edge-line.feedback { stroke: #fbbf74; stroke-dasharray: 7 5; }
-.edge-label { fill: #c2cce3; font-size: 11px; font-weight: 800; paint-order: stroke; stroke: #11182c; stroke-width: 4px; }
-.edge-label.cycle { fill: #fb7185; }
-.node-shape { fill: #1b2a4d; stroke: #4d6292; stroke-width: 1.5; }
-.node-shape.group { fill: #252248; stroke: #7961bf; }
-.node-shape.reference { fill: #1b3030; stroke: #4c8c8a; stroke-dasharray: 4 4; }
-.node-shape.cycle { stroke: #fb7185; stroke-width: 3; }
-.node-shape.warning { stroke: #fbbf74; }
-.node-shape.error { stroke: #fb7185; }
-.node-shape.dimmed, .node-label.dimmed { opacity: 0.18; }
-.node-shape.selected { fill: #28456a; stroke: #6ee7f9; stroke-width: 3; }
-.node-label { fill: #f3f6ff; font-size: 12px; font-weight: 800; }
-.node-subtitle { fill: #9eaccb; font-size: 10px; }
-`;
+const VIEWPORT_SELECTOR = ".viewport-content, .okf-viewport-content";
+const PRESENTATION_PROPERTIES = [
+  "fill", "fill-opacity", "fill-rule", "stroke", "stroke-width", "stroke-opacity",
+  "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
+  "opacity", "color", "font-family", "font-size", "font-weight", "font-style",
+  "letter-spacing", "text-anchor", "dominant-baseline", "paint-order", "visibility", "filter"
+];
 
 export function downloadCurrentSVG(context) {
   const source = context && context.elements && context.elements.graph
@@ -46,7 +31,8 @@ export function downloadCurrentSVG(context) {
 
 export function serializeSVG(source, bounds) {
   const copy = source.cloneNode(true);
-  const viewportContent = copy.querySelector(".viewport-content");
+  capturePresentation(source, copy);
+  const viewportContent = copy.querySelector(VIEWPORT_SELECTOR);
   if (viewportContent) viewportContent.removeAttribute("transform");
   copy.querySelectorAll(".edge-hit, .node-hitzone").forEach(function (element) { element.remove(); });
   copy.setAttribute("xmlns", SVG_NAMESPACE);
@@ -56,14 +42,26 @@ export function serializeSVG(source, bounds) {
   copy.setAttribute("height", String(bounds.height));
   copy.setAttribute("preserveAspectRatio", "xMidYMid meet");
 
-  const style = copy.ownerDocument.createElementNS(SVG_NAMESPACE, "style");
-  style.textContent = SVG_EXPORT_STYLES;
-  copy.insertBefore(style, copy.firstChild);
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + new XMLSerializer().serializeToString(copy);
 }
 
-function exportBounds(source) {
-  const content = source.querySelector(".viewport-content");
+function capturePresentation(source, copy) {
+  const originals = [source, ...source.querySelectorAll("*")];
+  const clones = [copy, ...copy.querySelectorAll("*")];
+  originals.forEach((element, index) => {
+    const computed = source.ownerDocument.defaultView.getComputedStyle(element);
+    PRESENTATION_PROPERTIES.forEach((property) => {
+      const value = computed.getPropertyValue(property);
+      if (value) clones[index].style.setProperty(property, value);
+    });
+  });
+  const canvasStyle = source.ownerDocument.defaultView.getComputedStyle(source);
+  copy.style.setProperty("background", canvasStyle.background);
+  copy.style.setProperty("background-color", canvasStyle.getPropertyValue("--bg") || "#090e1d");
+}
+
+export function exportBounds(source) {
+  const content = source.querySelector(VIEWPORT_SELECTOR);
   if (content && typeof content.getBBox === "function") {
     try {
       const box = content.getBBox();
@@ -94,7 +92,7 @@ function paddedBox(box) {
 
 function downloadFilename(context) {
   const scene = context && context.state ? context.state.scene : null;
-  const label = scene && scene.project ? scene.project.root_label : "architecture";
+  const label = context.exportLabel || (scene && scene.project ? scene.project.root_label : "architecture");
   const safe = String(label || "architecture")
     .trim()
     .replace(/[^a-z0-9._-]+/gi, "-")
