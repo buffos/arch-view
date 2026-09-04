@@ -22,17 +22,30 @@ func defaultLayoutProfile() LayoutProfile {
 func cloneLayoutProfile(profile LayoutProfile) LayoutProfile {
 	options := make(map[string]any, len(profile.Options))
 	for key, value := range profile.Options {
-		options[key] = value
+		options[key] = cloneOptionValue(value)
 	}
 	if profile.Algorithm == "" {
 		profile.Algorithm = "layered"
 	}
 	profile.Options = options
+	profile.Features = append(profile.Features[:0:0], profile.Features...)
 	return profile
+}
+
+func cloneOptionValue(value any) any {
+	if object, ok := value.(map[string]any); ok {
+		copy := make(map[string]any, len(object))
+		for key, item := range object {
+			copy[key] = cloneOptionValue(item)
+		}
+		return copy
+	}
+	return value
 }
 
 func (session Session) response() LayoutConfigResponse {
 	diagnostics := append([]LayoutDiagnostic(nil), session.diagnostics...)
+	diagnostics = append(diagnostics, unavailableFeatureDiagnostics(session.profile)...)
 	if diagnostics == nil {
 		diagnostics = []LayoutDiagnostic{}
 	}
@@ -52,9 +65,17 @@ func Catalog() LayoutOptionsResponse {
 	algorithms := append([]LayoutAlgorithmDefinition(nil), pinnedELKAlgorithms...)
 	categories := append([]LayoutCategoryDefinition(nil), pinnedELKCategories...)
 	options := make([]LayoutOptionDefinition, len(pinnedELKOptions))
+	features := FeatureCatalog()
 	copy(options, pinnedELKOptions)
 	for index := range options {
 		options[index] = enrichLayoutOption(options[index])
+		for _, feature := range features {
+			for _, id := range feature.OptionIDs {
+				if options[index].ID == id {
+					options[index].RequiredFeatures = append(options[index].RequiredFeatures, feature.ID)
+				}
+			}
+		}
 	}
 	return LayoutOptionsResponse{
 		SchemaVersion: layoutConfigSchemaVersion,
@@ -62,6 +83,7 @@ func Catalog() LayoutOptionsResponse {
 		Algorithms:    algorithms,
 		Categories:    categories,
 		Options:       options,
+		Features:      FeatureCatalog(),
 	}
 }
 
@@ -95,6 +117,10 @@ func layoutAlgorithmByID(id string) (LayoutAlgorithmDefinition, bool) {
 }
 
 func validateLayoutProfile(profile LayoutProfile) (LayoutProfile, error) {
+	return validateProfile(profile, false)
+}
+
+func validateProfile(profile LayoutProfile, allowUnavailable bool) (LayoutProfile, error) {
 	if strings.TrimSpace(profile.Algorithm) == "" {
 		return LayoutProfile{}, analysis.NewHostError(analysis.ErrInvalidOptions, "layout algorithm is required", map[string]any{"field": "layout.algorithm"})
 	}
@@ -115,12 +141,20 @@ func validateLayoutProfile(profile LayoutProfile) (LayoutProfile, error) {
 		normalizedOptions[canonicalKey] = value
 	}
 	profile.Options = normalizedOptions
+	features, err := validateFeatures(profile, allowUnavailable)
+	if err != nil {
+		return LayoutProfile{}, err
+	}
+	profile.Features = features
 	for key, value := range profile.Options {
 		option, ok := layoutOptionByID(key)
 		if !ok {
 			return LayoutProfile{}, analysis.NewHostError(analysis.ErrUnsupportedOption, "layout option is not in the pinned ELK catalog", map[string]any{"option": key})
 		}
 		if !option.Editable || option.RendererSupport != "supported" {
+			if allowUnavailable && unavailableFeatureOwnsOption(profile, key) {
+				continue
+			}
 			return LayoutProfile{}, analysis.NewHostError(analysis.ErrUnsupportedOption, "layout option is cataloged but not supported by the viewer renderer", map[string]any{"option": key})
 		}
 		if !layoutOptionApplies(option, profile.Algorithm) {
@@ -269,7 +303,7 @@ func decodeLayoutDocument(data []byte) (LayoutProfile, json.RawMessage, json.Raw
 	if config.SchemaVersion == "arch-view.config/v2" && !jsonObject(config.Analysis) {
 		return LayoutProfile{}, nil, nil, analysis.NewHostError(analysis.ErrInvalidOptions, "v2 layout configuration analysis section must be an object", map[string]any{"field": "analysis"})
 	}
-	profile, err := validateLayoutProfile(config.Layout)
+	profile, err := validateProfile(config.Layout, true)
 	if err != nil {
 		return LayoutProfile{}, nil, nil, err
 	}
@@ -301,6 +335,9 @@ func encodeLayoutConfigPreserving(profile LayoutProfile, analysisRaw, rawDocumen
 		return nil, err
 	}
 	schemaVersion := layoutConfigSchemaVersion
+	if len(profile.Features) > 0 && len(bytes.TrimSpace(analysisRaw)) == 0 {
+		analysisRaw = json.RawMessage(`{}`)
+	}
 	if len(bytes.TrimSpace(analysisRaw)) > 0 {
 		if !jsonObject(analysisRaw) {
 			return nil, analysis.NewHostError(analysis.ErrInvalidOptions, "v2 analysis configuration cannot be preserved because it is invalid", map[string]any{"field": "analysis"})

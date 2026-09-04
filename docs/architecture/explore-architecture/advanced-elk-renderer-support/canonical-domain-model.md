@@ -1,5 +1,9 @@
 # Advanced ELK renderer support canonical domain model
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## Modeling boundary
 
 This model owns layout feature negotiation and renderer-neutral geometry. The
@@ -24,7 +28,9 @@ backward-compatible with current behavior.
 Fields:
 
 - `schema_version`: `arch-view.geometry/v1`
-- `model_id`, `model_revision`, `hierarchy_path`
+- `source`: kind (`architecture|okf`), source ID, source revision, navigation scope.
+  Architecture adapters may retain model ID/revision; OKF uses bundle/projection
+  identity and never fabricates architecture-model identity.
 - `nodes[]`
 - `edges[]`
 - `diagnostics[]`

@@ -1,5 +1,9 @@
 # Advanced ELK renderer support canonical API/CLI contract
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## Feature profile
 
 The v2 layout profile extends the existing `layout` object additively:
@@ -18,7 +22,8 @@ The v2 layout profile extends the existing `layout` object additively:
 ```
 
 Allowed feature values are `edge_labels`, `junctions`, `ports`, `compound`,
-and `spline_refinement`. Omitted `features` is equivalent to `[]`. The
+and `spline_refinement`. Architecture omission is equivalent to `[]`; OKF
+profile omission inherits and explicit `[]` clears inherited features. The
 analysis assignment capability may use the same `arch-view.config/v2` file;
 its `analysis` section is independent of `layout.features`.
 
@@ -41,9 +46,17 @@ its `analysis` section is independent of `layout.features`.
 The response must mark broader ELK options as `catalog-only` until they have a
 renderer mapping and acceptance fixture.
 
+The example lists final delivery availability, not current stage support.
+Each feature also declares order, prerequisites, supported algorithms,
+required options, owned geometry, delivery stage and fallback policy. Stage 1
+publishes these five features as not-implemented, not selectable.
+
 ## Renderer-neutral geometry
 
-`GET /v1/models/{model_id}/projection` may include:
+The shared browser pipeline creates geometry locally. The following historical
+architecture example illustrates the shape; source identity follows the
+updated domain model for both architecture and OKF. No server-generated
+geometry or ELK execution endpoint is introduced:
 
 ```json
 {
@@ -81,8 +94,8 @@ remain presentation-only.
 
 - `POST /v1/layout/apply` accepts `layout.features` and validates feature/option compatibility.
 - `GET /v1/layout/config` reports active features, supported surfaces, and geometry diagnostics.
-- `GET /v1/models/{model_id}/projection?...` returns semantic scene plus validated geometry when layout is requested.
-- A supported feature with malformed output returns `200` with a fallback geometry and `geometry_fallback_applied` diagnostic.
+- Projection endpoints return semantic data. The shared browser runtime produces
+  and validates geometry, including local fallback diagnostics.
 - An unknown feature returns `422` with `renderer_feature_unknown`.
 
 ## CLI and export behavior

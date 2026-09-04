@@ -1,5 +1,9 @@
 # Advanced ELK renderer support requirements gap analysis
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## Scope examined
 
 This pass covers the bounded [Advanced ELK renderer support](../../../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) child, the pinned ELK catalog, the current flat scene projection, the renderer-neutral route primitives, the browser/embedded HTML serializers, and deterministic Go SVG export.

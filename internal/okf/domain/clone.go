@@ -102,6 +102,7 @@ func CloneProfile(value Profile) Profile {
 		}
 	}
 	result.Layout.Options = CloneMap(value.Layout.Options)
+	result.Layout.Features = cloneStrings(value.Layout.Features)
 	result.extensions = cloneProfileExtensions(value.extensions)
 	return result
 }
@@ -129,6 +130,7 @@ func CloneDiagnostics(value []Diagnostic) []Diagnostic {
 func CloneSnapshot(value ProjectionSnapshot) ProjectionSnapshot {
 	result := value
 	result.Profile.Layout.Options = CloneMap(value.Profile.Layout.Options)
+	result.Profile.Layout.Features = cloneStrings(value.Profile.Layout.Features)
 	result.Navigation.Breadcrumbs = append([]string(nil), value.Navigation.Breadcrumbs...)
 	result.Nodes = make([]SceneNode, len(value.Nodes))
 	for index, node := range value.Nodes {

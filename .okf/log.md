@@ -1441,3 +1441,17 @@
 * **Artifact sync:** Updated application PRD/architecture, deterministic and
   live/MCP contracts/scenarios, CLI/MCP/skill/website documentation, issue
   registry, and OKF capability references.
+
+## 2026-09-04
+
+### Advanced ELK staged delivery begins
+
+- Refreshed the renderer specification for shared architecture/OKF settings,
+  browser-only ELK execution, source identity and persisted feature preferences.
+- Allocated issues 080–083 after registry maximum 079, preserving the parallel
+  delivery records. The approved order is settings/registry, edges, ports,
+  then nested containers, with a human visual gate between stages.
+- Stage 1 adds verified options and shared registry/persistence foundations.
+  Pinned-runtime NONE routing and BFS search failures are documented and those
+  unsafe values remain unavailable. No runtime upgrade.
+- Capability state remains specified; no issue closure or state transition.

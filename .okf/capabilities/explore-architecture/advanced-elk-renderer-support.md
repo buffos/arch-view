@@ -19,6 +19,11 @@ use_cases: docs/architecture/explore-architecture/advanced-elk-renderer-support/
 contract: docs/architecture/explore-architecture/advanced-elk-renderer-support/canonical-api-cli-contract.md
 scenarios: docs/architecture/explore-architecture/advanced-elk-renderer-support/acceptance-scenarios.md
 readiness_review: docs/architecture/explore-architecture/advanced-elk-renderer-support/readiness-review.md
+issues:
+  - docs/agents/issues/pending/080-shared-elk-settings-and-feature-registry.md
+  - docs/agents/issues/pending/081-shared-elk-advanced-edge-geometry.md
+  - docs/agents/issues/pending/082-shared-elk-presentation-ports.md
+  - docs/agents/issues/pending/083-shared-elk-nested-containers.md
 ---
 
 # Intent
@@ -30,10 +35,9 @@ honor them.
 # Scope
 
 This child owns staged renderer/layout work that extends the implemented Explore
-capability: first route/output features such as edge labels, junctions, and
-spline refinement; then richer port/port-label and compound-graph geometry; and
-finally additional target-specific ELK options that have a demonstrable
-renderer contract. It does not change canonical model semantics, analyzer
+capability: useful shared settings and feature registration first, then
+edge labels, junctions and spline refinement, followed by presentation ports
+and nested containers. It does not change canonical model semantics, analyzer
 behavior, or project configuration ownership.
 
 # Relationships
@@ -50,5 +54,5 @@ presentation ports, compound geometry, and spline refinement. Browser,
 self-contained HTML, and browser SVG share `arch-view.geometry/v1`; Go static
 SVG remains deterministic orthogonal and reports when advanced geometry is not
 applied. The linked contract defines geometry identity, option gating,
-accessibility, validation, fallback, and visual scenarios. No implementation
-issues have been created.
+accessibility, validation, fallback, and visual scenarios. Approved stages are tracked by issues
+080–083. Each stage requires automated verification and human visual approval.

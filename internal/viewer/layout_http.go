@@ -129,7 +129,7 @@ func decodeLayoutProfileRequest(body io.Reader) (layout.LayoutProfile, error) {
 	if err := ensureJSONEOF(decoder); err != nil {
 		return layout.LayoutProfile{}, analysis.WrapHostError(analysis.ErrInvalidRequest, "layout request contains trailing data", err, nil)
 	}
-	if input.SchemaVersion != layout.ConfigSchemaVersion {
+	if input.SchemaVersion != layout.ConfigSchemaVersion && input.SchemaVersion != "arch-view.config/v2" {
 		return layout.LayoutProfile{}, analysis.NewHostError(analysis.ErrInvalidOptions, "layout configuration schema is unsupported", map[string]any{"schema_version": input.SchemaVersion, "expected": layout.ConfigSchemaVersion})
 	}
 	return layout.ValidateProfile(input.Layout)
@@ -149,7 +149,7 @@ func decodeLayoutSaveAsRequest(body io.Reader) (layoutSaveAsRequest, error) {
 	if err := ensureJSONEOF(decoder); err != nil {
 		return layoutSaveAsRequest{}, analysis.WrapHostError(analysis.ErrInvalidRequest, "Save As request contains trailing data", err, nil)
 	}
-	if input.SchemaVersion != layout.ConfigSchemaVersion {
+	if input.SchemaVersion != layout.ConfigSchemaVersion && input.SchemaVersion != "arch-view.config/v2" {
 		return layoutSaveAsRequest{}, analysis.NewHostError(analysis.ErrInvalidOptions, "layout configuration schema is unsupported", map[string]any{"schema_version": input.SchemaVersion, "expected": layout.ConfigSchemaVersion})
 	}
 	profile, err := layout.ValidateProfile(input.Layout)
@@ -184,6 +184,9 @@ func ensureJSONEOF(decoder *json.Decoder) error {
 }
 
 func layoutErrorStatus(err error) int {
+	if strings.HasPrefix(string(analysis.ErrorCodeOf(err)), "renderer_feature_") {
+		return http.StatusUnprocessableEntity
+	}
 	switch analysis.ErrorCodeOf(err) {
 	case analysis.ErrInvalidRequest:
 		return http.StatusBadRequest

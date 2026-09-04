@@ -1,3 +1,5 @@
+import { cloneLayoutValue } from "./layout_value.js";
+
 export function escapeHTML(value) {
   return String(value == null ? "" : value)
     .replaceAll("&", "&amp;")
@@ -101,12 +103,11 @@ export function pathKey(pathValue) {
 }
 
 export function cloneLayoutProfile(profile) {
-  const value = profile || {};
-  return { algorithm: value.algorithm || "layered", options: Object.assign({}, value.options || {}) };
+  return cloneLayoutValue(profile, "layered");
 }
 
 export function layoutRequestPayload(profile) {
-  return { schema_version: "arch-view.config/v1", layout: cloneLayoutProfile(profile) };
+  return { schema_version: profile?.features?.length ? "arch-view.config/v2" : "arch-view.config/v1", layout: cloneLayoutProfile(profile) };
 }
 
 export function formatOptionValue(value) {

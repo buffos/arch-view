@@ -129,6 +129,12 @@ func encodeConfiguration(existingData []byte, value domain.ProjectConfiguration)
 		return nil, domain.WrapError("okf_configuration_invalid", 422, "project configuration is not valid JSON", err)
 	}
 	sectionValues := sectionValue(value)
+	for _, profile := range value.Profiles {
+		if len(profile.Layout.Features) > 0 {
+			projectdocument.RequireV2(raw)
+			break
+		}
+	}
 	section, err := json.Marshal(sectionValues)
 	if err != nil {
 		return nil, domain.WrapError("okf_configuration_invalid", 400, "OKF configuration could not be encoded", err)

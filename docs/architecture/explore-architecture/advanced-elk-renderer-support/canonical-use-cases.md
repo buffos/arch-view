@@ -1,5 +1,9 @@
 # Advanced ELK renderer support canonical use cases
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## Application services
 
 ### RendererFeatureService

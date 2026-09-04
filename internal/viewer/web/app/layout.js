@@ -1,6 +1,5 @@
 import { fromELKSections, fromELKSplineSections } from "../graph_route.js";
-import { buildELKGraph } from "../layout_request.js";
-import { runELKLayout } from "./elk_runtime.js";
+import { runFeatureLayout } from "./elk_runtime.js";
 import { renderLayoutForm } from "./layout_form.js";
 import { sceneLayoutKey } from "./view.js";
 import { cloneLayoutProfile, numberOrZero, layoutRequestPayload } from "./utils.js";
@@ -66,7 +65,8 @@ export function adaptELKLayout(scene, result, key, algorithm, profile) {
     width: Math.max(760, numberOrZero(result.width) + offset * 2, fallback.width),
     height: Math.max(430, numberOrZero(result.height) + offset * 2, fallback.height),
     positions: positions,
-    edges: edges
+    edges: edges,
+    diagnostics: result.featureDiagnostics || []
   };
 }
 
@@ -76,7 +76,7 @@ export async function prepareLayout(context, scene, profile, services) {
   context.state.layoutKey = key;
   const request = ++context.state.layoutRequest;
   try {
-    const result = await runELKLayout(buildELKGraph(scene, profile || context.state.layoutProfile, context.state.layoutCatalog), context.workerURL, window.ELK);
+    const result = await runFeatureLayout(scene, profile || context.state.layoutProfile, context.state.layoutCatalog, context.workerURL, window.ELK);
     if (request !== context.state.layoutRequest || context.state.scene !== scene) return;
     context.state.layout = adaptELKLayout(scene, result, key, (context.state.layoutProfile && context.state.layoutProfile.algorithm) || "layered", profile || context.state.layoutProfile);
     context.state.layoutError = false;

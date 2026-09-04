@@ -1,9 +1,8 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
+const { pathToFileURL } = require("node:url");
 const path = require("node:path");
 
-const source = fs.readFileSync(path.join(__dirname, "utils.js"), "utf8");
-import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(function (utils) {
+import(pathToFileURL(path.join(__dirname, "utils.js")).href).then(function (utils) {
   assert.equal(utils.displayProjectRoot("."), "Repository root");
   assert.equal(utils.formatLanguage("typescript"), "TypeScript");
 

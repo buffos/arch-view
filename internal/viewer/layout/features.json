@@ -1,0 +1,116 @@
+[
+  {
+    "status": "not-implemented",
+    "algorithms": [
+      "layered"
+    ],
+    "surfaces": [
+      "browser",
+      "html",
+      "browser-svg"
+    ],
+    "prerequisites": [],
+    "required_options": {},
+    "fallback": "orthogonal-affected-portion",
+    "id": "edge_labels",
+    "option_ids": ["org.eclipse.elk.edgeLabels.placement"],
+    "name": "ELK edge labels",
+    "order": 10,
+    "owns": [
+      "edge.labels"
+    ],
+    "stage": 2
+  },
+  {
+    "status": "not-implemented",
+    "algorithms": [
+      "layered"
+    ],
+    "surfaces": [
+      "browser",
+      "html",
+      "browser-svg"
+    ],
+    "prerequisites": [],
+    "required_options": {},
+    "fallback": "orthogonal-affected-portion",
+    "id": "junctions",
+    "option_ids": ["org.eclipse.elk.junctionPoints"],
+    "name": "Shared-route junctions",
+    "order": 20,
+    "owns": [
+      "edge.junctions"
+    ],
+    "stage": 2
+  },
+  {
+    "status": "not-implemented",
+    "algorithms": [
+      "layered"
+    ],
+    "surfaces": [
+      "browser",
+      "html",
+      "browser-svg"
+    ],
+    "prerequisites": [],
+    "required_options": {
+      "org.eclipse.elk.edgeRouting": "SPLINES"
+    },
+    "fallback": "orthogonal-affected-portion",
+    "id": "spline_refinement",
+    "option_ids": ["org.eclipse.elk.layered.edgeRouting.splines.mode"],
+    "name": "Spline refinement",
+    "order": 30,
+    "owns": [
+      "edge.cubic_sections"
+    ],
+    "stage": 2
+  },
+  {
+    "status": "not-implemented",
+    "algorithms": [
+      "layered"
+    ],
+    "surfaces": [
+      "browser",
+      "html",
+      "browser-svg"
+    ],
+    "prerequisites": [],
+    "required_options": {},
+    "fallback": "orthogonal-affected-portion",
+    "id": "ports",
+    "option_ids": ["org.eclipse.elk.portConstraints", "org.eclipse.elk.port.side", "org.eclipse.elk.portLabels.placement"],
+    "name": "Presentation ports",
+    "order": 40,
+    "owns": [
+      "node.ports",
+      "edge.port_endpoints"
+    ],
+    "stage": 3
+  },
+  {
+    "status": "not-implemented",
+    "algorithms": [
+      "layered"
+    ],
+    "surfaces": [
+      "browser",
+      "html",
+      "browser-svg"
+    ],
+    "prerequisites": [],
+    "required_options": {},
+    "fallback": "orthogonal-affected-portion",
+    "id": "compound",
+    "option_ids": ["org.eclipse.elk.hierarchyHandling"],
+    "name": "Nested containers",
+    "order": 50,
+    "owns": [
+      "node.containers",
+      "node.parent_coordinates"
+    ],
+    "stage": 4
+  }
+]

@@ -1,5 +1,13 @@
 # Arch View application architecture summary
 
+Advanced ELK implementation follows the approved
+[shared feature-registry contract](explore-architecture/advanced-elk-renderer-support/delivery-contract.md).
+Architecture and OKF reuse settings, feature negotiation, browser ELK execution
+and geometry functions, with separate persisted profiles. Delivery starts with
+useful settings and registry/persistence, followed by edges, ports and compound
+geometry. Every stage has an automated and human visual gate. No server-side
+ELK service or parallel settings endpoint is introduced.
+
 ## Status
 
 The configurable OKF knowledge-view capability is a first-class root-level,

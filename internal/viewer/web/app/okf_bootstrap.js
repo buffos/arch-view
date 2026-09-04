@@ -17,7 +17,8 @@ import { syncFocusButton, toggleFocusMode } from "./viewport.js";
 import { configureModeNavigation } from "./mode_navigation.js";
 import { bindProfileForm, renderProfileForm, readProfileForm } from "./okf_profile_form.js";
 import { cloneOKFLayoutProfile, OKF_DEFAULT_LAYOUT_ALGORITHM } from "./okf_layout.js";
-import { renderLayoutForm, updateLayoutDraftAlgorithm, updateLayoutDraftOption } from "./layout_form.js";
+import { renderLayoutForm, updateLayoutDraftAlgorithm, updateLayoutDraftOption, layoutDraftProblems } from "./layout_form.js";
+import { sharedFeatureRegistry } from "./layout_features.js";
 
 export function bootstrapOKF() {
   const sessionMeta = document.querySelector('meta[name="okf-session-id"]');
@@ -241,7 +242,8 @@ async function renderState(state, elements, workerURL, services, extraDiagnostic
   if (requestID != null && !isCurrent(state, requestID)) return;
   ensureOKFViewport(state, snapshot);
   renderSelectors(state, elements);
-  const diagnostics = catalogDiagnostics(state.catalog).concat(extraDiagnostics || [], snapshot.diagnostics || []);
+  const diagnostics = catalogDiagnostics(state.catalog).concat(extraDiagnostics || [], snapshot.diagnostics || [],
+    sharedFeatureRegistry(state.layoutCatalog).negotiate(state.layoutProfile || {}).diagnostics);
   const tone = diagnostics.some((item) => item.severity === "error") ? "error" : diagnostics.length ? "warning" : "info";
   setStatus(elements, snapshot.status === "truncated" ? "Projection is visible but truncated by safety limits." : "Showing " + (snapshot.source?.bundle_id || "selected bundle"), diagnostics, tone);
   const counts = snapshot.counts || {};
@@ -392,6 +394,7 @@ function resetOKFLayoutDraft(state, elements) {
 
 async function applyOKFLayout(state, elements, services) {
   if (!state.layoutDraft || !state.snapshot) return;
+  if (layoutDraftProblems(state.layoutDraft, state.layoutCatalog).length) { renderOKFLayoutForm(state, elements); return; }
   const request = beginRequest(state);
   state.layoutProfile = cloneOKFLayoutProfile(state.layoutDraft);
   state.layoutOverride = cloneOKFLayoutProfile(state.layoutProfile);

@@ -331,6 +331,11 @@ export function renderSceneState(context) {
   } else if (context.embeddedExport) {
     pills.push('<span class="state-pill ok">ELK ' + escapeHTML((state.layoutProfile && state.layoutProfile.algorithm) || "layered") + " layout loading</span>");
   }
+  const geometryDiagnostics = state.layout?.diagnostics || [];
+  if (geometryDiagnostics.length) {
+    pills.push('<span class="state-pill warning" title="' + escapeHTML(geometryDiagnostics.map((item) => item.message).join(" "))
+      + '">' + geometryDiagnostics.length + " renderer feature(s) unavailable; ordinary geometry</span>");
+  }
   context.elements.sceneState.innerHTML = pills.join("");
 }
 

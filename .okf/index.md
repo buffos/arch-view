@@ -15,6 +15,8 @@
 
 - Initial topology: confirmed on 2026-08-25.
 - State totals: 0 `foggy`, 0 `bounded`, 1 `specified`, 18 `implemented`.
+- Advanced ELK has approved stages 080–083. Stage 1 delivers shared settings and
+  registry foundations; later stages remain blocked on human visual review.
 - The [Configurable OKF knowledge views](capabilities/okf-knowledge-views.md)
   capability is a first-class root-level implemented capability. Its exact
   reference set is maintained under

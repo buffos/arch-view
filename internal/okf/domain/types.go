@@ -219,6 +219,7 @@ type DetailRendererSelection struct {
 type LayoutSettings struct {
 	Algorithm string         `json:"algorithm,omitempty"`
 	Options   map[string]any `json:"options,omitempty"`
+	Features  []string       `json:"features,omitempty"`
 }
 
 type Profile struct {
