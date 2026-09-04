@@ -8,7 +8,7 @@ import { runFeatureLayout } from "./elk_runtime.js";
 import { activeGeometryJunctions, geometryJunctionMarkup, geometryLabelMarkup } from "./edge_presentation.js";
 import { geometryEdge } from "./geometry_snapshot.js";
 import { okfGeometrySource } from "./geometry_source.js";
-import { bindViewportGestures, createViewportState, viewportTransform } from "./viewport_runtime.js";
+import { applyViewportTransform, bindViewportGestures, createViewportState, viewportTransform } from "./viewport_runtime.js";
 
 const DEFAULT_PAN_LIMIT = 100000;
 const renderedLayouts = new WeakMap();
@@ -231,8 +231,7 @@ function routeForEdge(relationship, layout, viewport, fromID, toID, from, to) {
 }
 
 function applyOKFViewport(container, viewport) {
-  const content = container.querySelector(".okf-viewport-content");
-  if (content) content.setAttribute("transform", viewportTransform(viewport));
+  applyViewportTransform(container, ".okf-viewport-content", viewport);
 }
 
 function graphBaseScale(svg, layout) {

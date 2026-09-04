@@ -9,6 +9,12 @@ export function viewportTransform(viewport) {
   return "translate(" + value.panX + " " + value.panY + ") scale(" + value.zoom + ")";
 }
 
+export function applyViewportTransform(container, selector, viewport) {
+  const content = container && container.querySelector(selector);
+  if (content) content.setAttribute("transform", viewportTransform(viewport));
+  return Boolean(content);
+}
+
 export function updateViewportZoom(viewport, delta, minimum, maximum) {
   const value = viewport || createViewportState();
   value.zoom = clampNumber(value.zoom + delta, minimum, maximum, 1);
