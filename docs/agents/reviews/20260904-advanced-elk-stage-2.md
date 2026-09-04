@@ -55,6 +55,9 @@ The capability remains specified and issue 082 remains blocked.
 - OKF: verified the same settings surface and junction renderer, Fit/full
   canvas, no invented count labels, and selected-only arrowless semantic links
   without relayout.
+- Regression follow-up: canvas panning now updates the shared viewport transform
+  in place. It no longer replaces the SVG during a drag and then calculates
+  movement from a detached zero-sized element.
 
 ## Required review
 

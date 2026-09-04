@@ -5,7 +5,7 @@ import { nodeShapeMarkup } from "./node_shape.js";
 import { fallbackLayout } from "./layout.js";
 import { sceneLayoutKey } from "./view.js";
 import { defaultViewport, persistViewport, renderViewportControls } from "./viewport.js";
-import { bindViewportGestures } from "./viewport_runtime.js";
+import { applyViewportTransform, bindViewportGestures } from "./viewport_runtime.js";
 import { classForState, escapeHTML, formatLanguage, nodeLanguageBadge, nodeLanguageText, referenceScopeLabel, truncate } from "./utils.js";
 
 export function renderGraph(context, services) {
@@ -140,7 +140,7 @@ function bindGraphInteractions(context, svg, positions, services) {
     panLimit: context.constants.panLimit,
     isPanTarget: function (target) { return !(target && typeof target.closest === "function" && target.closest("[data-node-id], [data-edge-id]")); },
     onChange: function () { persistViewport(context); },
-    onRender: function () { services.renderGraph(); },
+    onRender: function () { applyViewportTransform(context.elements.graph, ".viewport-content", context.state.viewport); },
     onZoom: function (delta) { services.changeZoom(delta); }
   });
 }

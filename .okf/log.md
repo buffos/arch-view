@@ -1475,3 +1475,5 @@
 - Automated Go, race, vet/build, browser, syntax, export, strict OKF, diff, and
   line-count checks pass. The capability remains `specified`; issue 081 awaits
   explicit human visual approval and issues 082–083 remain blocked.
+- Corrected the pre-approval pan regression by keeping the active SVG mounted
+  and updating only the shared architecture/OKF viewport transform during drag.
