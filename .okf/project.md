@@ -3,7 +3,7 @@ type: project
 title: Arch View
 description: Analyze supported codebases and generate navigable architecture views.
 tags: [architecture, code-analysis, multi-language, golang]
-timestamp: 2026-08-30T08:15:05Z
+timestamp: 2026-09-04T00:00:00Z
 prd: docs/prd.md
 architecture_summary: docs/architecture/application-architecture-summary.md
 verification:
@@ -82,9 +82,10 @@ user-approved issues 039–043, including its mixed-language viewer review. The
 project analyzer assignments/view selection leaf is implemented through
 issues 044–047, including its approved visual review. The advanced ELK renderer
 support leaf remains specified and ready for later delivery issue slicing.
-The configurable OKF knowledge views capability is newly added at the root
-level and now has a bounded discovery baseline covering source discovery,
-profiles, projection, inspection, and safety behavior.
+The configurable OKF knowledge views capability is an implemented root-level
+capability with a complete node-scoped reference set covering source discovery,
+profiles, projection, inspection, safety behavior, and readiness. Issues 064–071
+are verified and archived after the user's final approval on 2026-09-04.
 The [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
 capability is a pure structural-child roll-up with effective state `implemented`,
 the minimum of its three children. Its three children are readiness-reviewed

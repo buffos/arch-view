@@ -14,11 +14,14 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 0 `foggy`, 1 `bounded`, 1 `specified`, 17 `implemented`.
+- State totals: 0 `foggy`, 0 `bounded`, 1 `specified`, 18 `implemented`.
 - The [Configurable OKF knowledge views](capabilities/okf-knowledge-views.md)
-  capability is a first-class root-level capability with a bounded discovery
-  baseline. Its pre-PRD notes are maintained under
-  `../docs/architecture/okf-knowledge-views/discovery-notes.md`.
+  capability is a first-class root-level implemented capability. Its exact
+  reference set is maintained under
+  `../docs/architecture/okf-knowledge-views/` and its readiness review
+  is complete.
+- Delivery issues 064–071 are verified and archived after the user's explicit
+  visual approval on 2026-09-04.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their
