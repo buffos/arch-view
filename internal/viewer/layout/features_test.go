@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/buffo/arch-view/internal/analysis"
@@ -42,6 +43,18 @@ func TestFeatureMetadataAndStagedAvailability(t *testing.T) {
 	if analysis.ErrorCodeOf(err) != "renderer_feature_unknown" {
 		t.Fatal(err)
 	}
+}
+
+func TestJunctionFeatureExplainsPinnedRoutingBehavior(t *testing.T) {
+	for _, feature := range FeatureCatalog() {
+		if feature.ID == "junctions" {
+			if !strings.Contains(feature.SupportNote, "ORTHOGONAL") || !strings.Contains(feature.SupportNote, "SPLINES") {
+				t.Fatal(feature.SupportNote)
+			}
+			return
+		}
+	}
+	t.Fatal("junction feature missing")
 }
 
 func TestSavedUnavailableFeaturesRemainPreferences(t *testing.T) {

@@ -40,7 +40,7 @@ The capability remains specified and issue 082 remains blocked.
 - `go test -race ./...`: passed.
 - `go vet ./...`: passed.
 - `go build ./...`: passed.
-- All 57 browser tests: passed.
+- All 59 browser tests: passed.
 - `node --check` for all browser JavaScript: passed.
 - Browser SVG serializer tests retain labels, junctions, and curved route data.
 - `git diff --check`: passed.
@@ -58,6 +58,9 @@ The capability remains specified and issue 082 remains blocked.
 - Regression follow-up: canvas panning now updates the shared viewport transform
   in place. It no longer replaces the SVG during a drag and then calculates
   movement from a detached zero-sized element.
+- Visual-review follow-up: changing an advanced feature preserves the expanded
+  settings section. The junction control now states that the pinned ELK runtime
+  emits inspectable junction points for orthogonal routes, not spline routes.
 
 ## Required review
 

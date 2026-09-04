@@ -6,9 +6,10 @@ const moduleURL = (name) => pathToFileURL(path.join(__dirname, name)).href;
 const option = (id, extra = {}) => ({ id, name: id, type: "DOUBLE", targets: ["PARENTS"], algorithms: ["layered"], editable: true, renderer_support: "supported", ...extra });
 function context() {
   const elements = Object.fromEntries(["layoutSettingsDialog","layoutSettingsOrigin","layoutSettingsStatus","layoutAlgorithm","layoutAlgorithmHelp","layoutOptionsList","layoutSettingsApply"].map((id) => [id, {}]));
-  return { elements, state: { layoutDraft: { algorithm: "layered", options: {} }, layoutCatalog: {
+  return { elements, state: { layoutDraft: { algorithm: "layered", options: {}, features: [] }, layoutCatalog: {
     algorithms: [{ id: "layered", name: "Layered" }, { id: "mrtree", name: "Mr. Tree" }],
-    options: [option("usable"), option("other", { algorithms: ["mrtree"] }), option("future", { editable: false }), option("gated", { required_features: ["ports"] })]
+    options: [option("usable"), option("other", { algorithms: ["mrtree"] }), option("future", { editable: false }), option("gated", { required_features: ["ports"] })],
+    features: [{ id: "edge_labels", name: "ELK edge labels", status: "supported", stage: 2, algorithms: ["layered"], surfaces: ["browser"], prerequisites: [], required_options: {} }]
   } } };
 }
 test("SC-AER-008 shared form shows usable options and complete catalog on demand", async () => {
@@ -21,6 +22,15 @@ test("SC-AER-008 shared form shows usable options and complete catalog on demand
   assert.match(value.elements.layoutOptionsList.innerHTML, /Not applicable to this algorithm/);
   assert.match(value.elements.layoutOptionsList.innerHTML, /Not implemented/);
   assert.match(value.elements.layoutOptionsList.innerHTML, /Requires an enabled feature: ports/);
+});
+test("advanced feature accordion remains open when a checkbox rerenders the form", async () => {
+  const { renderLayoutForm, updateLayoutDraftOption } = await import(moduleURL("layout_form.js"));
+  const value = context();
+  renderLayoutForm(value);
+  value.elements.layoutOptionsList.querySelector = () => ({ open: true });
+  updateLayoutDraftOption(value, { target: { dataset: { layoutFeature: "edge_labels" }, checked: true } });
+  assert.match(value.elements.layoutOptionsList.innerHTML, /data-layout-feature-section open/);
+  assert.deepEqual(value.state.layoutDraft.features, ["edge_labels"]);
 });
 test("SC-AER-008 algorithm changes keep preferences and block conflicting Apply", async () => {
   const { updateLayoutDraftAlgorithm } = await import(moduleURL("layout_form.js"));

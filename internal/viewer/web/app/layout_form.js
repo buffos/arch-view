@@ -46,14 +46,15 @@ export function layoutDraftProblems(draft, catalog) {
   return problems;
 }
 
-function featureControls(state) {
+function featureControls(state, expanded) {
   return '<label><input type="checkbox" data-layout-catalog-filter' + (state.layoutShowCatalog ? " checked" : "") + '> Show complete catalog</label>'
-    + '<details><summary>Advanced renderer features</summary>'
+    + '<details data-layout-feature-section' + (expanded ? " open" : "") + '><summary>Advanced renderer features</summary>'
     + (state.layoutCatalog.features || []).map((feature) => {
       const selected = (state.layoutDraft.features || []).includes(feature.id);
       return '<label class="layout-option-state"><input type="checkbox" data-layout-feature="' + escapeHTML(feature.id) + '"'
         + (selected ? " checked" : "") + (!selected && feature.status !== "supported" ? " disabled" : "") + "> "
-        + escapeHTML(feature.name) + (feature.status === "supported" ? "" : " · Not implemented, delivery stage " + feature.stage) + "</label>";
+        + escapeHTML(feature.name) + (feature.status === "supported" ? "" : " · Not implemented, delivery stage " + feature.stage)
+        + (feature.support_note ? '<span class="layout-feature-note">' + escapeHTML(feature.support_note) + "</span>" : "") + "</label>";
     }).join("") + "</details>";
 }
 
@@ -85,6 +86,7 @@ export function renderLayoutForm(context, config, options = {}) {
   const elements = context.elements;
   const state = context.state;
   if (!elements.layoutSettingsDialog) return;
+  const featureSectionExpanded = Boolean(elements.layoutOptionsList.querySelector?.("[data-layout-feature-section]")?.open);
   elements.layoutSettingsOrigin.textContent = originLabel(config || state.layoutConfig, options);
   renderDiagnostic(elements, config || state.layoutConfig);
   elements.layoutSettingsStatus.textContent = options.status || state.layoutMessage || (config && config.status === "invalid" ? "Safe defaults are active until the profile is corrected." : "");
@@ -131,7 +133,7 @@ export function renderLayoutForm(context, config, options = {}) {
     });
     elements.layoutOptionsList.innerHTML = markup.join("");
   }
-  elements.layoutOptionsList.innerHTML = featureControls(state) + elements.layoutOptionsList.innerHTML;
+  elements.layoutOptionsList.innerHTML = featureControls(state, featureSectionExpanded) + elements.layoutOptionsList.innerHTML;
   const problems = layoutDraftProblems(state.layoutDraft, state.layoutCatalog);
   if (problems.length) {
     elements.layoutSettingsStatus.textContent = problems.join(" ");
