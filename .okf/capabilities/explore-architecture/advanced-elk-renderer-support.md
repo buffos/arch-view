@@ -20,7 +20,7 @@ contract: docs/architecture/explore-architecture/advanced-elk-renderer-support/c
 scenarios: docs/architecture/explore-architecture/advanced-elk-renderer-support/acceptance-scenarios.md
 readiness_review: docs/architecture/explore-architecture/advanced-elk-renderer-support/readiness-review.md
 issues:
-  - docs/agents/issues/pending/080-shared-elk-settings-and-feature-registry.md
+  - docs/agents/issues/done/20260904-080-shared-elk-settings-and-feature-registry.md
   - docs/agents/issues/pending/081-shared-elk-advanced-edge-geometry.md
   - docs/agents/issues/pending/082-shared-elk-presentation-ports.md
   - docs/agents/issues/pending/083-shared-elk-nested-containers.md
@@ -55,4 +55,5 @@ self-contained HTML, and browser SVG share `arch-view.geometry/v1`; Go static
 SVG remains deterministic orthogonal and reports when advanced geometry is not
 applied. The linked contract defines geometry identity, option gating,
 accessibility, validation, fallback, and visual scenarios. Approved stages are tracked by issues
-080–083. Each stage requires automated verification and human visual approval.
+080–083. Stage 1 is verified, visually approved, and archived. Stages 2–4
+remain active and each requires automated verification and human visual approval.

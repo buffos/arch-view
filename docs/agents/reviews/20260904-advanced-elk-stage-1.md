@@ -2,8 +2,9 @@
 
 Date: 2026-09-04
 Issue: 080, Shared ELK settings and feature registry.
-Status: automated verification complete; awaiting human visual review.
-Capability remains specified. Issues 081–083 remain blocked.
+Status: automated verification and human visual review complete.
+Capability remains specified. Issue 081 is unblocked; issues 082–083 retain
+their dependency order.
 
 ## Scope and architecture
 
@@ -82,8 +83,7 @@ to issues 081–083, once those features exist. Stage 1 keeps the current export
 - New/modified implementation line audit: largest is profile/registry.go at
   581 lines, below 600. No new stylesheet; existing shared layout classes reused.
 
-## Human review still required
+## Human review result
 
-Inspect both settings dialogs, filtering, Mr. Tree controls, padding,
-incompatible-algorithm recovery, Save/reload and OKF navigation. Check normal
-and Full canvas interaction. Stage 2 must not start until explicit approval.
+The user explicitly approved Stage 1 on 2026-09-04 after inspecting both
+viewers and their shared settings and interaction behavior. Stage 2 may start.
