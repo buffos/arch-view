@@ -22,6 +22,10 @@
   is complete.
 - Delivery issues 064–071 are verified and archived after the user's explicit
   visual approval on 2026-09-04.
+- Next implementation transition: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
+  is the next eligible specified node. Its exact renderer contract is ready,
+  existing viewer/ELK prerequisites are implemented, and no delivery issues
+  have been created yet; issue slicing is the next bounded action.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their

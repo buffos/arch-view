@@ -209,7 +209,7 @@ permissions separately owned.
   approved configured-viewer visual review.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `implemented`, including the v1 canonical model and graph-projection contract.
 - [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) is `specified` for future extensions.
-- [Configurable OKF knowledge views](/.okf/capabilities/okf-knowledge-views.md): `specified`; its node-scoped PRD, glossary, domain/use-case models, contract, acceptance scenarios, and readiness review are complete.
+- [Configurable OKF knowledge views](/.okf/capabilities/okf-knowledge-views.md): `implemented` through verified and user-approved issues 064–071; its node-scoped PRD, glossary, domain/use-case models, contract, acceptance scenarios, and readiness review remain the detailed sources of truth.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `implemented`, including JSON v1 and deterministic HTML/SVG/CI behavior.
 - [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md): `implemented` as a structural roll-up; its [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) child is implemented through issues 048–052 with final visual approval, its [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063 and 077–078, and [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) is implemented through issues 064–079 with final cross-analyzer and product approval recorded in issue 076. The parent has no standalone implementation slice.
 
@@ -332,10 +332,11 @@ extension of the implemented viewer. The code-quality and code-intelligence
   than at the aggregate parent.
 
 The configurable OKF knowledge-view capability is a separate first-class
-root-level specified capability. Its exact node-scoped reference set is
-complete and ready for delivery planning. It may share the viewer and renderer
-capabilities, including future advanced ELK support, but it does not inherit
-the architecture model's source or relationship semantics.
+root-level implemented capability. Issues 064–071 deliver its exact
+node-scoped source, profile, projection, inspection, persistence, and resilience
+scope. It shares the viewer and renderer infrastructure, including future
+advanced ELK support, but does not inherit the architecture model's source or
+relationship semantics.
 
 ## Verification strategy
 

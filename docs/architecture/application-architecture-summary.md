@@ -3,8 +3,8 @@
 ## Status
 
 The configurable OKF knowledge-view capability is a first-class root-level,
-specified capability; its exact node-scoped reference set is linked below and
-its shared boundaries are summarized here.
+implemented capability through verified issues 064–071; its exact node-scoped
+reference set is linked below and its shared boundaries are summarized here.
 
 This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043, project analyzer assignment issues 044–047, and source-index issues 048–052 are verified, archived, and visually approved; the advanced ELK renderer child remains the specified plugin/viewer frontier.
 The Code quality and code intelligence capability is a pure structural-child
@@ -505,8 +505,10 @@ protocol fields to the canonical model.
 The compiled external analyzer distribution is implemented through issues
 034–038 after application synthesis. The project analyzer assignments and view
 selection child is implemented through verified, archived, and visually
-approved issues 044–047. The remaining specified frontier is [advanced ELK
-renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md).
+approved issues 044–047. The remaining specified frontiers are [advanced ELK
+renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md)
+and Live analysis/MCP; Advanced ELK is the next eligible visible delivery
+frontier.
 The multi-analyzer child is implemented through issues 039–043.
 The 2026-08-28 brownfield audit also confirmed that the existing Go analyzer,
 canonical model generation, and export/automation boundaries exhaust their
