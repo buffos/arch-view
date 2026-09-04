@@ -1477,3 +1477,6 @@
   explicit human visual approval and issues 082–083 remain blocked.
 - Corrected the pre-approval pan regression by keeping the active SVG mounted
   and updating only the shared architecture/OKF viewport transform during drag.
+- Preserved the expanded advanced-feature section across checkbox updates and
+  documented the pinned runtime's orthogonal-only junction-marker behavior in
+  the shared settings UI. Stage 2 remains at its human visual-review gate.
