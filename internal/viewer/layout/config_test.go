@@ -511,3 +511,39 @@ func TestLayoutConfigEncodingIsStableAndScoped(t *testing.T) {
 		t.Fatal("unsafe option encoded successfully")
 	}
 }
+
+func TestLayoutSessionAcceptsAndPreservesOKFConfiguration(t *testing.T) {
+	root := t.TempDir()
+	data := []byte(`{
+  "schema_version": "arch-view.config/v2",
+  "layout": {"algorithm": "layered", "options": {}},
+  "analysis": {"scope": "project"},
+  "okf": {"schema_version": "arch-view.okf/v1", "default_graph": "docs/.okf"}
+}`)
+	pathValue := filepath.Join(root, layoutConfigFileName)
+	if err := os.WriteFile(pathValue, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	session := discoverLayoutSession(root)
+	if session.status != "valid" {
+		t.Fatalf("session status = %q, diagnostics = %#v", session.status, session.diagnostics)
+	}
+	if err := session.SaveActive(LayoutProfile{Algorithm: "layered", Options: map[string]any{}}); err != nil {
+		t.Fatalf("SaveActive() error = %v", err)
+	}
+	updated, err := os.ReadFile(pathValue)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document map[string]json.RawMessage
+	if err := json.Unmarshal(updated, &document); err != nil {
+		t.Fatal(err)
+	}
+	var okf map[string]any
+	if err := json.Unmarshal(document["okf"], &okf); err != nil {
+		t.Fatal(err)
+	}
+	if okf["schema_version"] != "arch-view.okf/v1" || okf["default_graph"] != "docs/.okf" {
+		t.Fatalf("OKF configuration was not preserved: %#v", okf)
+	}
+}

@@ -1,18 +1,13 @@
 //go:build windows
 
-package layout
+package projectdocument
 
 import (
 	"syscall"
 	"unsafe"
 )
 
-const (
-	layoutMoveFileReplaceExisting = 0x1
-	layoutMoveFileWriteThrough    = 0x8
-)
-
-func replaceLayoutFile(source, target string) error {
+func replaceFile(source, target string) error {
 	sourcePointer, err := syscall.UTF16PtrFromString(source)
 	if err != nil {
 		return err
@@ -22,11 +17,7 @@ func replaceLayoutFile(source, target string) error {
 		return err
 	}
 	moveFileEx := syscall.NewLazyDLL("kernel32.dll").NewProc("MoveFileExW")
-	result, _, callErr := moveFileEx.Call(
-		uintptr(unsafe.Pointer(sourcePointer)),
-		uintptr(unsafe.Pointer(targetPointer)),
-		layoutMoveFileReplaceExisting|layoutMoveFileWriteThrough,
-	)
+	result, _, callErr := moveFileEx.Call(uintptr(unsafe.Pointer(sourcePointer)), uintptr(unsafe.Pointer(targetPointer)), 0x1|0x8)
 	if result == 0 {
 		return callErr
 	}

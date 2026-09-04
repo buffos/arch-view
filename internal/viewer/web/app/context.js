@@ -4,9 +4,7 @@ export const constants = Object.freeze({
   panSpeed: 1,
   panLimit: 100000,
   nodeDoubleClickWindow: 450,
-  nodeDoubleClickDistance: 12,
-  windowedFitZoom: 1.45,
-  expandedFitZoom: 1
+  nodeDoubleClickDistance: 12
 });
 
 function embeddedLayoutProfile(exportData) {

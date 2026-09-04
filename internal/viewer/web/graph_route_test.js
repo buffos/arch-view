@@ -1,10 +1,9 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
+const { pathToFileURL } = require("node:url");
 const path = require("node:path");
 
-const source = fs.readFileSync(path.join(__dirname, "graph_route.js"), "utf8");
 
-import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(function (routing) {
+import(pathToFileURL(path.join(__dirname, "graph_route.js")).href).then(function (routing) {
 
 const elkRoute = routing.fromELKSections([
   {
@@ -57,6 +56,12 @@ assert.deepEqual(JSON.parse(JSON.stringify(routing.routePoints(horizontal))), [
   { x: 314, y: 83 }
 ]);
 assert.equal(routing.geometryFromRoute(horizontal).path, "M 230 83 L 272 83 L 314 83");
+const straight = routing.straightRoute(from, { x: 400, y: 42, width: 190, height: 82 });
+assert.deepEqual(JSON.parse(JSON.stringify(routing.routePoints(straight))), [
+  { x: 230, y: 83 },
+  { x: 400, y: 83 }
+]);
+assert.equal(routing.geometryFromRoute(straight).path, "M 230 83 L 400 83");
 assert.equal(routing.geometryFromRoute({
   points: [{ x: 10, y: 20 }, { x: 30, y: 40 }],
   label_x: 21,

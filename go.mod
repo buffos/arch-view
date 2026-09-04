@@ -11,6 +11,8 @@ require (
 	github.com/tree-sitter/tree-sitter-rust v0.23.3
 	github.com/tree-sitter/tree-sitter-typescript v0.23.2
 	github.com/yogthos/tree-sitter-clojure v0.0.0-20260408145108-8ec8407eada5
+	github.com/yuin/goldmark v1.7.8
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

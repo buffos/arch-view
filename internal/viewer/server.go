@@ -16,6 +16,7 @@ import (
 	"github.com/buffo/arch-view/internal/live"
 	"github.com/buffo/arch-view/internal/model"
 	"github.com/buffo/arch-view/internal/model/canonical"
+	okfapplication "github.com/buffo/arch-view/internal/okf/application"
 	"github.com/buffo/arch-view/internal/quality"
 	"github.com/buffo/arch-view/internal/viewer/layout"
 )
@@ -61,6 +62,7 @@ type ServerOptions struct {
 	AnalyzeCombined   CombinedAnalyzeFunc
 	ReanalyzeCombined CombinedAnalyzeFunc
 	LiveSession       *live.LiveSession
+	OKFApplication    okfapplication.API
 }
 
 type Server struct {
@@ -77,6 +79,7 @@ type Server struct {
 	qualityReports         map[string]quality.QualityEvaluation
 	qualityReportRevisions map[string]int
 	layout                 layout.Session
+	okf                    okfapplication.API
 	handler                http.Handler
 }
 
@@ -142,6 +145,10 @@ func newServer(value model.Model, aggregate *orchestration.AnalysisRun, options 
 		qualityReports:         make(map[string]quality.QualityEvaluation),
 		qualityReportRevisions: make(map[string]int),
 		layout:                 layout.NewSession(sourceRoot),
+		okf:                    option.OKFApplication,
+	}
+	if server.okf == nil && sourceRoot != "" {
+		server.okf = newOKFApplication(sourceRoot)
 	}
 	if aggregate != nil {
 		server.runs[aggregate.RunID] = aggregate
@@ -169,6 +176,8 @@ func newServer(value model.Model, aggregate *orchestration.AnalysisRun, options 
 		server.liveHTTP = live.NewHTTPServer(live.NewLocalQueryAdapter(server.liveSession), live.HTTPServerOptions{Transport: live.TransportLocalHTTP, SessionID: server.liveSession.Config().SessionID})
 		mux.Handle("/v1/live/", server.liveHTTP.Handler())
 	}
+	mux.HandleFunc("/v1/okf", server.handleOKF)
+	mux.HandleFunc("/v1/okf/", server.handleOKF)
 	server.handler = mux
 	return server, nil
 }
@@ -264,9 +273,17 @@ func (s *Server) handleRoot(writer http.ResponseWriter, request *http.Request) {
 		liveSessionID = s.liveSession.Config().SessionID
 	}
 	content = strings.ReplaceAll(content, "__ARCH_VIEW_LIVE_SESSION_ID__", html.EscapeString(liveSessionID))
+	content = strings.ReplaceAll(content, "__ARCH_VIEW_OKF_ENABLED__", strconv.FormatBool(s.okfEnabled()))
+	content = strings.ReplaceAll(content, "__ARCH_VIEW_OKF_SESSION_ID__", html.EscapeString(okfapplication.DefaultSessionID))
 	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	writer.Header().Set("Cache-Control", "no-store")
 	_, _ = io.WriteString(writer, content)
+}
+
+func (s *Server) okfEnabled() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.okf != nil && s.sourceRoot != ""
 }
 
 func (s *Server) analysisRunID() string {

@@ -1,0 +1,147 @@
+/* Shared component bases. Feature modules own sizes and layout differences. */
+.layout-settings-dialog,
+.quality-profile-dialog,
+.quality-baseline-dialog {
+  max-height: min(90vh, 58rem);
+  padding: 0;
+  background: var(--card-strong);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
+}
+
+.layout-settings-dialog,
+.quality-profile-dialog,
+.quality-baseline-dialog,
+#okf-profile-editor {
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+}
+
+.layout-settings-dialog::backdrop,
+.quality-profile-dialog::backdrop,
+.quality-baseline-dialog::backdrop {
+  background: rgba(3, 6, 16, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.layout-settings-shell,
+.quality-profile-shell,
+.quality-baseline-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 58rem);
+  padding: 1.25rem;
+}
+
+.layout-settings-header,
+.layout-settings-footer,
+.layout-save-as,
+.quality-profile-header,
+.quality-profile-footer,
+.quality-profile-toolbar,
+.quality-rule-group-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.layout-settings-header,
+.quality-profile-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.layout-settings-header h3,
+.quality-profile-header h3 { margin-bottom: 0.35rem; }
+
+.layout-settings-header .muted,
+.quality-profile-header .muted {
+  max-width: 48rem;
+  margin-bottom: 0;
+  line-height: 1.45;
+}
+
+.layout-settings-footer,
+.quality-profile-footer {
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.layout-settings-actions,
+.quality-profile-actions,
+.okf-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.5rem;
+}
+
+.settings-field input,
+.settings-field select,
+.settings-field textarea,
+.layout-option-input,
+.okf-toolbar select,
+.okf-toolbar input,
+.okf-editor-field select,
+.okf-editor-field input,
+.okf-editor-field textarea,
+.okf-form-section input,
+.okf-form-section select,
+.okf-form-section textarea {
+  color: var(--text);
+  background: var(--control-surface);
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+}
+
+.okf-toolbar label,
+.okf-editor-field,
+.okf-form-section label,
+.okf-decoration label {
+  display: grid;
+  gap: .35rem;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.okf-toolbar select,
+.okf-toolbar input,
+.okf-editor-field select,
+.okf-editor-field input,
+.okf-editor-field textarea,
+.okf-form-section input,
+.okf-form-section select,
+.okf-form-section textarea {
+  min-width: 0;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.okf-editor-field textarea,
+.okf-advanced-json textarea {
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .8rem;
+}
+
+@media (max-width: 680px) {
+  body .layout-settings-controls,
+  body .layout-save-as,
+  body .layout-settings-footer,
+  body .quality-profile-header,
+  body .quality-profile-toolbar,
+  body .quality-profile-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  body .layout-settings-actions,
+  body .quality-profile-actions { justify-content: start; }
+}

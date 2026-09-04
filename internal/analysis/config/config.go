@@ -148,7 +148,7 @@ func Decode(data []byte, registry *analysis.Registry) (Configuration, error) {
 // DecodeAt validates a document with repository and invocation-root context.
 func DecodeAt(data []byte, repositoryRoot, invocationRoot string, registry *analysis.Registry) (Configuration, error) {
 	var raw rawConfiguration
-	if err := decodeStrict(data, &raw); err != nil {
+	if err := json.Unmarshal(data, &raw); err != nil {
 		return Configuration{}, configError("configuration document is not valid JSON", map[string]any{"field": "document"}, err)
 	}
 	if raw.SchemaVersion != SchemaVersionV1 && raw.SchemaVersion != SchemaVersionV2 {

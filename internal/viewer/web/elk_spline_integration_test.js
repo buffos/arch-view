@@ -1,15 +1,13 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
 const path = require("node:path");
 const { createRequire } = require("node:module");
 
 const requireFromTest = createRequire(__filename);
-const requestSource = fs.readFileSync(path.join(__dirname, "layout_request.js"), "utf8");
-const routingSource = fs.readFileSync(path.join(__dirname, "graph_route.js"), "utf8");
+const { pathToFileURL } = require("node:url");
 
 Promise.all([
-  import("data:text/javascript;charset=utf-8," + encodeURIComponent(requestSource)),
-  import("data:text/javascript;charset=utf-8," + encodeURIComponent(routingSource))
+  import(pathToFileURL(path.join(__dirname, "layout_request.js")).href),
+  import(pathToFileURL(path.join(__dirname, "graph_route.js")).href)
 ]).then(async function (modules) {
   const request = modules[0];
   const routing = modules[1];

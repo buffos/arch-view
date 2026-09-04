@@ -11,11 +11,13 @@
     <meta name="aggregate-enabled" content="__ARCH_VIEW_AGGREGATE__">
     <meta name="live-enabled" content="__ARCH_VIEW_LIVE_ENABLED__">
     <meta name="live-session-id" content="__ARCH_VIEW_LIVE_SESSION_ID__">
+    <meta name="okf-enabled" content="__ARCH_VIEW_OKF_ENABLED__">
+    <meta name="okf-session-id" content="__ARCH_VIEW_OKF_SESSION_ID__">
     <title>Arch View</title>
     <link rel="stylesheet" href="/assets/styles.css">
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to architecture view</a>
+    <a class="skip-link" href="#main-content">Skip to main view</a>
     <header class="topbar">
       <div class="brand-block">
         <p class="eyebrow">LOCAL ARCHITECTURE SESSION</p>
@@ -26,6 +28,10 @@
         <span class="meta-divider" aria-hidden="true">·</span>
         <span id="model-status">Loading</span>
         <span id="live-status" class="live-status" aria-live="polite" hidden></span>
+        <nav id="mode-navigation" class="mode-navigation" aria-label="View modes">
+          <a id="architecture-mode-link" href="?view=architecture" hidden>Architecture viewer</a>
+          <a id="okf-mode-link" href="?view=okf" hidden>Open OKF knowledge view</a>
+        </nav>
       </div>
     </header>
 

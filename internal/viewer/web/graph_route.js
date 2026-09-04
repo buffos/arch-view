@@ -1,3 +1,5 @@
+import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.js";
+
   function finiteNumber(value, fallback) {
     return typeof value === "number" && Number.isFinite(value) ? value : fallback;
   }
@@ -293,13 +295,27 @@
       const middleY = (sourceY + targetY) / 2;
       points.push({ x: fromCenterX, y: sourceY }, { x: fromCenterX, y: middleY }, { x: toCenterX, y: middleY }, { x: toCenterX, y: targetY });
     }
-    return lineRoute(points, undefined, undefined, "orthogonal");
+    return attachShapeEndpoints(lineRoute(points, undefined, undefined, "orthogonal"), from, to);
+  }
+
+  function straightRoute(from, to) {
+    const fromCenterX = from.x + from.width / 2;
+    const fromCenterY = from.y + from.height / 2;
+    const toCenterX = to.x + to.width / 2;
+    const toCenterY = to.y + to.height / 2;
+    const deltaX = toCenterX - fromCenterX;
+    const deltaY = toCenterY - fromCenterY;
+    if (deltaX === 0 && deltaY === 0) return null;
+    return lineRoute([
+      shapeBoundaryPoint(from, deltaX, deltaY),
+      shapeBoundaryPoint(to, -deltaX, -deltaY)
+    ], undefined, undefined, "polyline");
   }
 
   function selfLoopRoute(from) {
     const x = from.x + from.width / 2;
-    const start = { x: x, y: from.y };
-    const end = { x: x, y: from.y + from.height };
+    const start = shapeBoundaryPoint(from, 0, -from.height / 2);
+    const end = shapeBoundaryPoint(from, 0, from.height / 2);
     return {
       kind: "self-loop",
       sections: [{
@@ -317,7 +333,8 @@
 
   function edgeGeometry(relationship, from, to, route) {
     if (relationship.from_visible_id === relationship.to_visible_id) return geometryFromRoute(selfLoopRoute(from));
-    const routed = geometryFromRoute(route, route && route.labelX, route && route.labelY);
+    const attached = attachShapeEndpoints(routeFromLegacyLayoutEdge(route), from, to);
+    const routed = geometryFromRoute(attached, route && route.labelX, route && route.labelY);
     if (routed) return routed;
     // Any missing or malformed route is deterministic orthogonal fallback.
     // This keeps layout failures and manual-position routing on the same
@@ -329,6 +346,7 @@ export {
   edgeGeometry,
   geometryFromRoute,
   orthogonalRoute,
+  straightRoute,
   pathForRoute,
   routeFromSections as fromELKSections,
   routeFromSplineSections as fromELKSplineSections,

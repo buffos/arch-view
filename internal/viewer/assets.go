@@ -11,6 +11,7 @@ var stylesheetModules = []string{
 	"02-typography.css",
 	"03-layout.css",
 	"04-controls.css",
+	"04-form-dialog.css",
 	"05-components.css",
 	"06-graph.css",
 	"07-details.css",
@@ -20,6 +21,7 @@ var stylesheetModules = []string{
 	"11-inspection.css",
 	"12-quality.css",
 	"13-quality-profile.css",
+	"14-okf.css",
 }
 
 // Asset returns one of the browser assets embedded in the viewer. Exporters

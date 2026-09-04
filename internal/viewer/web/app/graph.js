@@ -1,7 +1,9 @@
 import { edgeGeometry } from "../graph_route.js";
+import { nodeShapeMarkup } from "./node_shape.js";
 import { fallbackLayout } from "./layout.js";
 import { sceneLayoutKey } from "./view.js";
 import { defaultViewport, persistViewport, renderViewportControls } from "./viewport.js";
+import { bindViewportGestures } from "./viewport_runtime.js";
 import { classForState, escapeHTML, formatLanguage, nodeLanguageBadge, nodeLanguageText, referenceScopeLabel, truncate } from "./utils.js";
 
 export function renderGraph(context, services) {
@@ -56,8 +58,8 @@ export function renderGraph(context, services) {
     const badgeClass = "node-language-badge " + classForState(languageValue) + (!matches ? " dimmed" : "");
     return '<g data-node-id="' + escapeHTML(node.id) + '" data-node-kind="' + escapeHTML(node.kind) + '" data-node-language="' + escapeHTML(languageValue) + '" tabindex="0" role="button" aria-label="' + escapeHTML(accessibleLabel) + '">' +
       '<title>' + escapeHTML(accessibleLabel) + "</title>" +
-      '<rect class="' + className + '" x="' + position.x + '" y="' + position.y + '" width="' + position.width + '" height="' + position.height + '" rx="12"></rect>' +
-      '<rect class="node-hitzone" x="' + position.x + '" y="' + position.y + '" width="' + position.width + '" height="' + position.height + '" rx="12"></rect>' +
+      nodeShapeMarkup("rounded_rectangle", position, ' class="' + className + '"') +
+      nodeShapeMarkup("rounded_rectangle", position, ' class="node-hitzone"') +
       '<rect class="' + badgeClass + '" x="' + badgeX + '" y="' + (position.y + 10) + '" width="' + badgeWidth + '" height="18" rx="9"></rect>' +
       '<text class="node-language-badge-label ' + (!matches ? "dimmed" : "") + '" x="' + (badgeX + badgeWidth / 2) + '" y="' + (position.y + 22.5) + '" text-anchor="middle">' + escapeHTML(badgeText) + "</text>" +
       '<text class="node-label ' + (!matches ? "dimmed" : "") + '" x="' + (position.x + 14) + '" y="' + (position.y + 30) + '">' + escapeHTML(truncate(node.label, 25)) + "</text>" +
@@ -121,14 +123,19 @@ function bindGraphInteractions(context, svg, positions, services) {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(); }
     });
   });
-  svg.addEventListener("pointerdown", function (event) {
-    if (event.button !== 0 || event.target.closest("[data-node-id], [data-edge-id]")) return;
-    beginPan(context, event, svg, services);
+  bindViewportGestures(svg, {
+    getViewport: function () {
+      if (!context.state.viewport) context.state.viewport = defaultViewport();
+      return context.state.viewport;
+    },
+    getBaseScale: function () { return graphBaseScale(context, svg); },
+    panSpeed: context.constants.panSpeed,
+    panLimit: context.constants.panLimit,
+    isPanTarget: function (target) { return !(target && typeof target.closest === "function" && target.closest("[data-node-id], [data-edge-id]")); },
+    onChange: function () { persistViewport(context); },
+    onRender: function () { services.renderGraph(); },
+    onZoom: function (delta) { services.changeZoom(delta); }
   });
-  svg.addEventListener("wheel", function (event) {
-    event.preventDefault();
-    services.changeZoom(event.deltaY < 0 ? 0.08 : -0.08);
-  }, { passive: false });
 }
 
 function graphBaseScale(context, svg) {
@@ -138,27 +145,6 @@ function graphBaseScale(context, svg) {
   const width = Math.max(1, svg.clientWidth);
   const height = Math.max(1, svg.clientHeight);
   return Math.max(0.01, Math.min(width / Math.max(1, active.width), height / Math.max(1, active.height)));
-}
-
-function beginPan(context, event, svg, services) {
-  if (!context.state.viewport) context.state.viewport = defaultViewport();
-  const start = { x: event.clientX, y: event.clientY, panX: context.state.viewport.panX, panY: context.state.viewport.panY };
-  const baseScale = graphBaseScale(context, svg);
-  event.preventDefault();
-  function move(pointerEvent) {
-    context.state.viewport.panX = clamp(context, start.panX + ((pointerEvent.clientX - start.x) / baseScale) * context.constants.panSpeed, -context.constants.panLimit, context.constants.panLimit, start.panX);
-    context.state.viewport.panY = clamp(context, start.panY + ((pointerEvent.clientY - start.y) / baseScale) * context.constants.panSpeed, -context.constants.panLimit, context.constants.panLimit, start.panY);
-    persistViewport(context);
-    services.renderGraph();
-  }
-  function stop() {
-    document.removeEventListener("pointermove", move);
-    document.removeEventListener("pointerup", stop);
-    document.removeEventListener("pointercancel", stop);
-  }
-  document.addEventListener("pointermove", move);
-  document.addEventListener("pointerup", stop);
-  document.addEventListener("pointercancel", stop);
 }
 
 function beginNodeDrag(context, event, svg, nodeID, position, services) {
@@ -204,10 +190,6 @@ function beginNodeDrag(context, event, svg, nodeID, position, services) {
   document.addEventListener("pointermove", move);
   document.addEventListener("pointerup", stop);
   document.addEventListener("pointercancel", stop);
-}
-
-function clamp(context, value, minimum, maximum, fallback) {
-  return typeof value === "number" && Number.isFinite(value) ? Math.max(minimum, Math.min(maximum, value)) : fallback;
 }
 
 function nodeMatches(state, node) {

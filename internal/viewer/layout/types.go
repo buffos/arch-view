@@ -102,10 +102,12 @@ type Session struct {
 	diagnostics  []LayoutDiagnostic
 	sourceRoot   string
 	analysisRaw  json.RawMessage
+	rawDocument  json.RawMessage
 }
 
 type layoutConfigFile struct {
 	SchemaVersion string          `json:"schema_version"`
 	Layout        LayoutProfile   `json:"layout"`
 	Analysis      json.RawMessage `json:"analysis,omitempty"`
+	OKF           json.RawMessage `json:"okf,omitempty"`
 }
