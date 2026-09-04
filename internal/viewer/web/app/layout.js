@@ -1,5 +1,6 @@
-import { fromELKSections, fromELKSplineSections } from "../graph_route.js";
 import { runFeatureLayout } from "./elk_runtime.js";
+import { normalizeGeometrySnapshot } from "./geometry_snapshot.js";
+import { architectureGeometrySource } from "./geometry_source.js";
 import { renderLayoutForm } from "./layout_form.js";
 import { sceneLayoutKey } from "./view.js";
 import { cloneLayoutProfile, numberOrZero, layoutRequestPayload } from "./utils.js";
@@ -39,34 +40,19 @@ export function fallbackLayout(context, scene) {
   return { engine: "fallback", key: sceneLayoutKey(scene), width: width, height: height, positions: positions, edges: {} };
 }
 
-function profileEdgeRouting(profile) {
-  const options = profile && profile.options ? profile.options : {};
-  return String(options["org.eclipse.elk.edgeRouting"] || options["elk.edgeRouting"] || "ORTHOGONAL").toUpperCase();
-}
-
 export function adaptELKLayout(scene, result, key, algorithm, profile) {
   const offset = 24;
-  const positions = {};
-  (result.children || []).forEach(function (child) {
-    positions[child.id] = { x: numberOrZero(child.x) + offset, y: numberOrZero(child.y) + offset, width: numberOrZero(child.width) || 190, height: numberOrZero(child.height) || 82 };
-  });
-  const edges = {};
-  const edgeRouting = profileEdgeRouting(profile);
-  (result.edges || []).forEach(function (edge) {
-    const route = edgeRouting === "SPLINES"
-      ? fromELKSplineSections(edge.sections, offset)
-      : fromELKSections(edge.sections, offset);
-    if (route) edges[edge.id] = route;
-  });
+  const geometry = normalizeGeometrySnapshot(scene, result, profile, result.geometrySource || architectureGeometrySource(scene), offset);
   const fallback = fallbackLayout({ embeddedExport: null }, scene);
   return {
     engine: "elk." + (algorithm || "layered"),
     key: key,
     width: Math.max(760, numberOrZero(result.width) + offset * 2, fallback.width),
     height: Math.max(430, numberOrZero(result.height) + offset * 2, fallback.height),
-    positions: positions,
-    edges: edges,
-    diagnostics: result.featureDiagnostics || []
+    positions: geometry.positions,
+    edges: geometry.routes,
+    geometry,
+    diagnostics: geometry.diagnostics
   };
 }
 
@@ -76,7 +62,7 @@ export async function prepareLayout(context, scene, profile, services) {
   context.state.layoutKey = key;
   const request = ++context.state.layoutRequest;
   try {
-    const result = await runFeatureLayout(scene, profile || context.state.layoutProfile, context.state.layoutCatalog, context.workerURL, window.ELK);
+    const result = await runFeatureLayout(scene, profile || context.state.layoutProfile, context.state.layoutCatalog, context.workerURL, window.ELK, architectureGeometrySource(scene));
     if (request !== context.state.layoutRequest || context.state.scene !== scene) return;
     context.state.layout = adaptELKLayout(scene, result, key, (context.state.layoutProfile && context.state.layoutProfile.algorithm) || "layered", profile || context.state.layoutProfile);
     context.state.layoutError = false;

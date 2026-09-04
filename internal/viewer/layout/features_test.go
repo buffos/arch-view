@@ -10,14 +10,14 @@ import (
 	"github.com/buffo/arch-view/internal/analysis"
 )
 
-func TestFeatureMetadataAndStageOneAvailability(t *testing.T) {
+func TestFeatureMetadataAndStagedAvailability(t *testing.T) {
 	features := FeatureCatalog()
 	if len(features) != 5 {
 		t.Fatal(features)
 	}
 	owned := map[string]bool{}
 	for _, feature := range features {
-		if feature.Status != "not-implemented" || feature.Stage < 2 || len(feature.Algorithms) == 0 || len(feature.Surfaces) != 3 || feature.Fallback == "" {
+		if feature.Stage < 2 || len(feature.Algorithms) == 0 || len(feature.Surfaces) != 3 || feature.Fallback == "" {
 			t.Fatal(feature)
 		}
 		for _, field := range feature.Owns {
@@ -26,9 +26,16 @@ func TestFeatureMetadataAndStageOneAvailability(t *testing.T) {
 			}
 			owned[field] = true
 		}
-		_, err := ValidateProfile(LayoutProfile{Algorithm: "layered", Features: []string{feature.ID}})
-		if analysis.ErrorCodeOf(err) != "renderer_feature_unavailable" {
-			t.Fatal(err)
+		profile := LayoutProfile{Algorithm: "layered", Features: []string{feature.ID}, Options: map[string]any{}}
+		if feature.ID == "spline_refinement" {
+			profile.Options["org.eclipse.elk.edgeRouting"] = "SPLINES"
+		}
+		_, err := ValidateProfile(profile)
+		if feature.Stage == 2 && err != nil {
+			t.Fatalf("supported stage 2 feature %s: %v", feature.ID, err)
+		}
+		if feature.Stage > 2 && analysis.ErrorCodeOf(err) != "renderer_feature_unavailable" {
+			t.Fatalf("future feature %s: %v", feature.ID, err)
 		}
 	}
 	_, err := ValidateProfile(LayoutProfile{Algorithm: "layered", Features: []string{"unknown"}})
@@ -46,7 +53,7 @@ func TestSavedUnavailableFeaturesRemainPreferences(t *testing.T) {
 	}
 	session := NewSession(root)
 	response := session.Response()
-	if response.Status != "valid" || !reflect.DeepEqual(response.Layout.Features, []string{"edge_labels", "ports"}) || len(response.Diagnostics) != 2 {
+	if response.Status != "valid" || !reflect.DeepEqual(response.Layout.Features, []string{"edge_labels", "ports"}) || len(response.Diagnostics) != 1 {
 		t.Fatalf("%+v", response)
 	}
 	response.Layout.Features[0] = "mutated"
@@ -56,6 +63,21 @@ func TestSavedUnavailableFeaturesRemainPreferences(t *testing.T) {
 	after, _ := os.ReadFile(path)
 	if string(after) != string(data) {
 		t.Fatal("read rewrote preferences")
+	}
+}
+
+func TestAdvancedEdgeSettingsRequireTheirFeatures(t *testing.T) {
+	profile := LayoutProfile{Algorithm: "layered", Features: []string{"edge_labels", "spline_refinement"}, Options: map[string]any{
+		"org.eclipse.elk.edgeRouting":                      "SPLINES",
+		"org.eclipse.elk.edgeLabels.placement":             "TAIL",
+		"org.eclipse.elk.layered.edgeRouting.splines.mode": "SLOPPY",
+	}}
+	if _, err := ValidateProfile(profile); err != nil {
+		t.Fatal(err)
+	}
+	profile.Features = []string{"edge_labels"}
+	if _, err := ValidateProfile(profile); err == nil {
+		t.Fatal("spline setting accepted without its renderer feature")
 	}
 }
 

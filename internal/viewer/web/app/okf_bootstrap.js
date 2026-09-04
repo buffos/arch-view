@@ -252,6 +252,11 @@ async function renderState(state, elements, workerURL, services, extraDiagnostic
   const layout = await renderOKFGraph(elements.graph, snapshot, state.selectedID, { onSelect: services.select, onFocus: services.focus, onZoom: (delta) => changeOKFZoom(state, elements, delta), layoutProfile: state.layoutProfile, layoutCatalog: state.layoutCatalog, getViewport: () => state.viewport, onViewportChange: () => persistOKFViewport(state), onViewportRender: () => renderOKFViewportControls(state, elements), onLayoutReady: (value) => { state.layout = value; }, isCurrent: () => requestID == null || isCurrent(state, requestID), onLayoutError: (error, recovery) => { if (requestID == null || isCurrent(state, requestID)) setStatus(elements, recovery.retained ? "Layout failed; the previous layout is retained." : "Layout failed; deterministic fallback is active.", diagnostics.concat({ code: "okf_layout_failed", severity: "warning", message: error.message }), tone === "error" ? "error" : "warning"); } }, workerURL || state.workerURL);
   if (requestID != null && !isCurrent(state, requestID)) return;
   if (layout) state.layout = layout;
+  if (layout?.diagnostics?.length) {
+    const layoutDiagnostics = diagnostics.concat(layout.diagnostics);
+    setStatus(elements, "Showing " + (snapshot.source?.bundle_id || "selected bundle") + " with safe geometry fallbacks.", layoutDiagnostics,
+      layoutDiagnostics.some((item) => item.severity === "error") ? "error" : "warning");
+  }
   updateOKFSelection(elements.graph, state.selectedID);
   updateOKFSemanticLinks(elements.graph, snapshot, state.selectedID, state.layout, state.viewport);
   if (!state.viewportInitialized) fitOKFViewport(state, elements);

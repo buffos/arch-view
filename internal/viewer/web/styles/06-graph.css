@@ -67,6 +67,13 @@
 .edge-label.cycle {
   fill: var(--red);
 }
+.edge-junction {
+  fill: var(--surface);
+  stroke: var(--cyan);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 
 .node-shape {
   fill: #1b2a4d;

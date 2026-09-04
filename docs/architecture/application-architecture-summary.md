@@ -7,6 +7,9 @@ and geometry functions, with separate persisted profiles. Delivery starts with
 useful settings and registry/persistence, followed by edges, ports and compound
 geometry. Every stage has an automated and human visual gate. No server-side
 ELK service or parallel settings endpoint is introduced.
+The registry/settings stage is approved and archived. Shared edge-label bounds,
+junction validation, spline preservation, geometry-v1 normalization, and
+per-edge fallback are implemented in Stage 2 and await human visual approval.
 
 ## Status
 

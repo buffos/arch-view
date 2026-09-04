@@ -9,7 +9,7 @@
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `ready-for-agent`
+- Suggested state: `awaiting-human-review`
 
 ## Parent Artifacts
 
@@ -29,13 +29,13 @@ controls and geometry. No feature-specific switches in scene adapters.
 
 ## Acceptance criteria
 
-- [ ] Existing count labels use ELK bounds without invented counts.
-- [ ] Validated shared junctions and connected cubic sections render through shared geometry.
-- [ ] Geometry v1 source identity supports architecture and OKF; invalid output falls back safely.
-- [ ] Actual downloaded SVG and embedded/static export behavior verified.
-- [ ] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
-- [ ] Automated verification and scenario evidence complete; implementation files below 600 lines.
-- [ ] Required artifact synchronization complete.
+- [x] Existing count labels use ELK bounds without invented counts.
+- [x] Validated shared junctions and connected cubic sections render through shared geometry.
+- [x] Geometry v1 source identity supports architecture and OKF; invalid output falls back safely.
+- [x] Actual downloaded SVG and embedded/static export behavior verified.
+- [x] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
+- [x] Automated verification and scenario evidence complete; implementation files below 600 lines.
+- [x] Required artifact synchronization complete.
 - [ ] Explicit human visual approval recorded before next stage or closeout.
 
 ## Artifact sync required
@@ -54,7 +54,9 @@ geometry and Download SVG when applicable. Automated checks do not waive review.
 
 ## Blocked by
 
-Issue 080, including its explicit human visual approval.
+Resolved: issue 080 is archived at
+`docs/agents/issues/done/20260904-080-shared-elk-settings-and-feature-registry.md`
+with explicit human visual approval.
 
 ## Artifact anchors
 
@@ -82,14 +84,20 @@ remain explicitly owned by their later blocked issues.
 
 | Scenario | Backend boundary | Frontend integration | End-to-end journey |
 |---|---|---|---|
-| SC-AER-002 | planned | planned | planned |
-| SC-AER-003 | planned | planned | planned |
-| SC-AER-006 | planned | planned | planned |
-| SC-AER-007 | planned | planned | planned |
-| SC-AER-009 | planned | not-applicable | planned |
-| SC-AER-010 | planned | planned | planned |
-| SC-AER-011 | planned | planned | planned |
+| SC-AER-002 | `layout/features_test.go` | `advanced_edge_features_test.js` | live architecture and OKF review |
+| SC-AER-003 | pinned ELK fixture | `advanced_edge_features_test.js` | live junction rendering and browser SVG serialization |
+| SC-AER-006 | pinned ELK fixture | `advanced_edge_features_test.js`, `elk_spline_integration_test.js` | live architecture spline review |
+| SC-AER-007 | static export provenance test | malformed-output fallback fixture | last-valid scene and diagnostic review |
+| SC-AER-009 | `export/layout_features_test.go` | not-applicable | static SVG limitation reported in provenance |
+| SC-AER-010 | catalog/profile validation | no-invented-count fixture and OKF graph tests | live selected-only arrowless semantic-link review |
+| SC-AER-011 | feature catalog consistency | registry and shared presentation tests | both viewers use the same settings and geometry modules |
 
 Run full Go tests, race, vet/build, browser tests/syntax, strict OKF validation,
 diff and line audits. Record focused test evidence for every addressed rule,
 not only a broad green command.
+
+## Evidence
+
+See `docs/agents/reviews/20260904-advanced-elk-stage-2.md`. Automated checks
+and the implementer visual pass are complete. The issue remains open solely
+for the required independent human visual approval.

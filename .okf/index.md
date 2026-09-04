@@ -15,8 +15,8 @@
 
 - Initial topology: confirmed on 2026-08-25.
 - State totals: 0 `foggy`, 0 `bounded`, 1 `specified`, 18 `implemented`.
-- Advanced ELK has approved stages 080–083. Stage 1 delivers shared settings and
-  registry foundations; later stages remain blocked on human visual review.
+- Advanced ELK has approved stages 080–083. Stage 1 is archived; Stage 2 edge
+  geometry is implemented and awaits human visual approval before ports begin.
 - The [Configurable OKF knowledge views](capabilities/okf-knowledge-views.md)
   capability is a first-class root-level implemented capability. Its exact
   reference set is maintained under
@@ -26,9 +26,8 @@
   verified and archived after the user's explicit visual approval on
   2026-09-04.
 - Next implementation transition: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
-  is the next eligible specified node. Its exact renderer contract is ready,
-  existing viewer/ELK prerequisites are implemented, and no delivery issues
-  have been created yet; issue slicing is the next bounded action.
+  is active through staged issues 080–083. Issue 081 awaits visual approval;
+  issue 082 cannot begin before that gate is recorded.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their

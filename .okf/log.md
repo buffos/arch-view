@@ -1463,3 +1463,15 @@
 - Archived issue 080 and unblocked issue 081 for advanced edge geometry.
 - Advanced ELK renderer support remains specified because issues 081–083 are
   still active. No capability or roll-up state changed.
+
+### Advanced ELK Stage 2 awaiting visual review
+
+- Implemented issue 081 through the shared architecture/OKF feature pipeline:
+  ELK-provided count-label bounds, validated shared junctions, connected cubic
+  splines, geometry-v1 source identity, and deterministic per-edge fallback.
+- Browser Download SVG retains the live advanced geometry. Go static SVG keeps
+  deterministic orthogonal output and reports unapplied advanced features in
+  provenance.
+- Automated Go, race, vet/build, browser, syntax, export, strict OKF, diff, and
+  line-count checks pass. The capability remains `specified`; issue 081 awaits
+  explicit human visual approval and issues 082–083 remain blocked.
