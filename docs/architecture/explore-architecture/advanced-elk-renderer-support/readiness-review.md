@@ -1,5 +1,9 @@
 # Advanced ELK renderer support architecture readiness review
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## Findings
 
 No High or Medium findings remain. The admitted feature set, additive geometry
@@ -41,3 +45,9 @@ workflow semantics change; the Go static SVG limitation is explicit.
 ## Readiness
 
 READY FOR ARCHITECTURE IMPLEMENTATION
+
+Stage 1, issue 080, is implemented and awaiting human visual review. Pinned
+runtime fixtures verified the admitted settings; broken NONE/BFS values and
+unimplemented CONSTRAINT weighting remain unavailable with explicit reasons.
+See docs/agents/reviews/20260904-advanced-elk-stage-1.md for executed evidence.
+Stages 2–4 remain blocked and all five advanced features remain unavailable.

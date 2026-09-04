@@ -144,7 +144,9 @@
 
 .layout-option-control {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
 }
 
 .layout-option-state {

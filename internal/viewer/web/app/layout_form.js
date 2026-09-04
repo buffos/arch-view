@@ -1,4 +1,7 @@
 import { escapeHTML, formatOptionValue, optionBoundsText } from "./utils.js";
+import { renderOptionControl, updateOptionValue } from "./layout_option_controls.js";
+import { featureProblems } from "./layout_features.js";
+import { validPadding } from "./layout_value.js";
 
 export function optionAppliesToAlgorithm(option, algorithm) {
   const algorithms = option && Array.isArray(option.algorithms) ? option.algorithms : [];
@@ -10,31 +13,48 @@ function optionDefaultText(option) {
 }
 
 function optionDisplayValue(option, draft) {
-  if (draft && draft.options && Object.prototype.hasOwnProperty.call(draft.options, option.id)) return String(draft.options[option.id]);
+  if (draft && draft.options && Object.prototype.hasOwnProperty.call(draft.options, option.id)) return formatOptionValue(draft.options[option.id]);
   return "";
 }
 
-function optionInput(option, draft, applicable) {
-  if (!applicable) return '<span class="layout-option-state">Not applicable to this algorithm</span>';
-  if (!option.editable || option.renderer_support !== "supported") return '<span class="layout-option-state">Cataloged · unsupported by this renderer</span>';
-  const value = optionDisplayValue(option, draft);
-  const id = "layout-option-" + option.id.replace(/[^a-z0-9_-]/gi, "-");
-  const attributes = 'data-layout-option-id="' + escapeHTML(option.id) + '" aria-label="' + escapeHTML(option.name) + '"';
-  if (option.allowed_values && option.allowed_values.length) {
-    const choices = ['<option value="">Engine default</option>'].concat(option.allowed_values.map(function (choice) {
-      const text = String(choice);
-      return '<option value="' + escapeHTML(text) + '"' + (value === text ? " selected" : "") + ">" + escapeHTML(text) + "</option>";
-    }));
-    return '<select id="' + id + '" class="layout-option-input" ' + attributes + ">" + choices.join("") + "</select>";
+export function optionAvailability(option, draft) {
+  if (!optionAppliesToAlgorithm(option, draft.algorithm)) return "Not applicable to this algorithm";
+  const missing = (option.required_features || []).filter((id) => !(draft.features || []).includes(id));
+  if (missing.length) return "Requires an enabled feature: " + missing.join(", ");
+  if (!option.editable || option.renderer_support !== "supported") return "Not implemented";
+  return "";
+}
+
+function optionInput(option, draft) {
+  const reason = optionAvailability(option, draft);
+  return reason ? '<span class="layout-option-state">' + escapeHTML(reason) + "</span>" : renderOptionControl(option, draft);
+}
+
+export function layoutDraftProblems(draft, catalog) {
+  const problems = featureProblems(draft, catalog);
+  for (const [id, value] of Object.entries(draft?.options || {})) {
+    const option = catalog?.options?.find((item) => item.id === id);
+    if (!option) { problems.push("Unknown layout option: " + id); continue; }
+    const reason = optionAvailability(option, draft);
+    if (reason) problems.push(option.name + ": " + reason);
+    if (option.control === "padding" && !validPadding(value)) problems.push("Padding requires four numbers between 0 and 10000.");
+    if (["INT", "DOUBLE"].includes(option.type) && (!Number.isFinite(value) || option.type === "INT" && !Number.isInteger(value)
+      || option.minimum != null && (value < option.minimum || option.minimum_exclusive && value === option.minimum)
+      || option.maximum != null && (value > option.maximum || option.maximum_exclusive && value === option.maximum))) problems.push(option.name + " is outside its supported range.");
+    if (option.allowed_values?.length && !option.allowed_values.includes(value)) problems.push(option.name + " has an unsupported value.");
   }
-  if (option.type === "BOOLEAN") return '<select id="' + id + '" class="layout-option-input" ' + attributes + '><option value="">Engine default</option><option value="true"' + (value === "true" ? " selected" : "") + '>true</option><option value="false"' + (value === "false" ? " selected" : "") + '>false</option></select>';
-  if (option.type === "INT" || option.type === "DOUBLE") {
-    const step = option.type === "INT" ? "1" : "any";
-    const min = option.minimum == null ? "" : ' min="' + escapeHTML(option.minimum) + '"';
-    const max = option.maximum == null ? "" : ' max="' + escapeHTML(option.maximum) + '"';
-    return '<input id="' + id + '" class="layout-option-input" type="number" step="' + step + '" value="' + escapeHTML(value) + '" placeholder="Engine default"' + min + max + " " + attributes + ">";
-  }
-  return '<input id="' + id + '" class="layout-option-input" type="text" value="' + escapeHTML(value) + '" placeholder="Engine default" ' + attributes + ">";
+  return problems;
+}
+
+function featureControls(state) {
+  return '<label><input type="checkbox" data-layout-catalog-filter' + (state.layoutShowCatalog ? " checked" : "") + '> Show complete catalog</label>'
+    + '<details><summary>Advanced renderer features</summary>'
+    + (state.layoutCatalog.features || []).map((feature) => {
+      const selected = (state.layoutDraft.features || []).includes(feature.id);
+      return '<label class="layout-option-state"><input type="checkbox" data-layout-feature="' + escapeHTML(feature.id) + '"'
+        + (selected ? " checked" : "") + (!selected && feature.status !== "supported" ? " disabled" : "") + "> "
+        + escapeHTML(feature.name) + (feature.status === "supported" ? "" : " · Not implemented, delivery stage " + feature.stage) + "</label>";
+    }).join("") + "</details>";
 }
 
 function originLabel(config, options) {
@@ -88,7 +108,8 @@ export function renderLayoutForm(context, config, options = {}) {
   const optionsList = state.layoutCatalog.options.slice().sort(function (left, right) {
     return String(left.group || "").localeCompare(String(right.group || "")) || String(left.name).localeCompare(String(right.name));
   }).filter(function (option) {
-    return !query || [option.id, option.name, option.group, option.description].join(" ").toLowerCase().includes(query);
+    return (state.layoutShowCatalog || !optionAvailability(option, state.layoutDraft) || Object.hasOwn(state.layoutDraft.options || {}, option.id))
+      && (!query || [option.id, option.name, option.group, option.description].join(" ").toLowerCase().includes(query));
   });
   if (!optionsList.length) {
     elements.layoutOptionsList.innerHTML = '<p class="muted">No ELK options match this search.</p>';
@@ -105,11 +126,18 @@ export function renderLayoutForm(context, config, options = {}) {
         markup.push('<h4 class="layout-option-group">' + escapeHTML(group) + "</h4>");
         lastGroup = group;
       }
-      markup.push('<article class="layout-option ' + supportClass + '"><div class="layout-option-copy"><div class="layout-option-title"><strong>' + escapeHTML(option.name) + '</strong><code>' + escapeHTML(option.id) + '</code></div><div class="layout-option-meta">' + escapeHTML(group) + " · " + escapeHTML(option.type) + " · default: " + escapeHTML(optionDefaultText(option)) + " · current: " + escapeHTML(currentLabel) + escapeHTML(optionBoundsText(option)) + '</div><p>' + escapeHTML(option.description) + '</p></div><div class="layout-option-control">' + optionInput(option, state.layoutDraft, applicable) + '</div></article>');
+      const reset = Object.hasOwn(state.layoutDraft.options || {}, option.id) ? '<label><input type="checkbox" data-layout-clear="' + escapeHTML(option.id) + '"> Reset to engine default</label>' : "";
+      markup.push('<article class="layout-option ' + supportClass + '"><div class="layout-option-copy"><div class="layout-option-title"><strong>' + escapeHTML(option.name) + '</strong><code>' + escapeHTML(option.id) + '</code></div><div class="layout-option-meta">' + escapeHTML(group) + " · " + escapeHTML(option.type) + " · default: " + escapeHTML(optionDefaultText(option)) + " · current: " + escapeHTML(currentLabel) + escapeHTML(optionBoundsText(option)) + '</div><p>' + escapeHTML(option.description) + '</p><p>' + escapeHTML(option.support_note || "") + '</p></div><div class="layout-option-control">' + optionInput(option, state.layoutDraft) + reset + '</div></article>');
     });
     elements.layoutOptionsList.innerHTML = markup.join("");
   }
-  elements.layoutSettingsApply.disabled = Boolean(options.disableApply);
+  elements.layoutOptionsList.innerHTML = featureControls(state) + elements.layoutOptionsList.innerHTML;
+  const problems = layoutDraftProblems(state.layoutDraft, state.layoutCatalog);
+  if (problems.length) {
+    elements.layoutSettingsStatus.textContent = problems.join(" ");
+    elements.layoutSettingsStatus.className = "layout-settings-status-error";
+  }
+  elements.layoutSettingsApply.disabled = Boolean(options.disableApply) || problems.length > 0;
   if (elements.layoutSettingsSave) elements.layoutSettingsSave.hidden = options.showPersistence === false;
   if (elements.layoutSettingsSaveAs) elements.layoutSettingsSaveAs.hidden = options.showPersistence === false;
   if (elements.layoutResetDefaults) elements.layoutResetDefaults.hidden = options.showPersistence === false;
@@ -117,39 +145,44 @@ export function renderLayoutForm(context, config, options = {}) {
     const saveAs = elements.layoutSaveAsDirectory.closest(".layout-save-as");
     if (saveAs) saveAs.hidden = options.showPersistence === false;
   }
-  if (elements.layoutSettingsSave) elements.layoutSettingsSave.disabled = options.showPersistence === false || !config || !config.can_save;
-  if (elements.layoutSettingsSaveAs) elements.layoutSettingsSaveAs.disabled = options.showPersistence === false || !config || !config.can_save_as;
+  if (elements.layoutSettingsSave) elements.layoutSettingsSave.disabled = problems.length > 0 || options.showPersistence === false || !config || !config.can_save;
+  if (elements.layoutSettingsSaveAs) elements.layoutSettingsSaveAs.disabled = problems.length > 0 || options.showPersistence === false || !config || !config.can_save_as;
 }
 
 export function updateLayoutDraftAlgorithm(context, event) {
   const state = context.state;
   if (!state.layoutDraft) state.layoutDraft = { algorithm: "layered", options: {} };
   state.layoutDraft.algorithm = event.target.value;
-  if (state.layoutCatalog && state.layoutDraft.options) {
-    Object.keys(state.layoutDraft.options).forEach(function (optionID) {
-      const option = state.layoutCatalog.options.find(function (item) { return item.id === optionID; });
-      if (option && !optionAppliesToAlgorithm(option, state.layoutDraft.algorithm)) delete state.layoutDraft.options[optionID];
-    });
-  }
   state.layoutMessage = "Unsaved settings changes";
   state.layoutMessageError = false;
   renderLayoutForm(context, context.state.layoutConfig, context.layoutFormOptions || {});
 }
 
 export function updateLayoutDraftOption(context, event) {
-  const input = event.target.closest("[data-layout-option-id]");
   const state = context.state;
+  const control = event.target.dataset || {};
+  if (Object.hasOwn(control, "layoutCatalogFilter")) {
+    state.layoutShowCatalog = event.target.checked;
+    renderLayoutForm(context, state.layoutConfig, context.layoutFormOptions || {}); return;
+  }
+  if (control.layoutFeature) {
+    const selected = new Set(state.layoutDraft.features || []);
+    if (event.target.checked) selected.add(control.layoutFeature); else selected.delete(control.layoutFeature);
+    state.layoutDraft.features = [...selected].sort();
+    renderLayoutForm(context, state.layoutConfig, context.layoutFormOptions || {}); return;
+  }
+  if (control.layoutClear) {
+    delete state.layoutDraft.options[control.layoutClear];
+    renderLayoutForm(context, state.layoutConfig, context.layoutFormOptions || {}); return;
+  }
+  const input = event.target.closest("[data-layout-option-id]");
   if (!input || !state.layoutDraft || !state.layoutCatalog) return;
   const option = (state.layoutCatalog.options || []).find(function (item) { return item.id === input.dataset.layoutOptionId; });
   if (!option) return;
-  const raw = input.value;
-  if (raw === "") delete state.layoutDraft.options[option.id];
-  else if (option.type === "BOOLEAN") state.layoutDraft.options[option.id] = raw === "true";
-  else if (option.type === "INT") state.layoutDraft.options[option.id] = Number.parseInt(raw, 10);
-  else if (option.type === "DOUBLE") state.layoutDraft.options[option.id] = Number.parseFloat(raw);
-  else state.layoutDraft.options[option.id] = raw;
+  updateOptionValue(option, input, state.layoutDraft);
   state.layoutMessage = "Unsaved settings changes";
   state.layoutMessageError = false;
   context.elements.layoutSettingsStatus.textContent = state.layoutMessage;
   context.elements.layoutSettingsStatus.className = "muted";
+  if (event.type === "change") renderLayoutForm(context, state.layoutConfig, context.layoutFormOptions || {});
 }

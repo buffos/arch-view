@@ -32,7 +32,7 @@ func TestLayoutCatalogMatchesPinnedELKSurface(t *testing.T) {
 		t.Fatalf("direction metadata = %#v", direction)
 	}
 	unsupported, ok := layoutOptionByID("org.eclipse.elk.padding")
-	if !ok || unsupported.Editable || unsupported.RendererSupport != "unsupported" {
+	if !ok || !unsupported.Editable || unsupported.Control != "padding" || unsupported.RendererSupport != "supported" {
 		t.Fatalf("padding metadata = %#v", unsupported)
 	}
 	edgeRouting, ok := layoutOptionByID("org.eclipse.elk.edgeRouting")
@@ -345,7 +345,7 @@ func TestValidateLayoutProfileRejectsUnknownAndUnsafeOptions(t *testing.T) {
 		{name: "wrong type", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.direction": 1.0}}, code: analysis.ErrInvalidOptions},
 		{name: "bad enum", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.edgeRouting": "curved"}}, code: analysis.ErrInvalidOptions},
 		{name: "spline algorithm incompatibility", profile: LayoutProfile{Algorithm: "force", Options: map[string]any{"org.eclipse.elk.edgeRouting": "SPLINES"}}, code: analysis.ErrInvalidOptions},
-		{name: "unsupported object", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.padding": "10"}}, code: analysis.ErrUnsupportedOption},
+		{name: "invalid padding", profile: LayoutProfile{Algorithm: "layered", Options: map[string]any{"org.eclipse.elk.padding": "10"}}, code: analysis.ErrInvalidOptions},
 		{name: "unknown algorithm", profile: LayoutProfile{Algorithm: "not-real", Options: map[string]any{}}, code: analysis.ErrUnsupportedOption},
 		{name: "missing algorithm", profile: LayoutProfile{Options: map[string]any{}}, code: analysis.ErrInvalidOptions},
 		{name: "blank algorithm", profile: LayoutProfile{Algorithm: "  ", Options: map[string]any{}}, code: analysis.ErrInvalidOptions},

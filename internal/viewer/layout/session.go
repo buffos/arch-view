@@ -32,6 +32,13 @@ func ValidateProfile(profile LayoutProfile) (LayoutProfile, error) {
 	return validateLayoutProfile(profile)
 }
 
+// ValidateStoredProfile retains known feature preferences absent from this
+// build. Rendering negotiates an effective subset and reports degradation.
+// Explicit Apply/Save must continue to use ValidateProfile.
+func ValidateStoredProfile(profile LayoutProfile) (LayoutProfile, error) {
+	return validateProfile(profile, true)
+}
+
 // EncodeConfig serializes a validated profile using the stable config schema.
 func EncodeConfig(profile LayoutProfile) ([]byte, error) {
 	return encodeLayoutConfig(profile)

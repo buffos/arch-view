@@ -18,6 +18,9 @@ func saveLayoutDocument(path string, profile LayoutProfile, initial []byte) ([]b
 			return nil, err
 		}
 		raw["layout"] = encoded
+		if len(profile.Features) > 0 {
+			projectdocument.RequireV2(raw)
+		}
 		updated, err := json.MarshalIndent(raw, "", "  ")
 		return append(updated, '\n'), err
 	})

@@ -179,7 +179,7 @@ func normalizeRequest(request Request) (Request, error) {
 		return Request{}, analysis.NewHostError(analysis.ErrUnsupportedOption, "source embedding is unsupported in v1", map[string]any{"embed_source": true})
 	}
 	if request.Format == FormatHTML && request.LayoutProfile != nil {
-		profile, err := layout.ValidateProfile(*request.LayoutProfile)
+		profile, err := layout.ValidateStoredProfile(*request.LayoutProfile)
 		if err != nil {
 			return Request{}, err
 		}

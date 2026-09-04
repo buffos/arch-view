@@ -1,6 +1,6 @@
+import { cloneLayoutValue } from "./layout_value.js";
 export const OKF_DEFAULT_LAYOUT_ALGORITHM = "mrtree";
 
 export function cloneOKFLayoutProfile(profile) {
-  const value = profile || {};
-  return { algorithm: value.algorithm || OKF_DEFAULT_LAYOUT_ALGORITHM, options: Object.assign({}, value.options || {}) };
+  return cloneLayoutValue(profile, OKF_DEFAULT_LAYOUT_ALGORITHM);
 }

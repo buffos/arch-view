@@ -1,5 +1,9 @@
 # Advanced ELK renderer support PRD
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## Purpose
 
 Extend Arch View's renderer-only layout surface with a small, explicit set of

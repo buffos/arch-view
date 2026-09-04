@@ -1,4 +1,5 @@
 import { shapeDimensions } from "./app/node_shape.js";
+import { serializeLayoutValue } from "./app/layout_value.js";
 
   function optionAppliesToAlgorithm(option, algorithm) {
     const algorithms = option && Array.isArray(option.algorithms) ? option.algorithms : [];
@@ -10,7 +11,7 @@ import { shapeDimensions } from "./app/node_shape.js";
       && option.editable === true
       && option.renderer_support === "supported"
       && Array.isArray(option.targets)
-      && option.targets.includes("PARENTS")
+      && (option.supported_targets || option.targets).includes("PARENTS")
       && optionAppliesToAlgorithm(option, algorithm);
   }
 
@@ -19,7 +20,7 @@ import { shapeDimensions } from "./app/node_shape.js";
       && option.editable === true
       && option.renderer_support === "supported"
       && Array.isArray(option.targets)
-      && option.targets.includes(target)
+      && (option.supported_targets || option.targets).includes(target)
       && optionAppliesToAlgorithm(option, algorithm);
   }
 
@@ -33,7 +34,7 @@ import { shapeDimensions } from "./app/node_shape.js";
       const value = profileOptions[key];
       const option = catalogOptions.find(function (item) { return item.id === key; });
       if (value !== undefined && value !== null && isEditableTargetOption(option, algorithm, target)) {
-        targetLayoutOptions[key] = String(value);
+        targetLayoutOptions[key] = serializeLayoutValue(option, value);
       }
     });
     return targetLayoutOptions;
@@ -72,7 +73,7 @@ import { shapeDimensions } from "./app/node_shape.js";
         const requestKey = key === "org.eclipse.elk.direction" || key === "org.eclipse.elk.edgeRouting"
           ? key.replace("org.eclipse.elk.", "elk.")
           : key;
-        rootLayoutOptions[requestKey] = String(value);
+        rootLayoutOptions[requestKey] = serializeLayoutValue(option, value);
       }
     });
     return rootLayoutOptions;

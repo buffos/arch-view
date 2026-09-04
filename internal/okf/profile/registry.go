@@ -494,6 +494,9 @@ func merge(base, overlay domain.Profile) domain.Profile {
 	if overlay.Layout.Options != nil {
 		result.Layout.Options = domain.CloneMap(overlay.Layout.Options)
 	}
+	if overlay.Layout.Features != nil {
+		result.Layout.Features = append([]string{}, overlay.Layout.Features...)
+	}
 	return result
 }
 

@@ -1,3 +1,21 @@
+import { buildELKGraph } from "../layout_request.js";
+import { sharedFeatureRegistry } from "./layout_features.js";
+
+// Both scene adapters use the same feature pipeline and worker boundary.
+export async function runFeatureLayout(scene, profile, catalog, workerURL, Engine = globalThis.ELK) {
+  const registry = sharedFeatureRegistry(catalog);
+  const negotiated = registry.negotiate(profile);
+  let context = { scene, profile, diagnostics: negotiated.diagnostics };
+  context = await registry.run("negotiate", context, negotiated.effective);
+  context.graph = buildELKGraph(scene, profile, catalog);
+  context = await registry.run("prepare", context, negotiated.effective);
+  context.output = await runELKLayout(context.graph, workerURL, Engine);
+  context = await registry.run("normalize", context, negotiated.effective);
+  context = await registry.run("validate", context, negotiated.effective);
+  context = await registry.run("render", context, negotiated.effective);
+  return Object.assign(context.output, { featureDiagnostics: context.diagnostics });
+}
+
 // Both scene adapters use the same worker lifetime and failure boundary.
 export async function runELKLayout(graph, workerURL, Engine = globalThis.ELK) {
   let engine;

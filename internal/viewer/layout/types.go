@@ -15,6 +15,7 @@ const (
 type LayoutProfile struct {
 	Algorithm string         `json:"algorithm"`
 	Options   map[string]any `json:"options"`
+	Features  []string       `json:"features,omitempty"`
 }
 
 type LayoutAdapter struct {
@@ -60,6 +61,10 @@ type LayoutOptionDefinition struct {
 	MaximumExclusive bool     `json:"maximum_exclusive,omitempty"`
 	Editable         bool     `json:"editable"`
 	RendererSupport  string   `json:"renderer_support"`
+	Control          string   `json:"control,omitempty"`
+	SupportedTargets []string `json:"supported_targets,omitempty"`
+	RequiredFeatures []string `json:"required_features,omitempty"`
+	SupportNote      string   `json:"support_note,omitempty"`
 }
 
 type LayoutOptionsResponse struct {
@@ -68,6 +73,7 @@ type LayoutOptionsResponse struct {
 	Algorithms    []LayoutAlgorithmDefinition `json:"algorithms"`
 	Categories    []LayoutCategoryDefinition  `json:"categories"`
 	Options       []LayoutOptionDefinition    `json:"options"`
+	Features      []FeatureDefinition         `json:"features"`
 }
 
 type LayoutDiagnostic struct {

@@ -50,6 +50,12 @@ knowledge structures without becoming architecture models.
 
 ## Confirmed extension direction
 
+Advanced ELK delivery now follows the approved
+[staged contract](architecture/explore-architecture/advanced-elk-renderer-support/delivery-contract.md):
+useful shared settings, better edges, ports, then nested containers. Features
+are opt-in and saved separately for architecture and OKF profiles. Each stage
+requires human visual approval; existing graph appearance remains the default.
+
 The current v1 product path remains valid. The compiled external analyzer
 distribution is implemented and is the production release path for stable
 logical analyzer IDs. The project-assignment and source-scope extension is also

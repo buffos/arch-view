@@ -1,11 +1,16 @@
 # Advanced ELK renderer support orchestration status
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## State
 
 - Planning state: `specified`.
 - Parent: the implemented [Explore and inspect architecture](../../../../.okf/capabilities/explore-architecture.md) capability.
 - Current route: the staged candidate workstreams are exact-specified and the application synthesis gate is current and passed; this is the next eligible delivery node for issue slicing.
-- Delivery issues: none yet. Creating issues before the supported renderer subset and acceptance behavior are decided would create speculative work.
+- Delivery issues: 080 settings/registry, 081 edges, 082 ports, 083 containers.
+  These approved stages have dependency-ordered visual gates.
 
 ## Boundary
 
@@ -35,8 +40,8 @@ only after every resulting issue and visual review is complete.
 
 ## Bounded decisions
 
-- Route/output extensions are the first tranche; structural scene extensions
-  follow; broader catalog options remain gated by concrete renderer support.
+- Useful settings and registry/persistence are the first tranche. Edge output,
+  ports and nested containers follow after their preceding visual gates.
 - Browser, embedded HTML, and browser SVG share the advanced renderer contract.
 - Go static SVG keeps its deterministic orthogonal contract unless a later
   exact specification explicitly extends it.

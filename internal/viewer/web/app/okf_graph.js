@@ -1,10 +1,10 @@
 import { edgeGeometry, straightRoute } from "../graph_route.js";
 import { nodeShapeMarkup, shapeContentBox } from "./node_shape.js";
-import { buildELKGraph, nodeDimensions } from "../layout_request.js";
+import { nodeDimensions } from "../layout_request.js";
 import { escapeOKF } from "./okf_markup.js";
 import { cloneOKFLayoutProfile } from "./okf_layout.js";
 import { adaptELKLayout } from "./layout.js";
-import { runELKLayout } from "./elk_runtime.js";
+import { runFeatureLayout } from "./elk_runtime.js";
 import { bindViewportGestures, createViewportState, viewportTransform } from "./viewport_runtime.js";
 
 const DEFAULT_PAN_LIMIT = 100000;
@@ -26,7 +26,7 @@ export async function renderOKFGraph(container, snapshot, selectedID, handlers, 
         visible_nodes: nodes.map((node) => Object.assign({ id: node.id || node.concept_id }, node)),
         visible_relationships: relationships.map((relationship) => Object.assign({ id: relationship.id, from_visible_id: relationship.from, to_visible_id: relationship.to }, relationship))
       };
-      const result = await runELKLayout(buildELKGraph(scene, profile, options.layoutCatalog), workerURL);
+      const result = await runFeatureLayout(scene, profile, options.layoutCatalog, workerURL);
       layout = adaptELKLayout(scene, result, "okf:" + (snapshot.projection_revision || "projection"), profile.algorithm, profile);
     } catch (error) {
       if (options.isCurrent && !options.isCurrent()) return null;

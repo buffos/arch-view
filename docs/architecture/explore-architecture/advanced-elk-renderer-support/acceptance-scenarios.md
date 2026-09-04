@@ -1,10 +1,21 @@
 # Advanced ELK renderer support acceptance scenarios
 
+The approved [delivery contract](delivery-contract.md) updates this baseline
+for shared architecture/OKF delivery, persistence, stage ordering, and browser-only
+ELK execution. Its AER-R rules and scenario mapping are authoritative.
+
 ## SC-AER-001 — Preserve the current default
 
 **Given** a layout profile with no `features`, **when** the scene is laid out,
 **then** the current flat scene and route behavior remain valid and no
 advanced geometry feature is required.
+
+Also verify architecture remains Layered by default and OKF remains Mr. Tree.
+Apply must not write a file; Save/reload restores settings independently in each
+viewer. OKF omission inherits features, an explicit empty array clears them,
+and clone/composition/Save As preserve that distinction. A saved known feature
+unavailable in this build yields a diagnostic and ordinary effective geometry
+without rewriting preferences.
 
 Verification: backend-boundary `when-supported`; frontend-integration
 `when-supported`; end-to-end `when-supported`.
@@ -72,6 +83,13 @@ user requests it, **then** the profile is rejected or the option remains
 catalog-only according to its catalog status and no partial renderer support is
 pretended.
 
+The default settings filter shows usable options, with the complete catalog
+available separately. Algorithm-inapplicable, feature-required and
+not-implemented reasons are distinct. Switching algorithms preserves selected
+settings and blocks Apply/Save for unresolved conflicts. Test graph padding as
+four numeric fields and the admitted Mr. Tree/Layered options against the
+actual pinned runtime. Unknown features fail with 422.
+
 Verification: backend-boundary `when-supported`; frontend-integration
 `when-supported`; end-to-end `when-supported`.
 
@@ -100,6 +118,12 @@ Verification: backend-boundary `when-supported`; frontend-integration
 **Given** the same model, profile, pinned runtime, and enabled feature set,
 **when** the layout is repeated, **then** geometry JSON and browser/HTML route
 meaning are stable, and feature order does not alter the result.
+
+Verify dependency-first ordering, then declared order and stable ID, regardless
+of registration order. Reject duplicate handlers/IDs, missing handlers for
+supported metadata, unknown dependencies, cycles and overlapping geometry
+ownership. Both viewers use the same pipeline and metadata; disabled features
+do not change existing output.
 
 Verification: backend-boundary `when-supported`; frontend-integration
 `when-supported`; end-to-end `when-supported`.
