@@ -53,8 +53,7 @@ function featureControls(state, expanded) {
       const selected = (state.layoutDraft.features || []).includes(feature.id);
       return '<label class="layout-option-state"><input type="checkbox" data-layout-feature="' + escapeHTML(feature.id) + '"'
         + (selected ? " checked" : "") + (!selected && feature.status !== "supported" ? " disabled" : "") + "> "
-        + escapeHTML(feature.name) + (feature.status === "supported" ? "" : " · Not implemented, delivery stage " + feature.stage)
-        + (feature.support_note ? '<span class="layout-feature-note">' + escapeHTML(feature.support_note) + "</span>" : "") + "</label>";
+        + escapeHTML(feature.name) + (feature.status === "supported" ? "" : " · Not implemented, delivery stage " + feature.stage) + "</label>";
     }).join("") + "</details>";
 }
 

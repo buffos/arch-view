@@ -34,7 +34,6 @@
     "prerequisites": [],
     "required_options": {},
     "fallback": "orthogonal-affected-portion",
-    "support_note": "Use ORTHOGONAL edge routing to inspect junction markers; the pinned runtime does not emit junction points for SPLINES.",
     "id": "junctions",
     "option_ids": ["org.eclipse.elk.junctionPoints"],
     "name": "Shared-route junctions",

@@ -53,7 +53,9 @@ geometry and Download SVG when applicable. Automated checks do not waive review.
 
 ## Blocked by
 
-Issue 081, including its explicit human visual approval.
+Resolved: issue 081 is archived at
+`docs/agents/issues/done/20260905-081-shared-elk-advanced-edge-geometry.md`
+with explicit human visual approval.
 
 ## Artifact anchors
 

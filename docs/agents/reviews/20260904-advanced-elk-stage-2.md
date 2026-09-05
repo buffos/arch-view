@@ -2,8 +2,8 @@
 
 Issue: 081, Shared ELK advanced edge geometry.
 
-Status: implemented and automatically verified; awaiting human visual review.
-The capability remains specified and issue 082 remains blocked.
+Status: implemented, verified, and visually approved on 2026-09-05.
+The capability remains specified while issue 082 proceeds.
 
 ## Delivered behavior
 
@@ -62,7 +62,8 @@ The capability remains specified and issue 082 remains blocked.
   settings section. The junction control now states that the pinned ELK runtime
   emits inspectable junction points for orthogonal routes, not spline routes.
 
-## Required review
+## Human review
 
-The user must inspect and explicitly approve Stage 2 before issue 081 can be
-closed or Stage 3 presentation ports can begin.
+The user approved Stage 2 after checking labels, spline routes, panning, and the
+corrected advanced-feature accordion behavior. Junction markers remain
+validated output only and may be absent when ELK returns no shared points.

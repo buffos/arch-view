@@ -156,13 +156,6 @@
   text-align: right;
 }
 
-.layout-feature-note {
-  display: block;
-  margin-top: 0.2rem;
-  padding-left: 1.35rem;
-  color: var(--muted-strong);
-}
-
 .layout-save-as {
   align-items: end;
   margin-top: 0.85rem;

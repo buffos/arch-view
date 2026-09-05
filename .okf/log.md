@@ -1480,3 +1480,12 @@
 - Preserved the expanded advanced-feature section across checkbox updates and
   documented the pinned runtime's orthogonal-only junction-marker behavior in
   the shared settings UI. Stage 2 remains at its human visual-review gate.
+
+### Advanced ELK Stage 2 approved
+
+- The user explicitly approved Stage 2 on 2026-09-05 after reviewing labels,
+  spline routes, panning, and the corrected feature accordion.
+- Archived issue 081 and unblocked issue 082 for presentation ports. Removed
+  the temporary inline junction guidance because it disrupted the compact
+  feature selector. Advanced ELK remains `specified` while issues 082–083 are
+  active; graph totals remain 0 foggy, 0 bounded, 1 specified, 18 implemented.
