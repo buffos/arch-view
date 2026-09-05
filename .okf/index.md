@@ -14,10 +14,8 @@
 ## Planning status
 
 - Initial topology: confirmed on 2026-08-25.
-- State totals: 0 `foggy`, 0 `bounded`, 1 `specified`, 18 `implemented`.
-- Advanced ELK has approved stages 080–083. Stages 1 and 2 are archived after
-  visual approval; Stage 3 presentation ports is implemented and awaiting its
-  visual review.
+- State totals: 0 `foggy`, 0 `bounded`, 0 `specified`, 19 `implemented`.
+- Advanced ELK stages 080–083 are verified, visually approved, and archived.
 - The [Configurable OKF knowledge views](capabilities/okf-knowledge-views.md)
   capability is a first-class root-level implemented capability. Its exact
   reference set is maintained under
@@ -26,9 +24,8 @@
 - OKF delivery records 064–071 (`20260903-064` through `20260903-071`) are
   verified and archived after the user's explicit visual approval on
   2026-09-04.
-- Next implementation transition: [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
-  is active through staged issues 080–083. Issue 082 is awaiting visual approval;
-  issue 083 remains blocked by that gate.
+- Next implementation transition: none in the current capability map; new work
+  requires a bounded planning decision.
 - Current delivery frontier: Go analysis, canonical model generation, export
   and automation, the current Explore scope, Python, TypeScript, Rust,
   Clojure, and the first external process slice are implemented after their
@@ -39,7 +36,7 @@
   has completed implementation issues 039–043, including its declared visual
   review. [Project analyzer assignments and view selection](capabilities/analyze-source/plugin-runtime/project-analyzer-assignments.md)
   has completed issues 044–047, including its declared visual gate. [Advanced ELK renderer support](capabilities/explore-architecture/advanced-elk-renderer-support.md)
-  remains specified and is ready for later delivery issue slicing. The
+  is implemented through issues 080–083, including all visual gates. The
   plugin-runtime and Analyze source nodes are implemented own-state capabilities
   whose child implementation is complete; their own PRDs and scopes remain
   authoritative. The new [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)

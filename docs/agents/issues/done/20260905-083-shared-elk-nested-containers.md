@@ -5,11 +5,11 @@
 - Issue number: `083`
 - Owning capability node: `/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md`
 - Artifact root: `docs/architecture/explore-architecture/advanced-elk-renderer-support`
-- Issue file: `docs/agents/issues/pending/083-shared-elk-nested-containers.md`
+- Issue file: `docs/agents/issues/done/20260905-083-shared-elk-nested-containers.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `awaiting-human-review`
+- Suggested state: `done`
 
 ## Parent Artifacts
 
@@ -35,7 +35,7 @@ controls and geometry. No feature-specific switches in scene adapters.
 - [x] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
 - [x] Automated verification and scenario evidence complete; implementation files below 600 lines.
 - [x] Required artifact synchronization complete.
-- [ ] Explicit human visual approval recorded before next stage or closeout.
+- [x] Explicit human visual approval recorded before next stage or closeout.
 
 ## Artifact sync required
 
@@ -81,7 +81,7 @@ remain explicitly owned by their later blocked issues.
 
 | Scenario | Backend boundary | Frontend integration | End-to-end journey |
 |---|---|---|---|
-| SC-AER-005 | `compound_feature_test.js`: pinned nested hierarchy and hidden-segment fixtures | shared architecture and OKF container-frame render tests | live OKF Layered session produced four visible containers |
+| SC-AER-005 | `compound_feature_test.js`: pinned nested hierarchy and hidden-segment fixtures | shared architecture and OKF container-frame render tests | live OKF Layered session produced three capability containers |
 | SC-AER-007 | malformed bounds and hierarchy fixture proves deterministic flat fallback | per-feature fallback preserves the last renderable scene | live browser completed without runtime diagnostics |
 | SC-AER-009 | static-export contract test retains the browser-only feature preference and provenance | not-applicable | browser SVG serializer retains container frames |
 | SC-AER-010 | descendant-set and movement helper tests | shared non-semantic frame, drag, and reroute tests | existing selection, focus/Back, and accessibility suites pass |

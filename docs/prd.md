@@ -55,9 +55,8 @@ Advanced ELK delivery now follows the approved
 useful shared settings, better edges, ports, then nested containers. Features
 are opt-in and saved separately for architecture and OKF profiles. Each stage
 requires human visual approval; existing graph appearance remains the default.
-The shared settings/registry, advanced-edge, and presentation-port stages are
-approved and archived. Nested containers are implemented and automatically
-verified at the final human visual-review gate.
+All four stages are verified, visually approved, and archived through issues
+080–083.
 
 The current v1 product path remains valid. The compiled external analyzer
 distribution is implemented and is the production release path for stable
@@ -217,7 +216,7 @@ permissions separately owned.
   selection child implemented through verified issues 044–047, including the
   approved configured-viewer visual review.
 - [Generate architecture models](/.okf/capabilities/generate-models.md): `implemented`, including the v1 canonical model and graph-projection contract.
-- [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the current local web/scene/evidence contract; its [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) is `specified` for future extensions.
+- [Explore and inspect architecture](/.okf/capabilities/explore-architecture.md): `implemented` for the local web/scene/evidence contract, including the [Advanced ELK renderer support child](/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md) delivered through issues 080–083.
 - [Configurable OKF knowledge views](/.okf/capabilities/okf-knowledge-views.md): `implemented` through verified and user-approved issues 064–071; its node-scoped PRD, glossary, domain/use-case models, contract, acceptance scenarios, and readiness review remain the detailed sources of truth.
 - [Export and automate](/.okf/capabilities/export-and-automate.md): `implemented`, including JSON v1 and deterministic HTML/SVG/CI behavior.
 - [Code quality and code intelligence](/.okf/capabilities/code-quality-and-intelligence.md): `implemented` as a structural roll-up; its [Source facts and symbol index](architecture/code-quality-and-intelligence/source-facts-and-symbol-index/prd.md) child is implemented through issues 048–052 with final visual approval, its [Deterministic quality checks](architecture/code-quality-and-intelligence/deterministic-quality-checks/prd.md) child is implemented through issues 053–063 and 077–078, and [Live analysis and MCP](architecture/code-quality-and-intelligence/live-analysis-and-mcp/prd.md) is implemented through issues 064–079 with final cross-analyzer and product approval recorded in issue 076. The parent has no standalone implementation slice.
@@ -320,7 +319,8 @@ complete the compiled distribution capability. The multi-analyzer child is
 implemented through issues 039–043, including its approved viewer visual
 review, and the project assignment/view child is implemented through verified
 issues 044–047, including its approved configured-viewer visual review. The
-advanced ELK renderer child remains specified.
+advanced ELK renderer child is implemented through verified and visually
+approved issues 080–083.
 
 ## Future planning state
 
@@ -331,20 +331,19 @@ remain explicit development or migration paths. Multi-analyzer orchestration
 is implemented, including the approved issue 043 visual review; project
 assignment/view selection and its source-scope policy are implemented through
 verified issues 044–047, including the approved configured-viewer visual
-review. Advanced ELK renderer support remains the specified renderer-only
-extension of the implemented viewer. The code-quality and code-intelligence
+review. Advanced ELK renderer support is an implemented renderer-only
+extension of the viewer. The code-quality and code-intelligence
   roll-up is `implemented`; its source-facts child is implemented with its
   approved final visual gate, deterministic-quality is implemented through
   issues 053–063 and 077–078, and live-analysis/MCP has verified implementation
-  issues 064–079 with issue 076's product approval complete. Further
-  implementation work starts at the least-mature remaining capability rather
-  than at the aggregate parent.
+  issues 064–079 with issue 076's product approval complete. New implementation
+  work requires a new bounded planning decision.
 
 The configurable OKF knowledge-view capability is a separate first-class
 root-level implemented capability. Issues 064–071 deliver its exact
 node-scoped source, profile, projection, inspection, persistence, and resilience
-scope. It shares the viewer and renderer infrastructure, including future
-advanced ELK support, but does not inherit the architecture model's source or
+scope. It shares the viewer and implemented advanced ELK infrastructure, but
+does not inherit the architecture model's source or
 relationship semantics.
 
 ## Verification strategy
