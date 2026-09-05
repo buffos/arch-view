@@ -91,7 +91,7 @@
     "stage": 3
   },
   {
-    "status": "not-implemented",
+    "status": "supported",
     "algorithms": [
       "layered"
     ],
@@ -106,7 +106,7 @@
     "id": "compound",
     "option_ids": ["org.eclipse.elk.hierarchyHandling"],
     "name": "Nested containers",
-    "order": 50,
+    "order": 5,
     "owns": [
       "node.containers",
       "node.parent_coordinates"

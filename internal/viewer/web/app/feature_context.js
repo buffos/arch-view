@@ -2,7 +2,8 @@ export function featureGeometry(context) {
   if (!context.featureGeometry) {
     context.featureGeometry = {
       labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [],
-      portsByNode: {}, portEndpointsByEdge: {}
+      portsByNode: {}, portEndpointsByEdge: {}, parentByNode: {},
+      childrenByNode: {}, containerNodeIDs: []
     };
   }
   return context.featureGeometry;

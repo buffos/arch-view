@@ -9,7 +9,7 @@
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `ready-for-agent`
+- Suggested state: `awaiting-human-review`
 
 ## Parent Artifacts
 
@@ -29,12 +29,12 @@ controls and geometry. No feature-specific switches in scene adapters.
 
 ## Acceptance criteria
 
-- [ ] Visible hierarchy becomes nested ELK containers without expanding hidden descendants.
-- [ ] Container dragging moves visible descendants and uses shared rerouting.
-- [ ] Cross-boundary routes and supported feature combinations preserve navigation and export.
-- [ ] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
-- [ ] Automated verification and scenario evidence complete; implementation files below 600 lines.
-- [ ] Required artifact synchronization complete.
+- [x] Visible hierarchy becomes nested ELK containers without expanding hidden descendants.
+- [x] Container dragging moves visible descendants and uses shared rerouting.
+- [x] Cross-boundary routes and supported feature combinations preserve navigation and export.
+- [x] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
+- [x] Automated verification and scenario evidence complete; implementation files below 600 lines.
+- [x] Required artifact synchronization complete.
 - [ ] Explicit human visual approval recorded before next stage or closeout.
 
 ## Artifact sync required
@@ -81,12 +81,14 @@ remain explicitly owned by their later blocked issues.
 
 | Scenario | Backend boundary | Frontend integration | End-to-end journey |
 |---|---|---|---|
-| SC-AER-005 | planned | planned | planned |
-| SC-AER-007 | planned | planned | planned |
-| SC-AER-009 | planned | not-applicable | planned |
-| SC-AER-010 | planned | planned | planned |
-| SC-AER-011 | planned | planned | planned |
+| SC-AER-005 | `compound_feature_test.js`: pinned nested hierarchy and hidden-segment fixtures | shared architecture and OKF container-frame render tests | live OKF Layered session produced four visible containers |
+| SC-AER-007 | malformed bounds and hierarchy fixture proves deterministic flat fallback | per-feature fallback preserves the last renderable scene | live browser completed without runtime diagnostics |
+| SC-AER-009 | static-export contract test retains the browser-only feature preference and provenance | not-applicable | browser SVG serializer retains container frames |
+| SC-AER-010 | descendant-set and movement helper tests | shared non-semantic frame, drag, and reroute tests | existing selection, focus/Back, and accessibility suites pass |
+| SC-AER-011 | registry and pinned mixed-feature fixtures | compound, labels, ports, and splines compose through shared geometry | full 77-test browser suite passes |
 
 Run full Go tests, race, vet/build, browser tests/syntax, strict OKF validation,
 diff and line audits. Record focused test evidence for every addressed rule,
 not only a broad green command.
+
+Evidence: `docs/agents/reviews/20260905-advanced-elk-stage-4.md`.

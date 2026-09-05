@@ -36,16 +36,16 @@ test("SC-AER-011 rejects duplicate, cyclic, missing and conflicting registration
   assert.throws(() => createFeatureRegistry([a, { ...definition("b"), owns: ["a.child"] }], [handler("a"), handler("b")]), /ownership/);
 });
 
-test("SC-AER-001 known unavailable preferences fall back without mutation", async () => {
+test("SC-AER-001 known feature preferences remain stable", async () => {
   const { sharedFeatureRegistry, featureProblems } = await import(moduleURL("layout_features.js"));
   assert.equal(metadata.length, 5);
   const registry = sharedFeatureRegistry({ features: metadata });
   const profile = { algorithm: "layered", features: ["compound"], options: {} };
   const negotiated = registry.negotiate(profile);
-  assert.deepEqual(negotiated.effective, []);
-  assert.equal(negotiated.diagnostics.length, 1);
+  assert.deepEqual(negotiated.effective, ["compound"]);
+  assert.equal(negotiated.diagnostics.length, 0);
   assert.deepEqual(profile.features, ["compound"]);
-  assert.equal(featureProblems(profile, { features: metadata }).length, 1);
+  assert.equal(featureProblems(profile, { features: metadata }).length, 0);
   assert.throws(() => registry.negotiate({ features: ["unknown"] }), /Unknown/);
 });
 

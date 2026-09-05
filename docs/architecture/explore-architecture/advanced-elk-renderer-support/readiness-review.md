@@ -47,4 +47,5 @@ workflow semantics change; the Go static SVG limitation is explicit.
 READY FOR ARCHITECTURE IMPLEMENTATION
 
 Stages 1 through 3, issues 080 through 082, are verified, visually approved,
-and archived. Compound geometry is active in Stage 4.
+and archived. Compound geometry is implemented and automatically verified in
+Stage 4; issue 083 remains open at its explicit visual-review gate.

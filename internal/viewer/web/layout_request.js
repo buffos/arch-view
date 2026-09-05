@@ -70,7 +70,7 @@ import { serializeLayoutValue } from "./app/layout_value.js";
         // built-in options. Avoid sending a default short key together with a
         // conflicting fully-qualified alias so the selected value is applied
         // deterministically by the engine.
-        const requestKey = key === "org.eclipse.elk.direction" || key === "org.eclipse.elk.edgeRouting"
+        const requestKey = key === "org.eclipse.elk.direction" || key === "org.eclipse.elk.edgeRouting" || key === "org.eclipse.elk.hierarchyHandling"
           ? key.replace("org.eclipse.elk.", "elk.")
           : key;
         rootLayoutOptions[requestKey] = serializeLayoutValue(option, value);
@@ -88,7 +88,7 @@ import { serializeLayoutValue } from "./app/layout_value.js";
     const nodeLayoutOptions = buildTargetLayoutOptions(profile, catalog, "NODES");
     const edgeLayoutOptions = buildTargetLayoutOptions(profile, catalog, "EDGES");
     return {
-      id: "root",
+      id: "arch-view-layout-root",
       layoutOptions: buildRootLayoutOptions(profile, catalog),
       children: scene.visible_nodes.map(function (node) {
         const dimensions = nodeDimensions(node);

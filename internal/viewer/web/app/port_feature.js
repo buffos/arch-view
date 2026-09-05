@@ -1,4 +1,5 @@
 import { addFeatureDiagnostic, failedFeature, featureGeometry } from "./feature_context.js";
+import { mapELKNodes } from "./elk_graph.js";
 
 const FEATURE_ID = "ports";
 const PORT_SIZE = 10;
@@ -33,7 +34,7 @@ function portInput(nodeID, role, side) {
 
 function prepare(context) {
   const sides = flowSides(context.profile);
-  context.graph.children = (context.graph.children || []).map((node) => ({
+  context.graph.children = mapELKNodes(context.graph.children, (node) => ({
     ...node,
     layoutOptions: { ...(node.layoutOptions || {}), "org.eclipse.elk.portConstraints": "FIXED_SIDE" },
     ports: [portInput(node.id, "in", sides.in), portInput(node.id, "out", sides.out)]
