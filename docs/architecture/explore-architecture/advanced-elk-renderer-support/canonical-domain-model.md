@@ -32,6 +32,7 @@ Fields:
   Architecture adapters may retain model ID/revision; OKF uses bundle/projection
   identity and never fabricates architecture-model identity.
 - `nodes[]`
+- `containers[]`
 - `edges[]`
 - `diagnostics[]`
 - `provenance`
@@ -39,11 +40,18 @@ Fields:
 ### GeometryNode
 
 Fields: `id`, `bounds`, `parent_id?`, `children_ids[]`, `ports[]`,
-`semantic_node_id?`.
+`semantic_node_id`.
 
-Visible semantic nodes retain their scene ID. Layout-only compound containers
-use a deterministic `container::<escaped hierarchy path>` ID and no semantic
-node ID.
+Visible semantic nodes retain their scene ID.
+
+### GeometryContainer
+
+Fields: `id`, `owner_node_id`, `parent_container_id?`, `bounds`.
+
+Compound containers are layout-only presentation objects with deterministic
+IDs. `owner_node_id` associates a container with the visible hierarchy node it
+frames; it does not give the container semantic identity. A container never
+uses `semantic_node_id`.
 
 ### PresentationPort
 

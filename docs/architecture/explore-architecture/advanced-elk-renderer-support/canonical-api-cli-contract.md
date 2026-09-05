@@ -62,11 +62,12 @@ geometry or ELK execution endpoint is introduced:
 {
   "geometry": {
     "schema_version": "arch-view.geometry/v1",
-    "model_id": "model-1",
-    "model_revision": "model-1",
-    "hierarchy_path": [],
+    "source": { "kind": "architecture", "id": "model-1", "revision": "model-1", "navigation_scope": { "hierarchy_path": [] } },
     "nodes": [
       { "id": "module-a", "semantic_node_id": "module-a", "bounds": { "x": 10, "y": 20, "width": 190, "height": 82 }, "parent_id": null, "children_ids": [], "ports": [] }
+    ],
+    "containers": [
+      { "id": "arch-view-container::module-a", "owner_node_id": "module-a", "parent_container_id": null, "bounds": { "x": 0, "y": 0, "width": 240, "height": 150 } }
     ],
     "edges": [
       {

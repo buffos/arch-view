@@ -46,7 +46,8 @@ test("SC-AER-005 pinned ELK produces validated nested visible hierarchy", async 
   assert.equal(nodes.get("group").parent_id, "root");
   assert.deepEqual(nodes.get("group").children_ids, ["leaf"]);
   assert.equal(nodes.get("leaf").parent_id, "group");
-  const containers = new Map(geometry.containers.map((container) => [container.semantic_node_id, container]));
+  const containers = new Map(geometry.containers.map((container) => [container.owner_node_id, container]));
+  assert.ok(geometry.containers.every((container) => !("semantic_node_id" in container)));
   assert.equal(containers.has("root"), false, "the canvas is the top-level container");
   assert.ok(contains(containers.get("group").bounds, nodes.get("group").bounds));
   assert.ok(contains(containers.get("group").bounds, nodes.get("leaf").bounds));
@@ -121,7 +122,7 @@ test("SC-AER-010 container presentation and movement stay non-semantic", async (
       { id: "leaf", semantic_node_id: "leaf", bounds: { x: 40, y: 120, width: 190, height: 82 }, parent_id: "group", children_ids: [] }
     ],
     containers: [
-      { id: "arch-view-container::group", semantic_node_id: "group", bounds: { x: 20, y: 60, width: 300, height: 180 } }
+      { id: "arch-view-container::group", owner_node_id: "group", bounds: { x: 20, y: 60, width: 300, height: 180 } }
     ]
   };
   assert.deepEqual(geometryMoveIDs(snapshot, "group"), ["group", "leaf"]);

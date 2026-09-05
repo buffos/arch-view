@@ -108,7 +108,7 @@
     "name": "Nested containers",
     "order": 5,
     "owns": [
-      "node.containers",
+      "containers",
       "node.parent_coordinates"
     ],
     "stage": 4

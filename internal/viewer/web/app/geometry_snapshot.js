@@ -75,7 +75,7 @@ function containersFor(featureGeometry, offset) {
     const parentNodeID = featureGeometry.parentByNode?.[nodeID] || null;
     return {
       id: presentationContainerID(nodeID),
-      semantic_node_id: nodeID,
+      owner_node_id: nodeID,
       parent_container_id: parentNodeID && featureGeometry.containerBoundsByNode?.[parentNodeID]
         ? presentationContainerID(parentNodeID) : null,
       bounds: { ...bounds, x: bounds.x + offset, y: bounds.y + offset }

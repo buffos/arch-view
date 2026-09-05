@@ -49,6 +49,33 @@ import(pathToFileURL(path.join(__dirname, "viewport.js")).href).then(function (v
 
 import(pathToFileURL(path.join(__dirname, "okf_viewport.js")).href).then(function (viewport) {
   const state = {
+    viewport: { zoom: 1, panX: 0, panY: 0, positions: { leaf: { x: 750, y: 300 } } },
+    layout: {
+      width: 1000, height: 800,
+      positions: {
+        group: { x: 400, y: 300, width: 200, height: 100 },
+        leaf: { x: 450, y: 330, width: 100, height: 50 }
+      },
+      geometry: {
+        nodes: [
+          { id: "group", bounds: { x: 400, y: 300, width: 200, height: 100 }, children_ids: ["leaf"] },
+          { id: "leaf", bounds: { x: 450, y: 330, width: 100, height: 50 }, children_ids: [] }
+        ],
+        containers: [{ id: "arch-view-container::group", owner_node_id: "group", bounds: { x: 388, y: 288, width: 224, height: 124 } }]
+      }
+    }
+  };
+  const elements = { graph: { clientWidth: 1000, clientHeight: 800, querySelector: (selector) => selector === "svg" ? { clientWidth: 1000, clientHeight: 800 } : null } };
+  viewport.fitOKFViewport(state, elements);
+  const fittedFrameRight = state.viewport.panX + (750 + 100 + 12) * state.viewport.zoom;
+  assert.ok(fittedFrameRight <= 988, "Fit includes a container expanded by manual child movement");
+}).catch(function (error) {
+  console.error(error);
+  process.exitCode = 1;
+});
+
+import(pathToFileURL(path.join(__dirname, "okf_viewport.js")).href).then(function (viewport) {
+  const state = {
     viewport: { zoom: 1, panX: 0, panY: 0, positions: {} },
     layout: {
       width: 1000, height: 800,
