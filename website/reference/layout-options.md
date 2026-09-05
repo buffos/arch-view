@@ -37,3 +37,9 @@ Arch View uses a pinned layout catalog. The catalog contains many options known 
 A catalog-only option is documented because the pinned engine knows it. It is not a promise that the current viewer can edit it. The viewer marks it as catalog-only or unsupported and rejects unsafe changes.
 
 The [complete generated catalog](/reference/layout-options.generated) contains every known option, grouped by algorithm and category, with type, default, targets, and support state.
+
+## Advanced renderer features
+
+The same generated reference lists the registered renderer features. Each feature documents its ID, compatible algorithms, prerequisites, affected geometry, supported surfaces, and fallback behavior.
+
+The current implementation supports edge labels, junctions, spline refinement, presentation ports, and nested containers for ELK Layered where their prerequisites are satisfied. This is separate from the larger catalog of options known by ELK; a catalog entry alone does not mean that the current viewer can safely apply it.

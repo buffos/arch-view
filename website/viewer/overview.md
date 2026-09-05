@@ -7,12 +7,18 @@ The viewer is the browser part of Arch View. It shows a report as a map instead 
 | Area | What it is for |
 | --- | --- |
 | Summary cards | Quick counts for nodes, relationships, cycles, diagnostics, evidence, and quality results. |
-| Graph | The visible architecture. Select a node or group to see its short summary. |
+| Graph | The current architecture or OKF scene. Select an item to see its short summary. |
 | Search | Find a module or group by name. |
 | Analysis scope | Choose which part of a multi-analyzer report you are viewing. |
 | References | Show or hide external and non-local references. |
 | Quality checks | See the selected profile, coverage, findings, and baseline state. |
 | Inspection | Read the selected node's files, symbols, dependencies, and evidence. |
+
+## Architecture first, OKF second
+
+The normal project entry point is the Architecture viewer. Its header may show **Open OKF knowledge view** when the server finds a selectable bundle. The OKF view uses the same graph controls but presents generic concepts through the selected profile.
+
+The Architecture viewer uses analyzer model data. The OKF viewer uses independent, read-only knowledge documents. Switching modes does not merge their nodes or relationships.
 
 ## A good first visit
 
@@ -39,3 +45,5 @@ If an item is not visible in the selected scope, the viewer explains that instea
 ## Local-first behavior
 
 When you open a project, the server reads the project locally. When you open a self-contained export, the data is already inside the HTML file. No live server is needed for that export.
+
+Project-backed OKF discovery, profile editing, and persistence require the local server. See [OKF knowledge views](/okf/overview).

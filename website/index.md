@@ -24,6 +24,9 @@ features:
   - title: Check what matters
     details: Run exact checks and useful review signals with a profile you control.
     link: /quality/overview
+  - title: Explore project knowledge
+    details: Open independent OKF knowledge bundles through generic, profile-driven views.
+    link: /okf/overview
 ---
 
 ## The short version
@@ -34,6 +37,8 @@ You can use it in two ways:
 
 - Run a command in a terminal and create a report.
 - Open the viewer and explore the report as a person.
+
+Project-backed sessions can also expose an optional OKF knowledge view. It starts from the architecture viewer and appears when a selectable knowledge bundle is discovered.
 
 The viewer is local-first. Your source does not need to leave your machine.
 
@@ -58,3 +63,5 @@ The command starts a local web server and prints the address to open. If you wan
 This is a human guide, not an internal code dump. It explains what a result means, why a check can appear, and what you can do next.
 
 Every command and setting has examples. Technical IDs are kept in secondary details so they are available when needed without becoming the main language of the guide.
+
+Start with [OKF knowledge views](/okf/overview) when you want to explore project-authored concepts alongside, but independently from, the architecture model.

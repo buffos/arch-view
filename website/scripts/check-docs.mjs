@@ -20,6 +20,13 @@ const requiredFiles = [
   'cli/open.md',
   'reference/settings.md',
   'formats/model.md',
+  'formats/okf.md',
+  'okf/overview.md',
+  'okf/profiles.md',
+  'okf/exploration.md',
+  'okf/configuration.md',
+  'reference/okf-api.md',
+  'viewer/advanced-rendering.md',
   'demo.md'
 ]
 for (const relative of requiredFiles) {
@@ -83,6 +90,14 @@ const layoutPage = textByPath.get(path.join(websiteRoot, 'reference/layout-optio
 if (!layoutPage) errors.push('generated layout option appendix is missing')
 for (const option of inventory.layout.options) {
   if (!layoutPage?.includes(`Technical ID: ${option.id}.`)) errors.push(`layout option ${option.id} is not documented`)
+}
+
+for (const feature of inventory.layout.features ?? []) {
+  if (!layoutPage?.includes(`**Technical ID:** ${feature.id}.`)) errors.push(`layout feature ${feature.id} is not documented`)
+  if (!layoutPage?.includes(`**Status:** ${feature.status}.`)) errors.push(`layout feature ${feature.id} status is not documented`)
+  if (!layoutPage?.includes(`**Supported algorithms:** ${formatList(feature.algorithms)}.`)) errors.push(`layout feature ${feature.id} algorithm support is not documented`)
+  if (!layoutPage?.includes(`**Prerequisites:** ${formatList(feature.prerequisites)}.`)) errors.push(`layout feature ${feature.id} prerequisites are not documented`)
+  if (!layoutPage?.includes(`**Supported surfaces:** ${formatList(feature.surfaces)}.`)) errors.push(`layout feature ${feature.id} surfaces are not documented`)
 }
 
 for (const link of findInternalLinks(allText)) {
@@ -155,4 +170,8 @@ function slugify(value) {
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s-]/gu, '')
     .replace(/\s+/g, '-')
+}
+
+function formatList(values) {
+  return Array.isArray(values) && values.length ? values.join(', ') : 'none declared'
 }

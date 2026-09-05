@@ -80,3 +80,9 @@ IDs, hashes, provider versions, snapshot data, and copy actions belong in Techni
 Source excerpts are opt-in. Selecting **View source** is an explicit request to show a bounded, read-only excerpt. If the report has no source content or no safe location, the viewer says so.
 
 An unavailable excerpt is not a failed analysis. It means the report does not contain enough source data for that action.
+
+## OKF concept details
+
+In the OKF view, selecting a concept opens its profile-driven details rather than the architecture module inspection sections. Details can include the concept type, selected frontmatter, state, source path, relationships, provenance, and rendered Markdown.
+
+The default presentation remains compact. Registered detail renderers can provide a custom presentation when a project profile selects one. Markdown is sanitized CommonMark: safe local links select concepts inside the bundle, safe external links remain external, and unsafe links are not executed.

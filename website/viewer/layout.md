@@ -4,9 +4,11 @@ Layout changes how the graph is drawn. They do not change the analysis result.
 
 ## Start with the default
 
-The default algorithm is **Layered**. It tries to place dependencies into readable layers.
+Both viewers default to **Layered**. The built-in OKF Neutral and Fog of War profiles also enable **Junctions** and **Presentation ports** by default, so containment and port-aware routing are visible as soon as those profiles open. Both use the same layout dialog and option catalog, but their saved settings remain separate.
 
 Use **Fit** after a large change. Use **Reset layout** when an experiment made the graph harder to read.
+
+Fit centers the complete current geometry with a small margin. It can enlarge a small graph beyond 100% or shrink a large graph; the behavior is the same in normal and Full canvas mode.
 
 ## The main algorithms
 
@@ -83,6 +85,14 @@ Higher thoroughness lets the layered algorithm spend more effort searching for a
 ### Random seed
 
 The random seed controls repeatability for algorithms that use randomness. Keeping the same seed helps you compare two layouts.
+
+## Advanced renderer features
+
+The layout dialog also exposes the shared advanced feature registry. The current features are edge labels, spline refinement, shared-route junctions, presentation ports, and nested containers.
+
+These features are currently verified for ELK Layered only. Spline refinement additionally requires `SPLINES` edge routing. Mr. Tree and the other algorithms remain useful for ordinary layout, but the viewer does not claim that they support these advanced geometry features.
+
+Features are opt-in and saved with the relevant presentation profile. They do not change the model. Read [Advanced ELK rendering](/viewer/advanced-rendering) for the feature behavior, fallback rules, and export differences.
 
 ## Complete option list
 

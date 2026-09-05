@@ -15,6 +15,8 @@ The viewer exposes:
 - source and symbol filters;
 - bounded page size and load-more controls.
 
+Project-backed OKF sessions additionally expose bundle selection, OKF profiles, navigation depth, Full mode, concept details, and profile editing. OKF layout settings use the same controls as Architecture layout settings but are stored in the selected OKF profile.
+
 Each control changes the presentation or the selected data. It does not rewrite the project.
 
 ## Quality settings
@@ -60,3 +62,5 @@ Layout settings change only the drawing. They are grouped into:
 - algorithm-specific options.
 
 Read [Change the layout](/viewer/layout) for the useful options and [Layout options](/reference/layout-options) for the complete catalog.
+
+Read [OKF configuration](/okf/configuration) for draft, Save, Save As, binding, revision, and persistence behavior.

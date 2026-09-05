@@ -13,6 +13,12 @@ Project: payments-service
 Root:    C:\work\payments-service
 ~~~
 
+## Bundle and concept
+
+An OKF bundle is an independent collection of knowledge documents inside the project. Each document is presented as a **concept**. The concept's type and vocabulary belong to the bundle author; Arch View does not assume that all concepts are capabilities or modules.
+
+A profile maps those concepts into a presentation. It can choose labels, states, hierarchy, relationships, styles, and details without editing the bundle. Read [OKF bundles](/formats/okf) and [OKF presentation profiles](/okf/profiles) for the full model.
+
 ## Module
 
 A module is a named part of a project. Depending on the language, it may be a package, namespace, crate, directory, or another unit the analyzer can identify.
@@ -76,6 +82,8 @@ It does not fix the code. It tells a later run: “do not show these exact, unch
 Evidence is the link between a result and the files, symbols, relationships, or measurements that support it.
 
 Precise evidence has a line range. File-only provenance tells you which file was involved, but it does not prove one exact line.
+
+OKF details use the same distinction: provenance explains where a concept came from, while a source revision identifies the indexed snapshot. Neither value changes the source document.
 
 ## Technical details
 

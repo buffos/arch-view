@@ -49,3 +49,23 @@ The viewer shows whether Save and Save As are available.
 ## Can Arch View fix a finding?
 
 No. Arch View reports observations. A developer or coding agent must decide whether to change code, change configuration, or record a justified baseline.
+
+## The OKF link is missing
+
+The link appears only when the project-backed server discovers at least one selectable OKF bundle. Refresh the project session and inspect the OKF catalog diagnostics. An invalid, unreadable, out-of-boundary, or empty bundle is not selectable.
+
+The Architecture viewer remains available when OKF discovery fails. Model-only sessions and the self-contained architecture demo do not provide project-backed OKF discovery or persistence.
+
+## Why are semantic links not visible?
+
+Semantic links are informational Markdown cross-references. They are hidden until you select a concept, then only that concept's links are shown. They are dashed and arrowless and never affect the layout. Solid arrowed lines represent containment.
+
+## Why is an advanced layout feature unavailable?
+
+The layout dialog distinguishes cataloged ELK options from features the current renderer can apply. The current advanced features are verified for Layered. Some features also require a specific option, such as `SPLINES` routing for spline refinement. Select a compatible algorithm and option combination before applying the feature.
+
+If saved preferences refer to unavailable geometry, Arch View retains the preference, reports a diagnostic, and uses safe ordinary geometry where possible.
+
+## A profile save reports a conflict
+
+Another operation changed the project configuration after the profile was read. Reload the profile and review the current values before saving again. Save operations validate first, use revision and idempotency checks, and leave the previous file intact when a write fails.

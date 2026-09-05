@@ -19,6 +19,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/quick-start' },
       { text: 'Viewer', link: '/viewer/overview' },
+      { text: 'OKF', link: '/okf/overview' },
       { text: 'Quality', link: '/quality/overview' },
       { text: 'CLI', link: '/cli/overview' },
       { text: 'Live & MCP', link: '/mcp/installation' },
@@ -44,7 +45,19 @@ export default defineConfig({
             { text: 'Viewer overview', link: '/viewer/overview' },
             { text: 'Read the graph', link: '/viewer/read-the-graph' },
             { text: 'Inspect a node', link: '/viewer/inspection' },
-            { text: 'Change the layout', link: '/viewer/layout' }
+            { text: 'Change the layout', link: '/viewer/layout' },
+            { text: 'Advanced ELK rendering', link: '/viewer/advanced-rendering' }
+          ]
+        }
+      ],
+      '/okf/': [
+        {
+          text: 'OKF knowledge views',
+          items: [
+            { text: 'Overview', link: '/okf/overview' },
+            { text: 'Profiles', link: '/okf/profiles' },
+            { text: 'Explore an OKF view', link: '/okf/exploration' },
+            { text: 'Configuration', link: '/okf/configuration' }
           ]
         }
       ],
@@ -96,7 +109,19 @@ export default defineConfig({
             { text: 'Baseline JSON', link: '/formats/baseline' },
             { text: 'Model JSON', link: '/formats/model' },
             { text: 'Analyzer options', link: '/reference/analyzer-options' },
-            { text: 'Layout options', link: '/reference/layout-options' }
+            { text: 'Layout options', link: '/reference/layout-options' },
+            { text: 'OKF HTTP API', link: '/reference/okf-api' }
+          ]
+        }
+      ],
+      '/formats/': [
+        {
+          text: 'Data formats',
+          items: [
+            { text: 'Model JSON', link: '/formats/model' },
+            { text: 'OKF bundles', link: '/formats/okf' },
+            { text: 'Quality profile JSON', link: '/formats/quality-profile' },
+            { text: 'Baseline JSON', link: '/formats/baseline' }
           ]
         }
       ],
