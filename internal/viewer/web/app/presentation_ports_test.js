@@ -40,6 +40,23 @@ test("SC-AER-004 pinned ELK returns deterministic presentation ports and endpoin
   assert.ok(geometry.nodes.flatMap((node) => node.ports).every((port) => port.label && Object.values(port.bounds).every(Number.isFinite)));
 });
 
+test("SC-AER-004 port sides follow every supported layout direction", async () => {
+  const { runFeatureLayout } = await import(moduleURL("elk_runtime.js"));
+  const { normalizeGeometrySnapshot } = await import(moduleURL("geometry_snapshot.js"));
+  const expected = {
+    RIGHT: ["WEST", "EAST"], LEFT: ["EAST", "WEST"],
+    DOWN: ["NORTH", "SOUTH"], UP: ["SOUTH", "NORTH"]
+  };
+  for (const [direction, sides] of Object.entries(expected)) {
+    const profile = { algorithm: "layered", features: ["ports"], options: { "org.eclipse.elk.direction": direction } };
+    const output = await runFeatureLayout(scene, profile, catalog, null, ELK, { kind: "architecture", id: "model", revision: "r", navigation_scope: {} });
+    const geometry = normalizeGeometrySnapshot(scene, output, profile, output.geometrySource);
+    assert.deepEqual(geometry.nodes[0].ports.map((port) => port.side), sides, direction);
+    assert.equal(geometry.edges[0].source_port_id, "port::a::out", direction);
+    assert.equal(geometry.edges[0].target_port_id, "port::b::in", direction);
+  }
+});
+
 test("SC-AER-007 malformed port geometry is omitted with affected-edge fallback", async () => {
   const { runFeatureLayout } = await import(moduleURL("elk_runtime.js"));
   const { normalizeGeometrySnapshot } = await import(moduleURL("geometry_snapshot.js"));
@@ -48,7 +65,11 @@ test("SC-AER-007 malformed port geometry is omitted with affected-edge fallback"
       return {
         ...graph, width: 500, height: 200,
         children: graph.children.map((node, index) => ({ ...node, x: 30 + index * 260, y: 40,
-          ports: node.ports.map((port) => ({ ...port, x: port.id.endsWith("::in") ? -10 : Number.NaN, y: 36 })) })),
+          ports: node.ports.map((port) => {
+            const role = port.id.endsWith("::in") ? "in" : "out";
+            return { ...port, x: role === "in" ? -10 : (node.id === "a" ? Number.NaN : node.width), y: 36,
+              labels: port.labels.map((label) => ({ ...label, x: role === "in" ? -label.width : 10, y: -1 })) };
+          }) })),
         edges: graph.edges.map((edge) => ({ ...edge, sections: [{ startPoint: { x: 220, y: 81 }, endPoint: { x: 290, y: 81 } }] }))
       };
     }
@@ -57,8 +78,82 @@ test("SC-AER-007 malformed port geometry is omitted with affected-edge fallback"
   const output = await runFeatureLayout(scene, profile, catalog, null, InvalidPortEngine, { kind: "okf", id: "bundle", revision: "r", navigation_scope: {} });
   const geometry = normalizeGeometrySnapshot(scene, output, profile, output.geometrySource);
   assert.ok(geometry.diagnostics.some((item) => item.code === "geometry_port_invalid"));
+  assert.ok(geometry.diagnostics.some((item) => item.code === "geometry_port_endpoint_invalid"));
+  assert.deepEqual(geometry.nodes[0].ports.map((port) => port.role), ["in"]);
   assert.equal(geometry.edges[0].source_port_id, undefined);
   assert.equal(geometry.edges[0].route.kind, "orthogonal");
+});
+
+test("SC-AER-007 a valid port on the wrong node is rejected as an endpoint", async () => {
+  const { runFeatureLayout } = await import(moduleURL("elk_runtime.js"));
+  const { normalizeGeometrySnapshot } = await import(moduleURL("geometry_snapshot.js"));
+  class WrongEndpointEngine {
+    async layout(graph) {
+      const engine = new ELK();
+      const output = await engine.layout(graph);
+      output.edges[0].sources = ["port::b::out"];
+      return output;
+    }
+  }
+  const profile = { algorithm: "layered", features: ["ports"], options: {} };
+  const output = await runFeatureLayout(scene, profile, catalog, null, WrongEndpointEngine, { kind: "architecture", id: "model", revision: "r", navigation_scope: {} });
+  const geometry = normalizeGeometrySnapshot(scene, output, profile, output.geometrySource);
+  assert.ok(geometry.diagnostics.some((item) => item.code === "geometry_port_endpoint_invalid"));
+  assert.equal(geometry.edges[0].source_port_id, undefined);
+  assert.equal(geometry.edges[0].target_port_id, undefined);
+  assert.equal(geometry.edges[0].route.kind, "orthogonal");
+});
+
+test("SC-AER-007 a route detached from valid ports is rejected", async () => {
+  const { runFeatureLayout } = await import(moduleURL("elk_runtime.js"));
+  const { normalizeGeometrySnapshot } = await import(moduleURL("geometry_snapshot.js"));
+  class DetachedRouteEngine {
+    async layout(graph) {
+      const output = await new ELK().layout(graph);
+      output.edges[0].sections[0].startPoint.x += 5;
+      return output;
+    }
+  }
+  const profile = { algorithm: "layered", features: ["ports"], options: {} };
+  const output = await runFeatureLayout(scene, profile, catalog, null, DetachedRouteEngine, { kind: "architecture", id: "model", revision: "r", navigation_scope: {} });
+  const geometry = normalizeGeometrySnapshot(scene, output, profile, output.geometrySource);
+  assert.ok(geometry.diagnostics.some((item) => item.code === "geometry_port_endpoint_invalid"));
+  assert.equal(geometry.edges[0].source_port_id, undefined);
+  assert.equal(geometry.edges[0].route.kind, "orthogonal");
+});
+
+test("SC-AER-007 a missing ELK edge is diagnosed and uses ordinary geometry", async () => {
+  const { runFeatureLayout } = await import(moduleURL("elk_runtime.js"));
+  const { normalizeGeometrySnapshot } = await import(moduleURL("geometry_snapshot.js"));
+  class MissingEdgeEngine {
+    async layout(graph) {
+      const output = await new ELK().layout(graph);
+      return { ...output, edges: [] };
+    }
+  }
+  const profile = { algorithm: "layered", features: ["ports"], options: {} };
+  const output = await runFeatureLayout(scene, profile, catalog, null, MissingEdgeEngine, { kind: "okf", id: "bundle", revision: "r", navigation_scope: {} });
+  const geometry = normalizeGeometrySnapshot(scene, output, profile, output.geometrySource);
+  assert.ok(geometry.diagnostics.some((item) => item.code === "geometry_port_endpoint_invalid"));
+  assert.equal(geometry.edges[0].source_port_id, undefined);
+  assert.equal(geometry.edges[0].route.kind, "orthogonal");
+});
+
+test("SC-AER-011 ports are stable across repeats and feature request order", async () => {
+  const { runFeatureLayout } = await import(moduleURL("elk_runtime.js"));
+  const { normalizeGeometrySnapshot } = await import(moduleURL("geometry_snapshot.js"));
+  const countedScene = { ...scene, visible_relationships: [{ ...scene.visible_relationships[0], count: 2 }] };
+  const source = { kind: "architecture", id: "model", revision: "r1", navigation_scope: {} };
+  const run = async (features) => {
+    const profile = { algorithm: "layered", features, options: {} };
+    const output = await runFeatureLayout(countedScene, profile, catalog, null, ELK, source);
+    return normalizeGeometrySnapshot(countedScene, output, profile, source);
+  };
+  const first = await run(["ports", "edge_labels"]);
+  const repeated = await run(["ports", "edge_labels"]);
+  const reordered = await run(["edge_labels", "ports"]);
+  assert.deepEqual(repeated, first);
+  assert.deepEqual(reordered, first);
 });
 
 test("SC-AER-004 shared port markup remains presentation-only", async () => {
@@ -81,6 +176,29 @@ test("SC-AER-004 shared port markup remains presentation-only", async () => {
   assert.equal(moved.route.sections[0].start.x, 125);
   assert.equal(moved.route.sections[0].start.y, 55);
   assert.equal(moved.preserveEndpoints, true);
+});
+
+test("SC-AER-004 port-bound self-loops retain ELK geometry after a manual move", async () => {
+  const { runFeatureLayout } = await import(moduleURL("elk_runtime.js"));
+  const { normalizeGeometrySnapshot } = await import(moduleURL("geometry_snapshot.js"));
+  const { geometryPortRoute } = await import(moduleURL("port_presentation.js"));
+  const { edgeGeometry } = await import(pathToFileURL(path.join(__dirname, "../graph_route.js")).href);
+  const selfScene = {
+    visible_nodes: [{ id: "a" }],
+    visible_relationships: [{ id: "self", from_visible_id: "a", to_visible_id: "a" }]
+  };
+  const profile = { algorithm: "layered", features: ["ports"], options: {} };
+  const source = { kind: "architecture", id: "model", revision: "r", navigation_scope: {} };
+  const output = await runFeatureLayout(selfScene, profile, catalog, null, ELK, source);
+  const snapshot = normalizeGeometrySnapshot(selfScene, output, profile, source);
+  const edge = snapshot.edges[0];
+  const movedBounds = { ...snapshot.nodes[0].bounds, x: snapshot.nodes[0].bounds.x + 25, y: snapshot.nodes[0].bounds.y + 15 };
+  const routed = geometryPortRoute(snapshot, edge, { a: movedBounds }, null);
+  const rendered = edgeGeometry(selfScene.visible_relationships[0], movedBounds, movedBounds, routed.route, routed.preserveEndpoints);
+  assert.equal(routed.route.sections[0].start.x, edge.route.sections[0].start.x + 25);
+  assert.equal(routed.route.sections[0].start.y, edge.route.sections[0].start.y + 15);
+  assert.equal(rendered.path.includes(" C "), edge.route.kind === "spline");
+  assert.notEqual(rendered.path, edgeGeometry(selfScene.visible_relationships[0], movedBounds, movedBounds, null).path);
 });
 
 test("SC-AER-004 OKF uses the shared live port renderer without adding semantic items", async () => {

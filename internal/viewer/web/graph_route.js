@@ -322,6 +322,29 @@ import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.j
     return lineRoute(points, undefined, undefined, "orthogonal");
   }
 
+  function translateRoute(route, dx, dy) {
+    if (!route || !Number.isFinite(dx) || !Number.isFinite(dy)) return null;
+    const move = (point) => pointValue(point) && ({ x: point.x + dx, y: point.y + dy });
+    const sections = (route.sections || []).map((section) => ({
+      ...section,
+      start: move(section.start),
+      segments: (section.segments || []).map((segment) => ({
+        ...segment,
+        ...(segment.control1 ? { control1: move(segment.control1) } : {}),
+        ...(segment.control2 ? { control2: move(segment.control2) } : {}),
+        to: move(segment.to)
+      }))
+    }));
+    if (!sections.length || sections.some((section) => !section.start || section.segments.some((segment) => !segment.to))) return null;
+    const points = Array.isArray(route.points) ? route.points.map(move) : route.points;
+    const label = route.label && move(route.label);
+    return {
+      ...route, sections, points, label,
+      labelX: Number.isFinite(route.labelX) ? route.labelX + dx : route.labelX,
+      labelY: Number.isFinite(route.labelY) ? route.labelY + dy : route.labelY
+    };
+  }
+
   function straightRoute(from, to) {
     const fromCenterX = from.x + from.width / 2;
     const fromCenterY = from.y + from.height / 2;
@@ -356,7 +379,7 @@ import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.j
   }
 
   function edgeGeometry(relationship, from, to, route, preserveEndpoints) {
-    if (relationship.from_visible_id === relationship.to_visible_id) return geometryFromRoute(selfLoopRoute(from));
+    if (relationship.from_visible_id === relationship.to_visible_id && !preserveEndpoints) return geometryFromRoute(selfLoopRoute(from));
     const normalized = routeFromLegacyLayoutEdge(route);
     const attached = preserveEndpoints ? normalized : attachShapeEndpoints(normalized, from, to);
     const routed = geometryFromRoute(attached, route && route.labelX, route && route.labelY);
@@ -372,6 +395,7 @@ export {
   geometryFromRoute,
   orthogonalRoute,
   orthogonalRouteBetweenPoints,
+  translateRoute,
   straightRoute,
   pathForRoute,
   routeFromSections as fromELKSections,
