@@ -46,8 +46,6 @@ workflow semantics change; the Go static SVG limitation is explicit.
 
 READY FOR ARCHITECTURE IMPLEMENTATION
 
-Stage 1, issue 080, is verified, visually approved, and archived. Stage 2,
-issue 081, implements shared ELK count-label bounds, validated junctions,
-connected cubic routes, geometry-v1 identity, and safe fallback for architecture
-and OKF. It has passed automated verification and awaits human visual review.
-Ports and compound geometry remain unavailable until stages 3 and 4.
+Stages 1 and 2, issues 080 and 081, are verified, visually approved, and
+archived. Presentation ports are active in Stage 3. Compound geometry remains
+unavailable until Stage 4.

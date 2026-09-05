@@ -5,11 +5,11 @@
 - Issue number: `081`
 - Owning capability node: `/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md`
 - Artifact root: `docs/architecture/explore-architecture/advanced-elk-renderer-support`
-- Issue file: `docs/agents/issues/pending/081-shared-elk-advanced-edge-geometry.md`
+- Issue file: `docs/agents/issues/done/20260905-081-shared-elk-advanced-edge-geometry.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `awaiting-human-review`
+- Suggested state: `done`
 
 ## Parent Artifacts
 
@@ -36,7 +36,7 @@ controls and geometry. No feature-specific switches in scene adapters.
 - [x] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
 - [x] Automated verification and scenario evidence complete; implementation files below 600 lines.
 - [x] Required artifact synchronization complete.
-- [ ] Explicit human visual approval recorded before next stage or closeout.
+- [x] Explicit human visual approval recorded before next stage or closeout.
 
 ## Artifact sync required
 
@@ -99,5 +99,6 @@ not only a broad green command.
 ## Evidence
 
 See `docs/agents/reviews/20260904-advanced-elk-stage-2.md`. Automated checks
-and the implementer visual pass are complete. The issue remains open solely
-for the required independent human visual approval.
+and the implementer visual pass are complete. The user approved the corrected
+Stage 2 behavior on 2026-09-05, including labels, splines, panning, and the
+advanced-feature accordion behavior.

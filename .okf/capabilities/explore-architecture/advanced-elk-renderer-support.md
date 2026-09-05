@@ -3,7 +3,7 @@ type: capability
 title: Advanced ELK renderer support
 description: Extend the viewer renderer to honor additional ELK presentation features beyond the implemented v1 route and option set.
 tags: [viewer, elk, renderer, layout, future]
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-09-05T00:00:00Z
 state: specified
 state_changed: 2026-08-28T00:00:00Z
 project: /project.md
@@ -21,7 +21,7 @@ scenarios: docs/architecture/explore-architecture/advanced-elk-renderer-support/
 readiness_review: docs/architecture/explore-architecture/advanced-elk-renderer-support/readiness-review.md
 issues:
   - docs/agents/issues/done/20260904-080-shared-elk-settings-and-feature-registry.md
-  - docs/agents/issues/pending/081-shared-elk-advanced-edge-geometry.md
+  - docs/agents/issues/done/20260905-081-shared-elk-advanced-edge-geometry.md
   - docs/agents/issues/pending/082-shared-elk-presentation-ports.md
   - docs/agents/issues/pending/083-shared-elk-nested-containers.md
 ---
@@ -55,6 +55,6 @@ self-contained HTML, and browser SVG share `arch-view.geometry/v1`; Go static
 SVG remains deterministic orthogonal and reports when advanced geometry is not
 applied. The linked contract defines geometry identity, option gating,
 accessibility, validation, fallback, and visual scenarios. Approved stages are tracked by issues
-080–083. Stage 1 is verified, visually approved, and archived. Stage 2 is
-implemented and automatically verified; issue 081 remains open at its human
-visual-review gate. Stages 3–4 remain blocked by the preceding approvals.
+080–083. Stages 1 and 2 are verified, visually approved, and archived. Stage 3
+presentation ports is the active delivery frontier. Stage 4 remains blocked by
+the preceding approval.

@@ -26,7 +26,6 @@ type FeatureDefinition struct {
 	Owns            []string       `json:"owns"`
 	RequiredOptions map[string]any `json:"required_options"`
 	Fallback        string         `json:"fallback"`
-	SupportNote     string         `json:"support_note,omitempty"`
 }
 
 //go:embed features.json
