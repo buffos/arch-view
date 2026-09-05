@@ -16,7 +16,7 @@ import { changeOKFZoom, ensureOKFViewport, fitOKFViewport, persistOKFViewport, r
 import { syncFocusButton, toggleFocusMode } from "./viewport.js";
 import { configureModeNavigation } from "./mode_navigation.js";
 import { bindProfileForm, renderProfileForm, readProfileForm } from "./okf_profile_form.js";
-import { cloneOKFLayoutProfile, OKF_DEFAULT_LAYOUT_ALGORITHM } from "./okf_layout.js";
+import { cloneOKFLayoutProfile } from "./okf_layout.js";
 import { renderLayoutForm, updateLayoutDraftAlgorithm, updateLayoutDraftOption, layoutDraftProblems } from "./layout_form.js";
 import { sharedFeatureRegistry } from "./layout_features.js";
 
@@ -294,7 +294,7 @@ function setStatus(elements, message, diagnostics, tone) {
 }
 
 function selectedProfile(state) {
-  return profileByID(state.profiles, state.profileID) || { profile_id: state.profileID || "project:custom", name: "Custom", origin: "project_local", bases: ["builtin:neutral"], layout: { algorithm: OKF_DEFAULT_LAYOUT_ALGORITHM, options: {} } };
+  return profileByID(state.profiles, state.profileID) || { profile_id: state.profileID || "project:custom", name: "Custom", origin: "project_local", bases: ["builtin:neutral"], layout: cloneOKFLayoutProfile() };
 }
 
 function copyProfile(value) {
@@ -391,7 +391,7 @@ function updateOKFLayoutDraft(state, elements, updater, event) {
 }
 
 function resetOKFLayoutDraft(state, elements) {
-  state.layoutDraft = { algorithm: OKF_DEFAULT_LAYOUT_ALGORITHM, options: {} };
+  state.layoutDraft = cloneOKFLayoutProfile();
   state.layoutMessage = "Built-in defaults restored for this session";
   state.layoutMessageError = false;
   renderOKFLayoutForm(state, elements);

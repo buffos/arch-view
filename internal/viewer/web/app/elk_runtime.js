@@ -3,11 +3,12 @@ import { sharedFeatureRegistry } from "./layout_features.js";
 
 // Both scene adapters use the same feature pipeline and worker boundary.
 export async function runFeatureLayout(scene, profile, catalog, workerURL, Engine = globalThis.ELK, source = null) {
+  const effectiveProfile = catalog ? profile : { ...(profile || {}), features: [] };
   const registry = sharedFeatureRegistry(catalog);
-  const negotiated = registry.negotiate(profile);
-  let context = { scene, profile, source, diagnostics: negotiated.diagnostics };
+  const negotiated = registry.negotiate(effectiveProfile);
+  let context = { scene, profile: effectiveProfile, source, diagnostics: negotiated.diagnostics };
   context = await registry.run("negotiate", context, negotiated.effective);
-  context.graph = buildELKGraph(scene, profile, catalog);
+  context.graph = buildELKGraph(scene, effectiveProfile, catalog);
   context = await registry.run("prepare", context, negotiated.effective);
   context.output = await runELKLayout(context.graph, workerURL, Engine);
   context = await registry.run("normalize", context, negotiated.effective);

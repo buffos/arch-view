@@ -1,4 +1,4 @@
-const OKF_DEFAULT_LAYOUT_ALGORITHM = "mrtree";
+import { cloneOKFLayoutProfile } from "./okf_layout.js";
 
 export function createOKFState(sessionID) {
   return {
@@ -13,7 +13,7 @@ export function createOKFState(sessionID) {
     viewportKey: "",
     viewportInitialized: false,
     layout: null,
-    layoutProfile: { algorithm: OKF_DEFAULT_LAYOUT_ALGORITHM, options: {} },
+    layoutProfile: cloneOKFLayoutProfile(),
     layoutOverride: null,
     layoutCatalog: null,
     layoutSettingsOpen: false,
