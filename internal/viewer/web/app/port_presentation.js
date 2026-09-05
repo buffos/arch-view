@@ -1,4 +1,4 @@
-import { orthogonalRouteBetweenPoints } from "../graph_route.js";
+import { orthogonalRouteBetweenPoints, translateRoute } from "../graph_route.js";
 import { escapeHTML } from "./utils.js";
 
 function translatedBounds(bounds, dx, dy) {
@@ -43,5 +43,13 @@ export function geometryPortRoute(snapshot, geometryEdge, positions, preferredRo
   if (!sourceNode || !targetNode || !positions[sourceNode.id] || !positions[targetNode.id]) return null;
   const moved = positions[sourceNode.id].x !== sourceNode.bounds.x || positions[sourceNode.id].y !== sourceNode.bounds.y
     || positions[targetNode.id].x !== targetNode.bounds.x || positions[targetNode.id].y !== targetNode.bounds.y;
-  return { route: !moved && preferredRoute ? preferredRoute : orthogonalRouteBetweenPoints(source.position, target.position), preserveEndpoints: true };
+  let route = preferredRoute;
+  if (moved && sourceNode.id === targetNode.id) {
+    route = translateRoute(geometryEdge.route,
+      positions[sourceNode.id].x - sourceNode.bounds.x,
+      positions[sourceNode.id].y - sourceNode.bounds.y);
+  } else if (moved || !route) {
+    route = orthogonalRouteBetweenPoints(source.position, target.position);
+  }
+  return { route, preserveEndpoints: true };
 }

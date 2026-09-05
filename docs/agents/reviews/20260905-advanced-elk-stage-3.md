@@ -15,8 +15,11 @@ approval is pending. The capability remains specified and issue 083 is blocked.
   presentation, route fallback, styles, settings form, and browser SVG path.
 - Manual node movement shifts its ports and reroutes affected edges between the
   new attachment points. Port graphics are noninteractive and aria-hidden.
-- Malformed port geometry reports `geometry_port_invalid` and falls back only
-  the affected route to deterministic orthogonal geometry.
+- Malformed port geometry, missing edges, wrong-node endpoints, detached routes,
+  and ports that do not touch their declared side are diagnosed and fall back
+  only the affected route to deterministic orthogonal geometry.
+- Port-bound self-loops preserve and translate their validated ELK route when
+  manually moved instead of reverting to the legacy center-based loop.
 - Go static SVG remains deterministic orthogonal and reports requested browser
   features as not applied.
 
@@ -24,11 +27,11 @@ approval is pending. The capability remains specified and issue 083 is blocked.
 
 | Scenario | Evidence |
 |---|---|
-| SC-AER-004 | Pinned ELK fixture proves deterministic IDs, sides, labels, bounds, and endpoint references; shared architecture and OKF render tests verify presentation. |
-| SC-AER-007 | Malformed-port fixture proves explicit diagnostics and per-edge fallback. |
+| SC-AER-004 | Pinned ELK fixtures prove deterministic IDs, all four directional side mappings, labels, bounds, endpoint references, manual movement, and self-loop routing; shared architecture and OKF render tests verify presentation. |
+| SC-AER-007 | Malformed-port, wrong-node endpoint, detached endpoint, and missing-edge fixtures prove explicit diagnostics and per-edge fallback. |
 | SC-AER-009 | Static SVG provenance test and browser SVG serializer port-retention test. |
 | SC-AER-010 | Ports are noninteractive, aria-hidden presentation objects; existing list/details and OKF navigation tests remain green. |
-| SC-AER-011 | Catalog/handler consistency tests and both scene renderers consume the same port modules. |
+| SC-AER-011 | Repeated layouts and reversed feature request order produce identical geometry; catalog/handler consistency tests and both scene renderers consume the same port modules. |
 
 ## Automated verification
 
@@ -36,7 +39,7 @@ approval is pending. The capability remains specified and issue 083 is blocked.
 - `go test -race ./...`: passed.
 - `go vet ./...`: passed.
 - `go build ./...`: passed.
-- All 60 browser tests: passed.
+- All 70 browser tests: passed.
 - `node --check` for all browser JavaScript: passed.
 - `git diff --check`: passed.
 - Modified implementation-file audit: all files are below 600 lines.

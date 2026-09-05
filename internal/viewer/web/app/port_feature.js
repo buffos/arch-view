@@ -3,6 +3,7 @@ import { addFeatureDiagnostic, failedFeature, featureGeometry } from "./feature_
 const FEATURE_ID = "ports";
 const PORT_SIZE = 10;
 const LABEL_HEIGHT = 12;
+const POSITION_TOLERANCE = 0.75;
 
 export function presentationPortID(nodeID, role) {
   return "port::" + nodeID + "::" + role;
@@ -55,12 +56,22 @@ function finiteBounds(value) {
     && value.width > 0 && value.height > 0;
 }
 
+function portTouchesSide(node, port, side) {
+  if (![node?.width, node?.height, port?.x, port?.y, port?.width, port?.height].every(Number.isFinite)) return false;
+  if (side === "WEST") return Math.abs(port.x + port.width) <= POSITION_TOLERANCE;
+  if (side === "EAST") return Math.abs(port.x - node.width) <= POSITION_TOLERANCE;
+  if (side === "NORTH") return Math.abs(port.y + port.height) <= POSITION_TOLERANCE;
+  if (side === "SOUTH") return Math.abs(port.y - node.height) <= POSITION_TOLERANCE;
+  return false;
+}
+
 function normalizePort(node, port, role, side) {
   const bounds = { x: node.x + port.x, y: node.y + port.y, width: port.width, height: port.height };
   const actualSide = port.layoutOptions?.["org.eclipse.elk.port.side"] || port.layoutOptions?.["elk.port.side"];
   const label = (port.labels || []).find((item) => item.id === labelID(node.id, role));
   const labelBounds = label && { x: bounds.x + label.x, y: bounds.y + label.y, width: label.width, height: label.height };
-  if (!finiteBounds(bounds) || actualSide !== side || !finiteBounds(labelBounds) || label.text !== role) return null;
+  if (!finiteBounds(bounds) || actualSide !== side || !portTouchesSide(node, port, side)
+    || !finiteBounds(labelBounds) || label.text !== role) return null;
   const center = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
   const position = {
     x: side === "WEST" ? bounds.x : side === "EAST" ? bounds.x + bounds.width : center.x,
@@ -77,6 +88,8 @@ function normalize(context) {
   const store = featureGeometry(context);
   const sides = flowSides(context.profile);
   const validPorts = new Set();
+  const normalizedPorts = new Map();
+  const relationships = new Map((context.scene?.visible_relationships || []).map((item) => [item.id, item]));
   for (const node of context.output?.children || []) {
     const ports = [];
     for (const role of ["in", "out"]) {
@@ -91,19 +104,40 @@ function normalize(context) {
       }
       ports.push(normalized);
       validPorts.add(id);
+      normalizedPorts.set(id, normalized);
     }
     store.portsByNode[node.id] = ports;
   }
-  for (const edge of context.output?.edges || []) {
-    const source = edge.sources?.[0];
-    const target = edge.targets?.[0];
-    if (!validPorts.has(source) || !validPorts.has(target)) {
-      if (!store.invalidRouteIDs.includes(edge.id)) store.invalidRouteIDs.push(edge.id);
+  const outputEdges = new Map((context.output?.edges || []).map((edge) => [edge.id, edge]));
+  for (const relationship of relationships.values()) {
+    const edge = outputEdges.get(relationship.id);
+    const source = edge?.sources?.[0];
+    const target = edge?.targets?.[0];
+    const expectedSource = presentationPortID(relationship.from_visible_id, "out");
+    const expectedTarget = presentationPortID(relationship.to_visible_id, "in");
+    const sourcePort = normalizedPorts.get(source);
+    const targetPort = normalizedPorts.get(target);
+    const firstSection = edge?.sections?.[0];
+    const lastSection = edge?.sections?.[edge.sections.length - 1];
+    const attached = sourcePort && targetPort
+      && pointsNear(firstSection?.startPoint, sourcePort.position)
+      && pointsNear(lastSection?.endPoint, targetPort.position);
+    if (source !== expectedSource || target !== expectedTarget || !validPorts.has(source) || !validPorts.has(target) || !attached) {
+      if (!store.invalidRouteIDs.includes(relationship.id)) store.invalidRouteIDs.push(relationship.id);
+      addFeatureDiagnostic(context, "geometry_port_endpoint_invalid",
+        "ELK returned invalid presentation port endpoints for relationship " + relationship.id + "; ordinary geometry is used.",
+        { feature: FEATURE_ID, relationship_id: relationship.id, source_port_id: source, target_port_id: target });
       continue;
     }
-    store.portEndpointsByEdge[edge.id] = { source_port_id: source, target_port_id: target };
+    store.portEndpointsByEdge[relationship.id] = { source_port_id: source, target_port_id: target };
   }
   return context;
+}
+
+function pointsNear(left, right) {
+  return left && right && Number.isFinite(left.x) && Number.isFinite(left.y)
+    && Math.abs(left.x - right.x) <= POSITION_TOLERANCE
+    && Math.abs(left.y - right.y) <= POSITION_TOLERANCE;
 }
 
 export const portFeature = {
@@ -114,4 +148,4 @@ export const portFeature = {
   fallback: (context, error, phase) => failedFeature(context, FEATURE_ID, error, phase)
 };
 
-export { finiteBounds, flowSides };
+export { finiteBounds, flowSides, pointsNear, portTouchesSide };
