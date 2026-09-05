@@ -6,14 +6,13 @@ ELK execution. Its AER-R rules and scenario mapping are authoritative.
 
 ## State
 
-- Planning state: `specified`.
+- Planning state: `implemented`.
 - Parent: the implemented [Explore and inspect architecture](../../../../.okf/capabilities/explore-architecture.md) capability.
-- Current route: the staged candidate workstreams are exact-specified and the application synthesis gate is current and passed; this is the next eligible delivery node for issue slicing.
+- Current route: complete; all staged delivery and review gates passed.
 - Delivery issues: 080 settings/registry, 081 edges, 082 ports, 083 containers.
   These approved stages have dependency-ordered visual gates.
-- Delivery progress: 080–082 are archived after automated verification and
-  explicit visual approval. Issue 083 nested containers is implemented and
-  automatically verified, awaiting explicit visual approval.
+- Delivery progress: issues 080–083 are archived after automated verification
+  and explicit visual approval.
 
 ## Boundary
 
@@ -38,8 +37,7 @@ HTML/browser-SVG parity, and deterministic static-SVG behavior.
 
 ## Readiness decision
 
-The child is READY FOR ARCHITECTURE IMPLEMENTATION. It can move to `implemented`
-only after every resulting issue and visual review is complete.
+The child is implemented; every resulting issue and visual review is complete.
 
 ## Bounded decisions
 

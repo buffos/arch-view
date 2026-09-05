@@ -7,9 +7,8 @@ and geometry functions, with separate persisted profiles. Delivery starts with
 useful settings and registry/persistence, followed by edges, ports and compound
 geometry. Every stage has an automated and human visual gate. No server-side
 ELK service or parallel settings endpoint is introduced.
-The registry/settings, advanced-edge, and presentation-port stages are
-approved and archived. Compound geometry is implemented and automatically
-verified at the final human visual-review gate.
+All four stages are verified, visually approved, and archived through issues
+080–083.
 
 ## Status
 
@@ -17,7 +16,7 @@ The configurable OKF knowledge-view capability is a first-class root-level,
 implemented capability through verified issues 064–071; its exact node-scoped
 reference set is linked below and its shared boundaries are summarized here.
 
-This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043, project analyzer assignment issues 044–047, and source-index issues 048–052 are verified, archived, and visually approved; the advanced ELK renderer child remains the specified plugin/viewer frontier.
+This is the application-level architecture baseline. It describes the target Go architecture and distinguishes it from the Clojure reference implementation. Capability territories are now specified, implemented, or explicitly tracked for implementation; the verified in-process Clojure adapter and opt-in external Python process both reach the existing analyzer, model, viewer, and export paths without adding language-specific consumer branches. The compiled external analyzer distribution is implemented as the trusted production release path. Multi-analyzer issues 039–043, project analyzer assignment issues 044–047, and source-index issues 048–052 are verified, archived, and visually approved; the advanced ELK renderer child is implemented through issues 080–083.
 The Code quality and code intelligence capability is a pure structural-child
 roll-up with effective state `implemented`, the minimum of its three children.
 Its Source facts and symbol index child is implemented through issues 048–052
@@ -287,7 +286,7 @@ source excerpts are opt-in and read-only, and IDs, hashes, provider versions,
 and snapshot data remain secondary technical details. Embedded exports apply
 the same bounded read model locally.
 
-## Capability decisions and remaining frontier
+## Capability decisions and delivered extensions
 
 The multi-analyzer, assignment, and advanced-renderer capabilities have exact
 schemas, contracts, scenarios, and readiness reviews. The compiled-distribution
@@ -295,7 +294,7 @@ capability is implemented through issues 034–038. Multi-analyzer issues
 039–043 are verified, archived, and visually approved; those issues consume the
 resolved source-scope policy. The assignment capability is implemented through
 verified, archived, and visually approved issues 044–047. The advanced-renderer
-frontier still requires later issue slicing, implementation, and verification:
+extension is implemented through verified and visually approved issues 080–083:
 
 - Opening a repository discovers marker-driven nested project roots within
   bounded exclusions. A strong manifest owns its subtree unless a nested
@@ -516,10 +515,9 @@ protocol fields to the canonical model.
 The compiled external analyzer distribution is implemented through issues
 034–038 after application synthesis. The project analyzer assignments and view
 selection child is implemented through verified, archived, and visually
-approved issues 044–047. The remaining specified frontier is [advanced ELK
-renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md);
-Live analysis/MCP is implemented. Advanced ELK is the next eligible visible
-delivery frontier.
+approved issues 044–047. [Advanced ELK renderer support](../../.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md)
+is implemented through verified and visually approved issues 080–083;
+Live analysis/MCP is implemented as well.
 The multi-analyzer child is implemented through issues 039–043.
 The 2026-08-28 brownfield audit also confirmed that the existing Go analyzer,
 canonical model generation, and export/automation boundaries exhaust their

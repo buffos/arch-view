@@ -1540,3 +1540,15 @@
 - Live OKF verification now shows all 17 nodes in a balanced graph with three
   capability containers and no browser errors. Issue 083 remains at its human
   visual-review gate with no capability-state or graph-total transition.
+
+### Advanced ELK Stage 4 approved and closed
+
+- The user explicitly approved the corrected nested-container presentation on
+  2026-09-05 after live visual inspection.
+- The final code-review loop corrected container identity ownership and made
+  OKF Fit include frames expanded by manual child movement; the second review
+  pass reported no remaining findings.
+- Archived issue 083 and promoted Advanced ELK renderer support from
+  `specified` to `implemented`. All scoped issues 080–083 and their visual
+  gates are complete; graph totals are now 0 foggy, 0 bounded, 0 specified,
+  and 19 implemented.

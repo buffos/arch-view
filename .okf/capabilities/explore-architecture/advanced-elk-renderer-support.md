@@ -4,8 +4,8 @@ title: Advanced ELK renderer support
 description: Extend the viewer renderer to honor additional ELK presentation features beyond the implemented v1 route and option set.
 tags: [viewer, elk, renderer, layout, future]
 timestamp: 2026-09-05T00:00:00Z
-state: specified
-state_changed: 2026-08-28T00:00:00Z
+state: implemented
+state_changed: 2026-09-05T00:00:00Z
 project: /project.md
 parent: /capabilities/explore-architecture.md
 artifact_root: docs/architecture/explore-architecture/advanced-elk-renderer-support
@@ -23,7 +23,7 @@ issues:
   - docs/agents/issues/done/20260904-080-shared-elk-settings-and-feature-registry.md
   - docs/agents/issues/done/20260905-081-shared-elk-advanced-edge-geometry.md
   - docs/agents/issues/done/20260905-082-shared-elk-presentation-ports.md
-  - docs/agents/issues/pending/083-shared-elk-nested-containers.md
+  - docs/agents/issues/done/20260905-083-shared-elk-nested-containers.md
 ---
 
 # Intent
@@ -48,7 +48,7 @@ behavior, or project configuration ownership.
 
 # Planning state
 
-This child is specified and readiness-reviewed. Its exact renderer-only
+This child is implemented and readiness-reviewed. Its exact renderer-only
 extension program admits five opt-in features: edge labels, junctions,
 presentation ports, compound geometry, and spline refinement. Browser,
 self-contained HTML, and browser SVG share `arch-view.geometry/v1`; Go static
@@ -56,5 +56,5 @@ SVG remains deterministic orthogonal and reports when advanced geometry is not
 applied. The linked contract defines geometry identity, option gating,
 accessibility, validation, fallback, and visual scenarios. Approved stages are tracked by issues
 080–083. Stages 1 through 3 are verified, visually approved, and archived.
-Stage 4 nested containers is implemented and automatically verified; issue
-083 remains open at its explicit human visual-review gate.
+Stage 4 nested containers is verified, visually approved, and archived with
+issue 083. The complete scoped delivery is exhausted.

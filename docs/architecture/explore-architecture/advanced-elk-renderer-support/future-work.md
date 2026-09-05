@@ -1,13 +1,11 @@
 # Advanced ELK renderer support future-work register
 
-Status: `in delivery` — issues 080–082 are verified, visually approved, and
-archived. Issue 083 implements compound graph geometry and is automatically
-verified at its final human visual-review gate.
+Status: initial contracted slice `implemented` — issues 080–083 are verified,
+visually approved, and archived. Broader candidates remain uncommitted.
 
-This register is the durable place to find renderer features that are not part
-of the implemented Explore v1 scope. The exact-spec set defines the initial
-five-feature slice; each workstream must remain within that contract when it is
-assigned implementation issues.
+This register is the durable place for renderer candidates beyond the
+implemented five-feature slice. Broader renderer work must receive a new
+bounded contract before issue slicing.
 
 ## Candidate workstreams
 
@@ -33,9 +31,9 @@ planning must confirm:
 5. What deterministic fallback, accessibility behavior, and visual acceptance
    evidence are required?
 
-The resulting PRD, contract/scenario updates, readiness review, and issues
-080–083 are linked from the specified child capability. Capability promotion
-waits for issue 083's explicit visual approval and closeout.
+The delivered PRD, contract/scenario updates, readiness review, and issues
+080–083 are linked from the implemented child capability. Candidate work above
+is not part of that completed delivery unless explicitly covered there.
 
 ## Bounded priority
 

@@ -3,7 +3,7 @@ type: project
 title: Arch View
 description: Analyze supported codebases and generate navigable architecture views.
 tags: [architecture, code-analysis, multi-language, golang]
-timestamp: 2026-09-04T00:00:00Z
+timestamp: 2026-09-05T00:00:00Z
 prd: docs/prd.md
 architecture_summary: docs/architecture/application-architecture-summary.md
 verification:
@@ -26,8 +26,8 @@ and Clojure analyzers through a common plugin contract. The confirmed direction
 is to distribute supported analyzers as compiled external executables, run
 multiple analyzers for one repository, and let project configuration map
 folders to analyzer IDs for selectable application views. These analysis and
-assignment flows are implemented; advanced renderer extensions remain future
-work. The product includes source
+assignment flows and advanced renderer extensions are implemented. The product
+includes source
 analysis, a language-neutral architecture model, interactive exploration, and
 headless export. The confirmed future direction also includes deterministic
 code-quality checks, a searchable code-intelligence index, and a live MCP
@@ -81,16 +81,14 @@ multi-analyzer orchestration leaf is implemented through the verified and
 user-approved issues 039–043, including its mixed-language viewer review. The
 project analyzer assignments/view selection leaf is implemented through
 issues 044–047, including its approved visual review. The advanced ELK renderer
-support leaf remains specified; approved delivery stages are tracked by issues
-080–083 with human visual review between stages. Stage 3 presentation ports is
-verified, visually approved, and archived; Stage 4 nested containers is
-implemented and automatically verified at its final visual-review gate.
+support leaf is implemented through issues 080–083; all four stages are
+verified, visually approved, and archived.
 The configurable OKF knowledge views capability is an implemented root-level
 capability with a complete node-scoped reference set covering source discovery,
 profiles, projection, inspection, safety behavior, and readiness. Issues 064–071
 are verified and archived after the user's final approval on 2026-09-04.
-The active specified implementation node is Advanced ELK renderer support;
-its final delivery issue awaits explicit visual approval before closeout.
+There is no remaining specified implementation node in the current capability
+map; future work requires a new bounded planning decision.
 The [Code quality and code intelligence](capabilities/code-quality-and-intelligence.md)
 capability is a pure structural-child roll-up with effective state `implemented`,
 the minimum of its three children. Its three children are readiness-reviewed

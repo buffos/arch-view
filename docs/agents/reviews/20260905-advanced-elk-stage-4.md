@@ -2,8 +2,8 @@
 
 Issue: 083, Shared ELK nested containers.
 
-Status: implemented and automatically verified on 2026-09-05. Explicit human
-visual approval is still required before issue closeout or capability promotion.
+Status: implemented, automatically verified, and explicitly visually approved
+by the user on 2026-09-05.
 
 ## Delivered behavior
 
@@ -31,7 +31,7 @@ visual approval is still required before issue closeout or capability promotion.
 
 | Scenario | Evidence |
 |---|---|
-| SC-AER-005 | Pinned ELK nested-hierarchy and hidden-segment fixtures; shared architecture/OKF frame tests; live OKF scene produced four containers. |
+| SC-AER-005 | Pinned ELK nested-hierarchy and hidden-segment fixtures; shared architecture/OKF frame tests; live OKF scene produced three capability containers. |
 | SC-AER-007 | Malformed hierarchy and bounds fixtures prove diagnostic flat fallback. |
 | SC-AER-009 | Static provenance test plus browser SVG serialization retaining container frames. |
 | SC-AER-010 | Frames are aria-hidden presentation objects; descendant movement and existing navigation/accessibility suites pass. |
@@ -62,5 +62,15 @@ visual approval is still required before issue closeout or capability promotion.
 
 ## Human review
 
-Pending explicit user approval. Review both viewers and the downloaded SVG,
-including Fit, zoom, pan, container movement, selection, and focus/Back.
+Approved explicitly by the user on 2026-09-05 after the corrected nested
+presentation was inspected in the live OKF viewer. Architecture remains
+intentionally progressive and does not expose additional hierarchy solely for
+this feature.
+
+## Code-review loop
+
+The first pass found and corrected a presentation-container identity mismatch
+in `arch-view.geometry/v1` and added container-aware Fit coverage after manual
+child movement. The second pass found no remaining actionable issues. Full Go,
+race, vet/build, browser, syntax, strict OKF, diff, and line-count verification
+passed after remediation.
