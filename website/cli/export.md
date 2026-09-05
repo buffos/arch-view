@@ -43,3 +43,7 @@ go run ./cmd/arch-view export --input model.json --format html --output architec
 | svg | A static image that can be embedded or inspected. |
 
 The exporter validates the model before writing. If the model is invalid, it stops instead of producing a misleading file.
+
+The CLI export surface accepts canonical architecture models. It does not export a project-backed OKF session or save an OKF profile.
+
+The live browser, embedded interactive HTML, and browser **Download SVG** can preserve supported advanced geometry. The deterministic static Go SVG exporter remains orthogonal and reports when advanced renderer features were not applied.

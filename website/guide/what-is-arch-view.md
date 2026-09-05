@@ -12,6 +12,14 @@ It answers questions such as:
 
 It does not rewrite your source code. It reports what it can observe.
 
+## Two kinds of view
+
+The default Architecture viewer presents a canonical model produced by analyzers. A project-backed session may also offer an OKF knowledge view for independent, user-authored knowledge bundles.
+
+The two views share navigation and layout infrastructure, but they do not share identities. An OKF concept is not silently converted into an architecture module, and an architecture module is not assumed to be an OKF concept.
+
+Read [OKF knowledge views](/okf/overview) when the information you want to explore is authored as knowledge documents rather than discovered by an analyzer.
+
 ## A small example
 
 Imagine this project:

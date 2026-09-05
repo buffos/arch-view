@@ -10,6 +10,8 @@ go run ./cmd/arch-view open --project . --port 0
 
 The server reads the project, builds the model, and prints a local address.
 
+The browser opens in the Architecture viewer. If the project contains a selectable OKF bundle, the header provides a link to the secondary OKF knowledge view. OKF selection and profile persistence are available only in this project-backed session.
+
 ## Open an existing model
 
 ~~~powershell
@@ -48,3 +50,5 @@ The project form accepts the analyzer and source-selection options described on 
 ## Important difference
 
 Open is for a person at a browser. Analyze is for creating a report that another command or CI job can consume.
+
+The `open` command does not turn OKF bundles into canonical architecture-model JSON. The two views remain separate.

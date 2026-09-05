@@ -8,6 +8,8 @@ A node can represent a module, a group of modules, or another visible architectu
 
 The label tells you the name. The small badges tell you the language and status. The line count or relationship count gives a quick idea of size and connectivity.
 
+In an OKF view, the node is a generic concept. Its label, compact fields, state, shape, and colors come from the selected profile. A concept is not automatically a capability, module, or other fixed category.
+
 ## What an arrow means
 
 An arrow means that the report contains a dependency relationship.
@@ -28,6 +30,15 @@ It does not automatically mean:
 - the target is local source code.
 
 Look at the relationship details and source evidence before deciding what to change.
+
+## OKF containment and semantic links
+
+OKF scenes separate structural and informational relationships:
+
+- solid containment edges describe explicit or filesystem hierarchy and point toward the child;
+- dashed semantic links describe Markdown cross-references and have no arrowheads.
+
+Semantic links are hidden until a concept is selected. Selecting another concept replaces the previous overlay. They never participate in layout, so adding or removing them does not rearrange the hierarchy.
 
 ## Layers
 
@@ -51,6 +62,10 @@ Use the node search to narrow the scene. The scene list remains keyboard accessi
 - Escape closes an open control when supported.
 
 If a search returns no items, clear the search instead of refreshing the page.
+
+## Containers, ports, and labels
+
+When enabled and supported by the selected layout, advanced rendering may add relationship-count labels, presentation-only ports, and frames around visible nested hierarchy. These objects are part of the drawing, not new concepts or canonical relationships. Read [Advanced ELK rendering](/viewer/advanced-rendering) for the compatibility boundary.
 
 ## References
 

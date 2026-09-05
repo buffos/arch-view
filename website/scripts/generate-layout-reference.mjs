@@ -8,7 +8,7 @@ const inventory = JSON.parse(fs.readFileSync(inventoryPath, 'utf8'))
 const lines = [
   '# Complete layout catalog',
   '',
-  'This appendix is built from the pinned layout catalog. It lists every known option. The simple explanation is intentionally short; options marked catalog-only are not editable in the current viewer.',
+  'This appendix is built from the pinned layout catalog and shared renderer feature registry. It lists every known option and advanced feature. The simple explanation is intentionally short; options marked catalog-only are not editable in the current viewer.',
   '',
   `Total options: ${inventory.layout.options.length}.`,
   ''
@@ -51,6 +51,31 @@ for (const algorithm of inventory.layout.algorithms) {
   lines.push('')
 }
 
+lines.push('## Advanced renderer features')
+lines.push('')
+lines.push('Features are opt-in presentation capabilities. Their support is determined by the pinned renderer, compatible algorithms, prerequisites, and export surface.')
+lines.push('')
+
+for (const feature of inventory.layout.features ?? []) {
+  lines.push(`<a id="feature-${feature.id.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}"></a>`)
+  lines.push(`### ${feature.name}`)
+  lines.push('')
+  lines.push(`**Technical ID:** ${feature.id}.`)
+  lines.push('')
+  lines.push(`**Status:** ${feature.status || 'not specified'}.`)
+  lines.push('')
+  lines.push(`**Supported algorithms:** ${formatList(feature.algorithms)}.`)
+  lines.push('')
+  lines.push(`**Prerequisites:** ${formatList(feature.prerequisites)}.`)
+  lines.push('')
+  lines.push(`**Supported surfaces:** ${formatList(feature.surfaces)}.`)
+  lines.push('')
+  lines.push(`**Owned geometry:** ${formatList(feature.owns)}.`)
+  lines.push('')
+  lines.push(`**Fallback:** ${feature.fallback || 'not specified'}.`)
+  lines.push('')
+}
+
 for (const option of inventory.layout.options) {
   const id = `layout-${option.id.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}`
   const what = friendly[option.id] || `This setting controls ${option.name.toLowerCase()} in the layout engine.`
@@ -87,4 +112,8 @@ function formatValue(value) {
   if (value === null || value === undefined) return 'engine default'
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
+}
+
+function formatList(values) {
+  return Array.isArray(values) && values.length ? values.join(', ') : 'none declared'
 }

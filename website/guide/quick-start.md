@@ -54,7 +54,13 @@ go run ./cmd/arch-view open --model architecture.json --port 0
 
 This skips analysis. The viewer opens the information already stored in the model.
 
-## 5. Create a report without opening a browser
+## 5. Open an optional OKF view
+
+Project sessions start in the Architecture viewer. If Arch View discovers a selectable OKF bundle, the header shows **Open OKF knowledge view**. Select it to open the profile-driven knowledge view, or use `?view=okf` in the local address.
+
+OKF discovery is optional. If no valid bundle is available, the Architecture viewer still starts normally. OKF profiles and bundle selection require the project-backed local server.
+
+## 6. Create a report without opening a browser
 
 ~~~powershell
 go run ./cmd/arch-view analyze --project . --format analysis-json --output analysis.json
@@ -62,7 +68,7 @@ go run ./cmd/arch-view analyze --project . --format analysis-json --output analy
 
 The JSON file is useful in CI, scripts, and later export steps.
 
-## 6. Export a browser file
+## 7. Export a browser file
 
 First create or obtain a canonical model, then export it:
 
@@ -74,7 +80,7 @@ The HTML file is self-contained. It can be opened without starting the Arch View
 
 ## What should happen?
 
-You should see a graph, a summary area, and controls for search, scope, layout, and quality checks when a report contains them.
+You should see the architecture graph first, with summary, search, scope, layout, and quality controls when the report contains them. An available OKF bundle is exposed through the header link rather than replacing the architecture entry point.
 
 If the viewer does not load, start with [Common questions](/troubleshooting/common-questions). The most useful first check is to copy the complete terminal output, including the command and any error text.
 

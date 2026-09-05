@@ -27,3 +27,9 @@ Its schema version is **arch-view.model/v1**.
 **Complete** means the model passed validation without a recoverable diagnostic. **Partial** means the model is usable but carries a recoverable limitation. **Failed** models cannot be exported as normal architecture views.
 
 The viewer should show the status rather than hiding it.
+
+## Model JSON versus OKF bundles
+
+Model JSON is the canonical analyzer-produced architecture input. An OKF bundle is a separate collection of knowledge documents with its own concepts, source revision, hierarchy, relationships, and profile-driven projection.
+
+OKF documents are not embedded into the model schema and are not converted into architecture modules. Read [OKF bundles](/formats/okf) for that format.
