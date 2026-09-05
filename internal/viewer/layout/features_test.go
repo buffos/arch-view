@@ -31,10 +31,10 @@ func TestFeatureMetadataAndStagedAvailability(t *testing.T) {
 			profile.Options["org.eclipse.elk.edgeRouting"] = "SPLINES"
 		}
 		_, err := ValidateProfile(profile)
-		if feature.Stage <= 3 && err != nil {
+		if feature.Stage <= 4 && err != nil {
 			t.Fatalf("supported stage %d feature %s: %v", feature.Stage, feature.ID, err)
 		}
-		if feature.Stage > 3 && analysis.ErrorCodeOf(err) != "renderer_feature_unavailable" {
+		if feature.Stage > 4 && analysis.ErrorCodeOf(err) != "renderer_feature_unavailable" {
 			t.Fatalf("future feature %s: %v", feature.ID, err)
 		}
 	}
@@ -44,7 +44,7 @@ func TestFeatureMetadataAndStagedAvailability(t *testing.T) {
 	}
 }
 
-func TestSavedUnavailableFeaturesRemainPreferences(t *testing.T) {
+func TestSavedFeaturesRemainPreferences(t *testing.T) {
 	root := t.TempDir()
 	data := []byte(`{"schema_version":"arch-view.config/v2","analysis":{},"layout":{"algorithm":"layered","features":["compound","edge_labels"],"options":{}},"extension":{"keep":true}}`)
 	path := filepath.Join(root, ConfigFileName)
@@ -53,7 +53,7 @@ func TestSavedUnavailableFeaturesRemainPreferences(t *testing.T) {
 	}
 	session := NewSession(root)
 	response := session.Response()
-	if response.Status != "valid" || !reflect.DeepEqual(response.Layout.Features, []string{"compound", "edge_labels"}) || len(response.Diagnostics) != 1 {
+	if response.Status != "valid" || !reflect.DeepEqual(response.Layout.Features, []string{"compound", "edge_labels"}) || len(response.Diagnostics) != 0 {
 		t.Fatalf("%+v", response)
 	}
 	response.Layout.Features[0] = "mutated"
@@ -81,6 +81,24 @@ func TestPresentationPortSettingsRequireFeatureAndFixedSides(t *testing.T) {
 	profile.Options["org.eclipse.elk.portConstraints"] = "FREE"
 	if _, err := ValidateProfile(profile); err == nil {
 		t.Fatal("unverified port constraint accepted")
+	}
+}
+
+func TestCompoundSettingsRequireFeatureAndSingleRunHierarchy(t *testing.T) {
+	profile := LayoutProfile{Algorithm: "layered", Features: []string{"compound"}, Options: map[string]any{
+		"org.eclipse.elk.hierarchyHandling": "INCLUDE_CHILDREN",
+	}}
+	if _, err := ValidateProfile(profile); err != nil {
+		t.Fatal(err)
+	}
+	profile.Features = nil
+	if _, err := ValidateProfile(profile); analysis.ErrorCodeOf(err) != "renderer_feature_dependency" {
+		t.Fatal(err)
+	}
+	profile.Features = []string{"compound"}
+	profile.Options["org.eclipse.elk.hierarchyHandling"] = "SEPARATE_CHILDREN"
+	if _, err := ValidateProfile(profile); err == nil {
+		t.Fatal("unverified hierarchy mode accepted")
 	}
 }
 

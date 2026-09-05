@@ -1,4 +1,5 @@
 import { edgeGeometry } from "../graph_route.js";
+import { applyGeometryMove, geometryContainerHeaderBounds, geometryContainerMarkup, geometryMoveStart } from "./container_presentation.js";
 import { activeGeometryJunctions, geometryJunctionMarkup, geometryLabelMarkup } from "./edge_presentation.js";
 import { geometryEdge } from "./geometry_snapshot.js";
 import { nodeShapeMarkup } from "./node_shape.js";
@@ -47,10 +48,12 @@ export function renderGraph(context, services) {
       label + "</g>";
   }).join("");
   const junctionMarkup = geometryJunctionMarkup(activeGeometryJunctions(activeLayout.geometry, manualPositions));
+  const containerMarkup = geometryContainerMarkup(activeLayout.geometry, positions);
 
   const nodeMarkup = nodes.map(function (node) {
     const position = positions[node.id];
     if (!position) return "";
+    const renderPosition = geometryContainerHeaderBounds(activeLayout.geometry, node.id, position, { width: 190, height: 82 });
     const selected = state.selected && state.selected.kind === "node" && state.selected.id === node.id;
     const matches = nodeMatches(state, node);
     const diagnosticClass = node.diagnostic_state === "none" ? "" : " " + classForState(node.diagnostic_state);
@@ -63,30 +66,30 @@ export function renderGraph(context, services) {
     const status = nodeStatusText(node);
     const accessibleLabel = node.accessible_label + "; " + language + " language";
     const badgeText = String(languageValue === "multi" ? "MULTI" : formatLanguage(languageValue)).toUpperCase();
-    const badgeWidth = Math.max(48, Math.min(position.width - 24, 18 + badgeText.length * 6.2));
-    const badgeX = position.x + position.width - badgeWidth - 12;
+    const badgeWidth = Math.max(48, Math.min(renderPosition.width - 24, 18 + badgeText.length * 6.2));
+    const badgeX = renderPosition.x + renderPosition.width - badgeWidth - 12;
     const badgeClass = "node-language-badge " + classForState(languageValue) + (!matches ? " dimmed" : "");
     const ports = geometryPortMarkup(geometryPortsForNode(activeLayout.geometry, node.id, position));
     return '<g data-node-id="' + escapeHTML(node.id) + '" data-node-kind="' + escapeHTML(node.kind) + '" data-node-language="' + escapeHTML(languageValue) + '" tabindex="0" role="button" aria-label="' + escapeHTML(accessibleLabel) + '">' +
       '<title>' + escapeHTML(accessibleLabel) + "</title>" +
-      nodeShapeMarkup("rounded_rectangle", position, ' class="' + className + '"') +
-      nodeShapeMarkup("rounded_rectangle", position, ' class="node-hitzone"') +
-      '<rect class="' + badgeClass + '" x="' + badgeX + '" y="' + (position.y + 10) + '" width="' + badgeWidth + '" height="18" rx="9"></rect>' +
-      '<text class="node-language-badge-label ' + (!matches ? "dimmed" : "") + '" x="' + (badgeX + badgeWidth / 2) + '" y="' + (position.y + 22.5) + '" text-anchor="middle">' + escapeHTML(badgeText) + "</text>" +
-      '<text class="node-label ' + (!matches ? "dimmed" : "") + '" x="' + (position.x + 14) + '" y="' + (position.y + 30) + '">' + escapeHTML(truncate(node.label, 25)) + "</text>" +
-      '<text class="node-subtitle" x="' + (position.x + 14) + '" y="' + (position.y + 51) + '">' + escapeHTML(truncate(subtitle, 29)) + "</text>" +
-      '<text class="node-subtitle" x="' + (position.x + 14) + '" y="' + (position.y + 68) + '">' + escapeHTML(truncate(status, 29)) + "</text>" + ports + "</g>";
+      nodeShapeMarkup("rounded_rectangle", renderPosition, ' class="' + className + '"') +
+      nodeShapeMarkup("rounded_rectangle", renderPosition, ' class="node-hitzone"') +
+      '<rect class="' + badgeClass + '" x="' + badgeX + '" y="' + (renderPosition.y + 10) + '" width="' + badgeWidth + '" height="18" rx="9"></rect>' +
+      '<text class="node-language-badge-label ' + (!matches ? "dimmed" : "") + '" x="' + (badgeX + badgeWidth / 2) + '" y="' + (renderPosition.y + 22.5) + '" text-anchor="middle">' + escapeHTML(badgeText) + "</text>" +
+      '<text class="node-label ' + (!matches ? "dimmed" : "") + '" x="' + (renderPosition.x + 14) + '" y="' + (renderPosition.y + 30) + '">' + escapeHTML(truncate(node.label, 25)) + "</text>" +
+      '<text class="node-subtitle" x="' + (renderPosition.x + 14) + '" y="' + (renderPosition.y + 51) + '">' + escapeHTML(truncate(subtitle, 29)) + "</text>" +
+      '<text class="node-subtitle" x="' + (renderPosition.x + 14) + '" y="' + (renderPosition.y + 68) + '">' + escapeHTML(truncate(status, 29)) + "</text>" + ports + "</g>";
   }).join("");
 
   const empty = nodes.length === 0 ? '<p class="muted">No visible nodes in this projection.</p>' : "";
-  context.elements.graph.innerHTML = empty + '<svg viewBox="0 0 ' + activeLayout.width + ' ' + activeLayout.height + '" role="img" aria-labelledby="graph-title graph-desc" xmlns="http://www.w3.org/2000/svg"><title id="graph-title">Architecture graph</title><desc id="graph-desc">' + escapeHTML(scene.accessibility.reading_order.length + " semantic items in the current scene") + '</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M 0 0 L 9 4.5 L 0 9 z" fill="#7483a9"></path></marker></defs><g class="viewport-content" transform="' + transform + '"><g class="edges">' + edgeMarkup + junctionMarkup + '</g><g class="nodes">' + nodeMarkup + "</g></g></svg>";
+  context.elements.graph.innerHTML = empty + '<svg viewBox="0 0 ' + activeLayout.width + ' ' + activeLayout.height + '" role="img" aria-labelledby="graph-title graph-desc" xmlns="http://www.w3.org/2000/svg"><title id="graph-title">Architecture graph</title><desc id="graph-desc">' + escapeHTML(scene.accessibility.reading_order.length + " semantic items in the current scene") + '</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M 0 0 L 9 4.5 L 0 9 z" fill="#7483a9"></path></marker></defs><g class="viewport-content" transform="' + transform + '"><g class="geometry-containers">' + containerMarkup + '</g><g class="edges">' + edgeMarkup + junctionMarkup + '</g><g class="nodes">' + nodeMarkup + "</g></g></svg>";
   const svg = context.elements.graph.querySelector("svg");
   if (!svg) return;
   context.elements.graph.insertAdjacentHTML("beforeend", '<span class="viewport-hint graph-viewport-hint">Drag the canvas to pan; Shift-drag a node to adjust this session.</span>');
-  bindGraphInteractions(context, svg, positions, services);
+  bindGraphInteractions(context, svg, positions, activeLayout.geometry, services);
 }
 
-function bindGraphInteractions(context, svg, positions, services) {
+function bindGraphInteractions(context, svg, positions, geometrySnapshot, services) {
   context.elements.graph.querySelectorAll("[data-node-id]").forEach(function (element) {
     const nodeID = element.dataset.nodeId;
     const select = function (preserveDoubleClick) {
@@ -121,7 +124,7 @@ function bindGraphInteractions(context, svg, positions, services) {
       }
     });
     element.addEventListener("pointerdown", function (event) {
-      if (event.shiftKey) beginNodeDrag(context, event, svg, nodeID, positions[nodeID], services);
+      if (event.shiftKey) beginNodeDrag(context, event, svg, nodeID, positions, geometrySnapshot, services);
     });
   });
   context.elements.graph.querySelectorAll("[data-edge-id]").forEach(function (element) {
@@ -158,12 +161,14 @@ function graphBaseScale(context, svg) {
   return Math.max(0.01, Math.min(width / Math.max(1, active.width), height / Math.max(1, active.height)));
 }
 
-function beginNodeDrag(context, event, svg, nodeID, position, services) {
+function beginNodeDrag(context, event, svg, nodeID, positions, geometrySnapshot, services) {
+  const position = positions[nodeID];
   if (event.button !== 0 || !position) return;
   if (!context.state.viewport) context.state.viewport = defaultViewport();
   const start = { x: event.clientX, y: event.clientY, nodeX: position.x, nodeY: position.y };
   const baseScale = graphBaseScale(context, svg);
   const drag = { nodeID: nodeID };
+  const moveSet = geometryMoveStart(geometrySnapshot, nodeID, positions);
   context.state.draggingNode = drag;
   let moved = false;
   event.preventDefault();
@@ -172,7 +177,7 @@ function beginNodeDrag(context, event, svg, nodeID, position, services) {
     const dx = (pointerEvent.clientX - start.x) / (baseScale * context.state.viewport.zoom);
     const dy = (pointerEvent.clientY - start.y) / (baseScale * context.state.viewport.zoom);
     if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-    context.state.viewport.positions[nodeID] = { x: start.nodeX + dx, y: start.nodeY + dy };
+    applyGeometryMove(moveSet, positions, context.state.viewport.positions, dx, dy);
     persistViewport(context);
     if (!context.state.dragFrame) {
       context.state.dragFrame = window.requestAnimationFrame(function () {

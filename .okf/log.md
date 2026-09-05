@@ -1511,3 +1511,18 @@
 - Archived issue 082 and unblocked issue 083 for nested containers. Advanced
   ELK remains `specified` while its final stage is active; graph totals remain
   0 foggy, 0 bounded, 1 specified, 18 implemented.
+
+### Advanced ELK Stage 4 awaiting visual review
+
+- Implemented visible-hierarchy compound layout through the shared feature
+  registry. Architecture and OKF consume the same validated container bounds,
+  absolute child geometry, cross-boundary routes, frame rendering, descendant
+  movement, rerouting, and browser SVG serialization.
+- Hidden hierarchy concepts are not synthesized. Invalid compound geometry
+  falls back deterministically to the flat scene, and mixed labels, ports, and
+  spline geometry are normalized after compound coordinates become absolute.
+- Full Go, race, vet/build, 77 browser tests, JavaScript syntax, strict OKF,
+  diff, and line-count checks pass. Live OKF verification produced four nested
+  visible containers without browser errors. Issue 083 remains open for
+  explicit human visual approval; capability state and graph totals do not
+  change.

@@ -6,14 +6,14 @@ import (
 	"testing"
 )
 
-func TestEmbeddedHTMLRetainsUnavailableFeaturePreferences(t *testing.T) {
+func TestEmbeddedHTMLRetainsCompoundFeaturePreference(t *testing.T) {
 	profile := layout.LayoutProfile{Algorithm: "layered", Features: []string{"compound"}}
 	_, data, err := Render(exportFixtureModel(t), Request{Format: FormatHTML, LayoutProfile: &profile})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(data, []byte(`"features":["compound"]`)) || !bytes.Contains(data, []byte("renderer_feature_unavailable")) {
-		t.Fatal("missing saved preference or shared diagnostic")
+	if !bytes.Contains(data, []byte(`"features":["compound"]`)) {
+		t.Fatal("missing supported compound preference")
 	}
 }
 

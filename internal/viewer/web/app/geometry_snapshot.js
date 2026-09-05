@@ -1,4 +1,4 @@
-import { fromELKSections, fromELKSplineSections, orthogonalRoute, selfLoopRoute } from "../graph_route.js";
+import { fromELKSections, fromELKSplineSections, orthogonalRoute, orthogonalRouteBetweenPoints, selfLoopRoute } from "../graph_route.js";
 
 function finite(value, fallback = 0) {
   return Number.isFinite(value) ? value : fallback;
@@ -26,6 +26,17 @@ function routeFor(edge, relationship, positions, profile, featureGeometry, offse
   if (!invalid && edge) {
     const route = spline ? fromELKSplineSections(edge.sections, offset) : fromELKSections(edge.sections, offset);
     if (route) return route;
+  }
+  const endpoints = featureGeometry.portEndpointsByEdge?.[relationship.id];
+  if (endpoints) {
+    const source = (featureGeometry.portsByNode?.[relationship.from_visible_id] || []).find((port) => port.id === endpoints.source_port_id);
+    const target = (featureGeometry.portsByNode?.[relationship.to_visible_id] || []).find((port) => port.id === endpoints.target_port_id);
+    if (source && target) {
+      return orthogonalRouteBetweenPoints(
+        { x: source.position.x + offset, y: source.position.y + offset },
+        { x: target.position.x + offset, y: target.position.y + offset }
+      );
+    }
   }
   if (relationship.from_visible_id === relationship.to_visible_id) return selfLoopRoute(from);
   return orthogonalRoute(from, to);
@@ -59,7 +70,7 @@ function portsFor(nodeID, featureGeometry, offset) {
 export function normalizeGeometrySnapshot(scene, output, profile, source, offset = 24) {
   const positions = nodePositions(output, offset);
   const outputEdges = new Map((output?.edges || []).map((edge) => [edge.id, edge]));
-  const featureGeometry = output?.featureGeometry || { labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [], portsByNode: {}, portEndpointsByEdge: {} };
+  const featureGeometry = output?.featureGeometry || { labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [], portsByNode: {}, portEndpointsByEdge: {}, parentByNode: {}, childrenByNode: {} };
   const geometryEdges = [];
   const routes = {};
   for (const relationship of scene?.visible_relationships || []) {
@@ -84,8 +95,8 @@ export function normalizeGeometrySnapshot(scene, output, profile, source, offset
     id: node.id,
     semantic_node_id: node.id,
     bounds: { ...positions[node.id] },
-    parent_id: null,
-    children_ids: [],
+    parent_id: featureGeometry.parentByNode?.[node.id] || null,
+    children_ids: [...(featureGeometry.childrenByNode?.[node.id] || [])],
     ports: portsFor(node.id, featureGeometry, offset)
   }));
   return {

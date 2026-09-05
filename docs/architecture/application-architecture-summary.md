@@ -8,7 +8,8 @@ useful settings and registry/persistence, followed by edges, ports and compound
 geometry. Every stage has an automated and human visual gate. No server-side
 ELK service or parallel settings endpoint is introduced.
 The registry/settings, advanced-edge, and presentation-port stages are
-approved and archived. Compound geometry is the remaining active stage.
+approved and archived. Compound geometry is implemented and automatically
+verified at the final human visual-review gate.
 
 ## Status
 

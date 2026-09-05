@@ -1,8 +1,8 @@
 # Advanced ELK renderer support future-work register
 
-Status: `specified` — the renderer-extension boundary, staged priority, exact
-contract, acceptance scenarios, and readiness review are complete; no delivery
-issue has been created yet.
+Status: `in delivery` — issues 080–082 are verified, visually approved, and
+archived. Issue 083 implements compound graph geometry and is automatically
+verified at its final human visual-review gate.
 
 This register is the durable place to find renderer features that are not part
 of the implemented Explore v1 scope. The exact-spec set defines the initial
@@ -33,9 +33,9 @@ planning must confirm:
 5. What deterministic fallback, accessibility behavior, and visual acceptance
    evidence are required?
 
-The resulting PRD, contract/scenario updates, and readiness review are linked
-from the specified child capability; the vertical implementation slice will be
-linked here when delivery begins.
+The resulting PRD, contract/scenario updates, readiness review, and issues
+080–083 are linked from the specified child capability. Capability promotion
+waits for issue 083's explicit visual approval and closeout.
 
 ## Bounded priority
 

@@ -41,6 +41,14 @@
   stroke-width: 18;
   pointer-events: stroke;
 }
+.geometry-container-frame {
+  fill: rgba(27, 42, 77, 0.34);
+  stroke: rgba(134, 157, 206, 0.52);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 .edge-line {
   fill: none;
   stroke: #7483a9;

@@ -35,13 +35,14 @@ import(pathToFileURL(path.join(__dirname, "export.js")).href).then(({ serializeS
   global.XMLSerializer = class { serializeToString(copy) { serialized = copy; return "<svg/>"; } };
   try {
     for (const viewportClass of ["viewport-content", "okf-viewport-content"]) {
+      const container = new Element({ class: "geometry-container-frame", "data-geometry-container": "group" }, [], { fill: "rgba(27, 42, 77, 0.34)", stroke: "rgb(134, 157, 206)" });
       const edge = new Element({ class: "containment", "marker-end": "url(#arrow)" }, [], { stroke: "rgb(116, 131, 169)" });
       const semantic = new Element({ class: "semantic-link" }, [], { "stroke-dasharray": "7px, 5px" });
       const node = new Element({ transform: "translate(10 20)" }, [], { fill: "rgb(17, 34, 51)", "font-size": "14px" });
       const label = new Element({ class: "edge-label geometry-edge-label", "data-edge-label-id": "label::e1::count" }, [], { fill: "rgb(216, 226, 255)" });
       const junction = new Element({ class: "edge-junction", "data-junction-id": "junction::1:2" }, [], { stroke: "rgb(110, 231, 249)" });
       const port = new Element({ class: "presentation-port out", "aria-hidden": "true" }, [], { fill: "rgb(110, 231, 249)" });
-      const content = new Element({ class: viewportClass, transform: "translate(90 70) scale(2)" }, [edge, semantic, node, label, junction, port, new Element({ class: "edge-hit" })]);
+      const content = new Element({ class: viewportClass, transform: "translate(90 70) scale(2)" }, [container, edge, semantic, node, label, junction, port, new Element({ class: "edge-hit" })]);
       content.getBBox = () => ({ x: 10, y: 20, width: 200, height: 100 });
       const source = new Element({ viewBox: "0 0 500 500" }, [content]);
       assert.deepEqual(exportBounds(source), { x: -22, y: -12, width: 264, height: 164 });
@@ -49,18 +50,20 @@ import(pathToFileURL(path.join(__dirname, "export.js")).href).then(({ serializeS
       const exportedContent = serialized.children[0];
       assert.equal(exportedContent.getAttribute("transform"), null);
       assert.equal(content.getAttribute("transform"), "translate(90 70) scale(2)", "live viewport must not change");
-      assert.equal(exportedContent.children.length, 6);
-      assert.equal(exportedContent.children[0].getAttribute("marker-end"), "url(#arrow)");
-      assert.equal(exportedContent.children[1].getAttribute("marker-end"), null);
-      assert.equal(exportedContent.children[1].styles["stroke-dasharray"], "7px, 5px");
-      assert.equal(exportedContent.children[2].styles.fill, "rgb(17, 34, 51)");
-      assert.equal(exportedContent.children[2].getAttribute("transform"), "translate(10 20)");
-      assert.equal(exportedContent.children[3].getAttribute("data-edge-label-id"), "label::e1::count");
-      assert.equal(exportedContent.children[3].styles.fill, "rgb(216, 226, 255)");
-      assert.equal(exportedContent.children[4].getAttribute("data-junction-id"), "junction::1:2");
-      assert.equal(exportedContent.children[4].styles.stroke, "rgb(110, 231, 249)");
-      assert.equal(exportedContent.children[5].getAttribute("aria-hidden"), "true");
-      assert.equal(exportedContent.children[5].styles.fill, "rgb(110, 231, 249)");
+      assert.equal(exportedContent.children.length, 7);
+      assert.equal(exportedContent.children[0].getAttribute("data-geometry-container"), "group");
+      assert.equal(exportedContent.children[0].styles.stroke, "rgb(134, 157, 206)");
+      assert.equal(exportedContent.children[1].getAttribute("marker-end"), "url(#arrow)");
+      assert.equal(exportedContent.children[2].getAttribute("marker-end"), null);
+      assert.equal(exportedContent.children[2].styles["stroke-dasharray"], "7px, 5px");
+      assert.equal(exportedContent.children[3].styles.fill, "rgb(17, 34, 51)");
+      assert.equal(exportedContent.children[3].getAttribute("transform"), "translate(10 20)");
+      assert.equal(exportedContent.children[4].getAttribute("data-edge-label-id"), "label::e1::count");
+      assert.equal(exportedContent.children[4].styles.fill, "rgb(216, 226, 255)");
+      assert.equal(exportedContent.children[5].getAttribute("data-junction-id"), "junction::1:2");
+      assert.equal(exportedContent.children[5].styles.stroke, "rgb(110, 231, 249)");
+      assert.equal(exportedContent.children[6].getAttribute("aria-hidden"), "true");
+      assert.equal(exportedContent.children[6].styles.fill, "rgb(110, 231, 249)");
       assert.equal(serialized.getAttribute("viewBox"), "-22 -12 264 164");
       assert.equal(serialized.styles["background-color"], "#090e1d", "exports remain readable outside the dark viewer page");
       content.getBBox = () => { throw new Error("unmeasurable"); };

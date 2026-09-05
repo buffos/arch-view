@@ -56,4 +56,5 @@ SVG remains deterministic orthogonal and reports when advanced geometry is not
 applied. The linked contract defines geometry identity, option gating,
 accessibility, validation, fallback, and visual scenarios. Approved stages are tracked by issues
 080–083. Stages 1 through 3 are verified, visually approved, and archived.
-Stage 4 nested containers is the remaining active delivery issue.
+Stage 4 nested containers is implemented and automatically verified; issue
+083 remains open at its explicit human visual-review gate.

@@ -12,12 +12,16 @@ func TestLayoutFeatureHTTPValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, feature := range []string{"unknown", "compound"} {
+	for _, feature := range []string{"unknown"} {
 		payload, _ := json.Marshal(layoutApplyRequest{SchemaVersion: "arch-view.config/v2", Layout: layout.LayoutProfile{Algorithm: "layered", Features: []string{feature}}})
 		response := requestLayout(t, server, http.MethodPost, "/v1/layout/apply", payload)
 		if response.Code != http.StatusUnprocessableEntity {
 			t.Fatalf("%d %s", response.Code, response.Body.String())
 		}
+	}
+	compoundPayload, _ := json.Marshal(layoutApplyRequest{SchemaVersion: "arch-view.config/v2", Layout: layout.LayoutProfile{Algorithm: "layered", Features: []string{"compound"}}})
+	if response := requestLayout(t, server, http.MethodPost, "/v1/layout/apply", compoundPayload); response.Code != http.StatusOK {
+		t.Fatalf("%d %s", response.Code, response.Body.String())
 	}
 	portPayload, _ := json.Marshal(layoutApplyRequest{SchemaVersion: "arch-view.config/v2", Layout: layout.LayoutProfile{Algorithm: "layered", Features: []string{"ports"}}})
 	if response := requestLayout(t, server, http.MethodPost, "/v1/layout/apply", portPayload); response.Code != http.StatusOK {
