@@ -1,4 +1,5 @@
 import { clampNumber } from "./utils.js";
+import { geometryContainerBounds } from "./container_presentation.js";
 import { fitViewportTransform, visibleGraphArea } from "./viewport_math.js";
 import { applyViewportFit, createViewportState, resetViewportZoom, updateViewportZoom, viewportTransform } from "./viewport_runtime.js";
 
@@ -61,7 +62,7 @@ export function fitOKFViewport(state, elements) {
   const available = visibleGraphArea(elements.graph.clientWidth, elements.graph.clientHeight);
   const renderedWidth = Math.max(1, svg.clientWidth || available.width);
   const renderedHeight = Math.max(1, svg.clientHeight || available.height);
-  const bounds = layoutBounds(state.layout);
+  const bounds = layoutBounds(state.layout, state.viewport.positions);
   const fitted = fitViewportTransform({
     availableWidth: available.width,
     availableHeight: available.height,
@@ -115,18 +116,26 @@ function readViewport(key, snapshot) {
   }
 }
 
-function layoutBounds(layout) {
+function layoutBounds(layout, manualPositions = {}) {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+  const positions = {};
   Object.keys(layout.positions || {}).forEach(function (id) {
-    const position = layout.positions[id];
+    positions[id] = Object.assign({}, layout.positions[id], manualPositions[id] || {});
+    const position = positions[id];
     if (!position) return;
     minX = Math.min(minX, position.x);
     minY = Math.min(minY, position.y);
     maxX = Math.max(maxX, position.x + position.width);
     maxY = Math.max(maxY, position.y + position.height);
+  });
+  Object.values(geometryContainerBounds(layout.geometry, positions)).forEach(function (bounds) {
+    minX = Math.min(minX, bounds.x);
+    minY = Math.min(minY, bounds.y);
+    maxX = Math.max(maxX, bounds.x + bounds.width);
+    maxY = Math.max(maxY, bounds.y + bounds.height);
   });
   if (!Number.isFinite(minX)) return { minX: 0, minY: 0, maxX: layout.width, maxY: layout.height, centerX: layout.width / 2, centerY: layout.height / 2 };
   const padding = 28;

@@ -10,7 +10,7 @@ export function geometryContainerNode(snapshot, nodeID) {
 }
 
 export function geometryContainer(snapshot, nodeID) {
-  return snapshot?.containers?.find((container) => container.semantic_node_id === nodeID) || null;
+  return snapshot?.containers?.find((container) => container.owner_node_id === nodeID) || null;
 }
 
 export function geometryMoveIDs(snapshot, nodeID) {
@@ -70,14 +70,14 @@ export function geometryContainerBounds(snapshot, positions) {
     result[nodeID] = bounds;
     return bounds;
   };
-  for (const container of snapshot?.containers || []) calculate(container.semantic_node_id);
+  for (const container of snapshot?.containers || []) calculate(container.owner_node_id);
   return result;
 }
 
 export function geometryContainerMarkup(snapshot, positions, attributesForNode = () => "") {
   const calculated = geometryContainerBounds(snapshot, positions);
   return (snapshot?.containers || []).map((container) => {
-    const nodeID = container.semantic_node_id;
+    const nodeID = container.owner_node_id;
     const bounds = calculated[nodeID];
     if (!bounds || ![bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite)) return "";
     return '<rect class="geometry-container-frame" data-geometry-container="' + escapeHTML(nodeID)
