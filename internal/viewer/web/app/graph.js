@@ -1,5 +1,5 @@
 import { edgeGeometry } from "../graph_route.js";
-import { applyGeometryMove, geometryContainerHeaderBounds, geometryContainerMarkup, geometryMoveStart } from "./container_presentation.js";
+import { applyGeometryMove, geometryContainerMarkup, geometryMoveStart } from "./container_presentation.js";
 import { activeGeometryJunctions, geometryJunctionMarkup, geometryLabelMarkup } from "./edge_presentation.js";
 import { geometryEdge } from "./geometry_snapshot.js";
 import { nodeShapeMarkup } from "./node_shape.js";
@@ -53,7 +53,7 @@ export function renderGraph(context, services) {
   const nodeMarkup = nodes.map(function (node) {
     const position = positions[node.id];
     if (!position) return "";
-    const renderPosition = geometryContainerHeaderBounds(activeLayout.geometry, node.id, position, { width: 190, height: 82 });
+    const renderPosition = position;
     const selected = state.selected && state.selected.kind === "node" && state.selected.id === node.id;
     const matches = nodeMatches(state, node);
     const diagnosticClass = node.diagnostic_state === "none" ? "" : " " + classForState(node.diagnostic_state);

@@ -8,13 +8,19 @@ visual approval is still required before issue closeout or capability promotion.
 ## Delivered behavior
 
 - The registered `compound` handler converts only visible supplied hierarchy
-  into nested Layered ELK input; hidden intermediate concepts are not invented.
+  into presentation-only nested Layered ELK containers; hidden intermediate
+  concepts are not invented.
+- Semantic parent nodes remain ordinary graph nodes inside their presentation
+  containers, so routes terminate on real node boundaries rather than frames.
+- The top-level concept remains on the canvas instead of creating a redundant
+  container around the whole graph.
 - ELK-relative child, edge, label, port, and junction coordinates are validated
   and normalized into the shared absolute `arch-view.geometry/v1` snapshot.
 - Architecture and OKF render the same non-semantic container frames behind
   scene content. The semantic parent remains the selectable header.
 - Moving a container moves every visible descendant and reroutes affected edges
-  through the existing shared geometry path.
+  through the existing shared geometry path. Moving a child beyond its original
+  frame expands its ancestor presentation frames.
 - Invalid hierarchy or bounds produce an explicit diagnostic and deterministic
   flat-layout fallback without corrupting the last renderable scene.
 - Existing defaults remain unchanged: compound is opt-in, OKF uses Mr. Tree by
@@ -46,11 +52,13 @@ visual approval is still required before issue closeout or capability promotion.
 ## Implementer visual pass
 
 - In a live OKF session, switched the session draft from Mr. Tree to Layered,
-  enabled Nested containers, and observed four visible hierarchy containers.
+  enabled Nested containers, and observed all 17 nodes with three bounded
+  capability containers.
 - Full canvas and Fit preserved the complete scene; the browser reported no
   runtime errors.
-- The current rightward Layered profile produces a tall, narrow compound graph.
-  That is valid geometry but remains an explicit aesthetic review point.
+- The architecture scene projection remains intentionally progressive and
+  usually has no simultaneously visible parent/child pairs, so enabling the
+  feature there normally produces no visual containers.
 
 ## Human review
 

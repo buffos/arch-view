@@ -1,4 +1,5 @@
 import { fromELKSections, fromELKSplineSections, orthogonalRoute, orthogonalRouteBetweenPoints, selfLoopRoute } from "../graph_route.js";
+import { presentationContainerID } from "./compound_hierarchy.js";
 
 function finite(value, fallback = 0) {
   return Number.isFinite(value) ? value : fallback;
@@ -67,10 +68,25 @@ function portsFor(nodeID, featureGeometry, offset) {
   }));
 }
 
+function containersFor(featureGeometry, offset) {
+  return (featureGeometry.containerNodeIDs || []).map((nodeID) => {
+    const bounds = featureGeometry.containerBoundsByNode?.[nodeID];
+    if (!bounds) return null;
+    const parentNodeID = featureGeometry.parentByNode?.[nodeID] || null;
+    return {
+      id: presentationContainerID(nodeID),
+      semantic_node_id: nodeID,
+      parent_container_id: parentNodeID && featureGeometry.containerBoundsByNode?.[parentNodeID]
+        ? presentationContainerID(parentNodeID) : null,
+      bounds: { ...bounds, x: bounds.x + offset, y: bounds.y + offset }
+    };
+  }).filter(Boolean);
+}
+
 export function normalizeGeometrySnapshot(scene, output, profile, source, offset = 24) {
   const positions = nodePositions(output, offset);
   const outputEdges = new Map((output?.edges || []).map((edge) => [edge.id, edge]));
-  const featureGeometry = output?.featureGeometry || { labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [], portsByNode: {}, portEndpointsByEdge: {}, parentByNode: {}, childrenByNode: {} };
+  const featureGeometry = output?.featureGeometry || { labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [], portsByNode: {}, portEndpointsByEdge: {}, parentByNode: {}, childrenByNode: {}, containerNodeIDs: [], containerBoundsByNode: {} };
   const geometryEdges = [];
   const routes = {};
   for (const relationship of scene?.visible_relationships || []) {
@@ -103,6 +119,7 @@ export function normalizeGeometrySnapshot(scene, output, profile, source, offset
     schema_version: "arch-view.geometry/v1",
     source,
     nodes,
+    containers: containersFor(featureGeometry, offset),
     edges: geometryEdges,
     junctions: junctionsFor(featureGeometry, offset),
     diagnostics: [...(output?.featureDiagnostics || [])],

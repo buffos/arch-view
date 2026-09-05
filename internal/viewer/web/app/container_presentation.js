@@ -9,6 +9,10 @@ export function geometryContainerNode(snapshot, nodeID) {
   return node && node.children_ids?.length ? node : null;
 }
 
+export function geometryContainer(snapshot, nodeID) {
+  return snapshot?.containers?.find((container) => container.semantic_node_id === nodeID) || null;
+}
+
 export function geometryMoveIDs(snapshot, nodeID) {
   const byID = new Map((snapshot?.nodes || []).map((node) => [node.id, node]));
   const result = [];
@@ -36,20 +40,49 @@ export function applyGeometryMove(move, positions, manualPositions, dx, dy) {
   }
 }
 
-export function geometryContainerHeaderBounds(snapshot, nodeID, currentBounds, preferredSize) {
-  if (!geometryContainerNode(snapshot, nodeID) || !currentBounds) return currentBounds;
-  const width = Math.min(Math.max(1, preferredSize?.width || 190), Math.max(1, currentBounds.width - 24));
-  const height = Math.min(Math.max(1, preferredSize?.height || 82), Math.max(1, currentBounds.height - 20));
-  return { x: currentBounds.x + 12, y: currentBounds.y + 10, width, height };
+function includeBox(bounds, box, padding = 12) {
+  if (!box) return bounds;
+  return {
+    x: Math.min(bounds.x, box.x - padding),
+    y: Math.min(bounds.y, box.y - padding),
+    width: Math.max(bounds.x + bounds.width, box.x + box.width + padding) - Math.min(bounds.x, box.x - padding),
+    height: Math.max(bounds.y + bounds.height, box.y + box.height + padding) - Math.min(bounds.y, box.y - padding)
+  };
+}
+
+export function geometryContainerBounds(snapshot, positions) {
+  const result = {};
+  const calculate = (nodeID) => {
+    if (result[nodeID]) return result[nodeID];
+    const container = geometryContainer(snapshot, nodeID);
+    const node = geometryNode(snapshot, nodeID);
+    if (!container || !node) return null;
+    const current = positions?.[nodeID] || node.bounds;
+    const dx = current.x - node.bounds.x;
+    const dy = current.y - node.bounds.y;
+    let bounds = { ...container.bounds, x: container.bounds.x + dx, y: container.bounds.y + dy };
+    for (const childID of node.children_ids || []) {
+      const child = geometryContainer(snapshot, childID)
+        ? calculate(childID)
+        : positions?.[childID] || geometryNode(snapshot, childID)?.bounds;
+      bounds = includeBox(bounds, child);
+    }
+    result[nodeID] = bounds;
+    return bounds;
+  };
+  for (const container of snapshot?.containers || []) calculate(container.semantic_node_id);
+  return result;
 }
 
 export function geometryContainerMarkup(snapshot, positions, attributesForNode = () => "") {
-  return (snapshot?.nodes || []).filter((node) => node.children_ids?.length).map((node) => {
-    const bounds = positions?.[node.id] || node.bounds;
+  const calculated = geometryContainerBounds(snapshot, positions);
+  return (snapshot?.containers || []).map((container) => {
+    const nodeID = container.semantic_node_id;
+    const bounds = calculated[nodeID];
     if (!bounds || ![bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite)) return "";
-    return '<rect class="geometry-container-frame" data-geometry-container="' + escapeHTML(node.id)
+    return '<rect class="geometry-container-frame" data-geometry-container="' + escapeHTML(nodeID)
       + '" aria-hidden="true" x="' + bounds.x + '" y="' + bounds.y
       + '" width="' + bounds.width + '" height="' + bounds.height + '" rx="14"'
-      + attributesForNode(node.id) + "></rect>";
+      + attributesForNode(nodeID) + "></rect>";
   }).join("");
 }

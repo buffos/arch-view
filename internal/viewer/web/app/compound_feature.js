@@ -1,5 +1,5 @@
 import { addFeatureDiagnostic, failedFeature, featureGeometry } from "./feature_context.js";
-import { nestELKNodes, visibleHierarchy } from "./compound_hierarchy.js";
+import { nestELKNodes, presentationContainerID, visibleHierarchy } from "./compound_hierarchy.js";
 
 const FEATURE_ID = "compound";
 const BOUNDS_TOLERANCE = 0.75;
@@ -32,6 +32,8 @@ function flattenOutput(output, hierarchy) {
   const flat = [];
   const origins = new Map([[output.id, { x: 0, y: 0 }]]);
   const actualParents = {};
+  const containerBoundsByNode = {};
+  const containerOwners = new Map(hierarchy.containerNodeIDs.map((id) => [presentationContainerID(id), id]));
   let valid = true;
   const visit = (nodes, parentID, parentOrigin, parentBounds) => {
     for (const node of nodes || []) {
@@ -43,15 +45,33 @@ function flattenOutput(output, hierarchy) {
       if (origins.has(node.id)) valid = false;
       origins.set(node.id, { x: absolute.x, y: absolute.y });
       actualParents[node.id] = parentID;
-      flat.push(absolute);
+      const ownerID = containerOwners.get(node.id);
+      if (ownerID) containerBoundsByNode[ownerID] = {
+        x: absolute.x, y: absolute.y, width: absolute.width, height: absolute.height
+      };
+      else flat.push({ ...absolute, children: undefined });
       visit(node.children, node.id, { x: absolute.x, y: absolute.y }, node);
     }
   };
   visit(output.children, null, { x: 0, y: 0 }, null);
-  const expectedIDs = Object.keys(hierarchy.parentByNode).sort();
-  const actualIDs = flat.map((node) => node.id).sort();
+  const semanticIDs = Object.keys(hierarchy.parentByNode).sort();
+  const expectedIDs = [...semanticIDs, ...containerOwners.keys()].sort();
+  const actualIDs = Object.keys(actualParents).sort();
   if (JSON.stringify(expectedIDs) !== JSON.stringify(actualIDs)) valid = false;
-  for (const id of expectedIDs) if ((actualParents[id] || null) !== hierarchy.parentByNode[id]) valid = false;
+  for (const id of semanticIDs) {
+    const semanticParent = hierarchy.parentByNode[id];
+    const expectedParent = containerOwners.has(presentationContainerID(id))
+      ? presentationContainerID(id)
+      : semanticParent && containerOwners.has(presentationContainerID(semanticParent))
+        ? presentationContainerID(semanticParent) : null;
+    if ((actualParents[id] || null) !== expectedParent) valid = false;
+  }
+  for (const ownerID of hierarchy.containerNodeIDs) {
+    const semanticParent = hierarchy.parentByNode[ownerID];
+    const expectedParent = semanticParent && containerOwners.has(presentationContainerID(semanticParent))
+      ? presentationContainerID(semanticParent) : null;
+    if ((actualParents[presentationContainerID(ownerID)] || null) !== expectedParent) valid = false;
+  }
   const edges = [];
   const collectEdges = (owner, ownerOrigin) => {
     for (const edge of owner.edges || []) {
@@ -61,7 +81,7 @@ function flattenOutput(output, hierarchy) {
     for (const child of owner.children || []) collectEdges(child, origins.get(child.id) || ownerOrigin);
   };
   collectEdges(output, { x: 0, y: 0 });
-  return { valid, nodes: flat, edges };
+  return { valid, nodes: flat, edges, containerBoundsByNode };
 }
 
 function deterministicFlatOutput(context) {
@@ -86,7 +106,7 @@ function prepare(context) {
   const hierarchy = visibleHierarchy(context.scene?.visible_nodes || []);
   context.compoundInput = { hierarchy, flatNodes: (context.graph.children || []).map((node) => ({ ...node })) };
   if (!hierarchy.containerNodeIDs.length) return context;
-  const nested = nestELKNodes(context.graph.children, hierarchy);
+  const nested = nestELKNodes(context.graph.children, hierarchy, context.graph.layoutOptions);
   context.graph = {
     ...context.graph,
     layoutOptions: { ...(context.graph.layoutOptions || {}), "elk.hierarchyHandling": "INCLUDE_CHILDREN" },
@@ -110,6 +130,7 @@ function normalize(context) {
   store.parentByNode = { ...hierarchy.parentByNode };
   store.childrenByNode = Object.fromEntries(Object.entries(hierarchy.childrenByNode).map(([id, children]) => [id, [...children]]));
   store.containerNodeIDs = [...hierarchy.containerNodeIDs];
+  store.containerBoundsByNode = Object.fromEntries(Object.entries(flattened.containerBoundsByNode).map(([id, bounds]) => [id, { ...bounds }]));
   return context;
 }
 
