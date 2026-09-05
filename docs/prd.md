@@ -56,7 +56,8 @@ useful shared settings, better edges, ports, then nested containers. Features
 are opt-in and saved separately for architecture and OKF profiles. Each stage
 requires human visual approval; existing graph appearance remains the default.
 The shared settings/registry and advanced-edge stages are approved and
-archived. Presentation ports are the current delivery stage.
+archived. Presentation ports are implemented and automatically verified at
+their human visual-review gate; nested containers remain blocked.
 
 The current v1 product path remains valid. The compiled external analyzer
 distribution is implemented and is the production release path for stable

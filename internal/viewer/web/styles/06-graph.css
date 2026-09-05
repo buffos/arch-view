@@ -75,6 +75,26 @@
   pointer-events: none;
 }
 
+.presentation-port-group {
+  pointer-events: none;
+}
+
+.presentation-port {
+  fill: var(--cyan);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+.presentation-port.in {
+  fill: var(--muted-strong);
+}
+
+.presentation-port-label {
+  fill: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .node-shape {
   fill: #1b2a4d;
   stroke: #4d6292;

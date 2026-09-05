@@ -12,7 +12,8 @@ ELK execution. Its AER-R rules and scenario mapping are authoritative.
 - Delivery issues: 080 settings/registry, 081 edges, 082 ports, 083 containers.
   These approved stages have dependency-ordered visual gates.
 - Delivery progress: 080–081 are archived after approval; 082 presentation
-  ports is active and 083 remains blocked by its visual-review gate.
+  ports is implemented and automatically verified at its human visual-review
+  gate. Issue 083 remains blocked by that approval.
 
 ## Boundary
 

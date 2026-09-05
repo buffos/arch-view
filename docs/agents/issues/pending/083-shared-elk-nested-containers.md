@@ -9,7 +9,7 @@
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `ready-for-agent`
+- Suggested state: `blocked`
 
 ## Parent Artifacts
 

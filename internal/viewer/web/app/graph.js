@@ -2,6 +2,7 @@ import { edgeGeometry } from "../graph_route.js";
 import { activeGeometryJunctions, geometryJunctionMarkup, geometryLabelMarkup } from "./edge_presentation.js";
 import { geometryEdge } from "./geometry_snapshot.js";
 import { nodeShapeMarkup } from "./node_shape.js";
+import { geometryPortMarkup, geometryPortRoute, geometryPortsForNode } from "./port_presentation.js";
 import { fallbackLayout } from "./layout.js";
 import { sceneLayoutKey } from "./view.js";
 import { defaultViewport, persistViewport, renderViewportControls } from "./viewport.js";
@@ -34,8 +35,10 @@ export function renderGraph(context, services) {
     const matches = relationshipMatches(state, relationship, nodesByID);
     const className = "edge-line " + classForState(relationship.cycle_state) + (selected ? " selected" : "") + (!matches ? " dimmed" : "");
     const hasManualEndpoint = manualPositions[relationship.from_visible_id] || manualPositions[relationship.to_visible_id];
-    const geometry = edgeGeometry(relationship, from, to, hasManualEndpoint ? null : activeLayout.edges[relationship.id]);
-    const advanced = !hasManualEndpoint && geometryEdge(activeLayout.geometry, relationship.id);
+    const snapshotEdge = geometryEdge(activeLayout.geometry, relationship.id);
+    const portRoute = geometryPortRoute(activeLayout.geometry, snapshotEdge, positions, hasManualEndpoint ? null : activeLayout.edges[relationship.id]);
+    const geometry = edgeGeometry(relationship, from, to, portRoute?.route || (hasManualEndpoint ? null : activeLayout.edges[relationship.id]), portRoute?.preserveEndpoints);
+    const advanced = !hasManualEndpoint && snapshotEdge;
     const label = advanced?.labels?.length
       ? geometryLabelMarkup(advanced.labels, classForState(relationship.cycle_state) + (!matches ? " dimmed" : ""))
       : '<text class="edge-label ' + classForState(relationship.cycle_state) + (!matches ? " dimmed" : "") + '" x="' + geometry.labelX + '" y="' + geometry.labelY + '" text-anchor="middle">' + escapeHTML(relationship.count) + "</text>";
@@ -63,6 +66,7 @@ export function renderGraph(context, services) {
     const badgeWidth = Math.max(48, Math.min(position.width - 24, 18 + badgeText.length * 6.2));
     const badgeX = position.x + position.width - badgeWidth - 12;
     const badgeClass = "node-language-badge " + classForState(languageValue) + (!matches ? " dimmed" : "");
+    const ports = geometryPortMarkup(geometryPortsForNode(activeLayout.geometry, node.id, position));
     return '<g data-node-id="' + escapeHTML(node.id) + '" data-node-kind="' + escapeHTML(node.kind) + '" data-node-language="' + escapeHTML(languageValue) + '" tabindex="0" role="button" aria-label="' + escapeHTML(accessibleLabel) + '">' +
       '<title>' + escapeHTML(accessibleLabel) + "</title>" +
       nodeShapeMarkup("rounded_rectangle", position, ' class="' + className + '"') +
@@ -71,7 +75,7 @@ export function renderGraph(context, services) {
       '<text class="node-language-badge-label ' + (!matches ? "dimmed" : "") + '" x="' + (badgeX + badgeWidth / 2) + '" y="' + (position.y + 22.5) + '" text-anchor="middle">' + escapeHTML(badgeText) + "</text>" +
       '<text class="node-label ' + (!matches ? "dimmed" : "") + '" x="' + (position.x + 14) + '" y="' + (position.y + 30) + '">' + escapeHTML(truncate(node.label, 25)) + "</text>" +
       '<text class="node-subtitle" x="' + (position.x + 14) + '" y="' + (position.y + 51) + '">' + escapeHTML(truncate(subtitle, 29)) + "</text>" +
-      '<text class="node-subtitle" x="' + (position.x + 14) + '" y="' + (position.y + 68) + '">' + escapeHTML(truncate(status, 29)) + "</text></g>";
+      '<text class="node-subtitle" x="' + (position.x + 14) + '" y="' + (position.y + 68) + '">' + escapeHTML(truncate(status, 29)) + "</text>" + ports + "</g>";
   }).join("");
 
   const empty = nodes.length === 0 ? '<p class="muted">No visible nodes in this projection.</p>' : "";

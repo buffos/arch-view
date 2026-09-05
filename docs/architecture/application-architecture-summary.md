@@ -8,7 +8,8 @@ useful settings and registry/persistence, followed by edges, ports and compound
 geometry. Every stage has an automated and human visual gate. No server-side
 ELK service or parallel settings endpoint is introduced.
 The registry/settings and advanced-edge stages are approved and archived.
-Presentation ports are the current delivery stage.
+Presentation ports are implemented through the shared geometry path and await
+human visual approval; compound geometry remains blocked.
 
 ## Status
 
