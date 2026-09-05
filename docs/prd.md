@@ -55,9 +55,8 @@ Advanced ELK delivery now follows the approved
 useful shared settings, better edges, ports, then nested containers. Features
 are opt-in and saved separately for architecture and OKF profiles. Each stage
 requires human visual approval; existing graph appearance remains the default.
-The shared settings/registry and advanced-edge stages are approved and
-archived. Presentation ports are implemented and automatically verified at
-their human visual-review gate; nested containers remain blocked.
+The shared settings/registry, advanced-edge, and presentation-port stages are
+approved and archived. Nested containers are the remaining active stage.
 
 The current v1 product path remains valid. The compiled external analyzer
 distribution is implemented and is the production release path for stable

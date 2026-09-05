@@ -5,11 +5,11 @@
 - Issue number: `082`
 - Owning capability node: `/.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md`
 - Artifact root: `docs/architecture/explore-architecture/advanced-elk-renderer-support`
-- Issue file: `docs/agents/issues/pending/082-shared-elk-presentation-ports.md`
+- Issue file: `docs/agents/issues/done/20260905-082-shared-elk-presentation-ports.md`
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `awaiting-human-review`
+- Suggested state: `done`
 
 ## Parent Artifacts
 
@@ -35,7 +35,7 @@ controls and geometry. No feature-specific switches in scene adapters.
 - [x] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
 - [x] Automated verification and scenario evidence complete; implementation files below 600 lines.
 - [x] Required artifact synchronization complete.
-- [ ] Explicit human visual approval recorded before next stage or closeout.
+- [x] Explicit human visual approval recorded before next stage or closeout.
 
 ## Artifact sync required
 
@@ -94,4 +94,5 @@ not only a broad green command.
 ## Evidence
 
 - `docs/agents/reviews/20260905-advanced-elk-stage-3.md`
-- Human visual approval remains intentionally unchecked; issue 083 stays blocked.
+- The user explicitly approved the Stage 3 visual-review gate on 2026-09-05;
+  issue 083 may proceed.

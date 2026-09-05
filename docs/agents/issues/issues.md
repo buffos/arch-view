@@ -2,8 +2,7 @@
 
 | # | Title | Category | Owning Capability | Artifact Root | Issue File | State | Blocked by |
 |---|---|---|---|---|---|---|---|
-| 082 | Shared ELK presentation ports | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/082-shared-elk-presentation-ports.md | awaiting-human-review | — |
-| 083 | Shared ELK nested containers | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/083-shared-elk-nested-containers.md | blocked | 082 |
+| 083 | Shared ELK nested containers | feature | /.okf/capabilities/explore-architecture/advanced-elk-renderer-support.md | docs/architecture/explore-architecture/advanced-elk-renderer-support | docs/agents/issues/pending/083-shared-elk-nested-containers.md | ready-for-agent | — |
 | 077 | Implement the managed quality-baseline store and merge lifecycle | feature | Deterministic quality checks | docs/architecture/code-quality-and-intelligence/deterministic-quality-checks | docs/agents/issues/done/20260831-077-managed-quality-baseline-store-and-merge.md | done | — |
 | 078 | Add automatic baseline loading and managed CLI append | feature | Deterministic quality checks | docs/architecture/code-quality-and-intelligence/deterministic-quality-checks | docs/agents/issues/done/20260831-078-managed-quality-baseline-cli.md | done | 077 |
 | 079 | Expose managed baselines through live analysis and MCP | feature | Live analysis and MCP | docs/architecture/code-quality-and-intelligence/live-analysis-and-mcp | docs/agents/issues/done/20260831-079-live-mcp-baseline-read-selection-and-append.md | done | 077 |

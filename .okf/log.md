@@ -1502,3 +1502,12 @@
 - Full Go, race, vet/build, browser, syntax, strict OKF, diff, and line-count
   verification passes. Issue 082 awaits explicit human visual approval; issue
   083 remains blocked. Capability state and graph totals do not change.
+
+### Advanced ELK Stage 3 approved
+
+- The user explicitly approved Presentation Ports on 2026-09-05 after the
+  shared geometry, endpoint arrows, interaction behavior, and SVG export were
+  reviewed in both architecture and OKF viewers.
+- Archived issue 082 and unblocked issue 083 for nested containers. Advanced
+  ELK remains `specified` while its final stage is active; graph totals remain
+  0 foggy, 0 bounded, 1 specified, 18 implemented.

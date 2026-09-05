@@ -2,8 +2,8 @@
 
 Issue: 082, Shared ELK presentation ports.
 
-Status: implemented and automatically verified on 2026-09-05. Human visual
-approval is pending. The capability remains specified and issue 083 is blocked.
+Status: implemented, automatically verified, and explicitly visually approved
+on 2026-09-05. The capability remains specified while issue 083 is active.
 
 ## Delivered behavior
 
@@ -58,5 +58,4 @@ approval is pending. The capability remains specified and issue 083 is blocked.
 
 ## Human review
 
-Pending explicit user approval. Nested containers must not begin before this
-gate is approved.
+Approved explicitly by the user on 2026-09-05. Nested containers may proceed.
