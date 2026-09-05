@@ -9,7 +9,7 @@
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `blocked`
+- Suggested state: `ready-for-agent`
 
 ## Parent Artifacts
 
@@ -53,7 +53,9 @@ geometry and Download SVG when applicable. Automated checks do not waive review.
 
 ## Blocked by
 
-Issue 082, including its explicit human visual approval.
+Resolved: issue 082 is archived at
+`docs/agents/issues/done/20260905-082-shared-elk-presentation-ports.md`
+with explicit human visual approval.
 
 ## Artifact anchors
 
