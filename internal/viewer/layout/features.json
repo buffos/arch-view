@@ -68,7 +68,7 @@
     "stage": 2
   },
   {
-    "status": "not-implemented",
+    "status": "supported",
     "algorithms": [
       "layered"
     ],

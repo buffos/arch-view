@@ -31,10 +31,10 @@ func TestFeatureMetadataAndStagedAvailability(t *testing.T) {
 			profile.Options["org.eclipse.elk.edgeRouting"] = "SPLINES"
 		}
 		_, err := ValidateProfile(profile)
-		if feature.Stage == 2 && err != nil {
-			t.Fatalf("supported stage 2 feature %s: %v", feature.ID, err)
+		if feature.Stage <= 3 && err != nil {
+			t.Fatalf("supported stage %d feature %s: %v", feature.Stage, feature.ID, err)
 		}
-		if feature.Stage > 2 && analysis.ErrorCodeOf(err) != "renderer_feature_unavailable" {
+		if feature.Stage > 3 && analysis.ErrorCodeOf(err) != "renderer_feature_unavailable" {
 			t.Fatalf("future feature %s: %v", feature.ID, err)
 		}
 	}
@@ -46,23 +46,41 @@ func TestFeatureMetadataAndStagedAvailability(t *testing.T) {
 
 func TestSavedUnavailableFeaturesRemainPreferences(t *testing.T) {
 	root := t.TempDir()
-	data := []byte(`{"schema_version":"arch-view.config/v2","analysis":{},"layout":{"algorithm":"layered","features":["ports","edge_labels"],"options":{"org.eclipse.elk.portConstraints":"FIXED_SIDE"}},"extension":{"keep":true}}`)
+	data := []byte(`{"schema_version":"arch-view.config/v2","analysis":{},"layout":{"algorithm":"layered","features":["compound","edge_labels"],"options":{}},"extension":{"keep":true}}`)
 	path := filepath.Join(root, ConfigFileName)
 	if err := os.WriteFile(path, data, 0600); err != nil {
 		t.Fatal(err)
 	}
 	session := NewSession(root)
 	response := session.Response()
-	if response.Status != "valid" || !reflect.DeepEqual(response.Layout.Features, []string{"edge_labels", "ports"}) || len(response.Diagnostics) != 1 {
+	if response.Status != "valid" || !reflect.DeepEqual(response.Layout.Features, []string{"compound", "edge_labels"}) || len(response.Diagnostics) != 1 {
 		t.Fatalf("%+v", response)
 	}
 	response.Layout.Features[0] = "mutated"
-	if session.Response().Layout.Features[0] != "edge_labels" {
+	if session.Response().Layout.Features[0] != "compound" {
 		t.Fatal("mutable snapshot")
 	}
 	after, _ := os.ReadFile(path)
 	if string(after) != string(data) {
 		t.Fatal("read rewrote preferences")
+	}
+}
+
+func TestPresentationPortSettingsRequireFeatureAndFixedSides(t *testing.T) {
+	profile := LayoutProfile{Algorithm: "layered", Features: []string{"ports"}, Options: map[string]any{
+		"org.eclipse.elk.portConstraints": "FIXED_SIDE",
+	}}
+	if _, err := ValidateProfile(profile); err != nil {
+		t.Fatal(err)
+	}
+	profile.Features = nil
+	if _, err := ValidateProfile(profile); analysis.ErrorCodeOf(err) != "renderer_feature_dependency" {
+		t.Fatal(err)
+	}
+	profile.Features = []string{"ports"}
+	profile.Options["org.eclipse.elk.portConstraints"] = "FREE"
+	if _, err := ValidateProfile(profile); err == nil {
+		t.Fatal("unverified port constraint accepted")
 	}
 }
 

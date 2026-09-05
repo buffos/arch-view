@@ -56,5 +56,5 @@ SVG remains deterministic orthogonal and reports when advanced geometry is not
 applied. The linked contract defines geometry identity, option gating,
 accessibility, validation, fallback, and visual scenarios. Approved stages are tracked by issues
 080–083. Stages 1 and 2 are verified, visually approved, and archived. Stage 3
-presentation ports is the active delivery frontier. Stage 4 remains blocked by
-the preceding approval.
+presentation ports is implemented, automatically verified, and awaiting human
+visual approval. Stage 4 remains blocked by that approval.

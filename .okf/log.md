@@ -1489,3 +1489,16 @@
   the temporary inline junction guidance because it disrupted the compact
   feature selector. Advanced ELK remains `specified` while issues 082–083 are
   active; graph totals remain 0 foggy, 0 bounded, 1 specified, 18 implemented.
+
+### Advanced ELK Stage 3 awaiting visual review
+
+- Implemented deterministic presentation-only input/output ports through the
+  shared feature registry and architecture/OKF geometry path. Layered ELK owns
+  endpoint placement; labels, sides, manual moves, and browser SVG export retain
+  canonical node and relationship identity.
+- Invalid port geometry produces an explicit diagnostic and deterministic
+  per-edge fallback. Go static SVG remains orthogonal and reports advanced
+  features as not applied.
+- Full Go, race, vet/build, browser, syntax, strict OKF, diff, and line-count
+  verification passes. Issue 082 awaits explicit human visual approval; issue
+  083 remains blocked. Capability state and graph totals do not change.

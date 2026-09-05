@@ -7,12 +7,12 @@ import (
 )
 
 func TestEmbeddedHTMLRetainsUnavailableFeaturePreferences(t *testing.T) {
-	profile := layout.LayoutProfile{Algorithm: "layered", Features: []string{"ports"}, Options: map[string]any{"org.eclipse.elk.portConstraints": "FIXED_SIDE"}}
+	profile := layout.LayoutProfile{Algorithm: "layered", Features: []string{"compound"}}
 	_, data, err := Render(exportFixtureModel(t), Request{Format: FormatHTML, LayoutProfile: &profile})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(data, []byte(`"features":["ports"]`)) || !bytes.Contains(data, []byte("renderer_feature_unavailable")) {
+	if !bytes.Contains(data, []byte(`"features":["compound"]`)) || !bytes.Contains(data, []byte("renderer_feature_unavailable")) {
 		t.Fatal("missing saved preference or shared diagnostic")
 	}
 }

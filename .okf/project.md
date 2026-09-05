@@ -82,7 +82,8 @@ user-approved issues 039–043, including its mixed-language viewer review. The
 project analyzer assignments/view selection leaf is implemented through
 issues 044–047, including its approved visual review. The advanced ELK renderer
 support leaf remains specified; approved delivery stages are tracked by issues
-080–083 with human visual review between stages.
+080–083 with human visual review between stages. Stage 3 presentation ports is
+implemented and automatically verified at its visual-review gate.
 The configurable OKF knowledge views capability is an implemented root-level
 capability with a complete node-scoped reference set covering source discovery,
 profiles, projection, inspection, safety behavior, and readiness. Issues 064–071

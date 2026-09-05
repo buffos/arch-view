@@ -47,10 +47,19 @@ function junctionsFor(featureGeometry, offset) {
   }));
 }
 
+function portsFor(nodeID, featureGeometry, offset) {
+  return (featureGeometry.portsByNode?.[nodeID] || []).map((port) => ({
+    ...port,
+    position: { x: port.position.x + offset, y: port.position.y + offset },
+    bounds: { ...port.bounds, x: port.bounds.x + offset, y: port.bounds.y + offset },
+    label_bounds: { ...port.label_bounds, x: port.label_bounds.x + offset, y: port.label_bounds.y + offset }
+  }));
+}
+
 export function normalizeGeometrySnapshot(scene, output, profile, source, offset = 24) {
   const positions = nodePositions(output, offset);
   const outputEdges = new Map((output?.edges || []).map((edge) => [edge.id, edge]));
-  const featureGeometry = output?.featureGeometry || { labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [] };
+  const featureGeometry = output?.featureGeometry || { labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [], portsByNode: {}, portEndpointsByEdge: {} };
   const geometryEdges = [];
   const routes = {};
   for (const relationship of scene?.visible_relationships || []) {
@@ -58,11 +67,14 @@ export function normalizeGeometrySnapshot(scene, output, profile, source, offset
     const route = routeFor(outputEdges.get(relationship.id), relationship, positions, profile, featureGeometry, offset);
     if (!route) continue;
     routes[relationship.id] = route;
+    const endpoints = featureGeometry.portEndpointsByEdge?.[relationship.id] || {};
     geometryEdges.push({
       id: relationship.id,
       semantic_relationship_id: relationship.id,
       source_node_id: relationship.from_visible_id,
       target_node_id: relationship.to_visible_id,
+      ...(endpoints.source_port_id ? { source_port_id: endpoints.source_port_id } : {}),
+      ...(endpoints.target_port_id ? { target_port_id: endpoints.target_port_id } : {}),
       labels: labelsFor(relationship.id, featureGeometry, offset),
       junctions: [...(featureGeometry.junctionIDsByEdge?.[relationship.id] || [])],
       route
@@ -74,7 +86,7 @@ export function normalizeGeometrySnapshot(scene, output, profile, source, offset
     bounds: { ...positions[node.id] },
     parent_id: null,
     children_ids: [],
-    ports: []
+    ports: portsFor(node.id, featureGeometry, offset)
   }));
   return {
     schema_version: "arch-view.geometry/v1",

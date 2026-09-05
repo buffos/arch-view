@@ -40,11 +40,11 @@ test("SC-AER-001 known unavailable preferences fall back without mutation", asyn
   const { sharedFeatureRegistry, featureProblems } = await import(moduleURL("layout_features.js"));
   assert.equal(metadata.length, 5);
   const registry = sharedFeatureRegistry({ features: metadata });
-  const profile = { algorithm: "layered", features: ["ports"], options: {} };
+  const profile = { algorithm: "layered", features: ["compound"], options: {} };
   const negotiated = registry.negotiate(profile);
   assert.deepEqual(negotiated.effective, []);
   assert.equal(negotiated.diagnostics.length, 1);
-  assert.deepEqual(profile.features, ["ports"]);
+  assert.deepEqual(profile.features, ["compound"]);
   assert.equal(featureProblems(profile, { features: metadata }).length, 1);
   assert.throws(() => registry.negotiate({ features: ["unknown"] }), /Unknown/);
 });

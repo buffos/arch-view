@@ -306,6 +306,22 @@ import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.j
     return attachShapeEndpoints(lineRoute(points, undefined, undefined, "orthogonal"), from, to);
   }
 
+  function orthogonalRouteBetweenPoints(from, to) {
+    if (!pointValue(from) || !pointValue(to) || samePoint(from, to)) return null;
+    const points = [from];
+    if (from.x !== to.x && from.y !== to.y) {
+      if (Math.abs(to.x - from.x) >= Math.abs(to.y - from.y)) {
+        const middleX = (from.x + to.x) / 2;
+        points.push({ x: middleX, y: from.y }, { x: middleX, y: to.y });
+      } else {
+        const middleY = (from.y + to.y) / 2;
+        points.push({ x: from.x, y: middleY }, { x: to.x, y: middleY });
+      }
+    }
+    points.push(to);
+    return lineRoute(points, undefined, undefined, "orthogonal");
+  }
+
   function straightRoute(from, to) {
     const fromCenterX = from.x + from.width / 2;
     const fromCenterY = from.y + from.height / 2;
@@ -339,9 +355,10 @@ import { shapeBoundaryPoint, attachShapeEndpoints } from "./app/shape_boundary.j
     };
   }
 
-  function edgeGeometry(relationship, from, to, route) {
+  function edgeGeometry(relationship, from, to, route, preserveEndpoints) {
     if (relationship.from_visible_id === relationship.to_visible_id) return geometryFromRoute(selfLoopRoute(from));
-    const attached = attachShapeEndpoints(routeFromLegacyLayoutEdge(route), from, to);
+    const normalized = routeFromLegacyLayoutEdge(route);
+    const attached = preserveEndpoints ? normalized : attachShapeEndpoints(normalized, from, to);
     const routed = geometryFromRoute(attached, route && route.labelX, route && route.labelY);
     if (routed) return routed;
     // Any missing or malformed route is deterministic orthogonal fallback.
@@ -354,6 +371,7 @@ export {
   edgeGeometry,
   geometryFromRoute,
   orthogonalRoute,
+  orthogonalRouteBetweenPoints,
   straightRoute,
   pathForRoute,
   routeFromSections as fromELKSections,

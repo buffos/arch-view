@@ -9,7 +9,7 @@
 - Category: `feature`
 - Execution type: `AFK`
 - Review gate: `visual-review`
-- Suggested state: `ready-for-agent`
+- Suggested state: `awaiting-human-review`
 
 ## Parent Artifacts
 
@@ -29,12 +29,12 @@ controls and geometry. No feature-specific switches in scene adapters.
 
 ## Acceptance criteria
 
-- [ ] Deterministic input/output presentation ports honor positions, sides, labels and endpoints.
-- [ ] Shared selection, dragging, hit-testing and export preserve semantic identity.
-- [ ] Layered port options are gated by verified prerequisites.
-- [ ] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
-- [ ] Automated verification and scenario evidence complete; implementation files below 600 lines.
-- [ ] Required artifact synchronization complete.
+- [x] Deterministic input/output presentation ports honor positions, sides, labels and endpoints.
+- [x] Shared selection, dragging, hit-testing and export preserve semantic identity.
+- [x] Layered port options are gated by verified prerequisites.
+- [x] Existing defaults, OKF selected-only arrowless semantics and navigation remain unchanged.
+- [x] Automated verification and scenario evidence complete; implementation files below 600 lines.
+- [x] Required artifact synchronization complete.
 - [ ] Explicit human visual approval recorded before next stage or closeout.
 
 ## Artifact sync required
@@ -81,12 +81,17 @@ remain explicitly owned by their later blocked issues.
 
 | Scenario | Backend boundary | Frontend integration | End-to-end journey |
 |---|---|---|---|
-| SC-AER-004 | planned | planned | planned |
-| SC-AER-007 | planned | planned | planned |
-| SC-AER-009 | planned | not-applicable | planned |
-| SC-AER-010 | planned | planned | planned |
-| SC-AER-011 | planned | planned | planned |
+| SC-AER-004 | verified | verified | verified |
+| SC-AER-007 | verified | verified | verified |
+| SC-AER-009 | verified | not-applicable | verified |
+| SC-AER-010 | verified | verified | verified |
+| SC-AER-011 | verified | verified | verified |
 
 Run full Go tests, race, vet/build, browser tests/syntax, strict OKF validation,
 diff and line audits. Record focused test evidence for every addressed rule,
 not only a broad green command.
+
+## Evidence
+
+- `docs/agents/reviews/20260905-advanced-elk-stage-3.md`
+- Human visual approval remains intentionally unchecked; issue 083 stays blocked.
