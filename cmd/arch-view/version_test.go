@@ -14,7 +14,7 @@ func TestVersionCommandReportsApplicationIdentity(t *testing.T) {
 	if code := run([]string{"version"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
-	if got, want := strings.TrimSpace(stdout.String()), "arch-view 0.1.0 (commit unknown, built unknown, build local)"; got != want {
+	if got, want := strings.TrimSpace(stdout.String()), "arch-view 0.2.0 (commit unknown, built unknown, build local)"; got != want {
 		t.Fatalf("version output = %q, want %q", got, want)
 	}
 	if stderr.Len() != 0 {
@@ -27,7 +27,7 @@ func TestVersionFlagReportsApplicationIdentityWithoutInitializingACommand(t *tes
 	if code := run([]string{"--version"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
-	if !strings.HasPrefix(strings.TrimSpace(stdout.String()), "arch-view 0.1.0") {
+	if !strings.HasPrefix(strings.TrimSpace(stdout.String()), "arch-view 0.2.0") {
 		t.Fatalf("version flag output = %q", stdout.String())
 	}
 }
@@ -41,7 +41,7 @@ func TestVersionCommandSupportsMachineReadableOutput(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
 		t.Fatalf("decode version output: %v; output=%s", err, stdout.String())
 	}
-	if got.Application != "arch-view" || got.Version != "0.1.0" || got.BuildID != "local" {
+	if got.Application != "arch-view" || got.Version != "0.2.0" || got.BuildID != "local" {
 		t.Fatalf("version info = %#v", got)
 	}
 }

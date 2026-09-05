@@ -12,7 +12,7 @@ import (
 
 const (
 	Application    = "arch-view"
-	DefaultVersion = "0.1.0"
+	DefaultVersion = "0.2.0"
 	DefaultCommit  = "unknown"
 	DefaultDate    = "unknown"
 	DefaultBuildID = "local"
