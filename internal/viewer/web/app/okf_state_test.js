@@ -1,16 +1,17 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
-const source = fs.readFileSync(path.join(__dirname, "okf_state.js"), "utf8");
+const moduleURL = pathToFileURL(path.join(__dirname, "okf_state.js")).href;
 
-import("data:text/javascript;charset=utf-8," + encodeURIComponent(source)).then(async function (stateModule) {
+import(moduleURL).then(async function (stateModule) {
   const state = stateModule.createOKFState("session-1");
   assert.equal(state.sessionID, "session-1");
   assert.equal(state.depth, 2);
   assert.equal(state.full, false);
   assert.equal(state.configurationRevision, "");
-  assert.equal(state.layoutProfile.algorithm, "mrtree");
+  assert.equal(state.layoutProfile.algorithm, "layered");
+  assert.deepEqual(state.layoutProfile.features, ["junctions", "ports"]);
   assert.equal(state.layoutOverride, null);
 
   const firstRequest = stateModule.beginRequest(state);

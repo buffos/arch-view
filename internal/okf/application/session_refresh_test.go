@@ -38,7 +38,10 @@ func TestSessionRebuildsAfterSourceRefreshAndProfileSave(t *testing.T) {
 		t.Fatal(err)
 	}
 	edited := saved.Profiles[0]
-	edited.Layout.Algorithm = "layered"
+	if edited.Layout.Options == nil {
+		edited.Layout.Options = map[string]any{}
+	}
+	edited.Layout.Options["org.eclipse.elk.direction"] = "DOWN"
 	if _, err := service.SaveProfile(ctx, edited, saved.Revision, "update", []byte("update")); err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +49,7 @@ func TestSessionRebuildsAfterSourceRefreshAndProfileSave(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if after.Projection.Profile.Layout.Algorithm != "layered" || after.Projection.Profile.ProfileRevision == before.Projection.Profile.ProfileRevision {
+	if after.Projection.Profile.Layout.Algorithm != "layered" || after.Projection.Profile.Layout.Options["org.eclipse.elk.direction"] != "DOWN" || after.Projection.Profile.ProfileRevision == before.Projection.Profile.ProfileRevision {
 		t.Fatalf("profile save returned stale projection: %#v", after.Projection.Profile)
 	}
 }

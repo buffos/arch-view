@@ -95,8 +95,11 @@ func TestNeutralProfileDoesNotInventAStateField(t *testing.T) {
 	if effective.State.Field != "" || len(effective.NodeFields) != 0 {
 		t.Fatalf("neutral profile should remain vocabulary agnostic: %#v", effective)
 	}
-	if effective.Layout.Algorithm != "mrtree" {
-		t.Fatalf("OKF default layout = %q, want mrtree", effective.Layout.Algorithm)
+	if effective.Layout.Algorithm != "layered" {
+		t.Fatalf("OKF default layout = %q, want layered", effective.Layout.Algorithm)
+	}
+	if !sameStrings(effective.Layout.Features, []string{"junctions", "ports"}) {
+		t.Fatalf("OKF default features = %#v, want junctions and ports", effective.Layout.Features)
 	}
 }
 

@@ -2,6 +2,7 @@ package projection
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/buffo/arch-view/internal/okf/domain"
@@ -29,8 +30,11 @@ func TestBuildSeparatesContainmentAndSemanticRelationshipsAndHonorsDepth(t *test
 	if len(snapshot.Relationships) != 2 {
 		t.Fatalf("relationships = %#v", snapshot.Relationships)
 	}
-	if snapshot.Profile.Layout.Algorithm != "mrtree" {
+	if snapshot.Profile.Layout.Algorithm != "layered" {
 		t.Fatalf("effective layout = %#v", snapshot.Profile.Layout)
+	}
+	if !reflect.DeepEqual(snapshot.Profile.Layout.Features, []string{"junctions", "ports"}) {
+		t.Fatalf("effective layout features = %#v", snapshot.Profile.Layout.Features)
 	}
 	if snapshot.Relationships[0].Kind == snapshot.Relationships[1].Kind {
 		t.Fatalf("relationship kinds were collapsed: %#v", snapshot.Relationships)

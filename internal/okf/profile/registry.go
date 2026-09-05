@@ -534,8 +534,8 @@ func validateNodeFields(value domain.Profile) []domain.Diagnostic {
 }
 
 func builtins() []domain.Profile {
-	neutral := normalize(domain.Profile{ProfileID: DefaultProfileID, Name: "Neutral", Origin: "builtin", Immutable: true, Revision: "builtin:neutral:v1"})
-	fog := normalize(domain.Profile{ProfileID: FogProfileID, Name: "Fog of war", Origin: "builtin", Bases: []string{DefaultProfileID}, Immutable: true, Revision: "builtin:fog-of-war:v1", State: domain.StateSettings{Field: "state", Mapping: map[string]string{"foggy": "foggy", "bounded": "bounded", "specified": "specified", "implemented": "implemented"}, RollUp: true, ShowDeclared: true}, NodeFields: []domain.NodeField{{Source: "frontmatter.state", Label: "state"}}, Style: domain.StyleSettings{DefaultToken: "state.unknown", StateTokens: map[string]string{"foggy": "state.foggy", "bounded": "state.bounded", "specified": "state.specified", "implemented": "state.implemented"}, Decorations: map[string]domain.StyleDecoration{
+	neutral := normalize(domain.Profile{ProfileID: DefaultProfileID, Name: "Neutral", Origin: "builtin", Immutable: true, Revision: "builtin:neutral:v1", Layout: defaultOKFLayout()})
+	fog := normalize(domain.Profile{ProfileID: FogProfileID, Name: "Fog of war", Origin: "builtin", Bases: []string{DefaultProfileID}, Immutable: true, Revision: "builtin:fog-of-war:v1", Layout: defaultOKFLayout(), State: domain.StateSettings{Field: "state", Mapping: map[string]string{"foggy": "foggy", "bounded": "bounded", "specified": "specified", "implemented": "implemented"}, RollUp: true, ShowDeclared: true}, NodeFields: []domain.NodeField{{Source: "frontmatter.state", Label: "state"}}, Style: domain.StyleSettings{DefaultToken: "state.unknown", StateTokens: map[string]string{"foggy": "state.foggy", "bounded": "state.bounded", "specified": "state.specified", "implemented": "state.implemented"}, Decorations: map[string]domain.StyleDecoration{
 		"root":   {Fill: "#4338ca", Stroke: "#c4b5fd", Text: "#ffffff", StrokeWidth: 2},
 		"rollup": {Stroke: "#f472b6", StrokeWidth: 3},
 	}}})

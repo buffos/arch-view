@@ -2,6 +2,16 @@ package profile
 
 import "github.com/buffo/arch-view/internal/okf/domain"
 
+const defaultOKFLayoutAlgorithm = "layered"
+
+func defaultOKFLayoutFeatures() []string {
+	return []string{"junctions", "ports"}
+}
+
+func defaultOKFLayout() domain.LayoutSettings {
+	return domain.LayoutSettings{Algorithm: defaultOKFLayoutAlgorithm, Features: defaultOKFLayoutFeatures()}
+}
+
 func normalize(value domain.Profile) domain.Profile {
 	value = domain.CloneProfile(value)
 	if value.Name == "" {
@@ -54,7 +64,7 @@ func normalize(value domain.Profile) domain.Profile {
 		value.Style.Tokens = defaultTokens()
 	}
 	if value.Layout.Algorithm == "" {
-		value.Layout.Algorithm = "mrtree"
+		value.Layout.Algorithm = defaultOKFLayoutAlgorithm
 	}
 	if value.Layout.Options == nil {
 		value.Layout.Options = map[string]any{}

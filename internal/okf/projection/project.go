@@ -167,7 +167,7 @@ func Build(ctx context.Context, index domain.BundleIndex, effective domain.Profi
 	projection := domain.ProjectionSnapshot{
 		Status: status, ProjectionRevision: projectionRevision(index, effective, navigation),
 		Source:     domain.ProjectionSource{BundleID: index.BundleID, SourceRevision: index.SourceRevision},
-		Profile:    domain.ProjectionProfile{ProfileID: effective.ProfileID, ProfileRevision: effective.Revision, Layout: domain.LayoutSettings{Algorithm: effective.Layout.Algorithm, Options: domain.CloneMap(effective.Layout.Options)}},
+		Profile:    domain.ProjectionProfile{ProfileID: effective.ProfileID, ProfileRevision: effective.Revision, Layout: domain.LayoutSettings{Algorithm: effective.Layout.Algorithm, Options: domain.CloneMap(effective.Layout.Options), Features: append([]string(nil), effective.Layout.Features...)}},
 		Navigation: navigation, Nodes: nodes, Relationships: relationships,
 		Counts: domain.ProjectionCounts{VisibleNodes: len(nodes), HiddenNodes: len(index.Documents) - len(nodes), VisibleRelationships: len(relationships), HiddenRelationships: hiddenRelationships},
 		Legend: legend, Diagnostics: boundDiagnostics(diagnostics), GeneratedAt: time.Now().UTC(),

@@ -2,8 +2,8 @@ import { escapeOKF } from "./okf_markup.js";
 import { readNumericInput } from "./numeric_input.js";
 import { shapeChoicesMarkup } from "./okf_shape_choices.js";
 import { detailRendererMarkup, readDetailRenderer } from "./okf_detail_form.js";
+import { OKF_DEFAULT_LAYOUT_ALGORITHM } from "./okf_layout.js";
 
-const OKF_DEFAULT_LAYOUT_ALGORITHM = "mrtree";
 const formDrafts = new WeakMap();
 
 export function renderProfileForm(root, profile, effective = profile) {

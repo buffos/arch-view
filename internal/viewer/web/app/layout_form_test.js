@@ -45,9 +45,12 @@ test("SC-AER-008 algorithm changes keep preferences and block conflicting Apply"
 test("SC-AER-001 clone and request serialization preserve inheritance and drafts", async () => {
   const { cloneLayoutProfile, layoutRequestPayload } = await import(moduleURL("utils.js"));
   const { cloneOKFLayoutProfile } = await import(moduleURL("okf_layout.js"));
+  assert.equal(Object.hasOwn(cloneLayoutProfile({}), "features"), false);
+  assert.deepEqual(cloneLayoutProfile({ features: [] }).features, []);
+  assert.equal(Object.hasOwn(cloneOKFLayoutProfile({}), "features"), false);
+  assert.deepEqual(cloneOKFLayoutProfile().features, ["junctions", "ports"]);
+  assert.deepEqual(cloneOKFLayoutProfile({ features: [] }).features, []);
   for (const clone of [cloneLayoutProfile, cloneOKFLayoutProfile]) {
-    assert.equal(Object.hasOwn(clone({}), "features"), false);
-    assert.deepEqual(clone({ features: [] }).features, []);
     const original = { features: ["ports"], options: { padding: { left: 5 } } };
     const copy = clone(original); copy.features.push("edge_labels"); copy.options.padding.left = 90;
     assert.deepEqual(original, { features: ["ports"], options: { padding: { left: 5 } } });
