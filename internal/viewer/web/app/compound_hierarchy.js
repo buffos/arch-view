@@ -29,11 +29,15 @@ export function visibleHierarchy(nodes) {
     parentByNode,
     childrenByNode,
     roots: entries.filter((entry) => !parentByNode[entry.id]).map((entry) => entry.id).sort(),
-    containerNodeIDs: entries.filter((entry) => childrenByNode[entry.id].length > 0).map((entry) => entry.id).sort()
+    containerNodeIDs: entries.filter((entry) => parentByNode[entry.id] && childrenByNode[entry.id].length > 0).map((entry) => entry.id).sort()
   };
 }
 
-export function nestELKNodes(flatNodes, hierarchy) {
+export function presentationContainerID(nodeID) {
+  return "arch-view-container::" + nodeID;
+}
+
+export function nestELKNodes(flatNodes, hierarchy, parentLayoutOptions = {}) {
   const byID = new Map((flatNodes || []).map((node) => [node.id, node]));
   if (byID.size !== (flatNodes || []).length) throw new Error("ELK input contains duplicate node IDs.");
   for (const id of Object.keys(hierarchy.parentByNode)) if (!byID.has(id)) throw new Error("Visible hierarchy has no matching ELK node: " + id);
@@ -41,15 +45,18 @@ export function nestELKNodes(flatNodes, hierarchy) {
     const source = byID.get(id);
     const children = hierarchy.childrenByNode[id].map(build);
     if (!children.length) return { ...source };
-    const headerHeight = Number.isFinite(source.height) ? source.height : 82;
     return {
-      ...source,
+      id: presentationContainerID(id),
+      archViewPresentationContainer: true,
       layoutOptions: {
-        ...(source.layoutOptions || {}),
-        "elk.padding": "[top=" + (headerHeight + 20) + ",left=18,bottom=18,right=18]"
+        ...parentLayoutOptions,
+        "elk.padding": "[top=18,left=18,bottom=18,right=18]"
       },
-      children
+      children: [{ ...source }, ...children]
     };
   };
-  return hierarchy.roots.map(build);
+  return hierarchy.roots.flatMap((id) => [
+    { ...byID.get(id) },
+    ...hierarchy.childrenByNode[id].map(build)
+  ]);
 }

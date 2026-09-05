@@ -1526,3 +1526,17 @@
   visible containers without browser errors. Issue 083 remains open for
   explicit human visual approval; capability state and graph totals do not
   change.
+
+### Advanced ELK Stage 4 compound presentation correction
+
+- Replaced semantic-node-as-container geometry after visual review exposed a
+  project-wide vertical strip and misleading routes attached to container
+  boundaries. Presentation containers now have deterministic independent IDs;
+  semantic parents remain ordinary nodes and edge endpoints.
+- Removed the redundant top-level project container, propagated the selected
+  layout settings into nested capability containers, and made manual child
+  movement expand ancestor frames. The architecture projection remains
+  intentionally progressive and unchanged.
+- Live OKF verification now shows all 17 nodes in a balanced graph with three
+  capability containers and no browser errors. Issue 083 remains at its human
+  visual-review gate with no capability-state or graph-total transition.

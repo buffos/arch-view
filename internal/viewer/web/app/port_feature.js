@@ -36,8 +36,10 @@ function prepare(context) {
   const sides = flowSides(context.profile);
   context.graph.children = mapELKNodes(context.graph.children, (node) => ({
     ...node,
-    layoutOptions: { ...(node.layoutOptions || {}), "org.eclipse.elk.portConstraints": "FIXED_SIDE" },
-    ports: [portInput(node.id, "in", sides.in), portInput(node.id, "out", sides.out)]
+    ...(!node.archViewPresentationContainer ? {
+      layoutOptions: { ...(node.layoutOptions || {}), "org.eclipse.elk.portConstraints": "FIXED_SIDE" },
+      ports: [portInput(node.id, "in", sides.in), portInput(node.id, "out", sides.out)]
+    } : {})
   }));
   const relationships = new Map((context.scene?.visible_relationships || []).map((item) => [item.id, item]));
   context.graph.edges = (context.graph.edges || []).map((edge) => {

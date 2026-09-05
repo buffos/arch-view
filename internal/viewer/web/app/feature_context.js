@@ -3,7 +3,7 @@ export function featureGeometry(context) {
     context.featureGeometry = {
       labelsByEdge: {}, junctions: [], junctionIDsByEdge: {}, invalidRouteIDs: [],
       portsByNode: {}, portEndpointsByEdge: {}, parentByNode: {},
-      childrenByNode: {}, containerNodeIDs: []
+      childrenByNode: {}, containerNodeIDs: [], containerBoundsByNode: {}
     };
   }
   return context.featureGeometry;

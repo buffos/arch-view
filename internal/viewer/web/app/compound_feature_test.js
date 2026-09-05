@@ -46,8 +46,11 @@ test("SC-AER-005 pinned ELK produces validated nested visible hierarchy", async 
   assert.equal(nodes.get("group").parent_id, "root");
   assert.deepEqual(nodes.get("group").children_ids, ["leaf"]);
   assert.equal(nodes.get("leaf").parent_id, "group");
-  assert.ok(contains(nodes.get("root").bounds, nodes.get("group").bounds));
-  assert.ok(contains(nodes.get("group").bounds, nodes.get("leaf").bounds));
+  const containers = new Map(geometry.containers.map((container) => [container.semantic_node_id, container]));
+  assert.equal(containers.has("root"), false, "the canvas is the top-level container");
+  assert.ok(contains(containers.get("group").bounds, nodes.get("group").bounds));
+  assert.ok(contains(containers.get("group").bounds, nodes.get("leaf").bounds));
+  assert.notDeepEqual(containers.get("group").bounds, nodes.get("group").bounds);
   assert.equal(geometry.edges.length, scene.visible_relationships.length);
   assert.ok(geometry.edges.every((edge) => edge.route.sections.length > 0));
 });
@@ -63,7 +66,7 @@ test("SC-AER-005 hidden hierarchy segments are not invented", async () => {
   const output = await runFeatureLayout(sparse, profile, catalog, null, ELK, source);
   const geometry = normalizeGeometrySnapshot(sparse, output, profile, source);
   assert.deepEqual(geometry.nodes.map((node) => node.id).sort(), ["leaf", "root"]);
-  assert.equal(geometry.nodes.find((node) => node.id === "leaf").parent_id, "root");
+  assert.equal(geometry.containers.length, 0);
 });
 
 test("SC-AER-011 compound geometry composes with labels, ports, and splines", async () => {
@@ -96,7 +99,8 @@ test("SC-AER-007 malformed compound bounds fall back to flat geometry", async ()
   class InvalidCompoundEngine {
     async layout(graph) {
       const output = await new ELK().layout(graph);
-      output.children[0].children[0].x = output.children[0].width + 10;
+      const container = output.children.find((node) => node.id.startsWith("arch-view-container::"));
+      container.children[0].x = container.width + 10;
       return output;
     }
   }
@@ -109,23 +113,30 @@ test("SC-AER-007 malformed compound bounds fall back to flat geometry", async ()
 });
 
 test("SC-AER-010 container presentation and movement stay non-semantic", async () => {
-  const { applyGeometryMove, geometryContainerMarkup, geometryMoveIDs, geometryMoveStart } = await import(moduleURL("container_presentation.js"));
+  const { applyGeometryMove, geometryContainerBounds, geometryContainerMarkup, geometryMoveIDs, geometryMoveStart } = await import(moduleURL("container_presentation.js"));
   const snapshot = {
     nodes: [
-      { id: "root", semantic_node_id: "root", bounds: { x: 0, y: 0, width: 400, height: 300 }, parent_id: null, children_ids: ["group"] },
-      { id: "group", semantic_node_id: "group", bounds: { x: 20, y: 60, width: 300, height: 180 }, parent_id: "root", children_ids: ["leaf"] },
+      { id: "root", semantic_node_id: "root", bounds: { x: 12, y: 12, width: 190, height: 82 }, parent_id: null, children_ids: ["group"] },
+      { id: "group", semantic_node_id: "group", bounds: { x: 32, y: 72, width: 190, height: 82 }, parent_id: "root", children_ids: ["leaf"] },
       { id: "leaf", semantic_node_id: "leaf", bounds: { x: 40, y: 120, width: 190, height: 82 }, parent_id: "group", children_ids: [] }
+    ],
+    containers: [
+      { id: "arch-view-container::group", semantic_node_id: "group", bounds: { x: 20, y: 60, width: 300, height: 180 } }
     ]
   };
   assert.deepEqual(geometryMoveIDs(snapshot, "group"), ["group", "leaf"]);
   const positions = Object.fromEntries(snapshot.nodes.map((node) => [node.id, { ...node.bounds }]));
   const manual = {};
   applyGeometryMove(geometryMoveStart(snapshot, "group", positions), positions, manual, 15, -5);
-  assert.deepEqual(manual, { group: { x: 35, y: 55 }, leaf: { x: 55, y: 115 } });
+  assert.deepEqual(manual, { group: { x: 47, y: 67 }, leaf: { x: 55, y: 115 } });
   assert.deepEqual(positions.root, snapshot.nodes[0].bounds);
   const markup = geometryContainerMarkup(snapshot, Object.fromEntries(snapshot.nodes.map((node) => [node.id, node.bounds])));
   assert.match(markup, /class="geometry-container-frame"/);
   assert.doesNotMatch(markup, /tabindex|role="button"|data-node-id|data-okf-node/);
+  const before = geometryContainerBounds(snapshot, positions).group;
+  applyGeometryMove(geometryMoveStart(snapshot, "leaf", positions), positions, manual, 500, 0);
+  const expanded = geometryContainerBounds(snapshot, positions).group;
+  assert.ok(expanded.width > before.width, "moving a child cannot leave it outside an unchanged frame");
 });
 
 test("SC-AER-005 OKF renders shared frames behind semantic nodes", async () => {

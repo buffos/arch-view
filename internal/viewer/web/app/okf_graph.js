@@ -1,5 +1,5 @@
 import { edgeGeometry, straightRoute } from "../graph_route.js";
-import { applyGeometryMove, geometryContainerHeaderBounds, geometryContainerMarkup, geometryMoveStart } from "./container_presentation.js";
+import { applyGeometryMove, geometryContainerBounds, geometryContainerMarkup, geometryMoveStart } from "./container_presentation.js";
 import { nodeShapeMarkup, shapeContentBox } from "./node_shape.js";
 import { nodeDimensions } from "../layout_request.js";
 import { escapeOKF } from "./okf_markup.js";
@@ -44,12 +44,11 @@ export async function renderOKFGraph(container, snapshot, selectedID, handlers, 
   renderedLayouts.set(container, { sceneKey, layout });
   const viewport = options.getViewport ? options.getViewport() : createViewportState();
   const positions = withManualPositions(layout.positions, viewport && viewport.positions, nodes);
-  const nodesByID = new Map(nodes.map((node) => [node.id || node.concept_id, node]));
   container.classList.add("okf-graph-wrap");
   const edges = relationships.map((relationship) => edgeMarkup(relationship, positions, layout, viewport)).join("");
   const junctions = geometryJunctionMarkup(activeGeometryJunctions(layout.geometry, viewport?.positions));
   const nodeMarkup = nodes.map((node) => nodeMarkupFor(node, positions[node.id || node.concept_id], selectedID, layout.geometry)).join("");
-  const containers = geometryContainerMarkup(layout.geometry, positions, (id) => presentationStyle(nodesByID.get(id)?.presentation_style || {}));
+  const containers = geometryContainerMarkup(layout.geometry, positions);
   container.innerHTML = nodes.length
     ? "<svg class=\"okf-graph-svg\" viewBox=\"0 0 " + layout.width + " " + layout.height + "\" preserveAspectRatio=\"xMidYMid meet\" role=\"img\" aria-label=\"OKF knowledge graph\"><defs><marker id=\"okf-arrow\" markerWidth=\"9\" markerHeight=\"9\" refX=\"8\" refY=\"4.5\" orient=\"auto\"><path d=\"M 0 0 L 9 4.5 L 0 9 z\" fill=\"#7483a9\"></path></marker></defs><g class=\"okf-viewport-content\" transform=\"" + viewportTransform(viewport) + "\"><g class=\"geometry-containers\">" + containers + "</g><g class=\"okf-edges\">" + edges + junctions + "</g><g class=\"okf-nodes\">" + nodeMarkup + "</g></g></svg>"
     : "<p class=\"muted\">No concepts are visible in the selected OKF projection.</p>";
@@ -143,8 +142,7 @@ function nodeMarkupFor(node, position, selectedID, geometrySnapshot) {
   const selected = id === selectedID;
   const style = node.presentation_style || {};
   const preferred = nodeDimensions(node);
-  const absoluteRenderBox = geometryContainerHeaderBounds(geometrySnapshot, id, position, preferred);
-  const renderBox = { x: absoluteRenderBox.x - position.x, y: absoluteRenderBox.y - position.y, width: absoluteRenderBox.width, height: absoluteRenderBox.height };
+  const renderBox = { x: 0, y: 0, width: position.width || preferred.width, height: position.height || preferred.height };
   const shape = shapeMarkup(node.shape_definition || node.shape || style.shape, renderBox, selected, style);
   const content = shapeContentBox(node.shape_definition || node.shape || style.shape, renderBox);
   const availableWidth = Math.max(24, content.width - 28);
@@ -219,11 +217,14 @@ function beginNodeDrag(event, id, handlers, positions, relationships, layout, co
 }
 
 function renderPositionUpdates(container, positions, relationships, layout, viewport) {
+  const containerBounds = geometryContainerBounds(layout?.geometry, positions);
   container.querySelectorAll("[data-geometry-container]").forEach((element) => {
-    const position = positions[element.dataset.geometryContainer];
+    const position = containerBounds[element.dataset.geometryContainer];
     if (!position) return;
     element.setAttribute("x", position.x);
     element.setAttribute("y", position.y);
+    element.setAttribute("width", position.width);
+    element.setAttribute("height", position.height);
   });
   container.querySelectorAll("[data-okf-node]").forEach((element) => {
     const position = positions[element.dataset.okfNode];
